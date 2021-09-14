@@ -193,3 +193,19 @@ func (s *diskSync) IsDir(path string) (bool, error) {
 	}
 	return f.IsDir(), nil
 }
+
+// SyncOnce auto sync src directory to target directory once.
+func (s *diskSync) SyncOnce() error {
+	return filepath.WalkDir(s.srcAbsPath, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() {
+			err = s.Create(path)
+			if err == nil {
+				err = s.Write(path)
+			}
+		}
+		return err
+	})
+}

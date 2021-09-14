@@ -20,6 +20,7 @@ var (
 	RetryWait    time.Duration
 	BufSize      int
 	PrintVersion bool
+	SyncOnce     bool
 )
 
 func main() {
@@ -32,6 +33,7 @@ func main() {
 	flag.IntVar(&RetryCount, "retry_count", 15, "if execute failed, then retry to work retry_count times")
 	flag.DurationVar(&RetryWait, "retry_wait", time.Second*5, "if retry to work, wait retry_wait time then do")
 	flag.IntVar(&BufSize, "buf_size", 1024*1024, "read and write buffer byte size")
+	flag.BoolVar(&SyncOnce, "sync_once", false, "sync src directory to target directory once.")
 	flag.Parse()
 
 	if PrintVersion {
@@ -46,12 +48,22 @@ func main() {
 		loggers = append(loggers, log.NewFileLogger(log.Level(LogLevel), LogDir, "gofs"))
 	}
 	log.InitDefaultLogger(log.NewMultiLogger(loggers...))
-	defer log.Log("gofs exited!")
 
 	// create syncer
 	syncer, err := sync.NewDiskSync(SrcPath, TargetPath, BufSize)
 	if err != nil {
 		log.Error(err, "create DiskSync error")
+		return
+	}
+
+	// process sync once
+	if SyncOnce {
+		err = syncer.SyncOnce()
+		if err != nil {
+			log.Error(err, "sync once error")
+		} else {
+			log.Log("sync once success")
+		}
 		return
 	}
 
@@ -75,6 +87,7 @@ func main() {
 
 	// start monitor
 	log.Log("file monitor is starting...")
+	defer log.Log("gofs exited!")
 	err = monitor.Start()
 	if err != nil {
 		log.Log("start to monitor failed, %s", err.Error())

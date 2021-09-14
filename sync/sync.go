@@ -7,4 +7,5 @@ type Sync interface {
 	Rename(path string) error
 	Chmod(path string) error
 	IsDir(path string) (bool, error)
+	SyncOnce() error
 }
