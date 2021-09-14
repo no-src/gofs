@@ -48,6 +48,7 @@ func main() {
 		loggers = append(loggers, log.NewFileLogger(log.Level(LogLevel), LogDir, "gofs"))
 	}
 	log.InitDefaultLogger(log.NewMultiLogger(loggers...))
+	defer log.Close()
 
 	// create syncer
 	syncer, err := sync.NewDiskSync(SrcPath, TargetPath, BufSize)
