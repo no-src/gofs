@@ -51,7 +51,7 @@ func (m *fsNotifyMonitor) Monitor(dir string) (err error) {
 			if err != nil {
 				log.Error(err, "watch dir error [%s]", path)
 			} else {
-				log.Log("watch dir success [%s]", path)
+				log.Debug("watch dir success [%s]", path)
 			}
 		}
 		return err
@@ -76,7 +76,7 @@ func (m *fsNotifyMonitor) Start() error {
 					last = nil
 					break
 				} else {
-					log.Log("notify received [%s] -> [%s]", event.Op.String(), event.Name)
+					log.Debug("notify received [%s] -> [%s]", event.Op.String(), event.Name)
 					last = &event
 				}
 				if event.Op&fsnotify.Write == fsnotify.Write {

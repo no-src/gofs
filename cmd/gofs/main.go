@@ -63,7 +63,7 @@ func main() {
 		if err != nil {
 			log.Error(err, "sync once error")
 		} else {
-			log.Log("sync once success")
+			log.Log("sync once done!")
 		}
 		return
 	}
@@ -91,6 +91,6 @@ func main() {
 	defer log.Log("gofs exited!")
 	err = monitor.Start()
 	if err != nil {
-		log.Log("start to monitor failed, %s", err.Error())
+		log.Error(err, "start to monitor failed")
 	}
 }

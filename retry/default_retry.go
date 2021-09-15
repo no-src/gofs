@@ -29,11 +29,11 @@ func (r *defaultRetry) Do(f func() error, desc string) {
 			err := f()
 			if err == nil {
 				if i > 0 {
-					log.Log("retry [%d] success [%s] ", i+1, desc)
+					log.Debug("retry [%d] success [%s] ", i+1, desc)
 				}
 				break
 			} else {
-				log.Log("retry [%d] after %s [%s]", i+1, r.retryWait.String(), desc)
+				log.Debug("retry [%d] after %s [%s]", i+1, r.retryWait.String(), desc)
 				if i == r.retryCount-1 {
 					log.Error(err, "retry [%d] times, and aborted [%s]", r.retryCount, desc)
 				} else {

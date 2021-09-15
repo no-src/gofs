@@ -84,6 +84,7 @@ func (s *diskSync) Create(path string) error {
 			return err
 		}
 	}
+	log.Debug("create target file success [%s] -> [%s]", path, target)
 	return nil
 }
 
@@ -140,7 +141,7 @@ func (s *diskSync) Write(path string) error {
 		}
 		err = writer.Flush()
 		if err == nil {
-			log.Log("Write:write to the target file success [%s]", target)
+			log.Info("write to the target file success [%s] -> [%s]", path, target)
 		} else {
 			log.Error(err, "Write:flush to the target file failed [%s]", target)
 			return err
@@ -159,6 +160,8 @@ func (s *diskSync) Remove(path string) error {
 	err = os.RemoveAll(target)
 	if err != nil {
 		log.Error(err, "Remove:remove the target file error")
+	} else {
+		log.Info("remove file success [%s] -> [%s]", path, target)
 	}
 	return err
 }
