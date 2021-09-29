@@ -64,7 +64,11 @@ func main() {
 	var loggers []log.Logger
 	loggers = append(loggers, log.NewConsoleLogger(log.Level(LogLevel)))
 	if FileLogger {
-		loggers = append(loggers, log.NewFileLogger(log.Level(LogLevel), LogDir, "gofs"))
+		filePrefix := "gofs_"
+		if Daemon {
+			filePrefix += "daemon_"
+		}
+		loggers = append(loggers, log.NewFileLogger(log.Level(LogLevel), LogDir, filePrefix))
 	}
 	log.InitDefaultLogger(log.NewMultiLogger(loggers...))
 	defer log.Close()
