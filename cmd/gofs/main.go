@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"github.com/no-src/gofs/daemon"
 	"github.com/no-src/gofs/monitor"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/sync"
@@ -11,16 +12,22 @@ import (
 )
 
 var (
-	SrcPath      string
-	TargetPath   string
-	LogLevel     int
-	LogDir       string
-	FileLogger   bool
-	RetryCount   int
-	RetryWait    time.Duration
-	BufSize      int
-	PrintVersion bool
-	SyncOnce     bool
+	SrcPath            string
+	TargetPath         string
+	LogLevel           int
+	LogDir             string
+	FileLogger         bool
+	RetryCount         int
+	RetryWait          time.Duration
+	BufSize            int
+	PrintVersion       bool
+	SyncOnce           bool
+	Daemon             bool
+	DaemonPid          bool
+	DaemonDelay        time.Duration
+	DaemonMonitorDelay time.Duration
+	KillPPid           bool
+	IsSubprocess       bool
 )
 
 func main() {
@@ -33,8 +40,20 @@ func main() {
 	flag.IntVar(&RetryCount, "retry_count", 15, "if execute failed, then retry to work retry_count times")
 	flag.DurationVar(&RetryWait, "retry_wait", time.Second*5, "if retry to work, wait retry_wait time then do")
 	flag.IntVar(&BufSize, "buf_size", 1024*1024, "read and write buffer byte size")
-	flag.BoolVar(&SyncOnce, "sync_once", false, "sync src directory to target directory once.")
+	flag.BoolVar(&SyncOnce, "sync_once", false, "sync src directory to target directory once")
+	flag.BoolVar(&Daemon, "daemon", false, "enable daemon to create and monitor a subprocess to work, you can use [go build -ldflags=\"-H windowsgui\"] to build on Windows")
+	flag.BoolVar(&DaemonPid, "daemon_pid", false, "record parent process pid, daemon process pid and worker process pid to pid file")
+	flag.DurationVar(&DaemonDelay, "daemon_delay", time.Second, "daemon work interval, wait to create subprocess")
+	flag.DurationVar(&DaemonMonitorDelay, "daemon_monitor_delay", time.Second*3, "daemon monitor work interval, wait to check subprocess state")
+	flag.BoolVar(&KillPPid, "kill_ppid", false, "try to kill the parent process when it's running")
+	flag.BoolVar(&IsSubprocess, daemon.SubprocessTag, false, "tag current process is subprocess")
 	flag.Parse()
+
+	// if current is subprocess, then reset the "kill_ppid" and "daemon"
+	if IsSubprocess {
+		KillPPid = false
+		Daemon = false
+	}
 
 	if PrintVersion {
 		version.PrintVersionInfo()
@@ -49,6 +68,18 @@ func main() {
 	}
 	log.InitDefaultLogger(log.NewMultiLogger(loggers...))
 	defer log.Close()
+
+	// kill parent process
+	if KillPPid {
+		daemon.KillPPid()
+	}
+
+	// start the daemon
+	if Daemon {
+		daemon.Daemon(DaemonPid, DaemonDelay, DaemonMonitorDelay)
+		log.Log("daemon exited")
+		return
+	}
 
 	// create syncer
 	syncer, err := sync.NewDiskSync(SrcPath, TargetPath, BufSize)
