@@ -1,9 +1,11 @@
 package version
 
-import "fmt"
+import (
+	"github.com/no-src/log"
+)
 
 const VERSION = "v0.0.2"
 
 func PrintVersionInfo() {
-	fmt.Printf("gofs %s\n", VERSION)
+	log.Log("gofs version %s", VERSION)
 }

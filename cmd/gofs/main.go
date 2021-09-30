@@ -20,11 +20,6 @@ func main() {
 		Daemon = false
 	}
 
-	if PrintVersion {
-		version.PrintVersionInfo()
-		return
-	}
-
 	// init logger
 	var loggers []log.Logger
 	loggers = append(loggers, log.NewConsoleLogger(log.Level(LogLevel)))
@@ -37,6 +32,12 @@ func main() {
 	}
 	log.InitDefaultLogger(log.NewMultiLogger(loggers...))
 	defer log.Close()
+
+	// print version info
+	if PrintVersion {
+		version.PrintVersionInfo()
+		return
+	}
 
 	// kill parent process
 	if KillPPid {
