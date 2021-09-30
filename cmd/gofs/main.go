@@ -5,6 +5,7 @@ import (
 	"github.com/no-src/gofs/daemon"
 	"github.com/no-src/gofs/monitor"
 	"github.com/no-src/gofs/retry"
+	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/version"
 	"github.com/no-src/log"
@@ -30,6 +31,8 @@ var (
 	DaemonMonitorDelay time.Duration
 	KillPPid           bool
 	IsSubprocess       bool
+	FileServer         bool
+	FileServerAddr     string
 )
 
 func main() {
@@ -51,6 +54,8 @@ func main() {
 	flag.DurationVar(&DaemonMonitorDelay, "daemon_monitor_delay", time.Second*3, "daemon monitor work interval, wait to check subprocess state")
 	flag.BoolVar(&KillPPid, "kill_ppid", false, "try to kill the parent process when it's running")
 	flag.BoolVar(&IsSubprocess, daemon.SubprocessTag, false, "tag current process is subprocess")
+	flag.BoolVar(&FileServer, "server", false, "start a file server to browse source directory and target directory")
+	flag.StringVar(&FileServerAddr, "server_addr", ":9015", "a file server binding address")
 	flag.Parse()
 
 	// if current is subprocess, then reset the "kill_ppid" and "daemon"
@@ -89,6 +94,8 @@ func main() {
 		return
 	}
 
+	// if enable daemon, start a worker to process the following
+
 	// create syncer
 	syncer, err := sync.NewDiskSync(SrcPath, TargetPath, BufSize)
 	if err != nil {
@@ -117,6 +124,17 @@ func main() {
 		return
 	}
 	defer monitor.Close()
+
+	// start a file server
+	go func() {
+		if FileServer {
+			log.Log("file server [%s] starting...", FileServerAddr)
+			err := server.StartFileServer(SrcPath, TargetPath, FileServerAddr)
+			if err != nil {
+				log.Error(err, "start file server [%s] error", FileServerAddr)
+			}
+		}
+	}()
 
 	// add to monitor
 	err = monitor.Monitor(SrcPath)
