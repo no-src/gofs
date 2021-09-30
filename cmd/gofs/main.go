@@ -15,8 +15,10 @@ var (
 	SrcPath            string
 	TargetPath         string
 	LogLevel           int
-	LogDir             string
 	FileLogger         bool
+	LogDir             string
+	LogFlush           bool
+	LogFlushInterval   time.Duration
 	RetryCount         int
 	RetryWait          time.Duration
 	BufSize            int
@@ -35,8 +37,10 @@ func main() {
 	flag.StringVar(&SrcPath, "src", "", "source path by monitor")
 	flag.StringVar(&TargetPath, "target", "", "target path to backup")
 	flag.IntVar(&LogLevel, "log_level", int(log.InfoLevel), "set log level, default is INFO. DEBUG=0 INFO=1 WARN=2 ERROR=3")
-	flag.BoolVar(&FileLogger, "file_log", false, "enable file logger")
+	flag.BoolVar(&FileLogger, "log_file", false, "enable file logger")
 	flag.StringVar(&LogDir, "log_dir", "./logs/", "set log file's dir")
+	flag.BoolVar(&LogFlush, "log_flush", false, "enable auto flush log with interval")
+	flag.DurationVar(&LogFlushInterval, "log_flush_interval", time.Second*3, "set log flush interval duration, you need to enable log_flush first")
 	flag.IntVar(&RetryCount, "retry_count", 15, "if execute failed, then retry to work retry_count times")
 	flag.DurationVar(&RetryWait, "retry_wait", time.Second*5, "if retry to work, wait retry_wait time then do")
 	flag.IntVar(&BufSize, "buf_size", 1024*1024, "read and write buffer byte size")
@@ -68,7 +72,7 @@ func main() {
 		if Daemon {
 			filePrefix += "daemon_"
 		}
-		loggers = append(loggers, log.NewFileLogger(log.Level(LogLevel), LogDir, filePrefix))
+		loggers = append(loggers, log.NewFileLoggerWithAutoFlush(log.Level(LogLevel), LogDir, filePrefix, LogFlush, LogFlushInterval))
 	}
 	log.InitDefaultLogger(log.NewMultiLogger(loggers...))
 	defer log.Close()
