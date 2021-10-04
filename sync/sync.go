@@ -1,5 +1,11 @@
 package sync
 
+import (
+	"errors"
+	"fmt"
+	"github.com/no-src/gofs/core"
+)
+
 type Sync interface {
 	Create(path string) error
 	Write(path string) error
@@ -8,4 +14,11 @@ type Sync interface {
 	Chmod(path string) error
 	IsDir(path string) (bool, error)
 	SyncOnce() error
+}
+
+func NewSync(src core.VFS, target core.VFS, bufSize int) (Sync, error) {
+	if src.IsDisk() && target.IsDisk() {
+		return NewDiskSync(src.Path(), target.Path(), bufSize)
+	}
+	return nil, errors.New(fmt.Sprintf("file system unsupported ! src=>%s target=>%s", src.Type().String(), target.Type().String()))
 }

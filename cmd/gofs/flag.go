@@ -2,14 +2,15 @@ package main
 
 import (
 	"flag"
+	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/daemon"
 	"github.com/no-src/log"
 	"time"
 )
 
 var (
-	SrcPath            string
-	TargetPath         string
+	SourceVFS          core.VFS
+	TargetVFS          core.VFS
 	LogLevel           int
 	FileLogger         bool
 	LogDir             string
@@ -32,8 +33,8 @@ var (
 
 func parseFlags() {
 	flag.BoolVar(&PrintVersion, "v", false, "print version info")
-	flag.StringVar(&SrcPath, "src", "", "source path by monitor")
-	flag.StringVar(&TargetPath, "target", "", "target path to backup")
+	core.VFSVar(&SourceVFS, "src", core.NewEmptyVFS(), "source path by monitor")
+	core.VFSVar(&TargetVFS, "target", core.NewEmptyVFS(), "target path to backup")
 	flag.IntVar(&LogLevel, "log_level", int(log.InfoLevel), "set log level, default is INFO. DEBUG=0 INFO=1 WARN=2 ERROR=3")
 	flag.BoolVar(&FileLogger, "log_file", false, "enable file logger")
 	flag.StringVar(&LogDir, "log_dir", "./logs/", "set log file's dir")

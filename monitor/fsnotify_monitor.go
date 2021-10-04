@@ -3,6 +3,7 @@ package monitor
 import (
 	"errors"
 	"github.com/fsnotify/fsnotify"
+	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/log"
@@ -33,7 +34,15 @@ func NewFsNotifyMonitor(syncer sync.Sync, retry retry.Retry) (m Monitor, err err
 	return m, nil
 }
 
-func (m *fsNotifyMonitor) Monitor(dir string) (err error) {
+func (m *fsNotifyMonitor) Monitor(vfs core.VFS) (err error) {
+	if vfs.IsDisk() == false {
+		return errors.New("not local file system")
+	}
+	dir := vfs.Path()
+	return m.monitor(dir)
+}
+
+func (m *fsNotifyMonitor) monitor(dir string) (err error) {
 	dir, err = filepath.Abs(dir)
 	if err != nil {
 		log.Error(err, "parse dir to abs dir error")
@@ -93,7 +102,7 @@ func (m *fsNotifyMonitor) Start() error {
 						// if create a new dir, then monitor it
 						isDir, err := m.syncer.IsDir(event.Name)
 						if err == nil && isDir {
-							m.Monitor(event.Name)
+							m.monitor(event.Name)
 						}
 					}
 				} else if event.Op&fsnotify.Remove == fsnotify.Remove {

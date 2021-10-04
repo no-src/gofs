@@ -1,7 +1,9 @@
 package monitor
 
+import "github.com/no-src/gofs/core"
+
 type Monitor interface {
-	Monitor(dir string) error
+	Monitor(vfs core.VFS) error
 	Start() error
 	Close() error
 }

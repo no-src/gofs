@@ -54,7 +54,7 @@ func main() {
 	// if enable daemon, start a worker to process the following
 
 	// create syncer
-	syncer, err := sync.NewDiskSync(SrcPath, TargetPath, BufSize)
+	syncer, err := sync.NewSync(SourceVFS, TargetVFS, BufSize)
 	if err != nil {
 		log.Error(err, "create DiskSync error")
 		return
@@ -86,7 +86,7 @@ func main() {
 	go func() {
 		if FileServer {
 			log.Log("file server [%s] starting...", FileServerAddr)
-			err := server.StartFileServer(SrcPath, TargetPath, FileServerAddr)
+			err := server.StartFileServer(SourceVFS, TargetVFS, FileServerAddr)
 			if err != nil {
 				log.Error(err, "start file server [%s] error", FileServerAddr)
 			}
@@ -94,7 +94,7 @@ func main() {
 	}()
 
 	// add to monitor
-	err = monitor.Monitor(SrcPath)
+	err = monitor.Monitor(SourceVFS)
 	if err != nil {
 		log.Error(err, "monitor error, program will be exit")
 		return
