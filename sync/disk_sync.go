@@ -173,7 +173,8 @@ func (s *diskSync) Rename(path string) error {
 }
 
 func (s *diskSync) Chmod(path string) error {
-	panic("Chmod not implemented")
+	log.Debug("Chmod not implemented [%s]", path)
+	return nil
 }
 
 // buildTargetAbsFile build target abs file path
