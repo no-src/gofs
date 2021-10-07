@@ -72,7 +72,13 @@ func (m *fsNotifyMonitor) monitor(dir string) (err error) {
 }
 
 func (m *fsNotifyMonitor) Start() error {
-	var last *fsnotify.Event
+	// action trigger
+	// cp => Create -> Write
+	// mv => Rename -> Create +->Write
+	// rm => Remove
+	// echo => Write
+	// touch => Create -> Chmod
+	// chmod => Chmod
 	for {
 		select {
 		case event, ok := <-m.watcher.Events:
@@ -80,14 +86,8 @@ func (m *fsNotifyMonitor) Start() error {
 				if !ok {
 					return errors.New("get watch event failed")
 				}
-				// in windows,will trigger twice, the same as last event,ignore it
-				if last != nil && last.Name == event.Name && last.Op == event.Op {
-					last = nil
-					break
-				} else {
-					log.Debug("notify received [%s] -> [%s]", event.Op.String(), event.Name)
-					last = &event
-				}
+				// on Windows, may trigger twice or more
+				log.Debug("notify received [%s] -> [%s]", event.Op.String(), event.Name)
 				if event.Op&fsnotify.Write == fsnotify.Write {
 					if m.retry != nil {
 						m.retry.Do(func() error {
@@ -103,6 +103,15 @@ func (m *fsNotifyMonitor) Start() error {
 						isDir, err := m.syncer.IsDir(event.Name)
 						if err == nil && isDir {
 							m.monitor(event.Name)
+						}
+						if err == nil && !isDir {
+							// rename a file, will not trigger Write event
+							// send a Write event manually
+							m.watcher.Events <- fsnotify.Event{
+								Name: event.Name,
+								Op:   fsnotify.Write,
+							}
+							log.Debug("send a Write event after Create event [%s]", event.Name)
 						}
 					}
 				} else if event.Op&fsnotify.Remove == fsnotify.Remove {
