@@ -18,6 +18,7 @@ var (
 	LogFlushInterval   time.Duration
 	RetryCount         int
 	RetryWait          time.Duration
+	RetryAsync         bool
 	BufSize            int
 	PrintVersion       bool
 	SyncOnce           bool
@@ -42,6 +43,7 @@ func parseFlags() {
 	flag.DurationVar(&LogFlushInterval, "log_flush_interval", time.Second*3, "set log flush interval duration, you need to enable log_flush first")
 	flag.IntVar(&RetryCount, "retry_count", 15, "if execute failed, then retry to work retry_count times")
 	flag.DurationVar(&RetryWait, "retry_wait", time.Second*5, "if retry to work, wait retry_wait time then do")
+	flag.BoolVar(&RetryAsync, "retry_async", false, "execute retry asynchronously")
 	flag.IntVar(&BufSize, "buf_size", 1024*1024, "read and write buffer byte size")
 	flag.BoolVar(&SyncOnce, "sync_once", false, "sync src directory to target directory once")
 	flag.BoolVar(&Daemon, "daemon", false, "enable daemon to create and monitor a subprocess to work, you can use [go build -ldflags=\"-H windowsgui\"] to build on Windows")

@@ -72,7 +72,7 @@ func main() {
 	}
 
 	// create retry
-	retry := retry.NewRetry(RetryCount, RetryWait)
+	retry := retry.NewRetry(RetryCount, RetryWait, RetryAsync)
 
 	// create monitor
 	monitor, err := monitor.NewFsNotifyMonitor(syncer, retry)
