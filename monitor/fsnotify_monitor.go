@@ -107,11 +107,13 @@ func (m *fsNotifyMonitor) Start() error {
 						if err == nil && !isDir {
 							// rename a file, will not trigger Write event
 							// send a Write event manually
-							m.watcher.Events <- fsnotify.Event{
-								Name: event.Name,
-								Op:   fsnotify.Write,
-							}
-							log.Debug("send a Write event after Create event [%s]", event.Name)
+							go func() {
+								log.Debug("prepare to send a Write event after Create event [%s]", event.Name)
+								m.watcher.Events <- fsnotify.Event{
+									Name: event.Name,
+									Op:   fsnotify.Write,
+								}
+							}()
 						}
 					}
 				} else if event.Op&fsnotify.Remove == fsnotify.Remove {
