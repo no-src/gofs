@@ -3,6 +3,7 @@ package sync
 import (
 	"bufio"
 	"errors"
+	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
 	"io"
 	"io/fs"
@@ -117,16 +118,31 @@ func (s *diskSync) Write(path string) error {
 			return err
 		}
 
-		targetFile, err := os.Create(target)
+		targetFile, err := os.OpenFile(target, os.O_RDWR|os.O_CREATE, 0666)
 		if err != nil {
 			log.Error(err, "Write:create the target file failed")
 			return err
 		}
 		defer targetFile.Close()
+		targetStat, err := targetFile.Stat()
+		if err != nil {
+			log.Error(err, "Write:get the target file stat failed")
+			return err
+		}
 
-		block := make([]byte, s.bufSize)
 		reader := bufio.NewReader(srcFile)
 		writer := bufio.NewWriter(targetFile)
+
+		// if src and target is the same file, ignore the following steps and return directly
+		if srcStat.Size() > 0 && srcStat.Size() == targetStat.Size() {
+			isSame, err := s.same(srcFile, targetFile)
+			if err == nil && isSame {
+				log.Debug("Write:ignored, the file is unmodified")
+				return nil
+			}
+		}
+
+		block := make([]byte, s.bufSize)
 		var wc int64 = 0
 		for {
 			n, err := reader.Read(block)
@@ -156,6 +172,26 @@ func (s *diskSync) Write(path string) error {
 		}
 	}
 	return nil
+}
+
+func (s *diskSync) same(srcFile *os.File, targetFile *os.File) (bool, error) {
+	srcHash, err := util.MD5FromFile(srcFile, s.bufSize)
+	if err != nil {
+		log.Error(err, "calc src file md5 error [%s]", srcFile.Name())
+		return false, err
+	}
+
+	targetHash, err := util.MD5FromFile(targetFile, s.bufSize)
+	if err != nil {
+		log.Error(err, "calc target file md5 error [%s]", targetFile.Name())
+		return false, err
+	}
+
+	if len(srcHash) > 0 && srcHash == targetHash {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 // Remove removes the source file or dir in target
