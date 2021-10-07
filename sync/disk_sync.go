@@ -111,6 +111,11 @@ func (s *diskSync) Write(path string) error {
 			return err
 		}
 		defer srcFile.Close()
+		srcStat, err := srcFile.Stat()
+		if err != nil {
+			log.Error(err, "Write:get the src file stat failed")
+			return err
+		}
 
 		targetFile, err := os.Create(target)
 		if err != nil {
@@ -122,6 +127,7 @@ func (s *diskSync) Write(path string) error {
 		block := make([]byte, s.bufSize)
 		reader := bufio.NewReader(srcFile)
 		writer := bufio.NewWriter(targetFile)
+		var wc int64 = 0
 		for {
 			n, err := reader.Read(block)
 			if err == io.EOF {
@@ -137,7 +143,9 @@ func (s *diskSync) Write(path string) error {
 				log.Error(err, "Write:write to the target file bytes failed [%s]", target)
 				return err
 			}
-			log.Debug("Write:write to the target file [%d] bytes [%s]", nn, target)
+			wc += int64(nn)
+			progress := float64(wc) / float64(srcStat.Size()) * 100
+			log.Debug("Write:write to the target file [%d] bytes, current progress [%d/%d][%.2f%%] [%s]", nn, wc, srcStat.Size(), progress, target)
 		}
 		err = writer.Flush()
 		if err == nil {
