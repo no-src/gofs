@@ -85,7 +85,6 @@ func main() {
 	// start a file server
 	go func() {
 		if FileServer {
-			log.Log("file server [%s] starting...", FileServerAddr)
 			err := server.StartFileServer(SourceVFS, TargetVFS, FileServerAddr)
 			if err != nil {
 				log.Error(err, "start file server [%s] error", FileServerAddr)

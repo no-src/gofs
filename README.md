@@ -12,6 +12,12 @@ You can install a no windows gui program using the following command on Windows.
 go install -ldflags="-H windowsgui" github.com/no-src/gofs/...@latest
 ```
 
+If you needn't file server, you can install the program without the file server to reduce the file size of the program.
+
+```bash
+go install -tags "no_server" github.com/no-src/gofs/...@latest
+```
+
 ## Quick Start
 
 For example, sync src directory to target directory.
