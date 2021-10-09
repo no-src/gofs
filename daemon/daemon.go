@@ -45,7 +45,13 @@ func startSubprocess() (*os.Process, error) {
 	args := os.Args
 	// use "-sub" to tag sub process
 	args = append(args, "-"+SubprocessTag)
-	p, err := os.StartProcess(os.Args[0], args, attr)
+	exeFile, err := os.Executable()
+	if err == nil {
+		args[0] = exeFile
+	} else {
+		log.Error(err, "get current executable error")
+	}
+	p, err := os.StartProcess(args[0], args, attr)
 	if err == nil && p != nil {
 		log.Info("[%d] start subprocess success", p.Pid)
 	} else {
