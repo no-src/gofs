@@ -22,7 +22,9 @@ func Daemon(recordPid bool, daemonDelay time.Duration, monitorDelay time.Duratio
 		p, err := startSubprocess()
 		if err == nil && p != nil {
 			if recordPid {
-				writePidFile(os.Getppid(), os.Getpid(), p.Pid)
+				if err = writePidFile(os.Getppid(), os.Getpid(), p.Pid); err != nil {
+					log.Error(err, "write pid info to file error")
+				}
 			}
 			monitor(p.Pid, monitorDelay)
 		}
@@ -58,11 +60,13 @@ func monitor(pid int, monitorDelay time.Duration) {
 		<-time.After(monitorDelay)
 		p, err := os.FindProcess(pid)
 		if err != nil {
+			log.Error(err, "[%d] subprocess status error", pid)
 			if p != nil {
 				log.Info("[%d] try to kill the subprocess", pid)
-				p.Kill()
+				if err = p.Kill(); err != nil {
+					log.Error(err, "[%d] try to kill the subprocess error", pid)
+				}
 			}
-			log.Error(err, "[%d] subprocess status error", pid)
 			return
 		}
 		if p == nil {
@@ -84,19 +88,20 @@ func monitor(pid int, monitorDelay time.Duration) {
 // row 1: record parent process pid (bash,cmd,explorer etc.)
 // row 2: record current process pid (daemon)
 // row 3: record subprocess pid (worker)
-func writePidFile(ppid, pid, subPid int) {
+func writePidFile(ppid, pid, subPid int) error {
 	fName := "pid"
 	f, err := os.OpenFile(fName, os.O_CREATE|os.O_WRONLY, 0775)
-	if err != nil {
-		log.Error(err, "open pid file error [%s]", fName)
-	} else {
+	if err == nil {
 		writer := bufio.NewWriter(f)
-		writer.WriteString(fmt.Sprintf("%d\n", ppid))
-		writer.WriteString(fmt.Sprintf("%d\n", pid))
-		writer.WriteString(fmt.Sprintf("%d\n", subPid))
-		writer.Flush()
-		f.Close()
+		if _, err = writer.WriteString(fmt.Sprintf("%d\n%d\n%d\n", ppid, pid, subPid)); err != nil {
+			return err
+		}
+		if err = writer.Flush(); err != nil {
+			return err
+		}
+		err = f.Close()
 	}
+	return err
 }
 
 func isWindows() bool {

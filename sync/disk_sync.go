@@ -79,7 +79,11 @@ func (s *diskSync) Create(path string) error {
 			return err
 		}
 		f, err := os.Create(target)
-		defer f.Close()
+		defer func() {
+			if err = f.Close(); err != nil {
+				log.Error(err, "Create:close file error")
+			}
+		}()
 		if err != nil {
 			log.Error(err, "Create:create file error")
 			return err
@@ -111,7 +115,11 @@ func (s *diskSync) Write(path string) error {
 			log.Error(err, "Write:open the src file failed")
 			return err
 		}
-		defer srcFile.Close()
+		defer func() {
+			if err = srcFile.Close(); err != nil {
+				log.Error(err, "Write:close the src file error")
+			}
+		}()
 		srcStat, err := srcFile.Stat()
 		if err != nil {
 			log.Error(err, "Write:get the src file stat failed")
@@ -123,7 +131,11 @@ func (s *diskSync) Write(path string) error {
 			log.Error(err, "Write:create the target file failed")
 			return err
 		}
-		defer targetFile.Close()
+		defer func() {
+			if err = targetFile.Close(); err != nil {
+				log.Error(err, "Write:close the target file error")
+			}
+		}()
 		targetStat, err := targetFile.Stat()
 		if err != nil {
 			log.Error(err, "Write:get the target file stat failed")
@@ -226,7 +238,7 @@ func (s *diskSync) Chmod(path string) error {
 func (s *diskSync) buildTargetAbsFile(srcFileAbs string) (string, error) {
 	srcFileRel, err := filepath.Rel(s.srcAbsPath, srcFileAbs)
 	if err != nil {
-		log.Error(err, "parse rel path error, basepath=%s targpath=%s", s.srcAbsPath, srcFileRel)
+		log.Error(err, "parse rel path error, basePath=%s targetPath=%s", s.srcAbsPath, srcFileRel)
 		return "", err
 	}
 	target := filepath.Join(s.targetAbsPath, srcFileRel)

@@ -80,7 +80,11 @@ func main() {
 		log.Error(err, "create fsNotifyMonitor error")
 		return
 	}
-	defer monitor.Close()
+	defer func() {
+		if err = monitor.Close(); err != nil {
+			log.Error(err, "close monitor error")
+		}
+	}()
 
 	// start a file server
 	go func() {

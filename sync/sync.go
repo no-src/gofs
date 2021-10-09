@@ -1,7 +1,6 @@
 package sync
 
 import (
-	"errors"
 	"fmt"
 	"github.com/no-src/gofs/core"
 )
@@ -20,5 +19,5 @@ func NewSync(src core.VFS, target core.VFS, bufSize int) (Sync, error) {
 	if src.IsDisk() && target.IsDisk() {
 		return NewDiskSync(src.Path(), target.Path(), bufSize)
 	}
-	return nil, errors.New(fmt.Sprintf("file system unsupported ! src=>%s target=>%s", src.Type().String(), target.Type().String()))
+	return nil, fmt.Errorf("file system unsupported ! src=>%s target=>%s", src.Type().String(), target.Type().String())
 }

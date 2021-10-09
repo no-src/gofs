@@ -35,7 +35,7 @@ func NewFsNotifyMonitor(syncer sync.Sync, retry retry.Retry) (m Monitor, err err
 }
 
 func (m *fsNotifyMonitor) Monitor(vfs core.VFS) (err error) {
-	if vfs.IsDisk() == false {
+	if !vfs.IsDisk() {
 		return errors.New("not local file system")
 	}
 	dir := vfs.Path()
@@ -94,7 +94,9 @@ func (m *fsNotifyMonitor) Start() error {
 							return m.syncer.Write(event.Name)
 						}, event.String())
 					} else {
-						m.syncer.Write(event.Name)
+						if err := m.syncer.Write(event.Name); err != nil {
+							log.Error(err, "Write event execute error => [%s]", event.Name)
+						}
 					}
 				} else if event.Op&fsnotify.Create == fsnotify.Create {
 					err := m.syncer.Create(event.Name)
@@ -102,7 +104,9 @@ func (m *fsNotifyMonitor) Start() error {
 						// if create a new dir, then monitor it
 						isDir, err := m.syncer.IsDir(event.Name)
 						if err == nil && isDir {
-							m.monitor(event.Name)
+							if err = m.monitor(event.Name); err != nil {
+								log.Error(err, "Create event execute monitor error => [%s]", event.Name)
+							}
 						}
 						if err == nil && !isDir {
 							// rename a file, will not trigger Write event
@@ -117,11 +121,17 @@ func (m *fsNotifyMonitor) Start() error {
 						}
 					}
 				} else if event.Op&fsnotify.Remove == fsnotify.Remove {
-					m.syncer.Remove(event.Name)
+					if err := m.syncer.Remove(event.Name); err != nil {
+						log.Error(err, "Remove event execute error => [%s]", event.Name)
+					}
 				} else if event.Op&fsnotify.Rename == fsnotify.Rename {
-					m.syncer.Rename(event.Name)
+					if err := m.syncer.Rename(event.Name); err != nil {
+						log.Error(err, "Rename event execute error => [%s]", event.Name)
+					}
 				} else if event.Op&fsnotify.Chmod == fsnotify.Chmod {
-					m.syncer.Chmod(event.Name)
+					if err := m.syncer.Chmod(event.Name); err != nil {
+						log.Error(err, "Chmod event execute error => [%s]", event.Name)
+					}
 				}
 				break
 			}
