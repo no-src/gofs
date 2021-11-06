@@ -75,9 +75,9 @@ func main() {
 	retry := retry.NewRetry(RetryCount, RetryWait, RetryAsync)
 
 	// create monitor
-	monitor, err := monitor.NewFsNotifyMonitor(syncer, retry)
+	monitor, err := monitor.NewMonitor(syncer, retry)
 	if err != nil {
-		log.Error(err, "create fsNotifyMonitor error")
+		log.Error(err, "create monitor error")
 		return
 	}
 	defer func() {
@@ -96,16 +96,10 @@ func main() {
 		}
 	}()
 
-	// add to monitor
-	err = monitor.Monitor(SourceVFS)
-	if err != nil {
-		log.Error(err, "monitor error, program will be exit")
-		return
-	}
-
 	// start monitor
 	log.Log("file monitor is starting...")
 	defer log.Log("gofs exited!")
+	defer monitor.Close()
 	err = monitor.Start()
 	if err != nil {
 		log.Error(err, "start to monitor failed")

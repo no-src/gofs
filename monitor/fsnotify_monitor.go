@@ -34,14 +34,6 @@ func NewFsNotifyMonitor(syncer sync.Sync, retry retry.Retry) (m Monitor, err err
 	return m, nil
 }
 
-func (m *fsNotifyMonitor) Monitor(vfs core.VFS) (err error) {
-	if !vfs.IsDisk() {
-		return errors.New("not local file system")
-	}
-	dir := vfs.Path()
-	return m.monitor(dir)
-}
-
 func (m *fsNotifyMonitor) monitor(dir string) (err error) {
 	dir, err = filepath.Abs(dir)
 	if err != nil {
@@ -72,6 +64,14 @@ func (m *fsNotifyMonitor) monitor(dir string) (err error) {
 }
 
 func (m *fsNotifyMonitor) Start() error {
+	src := m.syncer.Source()
+	if !src.IsDisk() && !src.Is(core.RemoteDisk) {
+		return errors.New("not local file system")
+	}
+	if err := m.monitor(src.Path()); err != nil {
+		return err
+	}
+
 	// action trigger
 	// cp => Create -> Write
 	// mv => Rename -> Create +->Write

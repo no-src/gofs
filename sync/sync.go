@@ -13,11 +13,15 @@ type Sync interface {
 	Chmod(path string) error
 	IsDir(path string) (bool, error)
 	SyncOnce() error
+	Source() core.VFS
+	Target() core.VFS
 }
 
 func NewSync(src core.VFS, target core.VFS, bufSize int) (Sync, error) {
 	if src.IsDisk() && target.IsDisk() {
-		return NewDiskSync(src.Path(), target.Path(), bufSize)
+		return NewDiskSync(src, target, bufSize)
+	} else if src.Is(core.RemoteDisk) {
+		return NewRemoteSync(src, target, bufSize)
 	}
 	return nil, fmt.Errorf("file system unsupported ! src=>%s target=>%s", src.Type().String(), target.Type().String())
 }

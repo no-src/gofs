@@ -1,23 +1,28 @@
-//go:build !no_server
-// +build !no_server
-
 package server
 
 import (
-	"github.com/no-src/gofs/core"
 	"github.com/no-src/log"
-	"net/http"
+	"net"
 )
 
-// StartFileServer start a file server
-func StartFileServer(src core.VFS, target core.VFS, addr string) error {
-	if src.IsDisk() {
-		http.Handle("/", http.FileServer(http.Dir(src.Path())))
-		http.Handle("/src/", http.StripPrefix("/src/", http.FileServer(http.Dir(src.Path()))))
+var serverAddr *net.TCPAddr
+
+func initServerAddr(addr string) {
+	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
+	if err == nil {
+		serverAddr = tcpAddr
+	} else {
+		log.Error(err, "invalid server addr => %s", addr)
 	}
-	if target.IsDisk() {
-		http.Handle("/target/", http.StripPrefix("/target/", http.FileServer(http.Dir(target.Path()))))
+}
+
+func ServerAddr() *net.TCPAddr {
+	return serverAddr
+}
+
+func ServerPort() int {
+	if serverAddr != nil {
+		return serverAddr.Port
 	}
-	log.Log("file server [%s] starting...", addr)
-	return http.ListenAndServe(addr, nil)
+	return 0
 }

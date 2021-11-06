@@ -23,7 +23,7 @@ func newVFSValue(val VFS, p *VFS) *vfsValue {
 }
 
 func (d *vfsValue) Set(s string) error {
-	v := NewDiskVFS(s)
+	v := NewVFS(s)
 	*d = vfsValue(v)
 	return nil
 }

@@ -8,11 +8,14 @@ import (
 	"github.com/no-src/log"
 	"io"
 	"io/fs"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
-type diskSync struct {
+type remoteClientSync struct {
 	src           core.VFS
 	target        core.VFS
 	srcAbsPath    string
@@ -20,22 +23,15 @@ type diskSync struct {
 	bufSize       int
 }
 
-// NewDiskSync create a diskSync instance
-// src is source path to read
-// target is target path to write
-// bufSize is read and write buffer byte size
-func NewDiskSync(src, target core.VFS, bufSize int) (s Sync, err error) {
+func NewRemoteClientSync(src, target core.VFS, bufSize int) (Sync, error) {
 	if len(src.Path()) == 0 {
-		err = errors.New("src is not found")
-		return nil, err
+		return nil, errors.New("src is not found")
 	}
 	if len(target.Path()) == 0 {
-		err = errors.New("target is not found")
-		return nil, err
+		return nil, errors.New("target is not found")
 	}
 	if bufSize <= 0 {
-		err = errors.New("bufSize must greater than zero")
-		return nil, err
+		return nil, errors.New("bufSize must greater than zero")
 	}
 
 	srcAbsPath, err := filepath.Abs(src.Path())
@@ -48,24 +44,22 @@ func NewDiskSync(src, target core.VFS, bufSize int) (s Sync, err error) {
 		return nil, err
 	}
 
-	s = &diskSync{
+	rs := &remoteClientSync{
 		srcAbsPath:    srcAbsPath,
 		targetAbsPath: targetAbsPath,
 		bufSize:       bufSize,
 		src:           src,
 		target:        target,
 	}
-	return s, nil
+	return rs, nil
 }
 
-// Create creates the source file or dir to the target
-func (s *diskSync) Create(path string) error {
-	target, err := s.buildTargetAbsFile(path)
+func (rs *remoteClientSync) Create(path string) error {
+	target, err := rs.buildTargetAbsFile(path)
 	if err != nil {
-		log.Error(err, "Create:build to target abs file error [%s]", path)
 		return err
 	}
-	isDir, err := s.IsDir(path)
+	isDir, err := rs.IsDir(path)
 	if err != nil {
 		log.Error(err, "Create:check if the path is dir error")
 		return err
@@ -98,15 +92,14 @@ func (s *diskSync) Create(path string) error {
 	return nil
 }
 
-// Write sync the src file to the target
-func (s *diskSync) Write(path string) error {
-	target, err := s.buildTargetAbsFile(path)
+func (rs *remoteClientSync) Write(path string) error {
+	target, err := rs.buildTargetAbsFile(path)
 	if err != nil {
 		log.Error(err, "Write:build to target abs file error [%s]", path)
 		return err
 	}
 
-	isDir, err := s.IsDir(path)
+	isDir, err := rs.IsDir(path)
 	if err != nil {
 		log.Error(err, "Write:check if the path is dir error")
 		return err
@@ -115,21 +108,16 @@ func (s *diskSync) Write(path string) error {
 	if isDir {
 		// ignored
 	} else {
-		srcFile, err := os.Open(path)
+		resp, err := http.Get(path)
 		if err != nil {
-			log.Error(err, "Write:open the src file failed")
+			log.Error(err, "Write:download the src file failed")
 			return err
 		}
 		defer func() {
-			if err = srcFile.Close(); err != nil {
-				log.Error(err, "Write:close the src file error")
+			if err = resp.Body.Close(); err != nil {
+				log.Error(err, "Write:close the resp body error")
 			}
 		}()
-		srcStat, err := srcFile.Stat()
-		if err != nil {
-			log.Error(err, "Write:get the src file stat failed")
-			return err
-		}
 
 		targetFile, err := os.OpenFile(target, os.O_RDWR|os.O_CREATE, 0666)
 		if err != nil {
@@ -146,27 +134,32 @@ func (s *diskSync) Write(path string) error {
 			log.Error(err, "Write:get the target file stat failed")
 			return err
 		}
-
-		reader := bufio.NewReader(srcFile)
+		reader := bufio.NewReader(resp.Body)
 		writer := bufio.NewWriter(targetFile)
 
+		size, hash, err := rs.fileInfo(path)
+		if err != nil {
+			log.Error(err, "Write:get src file info error")
+			return err
+		}
+
 		// if src and target is the same file, ignore the following steps and return directly
-		if srcStat.Size() > 0 && srcStat.Size() == targetStat.Size() {
-			isSame, err := s.same(srcFile, targetFile)
+		if size > 0 && size == targetStat.Size() {
+			isSame, err := rs.same(hash, targetFile)
 			if err == nil && isSame {
 				log.Debug("Write:ignored, the file is unmodified")
 				return nil
 			}
 		}
 
-		block := make([]byte, s.bufSize)
+		block := make([]byte, rs.bufSize)
 		var wc int64 = 0
 		for {
 			n, err := reader.Read(block)
-			if err == io.EOF {
+			if err == io.EOF && n == 0 {
 				break
 			}
-			if err != nil {
+			if err != nil && err != io.EOF {
 				log.Error(err, "Write:read from the src file bytes failed [%s]", path)
 				return err
 			}
@@ -177,8 +170,8 @@ func (s *diskSync) Write(path string) error {
 				return err
 			}
 			wc += int64(nn)
-			progress := float64(wc) / float64(srcStat.Size()) * 100
-			log.Debug("Write:write to the target file [%d] bytes, current progress [%d/%d][%.2f%%] [%s]", nn, wc, srcStat.Size(), progress, target)
+			progress := float64(wc) / float64(size) * 100
+			log.Debug("Write:write to the target file [%d] bytes, current progress [%d/%d][%.2f%%] [%s]", nn, wc, size, progress, target)
 		}
 		err = writer.Flush()
 		if err == nil {
@@ -191,29 +184,8 @@ func (s *diskSync) Write(path string) error {
 	return nil
 }
 
-func (s *diskSync) same(srcFile *os.File, targetFile *os.File) (bool, error) {
-	srcHash, err := util.MD5FromFile(srcFile, s.bufSize)
-	if err != nil {
-		log.Error(err, "calc src file md5 error [%s]", srcFile.Name())
-		return false, err
-	}
-
-	targetHash, err := util.MD5FromFile(targetFile, s.bufSize)
-	if err != nil {
-		log.Error(err, "calc target file md5 error [%s]", targetFile.Name())
-		return false, err
-	}
-
-	if len(srcHash) > 0 && srcHash == targetHash {
-		return true, nil
-	}
-
-	return false, nil
-}
-
-// Remove removes the source file or dir in target
-func (s *diskSync) Remove(path string) error {
-	target, err := s.buildTargetAbsFile(path)
+func (rs *remoteClientSync) Remove(path string) error {
+	target, err := rs.buildTargetAbsFile(path)
 	if err != nil {
 		log.Error(err, "Remove:build to target abs file error [%s]", path)
 		return err
@@ -227,58 +199,78 @@ func (s *diskSync) Remove(path string) error {
 	return err
 }
 
-// Rename removes the source file or dir in target, the same as Remove
-func (s *diskSync) Rename(path string) error {
+func (rs *remoteClientSync) Rename(path string) error {
 	// delete old file, then trigger Create
-	return s.Remove(path)
+	return rs.Remove(path)
 }
 
-func (s *diskSync) Chmod(path string) error {
+func (rs *remoteClientSync) Chmod(path string) error {
 	log.Debug("Chmod not implemented [%s]", path)
 	return nil
 }
 
-// buildTargetAbsFile build target abs file path
-// srcFileAbs: src abs file path
-func (s *diskSync) buildTargetAbsFile(srcFileAbs string) (string, error) {
-	srcFileRel, err := filepath.Rel(s.srcAbsPath, srcFileAbs)
+func (rs *remoteClientSync) IsDir(path string) (bool, error) {
+	remoteUrl, err := url.Parse(path)
 	if err != nil {
-		log.Error(err, "parse rel path error, basePath=%s targetPath=%s", s.srcAbsPath, srcFileRel)
+		return false, err
+	}
+	return remoteUrl.Query().Get("dir") == "1", nil
+}
+
+func (rs *remoteClientSync) fileInfo(path string) (size int64, hash string, err error) {
+	remoteUrl, err := url.Parse(path)
+	if err != nil {
+		return
+	}
+	isDir := remoteUrl.Query().Get("dir") != "0"
+	if isDir {
+		return
+	}
+
+	size, err = strconv.ParseInt(remoteUrl.Query().Get("size"), 10, 64)
+	if err != nil {
+		return
+	}
+	hash = remoteUrl.Query().Get("hash")
+	return
+}
+
+func (rs *remoteClientSync) SyncOnce() error {
+	log.Debug("SyncOnce not implemented")
+	return nil
+}
+
+func (rs *remoteClientSync) buildTargetAbsFile(srcFileAbs string) (string, error) {
+	remoteUrl, err := url.Parse(srcFileAbs)
+	if err != nil {
+		log.Error(err, "parse url error, srcFileAbs=%s", srcFileAbs)
 		return "", err
 	}
-	target := filepath.Join(s.targetAbsPath, srcFileRel)
+	target := filepath.Join(rs.targetAbsPath, remoteUrl.Path)
 	return target, nil
 }
 
-func (s *diskSync) IsDir(path string) (bool, error) {
-	f, err := os.Stat(path)
+func (rs *remoteClientSync) same(srcHash string, targetFile *os.File) (bool, error) {
+	if len(srcHash) == 0 {
+		return false, nil
+	}
+	targetHash, err := util.MD5FromFile(targetFile, rs.bufSize)
 	if err != nil {
-		log.Error(err, "check path stat error")
+		log.Error(err, "calc target file md5 error [%s]", targetFile.Name())
 		return false, err
 	}
-	return f.IsDir(), nil
+
+	if len(srcHash) > 0 && srcHash == targetHash {
+		return true, nil
+	}
+
+	return false, nil
 }
 
-// SyncOnce auto sync src directory to target directory once.
-func (s *diskSync) SyncOnce() error {
-	return filepath.WalkDir(s.srcAbsPath, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if !d.IsDir() {
-			err = s.Create(path)
-			if err == nil {
-				err = s.Write(path)
-			}
-		}
-		return err
-	})
+func (rs *remoteClientSync) Source() core.VFS {
+	return rs.src
 }
 
-func (s *diskSync) Source() core.VFS {
-	return s.src
-}
-
-func (s *diskSync) Target() core.VFS {
-	return s.target
+func (rs *remoteClientSync) Target() core.VFS {
+	return rs.target
 }
