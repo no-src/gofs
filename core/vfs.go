@@ -76,7 +76,7 @@ func NewVFS(path string) VFS {
 	lowerPath := strings.ToLower(path)
 	var err error
 	if strings.HasPrefix(lowerPath, "rs://") {
-		// rs://127.0.0.1:9016?mode=server&path=/var/source
+		// rs://127.0.0.1:9016?mode=server&path=/var/source&fs_server=https://fs-server-domain.com
 		vfs.fsType = RemoteDisk
 		_, vfs.host, vfs.port, vfs.path, vfs.server, vfs.fsServer, err = parse(path)
 	}
