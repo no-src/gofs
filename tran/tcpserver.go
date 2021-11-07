@@ -56,7 +56,7 @@ func (srv *tcpServer) Accept(process func(client net.Conn, data []byte)) (err er
 				if err != nil {
 					clientConn.Close()
 					srv.removeClient(clientConn)
-					log.Error(err, "client[%s]conn closed ,current client connect count:%d", clientConn.RemoteAddr().String(), srv.ClientCount())
+					log.Error(err, "client[%s]conn closed, current client connect count:%d", clientConn.RemoteAddr().String(), srv.ClientCount())
 					clientConn = nil
 					return
 				} else {
@@ -77,14 +77,14 @@ func (srv *tcpServer) addClient(conn net.Conn) (clientCount int, err error) {
 	_, exist := srv.conns[addr]
 	srv.conns[addr] = conn
 	if exist {
-		log.Debug("client[%s]conn is already exist ,replace it now", conn.RemoteAddr().String())
+		log.Debug("client[%s]conn is already exist, replace it now", conn.RemoteAddr().String())
 	}
 	clientCount = srv.ClientCount()
-	log.Debug("client[%s]conn succeed ,current client connect count:%d", conn.RemoteAddr().String(), clientCount)
+	log.Debug("client[%s]conn succeed, current client connect count:%d", conn.RemoteAddr().String(), clientCount)
 	return clientCount, err
 }
 
-// removeClient just remove client ,not close conn
+// removeClient just remove client, not close conn
 func (srv *tcpServer) removeClient(conn net.Conn) (clientCount int, err error) {
 	if conn == nil {
 		return clientCount, errors.New("conn is nil")
@@ -92,7 +92,7 @@ func (srv *tcpServer) removeClient(conn net.Conn) (clientCount int, err error) {
 	addr := strings.ToLower(conn.RemoteAddr().String())
 	delete(srv.conns, addr)
 	clientCount = srv.ClientCount()
-	log.Debug("client[%s]conn removed ,current client connect count:%d", conn.RemoteAddr().String(), clientCount)
+	log.Debug("client[%s]conn removed, current client connect count:%d", conn.RemoteAddr().String(), clientCount)
 	return clientCount, err
 }
 

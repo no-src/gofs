@@ -17,7 +17,7 @@ func NewMonitor(syncer sync.Sync, retry retry.Retry) (Monitor, error) {
 	if src.IsDisk() || (src.Is(core.RemoteDisk) && src.Server()) {
 		return NewFsNotifyMonitor(syncer, retry)
 	} else if src.Is(core.RemoteDisk) && !src.Server() {
-		return NewRemoteMonitor(syncer, retry, src.Host(), src.Port())
+		return NewRemoteMonitor(syncer, retry, src.Host(), src.Port(), src.MessageQueue())
 	}
 	return nil, fmt.Errorf("file system unsupported ! src=>%s", src.Type().String())
 
