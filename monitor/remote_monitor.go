@@ -8,6 +8,7 @@ import (
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/tran"
 	"github.com/no-src/log"
+	"strings"
 )
 
 type remoteMonitor struct {
@@ -78,7 +79,8 @@ func (m *remoteMonitor) processingMessage() {
 				log.Error(err, "client unmarshal data error")
 			} else {
 				// append is dir, 1 or 0,-1 mean unknown
-				path := req.BaseUrl + req.Path + fmt.Sprintf("?dir=%d", req.IsDir)
+				// replace question marks with "%3F" to avoid parse the path is breaking when it contains some question marks
+				path := req.BaseUrl + strings.ReplaceAll(req.Path, "?", "%3F") + fmt.Sprintf("?dir=%d", req.IsDir)
 				// append file size, bytes
 				path += fmt.Sprintf("&size=%d", req.Size)
 				// append file hash
