@@ -131,7 +131,7 @@ func (s *diskSync) Write(path string) error {
 			return err
 		}
 
-		targetFile, err := os.OpenFile(target, os.O_RDWR|os.O_CREATE, 0666)
+		targetFile, err := os.OpenFile(target, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 		if err != nil {
 			log.Error(err, "Write:create the target file failed")
 			return err
@@ -145,6 +145,11 @@ func (s *diskSync) Write(path string) error {
 		if err != nil {
 			log.Error(err, "Write:get the target file stat failed")
 			return err
+		}
+
+		if srcStat.Size() == 0 {
+			log.Info("write to the target file success [size=%d] [%s] -> [%s]", srcStat.Size(), path, target)
+			return nil
 		}
 
 		reader := bufio.NewReader(srcFile)
@@ -182,7 +187,7 @@ func (s *diskSync) Write(path string) error {
 		}
 		err = writer.Flush()
 		if err == nil {
-			log.Info("write to the target file success [%s] -> [%s]", path, target)
+			log.Info("write to the target file success [size=%d] [%s] -> [%s]", srcStat.Size(), path, target)
 		} else {
 			log.Error(err, "Write:flush to the target file failed [%s]", target)
 			return err

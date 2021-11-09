@@ -119,7 +119,7 @@ func (rs *remoteClientSync) Write(path string) error {
 			}
 		}()
 
-		targetFile, err := os.OpenFile(target, os.O_RDWR|os.O_CREATE, 0666)
+		targetFile, err := os.OpenFile(target, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 		if err != nil {
 			log.Error(err, "Write:create the target file failed")
 			return err
@@ -134,6 +134,7 @@ func (rs *remoteClientSync) Write(path string) error {
 			log.Error(err, "Write:get the target file stat failed")
 			return err
 		}
+
 		reader := bufio.NewReader(resp.Body)
 		writer := bufio.NewWriter(targetFile)
 
@@ -141,6 +142,11 @@ func (rs *remoteClientSync) Write(path string) error {
 		if err != nil {
 			log.Error(err, "Write:get src file info error")
 			return err
+		}
+
+		if size == 0 {
+			log.Info("write to the target file success [size=%d] [%s] -> [%s]", size, path, target)
+			return nil
 		}
 
 		// if src and target is the same file, ignore the following steps and return directly
@@ -175,7 +181,7 @@ func (rs *remoteClientSync) Write(path string) error {
 		}
 		err = writer.Flush()
 		if err == nil {
-			log.Info("write to the target file success [%s] -> [%s]", path, target)
+			log.Info("write to the target file success [size=%d] [%s] -> [%s]", size, path, target)
 		} else {
 			log.Error(err, "Write:flush to the target file failed [%s]", target)
 			return err
