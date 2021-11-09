@@ -51,3 +51,11 @@ func (r *defaultRetry) retry(f func() error, desc string) {
 		}
 	}
 }
+
+func (r *defaultRetry) RetryCount() int {
+	return r.retryCount
+}
+
+func (r *defaultRetry) RetryWait() time.Duration {
+	return r.retryWait
+}
