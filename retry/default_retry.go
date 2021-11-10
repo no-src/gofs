@@ -26,6 +26,12 @@ func NewRetry(retryCount int, retryWait time.Duration, retryAsync bool) Retry {
 
 // Do execute once first, if failed retry retryCount times, per wait Duration Sleep
 func (r *defaultRetry) Do(f func() error, desc string) {
+	defer func() {
+		e := recover()
+		if e != nil {
+			log.Warn("retry do recover from => %s", desc)
+		}
+	}()
 	if f == nil || f() == nil || r.retryCount <= 0 {
 		return
 	}
