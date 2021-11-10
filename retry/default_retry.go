@@ -11,6 +11,10 @@ type defaultRetry struct {
 	retryAsync bool
 }
 
+// NewRetry get a default retry instance
+// retryCount retry execute count
+// retryWait execute once per retryWait interval
+// retryAsync async or sync to execute retry
 func NewRetry(retryCount int, retryWait time.Duration, retryAsync bool) Retry {
 	r := &defaultRetry{
 		retryCount: retryCount,
@@ -20,12 +24,12 @@ func NewRetry(retryCount int, retryWait time.Duration, retryAsync bool) Retry {
 	return r
 }
 
-// Do if execute failed, retry retryCount times, per wait Duration Sleep
+// Do execute once first, if failed retry retryCount times, per wait Duration Sleep
 func (r *defaultRetry) Do(f func() error, desc string) {
 	if f == nil || f() == nil || r.retryCount <= 0 {
 		return
 	}
-	log.Warn("execute failed, wait to retry [%s]", desc)
+	log.Warn("execute failed, wait to retry [%s] %d times, execute once per %s", desc, r.retryCount, r.retryWait)
 	if r.retryAsync {
 		go r.retry(f, desc)
 	} else {
