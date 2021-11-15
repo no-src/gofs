@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"github.com/no-src/gofs/core"
+	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
 	"io"
@@ -13,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -284,7 +286,7 @@ func (rs *remoteClientSync) buildTargetAbsFile(srcFileAbs string) (string, error
 		log.Error(err, "parse url error, srcFileAbs=%s", srcFileAbs)
 		return "", err
 	}
-	target := filepath.Join(rs.targetAbsPath, remoteUrl.Path)
+	target := filepath.Join(rs.targetAbsPath, strings.TrimPrefix(remoteUrl.Path, server.SrcRoutePrefix))
 	return target, nil
 }
 

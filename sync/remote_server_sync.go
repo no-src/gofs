@@ -12,7 +12,6 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -140,7 +139,7 @@ func (rs *remoteServerSync) send(action Action, path string) (err error) {
 		isDirValue = 0
 	}
 
-	path = strings.TrimPrefix(path, rs.srcAbsPath)
+	path, err = filepath.Rel(rs.srcAbsPath, path)
 	path = filepath.ToSlash(path)
 	req := Request{
 		Action:  action,
@@ -155,7 +154,7 @@ func (rs *remoteServerSync) send(action Action, path string) (err error) {
 	}
 
 	if len(rs.src.FsServer()) == 0 {
-		req.BaseUrl = fmt.Sprintf("http://%s:%d", rs.server.Host(), server.ServerPort())
+		req.BaseUrl = fmt.Sprintf("http://%s:%d%s", rs.server.Host(), server.ServerPort(), server.SrcRoutePrefix)
 	}
 
 	data, err := json.Marshal(req)
