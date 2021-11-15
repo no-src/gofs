@@ -94,6 +94,14 @@ func (s *diskSync) Create(path string) error {
 			return err
 		}
 	}
+	_, aTime, mTime, err := util.GetFileTime(path)
+	if err != nil {
+		return err
+	}
+	err = os.Chtimes(target, aTime, mTime)
+	if err != nil {
+		return err
+	}
 	log.Debug("create target file success [%s] -> [%s]", path, target)
 	return nil
 }
@@ -186,6 +194,10 @@ func (s *diskSync) Write(path string) error {
 			log.Debug("Write:write to the target file [%d] bytes, current progress [%d/%d][%.2f%%] [%s]", nn, wc, srcStat.Size(), progress, target)
 		}
 		err = writer.Flush()
+		_, aTime, mTime, err := util.GetFileTime(path)
+		if err == nil {
+			err = os.Chtimes(target, aTime, mTime)
+		}
 		if err == nil {
 			log.Info("write to the target file success [size=%d] [%s] -> [%s]", srcStat.Size(), path, target)
 		} else {
@@ -270,7 +282,9 @@ func (s *diskSync) SyncOnce() error {
 		if err != nil {
 			return err
 		}
-		if !d.IsDir() {
+		if d.IsDir() {
+			err = s.Create(path)
+		} else {
 			err = s.Create(path)
 			if err == nil {
 				err = s.Write(path)
