@@ -2,6 +2,7 @@ package core
 
 import (
 	"net/url"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -65,7 +66,7 @@ func (vfs *VFS) MessageQueue() int {
 func NewDiskVFS(path string) VFS {
 	vfs := VFS{
 		fsType: Disk,
-		path:   path,
+		path:   filepath.Clean(path),
 	}
 	return vfs
 }
@@ -103,7 +104,7 @@ func parse(path string) (scheme string, host string, port int, localPath string,
 	if err != nil {
 		return
 	}
-	localPath = parseUrl.Query().Get("path")
+	localPath = filepath.Clean(parseUrl.Query().Get("path"))
 	mode := parseUrl.Query().Get("mode")
 	if strings.ToLower(mode) == "server" {
 		isServer = true
