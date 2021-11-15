@@ -84,6 +84,12 @@ func (m *remoteMonitor) processingMessage() {
 			path += fmt.Sprintf("&size=%d", req.Size)
 			// append file hash
 			path += fmt.Sprintf("&hash=%s", req.Hash)
+			// append file ctime
+			path += fmt.Sprintf("&ctime=%d", req.CTime)
+			// append file atime
+			path += fmt.Sprintf("&atime=%d", req.ATime)
+			// append file mtime
+			path += fmt.Sprintf("&mtime=%d", req.MTime)
 
 			switch req.Action {
 			case sync.CreateAction:

@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 type remoteServerSync struct {
@@ -91,23 +92,21 @@ func (rs *remoteServerSync) Chmod(path string) error {
 	return rs.send(ChmodAction, path)
 }
 
-func (rs *remoteServerSync) send(action Action, path string) error {
-	isDirValue := -1
+func (rs *remoteServerSync) send(action Action, path string) (err error) {
+	isDir := false
 	if action != RemoveAction && action != RenameAction {
-		isDir, err := rs.IsDir(path)
+		isDir, err = rs.IsDir(path)
 		if err != nil {
 			return err
-		}
-		if isDir {
-			isDirValue = 1
-		} else {
-			isDirValue = 0
 		}
 	}
 
 	var size int64
 	hash := ""
-	if isDirValue == 0 && action == WriteAction {
+	cTime := time.Now()
+	aTime := time.Now()
+	mTime := time.Now()
+	if !isDir && action == WriteAction {
 		file, err := os.Open(path)
 		if err != nil {
 			return err
@@ -125,6 +124,22 @@ func (rs *remoteServerSync) send(action Action, path string) error {
 			}
 		}
 	}
+
+	if action == WriteAction || action == CreateAction {
+		var timeErr error
+		cTime, aTime, mTime, timeErr = util.GetFileTime(path)
+		if timeErr != nil {
+			return timeErr
+		}
+	}
+
+	isDirValue := -1
+	if isDir {
+		isDirValue = 1
+	} else {
+		isDirValue = 0
+	}
+
 	path = strings.TrimPrefix(path, rs.srcAbsPath)
 	path = filepath.ToSlash(path)
 	req := Request{
@@ -134,8 +149,11 @@ func (rs *remoteServerSync) send(action Action, path string) error {
 		IsDir:   isDirValue,
 		Size:    size,
 		Hash:    hash,
+		CTime:   cTime.Unix(),
+		ATime:   aTime.Unix(),
+		MTime:   mTime.Unix(),
 	}
-	
+
 	if len(rs.src.FsServer()) == 0 {
 		req.BaseUrl = fmt.Sprintf("http://%s:%d", rs.server.Host(), server.ServerPort())
 	}

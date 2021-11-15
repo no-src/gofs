@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 )
 
 type remoteClientSync struct {
@@ -59,6 +60,7 @@ func (rs *remoteClientSync) Create(path string) error {
 	if err != nil {
 		return err
 	}
+
 	isDir, err := rs.IsDir(path)
 	if err != nil {
 		log.Error(err, "Create:check if the path is dir error")
@@ -87,6 +89,14 @@ func (rs *remoteClientSync) Create(path string) error {
 			log.Error(err, "Create:create file error")
 			return err
 		}
+	}
+	_, _, _, aTime, mTime, err := rs.fileInfo(path)
+	if err != nil {
+		return err
+	}
+	err = os.Chtimes(target, aTime, mTime)
+	if err != nil {
+		return err
 	}
 	log.Debug("create target file success [%s] -> [%s]", path, target)
 	return nil
@@ -138,7 +148,7 @@ func (rs *remoteClientSync) Write(path string) error {
 		reader := bufio.NewReader(resp.Body)
 		writer := bufio.NewWriter(targetFile)
 
-		size, hash, err := rs.fileInfo(path)
+		size, hash, _, aTime, mTime, err := rs.fileInfo(path)
 		if err != nil {
 			log.Error(err, "Write:get src file info error")
 			return err
@@ -180,6 +190,9 @@ func (rs *remoteClientSync) Write(path string) error {
 			log.Debug("Write:write to the target file [%d] bytes, current progress [%d/%d][%.2f%%] [%s]", nn, wc, size, progress, target)
 		}
 		err = writer.Flush()
+		if err == nil {
+			err = os.Chtimes(target, aTime, mTime)
+		}
 		if err == nil {
 			log.Info("write to the target file success [size=%d] [%s] -> [%s]", size, path, target)
 		} else {
@@ -223,7 +236,7 @@ func (rs *remoteClientSync) IsDir(path string) (bool, error) {
 	return remoteUrl.Query().Get("dir") == "1", nil
 }
 
-func (rs *remoteClientSync) fileInfo(path string) (size int64, hash string, err error) {
+func (rs *remoteClientSync) fileInfo(path string) (size int64, hash string, cTime, aTime, mTime time.Time, err error) {
 	remoteUrl, err := url.Parse(path)
 	if err != nil {
 		return
@@ -238,6 +251,25 @@ func (rs *remoteClientSync) fileInfo(path string) (size int64, hash string, err 
 		return
 	}
 	hash = remoteUrl.Query().Get("hash")
+
+	cTime = time.Now()
+	aTime = time.Now()
+	mTime = time.Now()
+	cTimeStr := remoteUrl.Query().Get("ctime")
+	aTimeStr := remoteUrl.Query().Get("atime")
+	mTimeStr := remoteUrl.Query().Get("mtime")
+	cTimeL, timeErr := strconv.ParseInt(cTimeStr, 10, 64)
+	if timeErr == nil {
+		cTime = time.Unix(cTimeL, 0)
+	}
+	aTimeL, timeErr := strconv.ParseInt(aTimeStr, 10, 64)
+	if timeErr == nil {
+		aTime = time.Unix(aTimeL, 0)
+	}
+	mTimeL, timeErr := strconv.ParseInt(mTimeStr, 10, 64)
+	if timeErr == nil {
+		mTime = time.Unix(mTimeL, 0)
+	}
 	return
 }
 
