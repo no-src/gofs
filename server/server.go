@@ -7,6 +7,11 @@ import (
 
 var serverAddr *net.TCPAddr
 
+const (
+	SrcRoutePrefix    = "/src/"
+	TargetRoutePrefix = "/target/"
+)
+
 func initServerAddr(addr string) {
 	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err == nil {

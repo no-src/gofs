@@ -12,11 +12,10 @@ import (
 // StartFileServer start a file server
 func StartFileServer(src core.VFS, target core.VFS, addr string) error {
 	if src.IsDisk() || src.Is(core.RemoteDisk) {
-		http.Handle("/", http.FileServer(http.Dir(src.Path())))
-		http.Handle("/src/", http.StripPrefix("/src/", http.FileServer(http.Dir(src.Path()))))
+		http.Handle(SrcRoutePrefix, http.StripPrefix(SrcRoutePrefix, http.FileServer(http.Dir(src.Path()))))
 	}
 	if target.IsDisk() {
-		http.Handle("/target/", http.StripPrefix("/target/", http.FileServer(http.Dir(target.Path()))))
+		http.Handle(TargetRoutePrefix, http.StripPrefix(TargetRoutePrefix, http.FileServer(http.Dir(target.Path()))))
 	}
 	log.Log("file server [%s] starting...", addr)
 	initServerAddr(addr)
