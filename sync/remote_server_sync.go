@@ -139,11 +139,11 @@ func (rs *remoteServerSync) send(action Action, path string) (err error) {
 		}
 	}
 
-	isDirValue := -1
+	isDirValue := contract.FsUnknown
 	if isDir {
-		isDirValue = 1
+		isDirValue = contract.FsIsDir
 	} else {
-		isDirValue = 0
+		isDirValue = contract.FsNotDir
 	}
 
 	path, err = filepath.Rel(rs.srcAbsPath, path)

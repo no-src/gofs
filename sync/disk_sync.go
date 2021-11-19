@@ -78,7 +78,7 @@ func (s *diskSync) Create(path string) error {
 		}
 	} else {
 		dir := filepath.Dir(target)
-		err = os.MkdirAll(dir, fs.ModePerm)
+		err = os.MkdirAll(dir, os.ModePerm)
 		if err != nil {
 			log.Error(err, "Create:create dir error")
 			return err

@@ -10,6 +10,7 @@ import (
 	"github.com/no-src/gofs/tran"
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
+	"net/url"
 	"strings"
 )
 
@@ -125,19 +126,16 @@ func (m *remoteMonitor) processingMessage() {
 		} else if msg.ApiType != contract.SyncMessageApi {
 			log.Debug("received other message, ignore it => %s", string(message.data))
 		} else {
-			// append is dir, 1 or 0,-1 mean unknown
+			values := url.Values{}
+			values.Add(contract.FsDir, util.String(msg.IsDir))
+			values.Add(contract.FsSize, util.String(msg.Size))
+			values.Add(contract.FsHash, util.String(msg.Hash))
+			values.Add(contract.FsCtime, util.String(msg.CTime))
+			values.Add(contract.FsAtime, util.String(msg.ATime))
+			values.Add(contract.FsMtime, util.String(msg.MTime))
+
 			// replace question marks with "%3F" to avoid parse the path is breaking when it contains some question marks
-			path := msg.BaseUrl + strings.ReplaceAll(msg.Path, "?", "%3F") + fmt.Sprintf("?dir=%d", msg.IsDir)
-			// append file size, bytes
-			path += fmt.Sprintf("&size=%d", msg.Size)
-			// append file hash
-			path += fmt.Sprintf("&hash=%s", msg.Hash)
-			// append file ctime
-			path += fmt.Sprintf("&ctime=%d", msg.CTime)
-			// append file atime
-			path += fmt.Sprintf("&atime=%d", msg.ATime)
-			// append file mtime
-			path += fmt.Sprintf("&mtime=%d", msg.MTime)
+			path := msg.BaseUrl + strings.ReplaceAll(msg.Path, "?", "%3F") + fmt.Sprintf("?%s", values.Encode())
 
 			switch msg.Action {
 			case sync.CreateAction:
