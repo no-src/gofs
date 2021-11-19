@@ -15,38 +15,38 @@ func main() {
 	parseFlags()
 
 	// if current is subprocess, then reset the "kill_ppid" and "daemon"
-	if IsSubprocess {
-		KillPPid = false
-		Daemon = false
+	if isSubprocess {
+		killPPid = false
+		isDaemon = false
 	}
 
 	// init logger
 	var loggers []log.Logger
-	loggers = append(loggers, log.NewConsoleLogger(log.Level(LogLevel)))
-	if FileLogger {
+	loggers = append(loggers, log.NewConsoleLogger(log.Level(logLevel)))
+	if fileLogger {
 		filePrefix := "gofs_"
-		if Daemon {
+		if isDaemon {
 			filePrefix += "daemon_"
 		}
-		loggers = append(loggers, log.NewFileLoggerWithAutoFlush(log.Level(LogLevel), LogDir, filePrefix, LogFlush, LogFlushInterval))
+		loggers = append(loggers, log.NewFileLoggerWithAutoFlush(log.Level(logLevel), logDir, filePrefix, logFlush, logFlushInterval))
 	}
 	log.InitDefaultLogger(log.NewMultiLogger(loggers...))
 	defer log.Close()
 
 	// print version info
-	if PrintVersion {
+	if printVersion {
 		version.PrintVersionInfo()
 		return
 	}
 
 	// kill parent process
-	if KillPPid {
+	if killPPid {
 		daemon.KillPPid()
 	}
 
 	// start the daemon
-	if Daemon {
-		daemon.Daemon(DaemonPid, DaemonDelay, DaemonMonitorDelay)
+	if isDaemon {
+		daemon.Daemon(daemonPid, daemonDelay, daemonMonitorDelay)
 		log.Log("daemon exited")
 		return
 	}
@@ -54,29 +54,29 @@ func main() {
 	// if enable daemon, start a worker to process the following
 
 	// start a file server
-	if FileServer {
+	if fileServer {
 		waitInit := retry.NewWaitDone()
 		go func() {
-			err := server.StartFileServer(SourceVFS, TargetVFS, FileServerAddr, waitInit)
+			err := server.StartFileServer(sourceVFS, targetVFS, fileServerAddr, waitInit)
 			if err != nil {
-				log.Error(err, "start file server [%s] error", FileServerAddr)
+				log.Error(err, "start file server [%s] error", fileServerAddr)
 			}
 		}()
 		waitInit.Wait()
 	}
 
 	// create syncer
-	syncer, err := sync.NewSync(SourceVFS, TargetVFS, BufSize)
+	syncer, err := sync.NewSync(sourceVFS, targetVFS, bufSize)
 	if err != nil {
 		log.Error(err, "create DiskSync error")
 		return
 	}
 
 	// create retry
-	retry := retry.NewRetry(RetryCount, RetryWait, RetryAsync)
+	retry := retry.NewRetry(retryCount, retryWait, retryAsync)
 
 	// create monitor
-	monitor, err := monitor.NewMonitor(syncer, retry, SyncOnce)
+	monitor, err := monitor.NewMonitor(syncer, retry, syncOnce)
 	if err != nil {
 		log.Error(err, "create monitor error")
 		return
