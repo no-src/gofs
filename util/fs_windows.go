@@ -12,8 +12,12 @@ func GetFileTime(path string) (cTime time.Time, aTime time.Time, mTime time.Time
 	if err != nil {
 		return
 	}
-	if stat.Sys() != nil {
-		attr := stat.Sys().(*syscall.Win32FileAttributeData)
+	return GetFileTimeBySys(stat.Sys())
+}
+
+func GetFileTimeBySys(sys interface{}) (cTime time.Time, aTime time.Time, mTime time.Time, err error) {
+	if sys != nil {
+		attr := sys.(*syscall.Win32FileAttributeData)
 		if attr != nil {
 			cTime = time.Unix(0, attr.CreationTime.Nanoseconds())
 			aTime = time.Unix(0, attr.LastAccessTime.Nanoseconds())

@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // StartFileServer start a file server
@@ -84,10 +85,19 @@ func (h *fileApiHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 			return
 		}
 		for _, file := range files {
+			cTime, aTime, mTime, fsTimeErr := util.GetFileTimeBySys(file.Sys())
+			if fsTimeErr != nil {
+				cTime = time.Now()
+				aTime = cTime
+				mTime = cTime
+			}
 			remoteFiles = append(remoteFiles, RemoteFile{
 				Path:  file.Name(),
 				IsDir: file.IsDir(),
 				Size:  file.Size(),
+				ATime: aTime.Unix(),
+				CTime: cTime.Unix(),
+				MTime: mTime.Unix(),
 			})
 		}
 	}
