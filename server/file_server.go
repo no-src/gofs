@@ -4,6 +4,7 @@
 package server
 
 import (
+	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/util"
@@ -50,7 +51,7 @@ func (h *fileApiHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 	}()
 	writer.Header().Set("Content-Type", "application/json; charset=utf-8")
 	var remoteFiles []RemoteFile
-	path := request.FormValue("path")
+	path := request.FormValue(contract.FsPath)
 	srcPrefix := strings.Trim(SrcRoutePrefix, "/")
 	targetPrefix := strings.Trim(TargetRoutePrefix, "/")
 	if !strings.HasPrefix(strings.ToLower(path), srcPrefix) && !strings.HasPrefix(strings.ToLower(path), targetPrefix) {

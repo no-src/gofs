@@ -4,18 +4,17 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
 	"io"
-	"io/fs"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -78,7 +77,7 @@ func (rs *remoteClientSync) Create(path string) error {
 		}
 	} else {
 		dir := filepath.Dir(target)
-		err = os.MkdirAll(dir, fs.ModePerm)
+		err = os.MkdirAll(dir, os.ModePerm)
 		if err != nil {
 			log.Error(err, "Create:create dir error")
 			return err
@@ -237,7 +236,7 @@ func (rs *remoteClientSync) IsDir(path string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return remoteUrl.Query().Get("dir") == "1", nil
+	return contract.FsIsDir.Is(remoteUrl.Query().Get(contract.FsDir)), nil
 }
 
 func (rs *remoteClientSync) fileInfo(path string) (size int64, hash string, cTime, aTime, mTime time.Time, err error) {
@@ -245,32 +244,31 @@ func (rs *remoteClientSync) fileInfo(path string) (size int64, hash string, cTim
 	if err != nil {
 		return
 	}
-	isDir := remoteUrl.Query().Get("dir") != "0"
+	isDir := contract.FsNotDir.Not(remoteUrl.Query().Get(contract.FsDir))
 	if isDir {
 		return
 	}
-
-	size, err = strconv.ParseInt(remoteUrl.Query().Get("size"), 10, 64)
+	size, err = util.Int64(remoteUrl.Query().Get(contract.FsSize))
 	if err != nil {
 		return
 	}
-	hash = remoteUrl.Query().Get("hash")
+	hash = remoteUrl.Query().Get(contract.FsHash)
 
 	cTime = time.Now()
 	aTime = time.Now()
 	mTime = time.Now()
-	cTimeStr := remoteUrl.Query().Get("ctime")
-	aTimeStr := remoteUrl.Query().Get("atime")
-	mTimeStr := remoteUrl.Query().Get("mtime")
-	cTimeL, timeErr := strconv.ParseInt(cTimeStr, 10, 64)
+	cTimeStr := remoteUrl.Query().Get(contract.FsCtime)
+	aTimeStr := remoteUrl.Query().Get(contract.FsAtime)
+	mTimeStr := remoteUrl.Query().Get(contract.FsMtime)
+	cTimeL, timeErr := util.Int64(cTimeStr)
 	if timeErr == nil {
 		cTime = time.Unix(cTimeL, 0)
 	}
-	aTimeL, timeErr := strconv.ParseInt(aTimeStr, 10, 64)
+	aTimeL, timeErr := util.Int64(aTimeStr)
 	if timeErr == nil {
 		aTime = time.Unix(aTimeL, 0)
 	}
-	mTimeL, timeErr := strconv.ParseInt(mTimeStr, 10, 64)
+	mTimeL, timeErr := util.Int64(mTimeStr)
 	if timeErr == nil {
 		mTime = time.Unix(mTimeL, 0)
 	}
@@ -288,7 +286,7 @@ func (rs *remoteClientSync) SyncOnce(path string) error {
 
 func (rs *remoteClientSync) sync(serverAddr, path string) error {
 	log.Debug("remote client sync path => %s", path)
-	queryUrl := fmt.Sprintf("%s%s?path=%s", serverAddr, server.QueryRoute, url.QueryEscape(path))
+	queryUrl := fmt.Sprintf("%s%s?%s", serverAddr, server.QueryRoute, util.ValuesEncode(contract.FsPath, path))
 	resp, err := http.Get(queryUrl)
 	if err != nil {
 		return err
@@ -324,7 +322,10 @@ func (rs *remoteClientSync) sync(serverAddr, path string) error {
 		if file.IsDir {
 			isDir = 1
 		}
-		syncPath := fmt.Sprintf("%s/%s?dir=%d&size=%d", serverAddr, currentPath, isDir, file.Size)
+		values := url.Values{}
+		values.Add(contract.FsDir, util.String(isDir))
+		values.Add(contract.FsSize, util.String(file.Size))
+		syncPath := fmt.Sprintf("%s/%s?%s", serverAddr, currentPath, values.Encode())
 		if file.IsDir {
 			// create directory
 			rs.Create(syncPath)
