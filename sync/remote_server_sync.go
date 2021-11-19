@@ -1,9 +1,12 @@
 package sync
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/tran"
@@ -17,7 +20,8 @@ import (
 
 type remoteServerSync struct {
 	diskSync
-	server tran.Server
+	server     tran.Server
+	serverAddr string
 }
 
 func NewRemoteServerSync(src, target core.VFS, bufSize int) (Sync, error) {
@@ -53,6 +57,10 @@ func NewRemoteServerSync(src, target core.VFS, bufSize int) (Sync, error) {
 		diskSync: ds,
 	}
 	rs.server = tran.NewServer(src.Host(), src.Port())
+	rs.serverAddr = fmt.Sprintf("http://%s:%d", rs.server.Host(), server.ServerPort())
+	if server.ServerPort() <= 0 {
+		log.Warn("create remote server sync warning, you should enable the file server with server flag")
+	}
 	return rs, rs.start()
 }
 
@@ -141,7 +149,8 @@ func (rs *remoteServerSync) send(action Action, path string) (err error) {
 
 	path, err = filepath.Rel(rs.srcAbsPath, path)
 	path = filepath.ToSlash(path)
-	req := Request{
+	req := Message{
+		Status:  contract.SuccessStatus(contract.SyncMessageApi),
 		Action:  action,
 		Path:    path,
 		BaseUrl: rs.src.FsServer(),
@@ -154,7 +163,7 @@ func (rs *remoteServerSync) send(action Action, path string) (err error) {
 	}
 
 	if len(rs.src.FsServer()) == 0 {
-		req.BaseUrl = fmt.Sprintf("http://%s:%d%s", rs.server.Host(), server.ServerPort(), server.SrcRoutePrefix)
+		req.BaseUrl = rs.serverAddr + server.SrcRoutePrefix
 	}
 
 	data, err := json.Marshal(req)
@@ -168,8 +177,8 @@ func (rs *remoteServerSync) IsDir(path string) (bool, error) {
 	return rs.diskSync.IsDir(path)
 }
 
-func (rs *remoteServerSync) SyncOnce() error {
-	return rs.diskSync.SyncOnce()
+func (rs *remoteServerSync) SyncOnce(path string) error {
+	return rs.diskSync.SyncOnce(path)
 }
 
 func (rs *remoteServerSync) start() error {
@@ -182,12 +191,36 @@ func (rs *remoteServerSync) start() error {
 		return err
 	}
 	go rs.server.Accept(func(client net.Conn, data []byte) {
+		if bytes.HasSuffix(data, tran.EndIdentity) {
+			data = data[:len(data)-len(tran.EndIdentity)]
+		}
 		log.Debug("receive message [%s] => %s", client.RemoteAddr().String(), string(data))
-		//writer := bufio.NewWriter(client)
-		//result := append(data, tran.EndIdentity...)
-		//result = append(result, tran.LFBytes...)
-		//_, err = writer.Write(result)
-		//writer.Flush()
+		writer := bufio.NewWriter(client)
+		if bytes.Equal(data, contract.InfoCommand) {
+			info := server.Info{
+				Status:     contract.SuccessStatus(contract.InfoApi),
+				ServerAddr: rs.serverAddr,
+				SrcPath:    server.SrcRoutePrefix,
+				TargetPath: server.TargetRoutePrefix,
+				QueryAddr:  server.QueryRoute,
+			}
+			result, err := json.Marshal(info)
+			if err != nil {
+				result = append(result, []byte(err.Error())...)
+				result = append(result, tran.ErrorEndIdentity...)
+			} else {
+				result = append(result, tran.EndIdentity...)
+			}
+			result = append(result, tran.LFBytes...)
+			_, err = writer.Write(result)
+			if err != nil {
+				log.Error(err, "write info message error")
+			}
+			err = writer.Flush()
+			if err != nil {
+				log.Error(err, "flush info message error")
+			}
+		}
 	})
 	return nil
 }

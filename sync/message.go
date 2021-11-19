@@ -1,6 +1,9 @@
 package sync
 
-type Request struct {
+import "github.com/no-src/gofs/contract"
+
+type Message struct {
+	contract.Status
 	Path    string `json:"path"`
 	Action  Action `json:"action"`
 	BaseUrl string `json:"base_url"`

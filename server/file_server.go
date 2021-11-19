@@ -6,6 +6,7 @@ package server
 import (
 	"encoding/json"
 	"github.com/no-src/gofs/core"
+	"github.com/no-src/gofs/retry"
 	"github.com/no-src/log"
 	"io/ioutil"
 	"net/http"
@@ -15,7 +16,7 @@ import (
 )
 
 // StartFileServer start a file server
-func StartFileServer(src core.VFS, target core.VFS, addr string) error {
+func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.WaitDone) error {
 	enableFileApi := false
 	if src.IsDisk() || src.Is(core.RemoteDisk) {
 		http.Handle(SrcRoutePrefix, http.StripPrefix(SrcRoutePrefix, http.FileServer(http.Dir(src.Path()))))
@@ -28,11 +29,12 @@ func StartFileServer(src core.VFS, target core.VFS, addr string) error {
 	}
 
 	if enableFileApi {
-		http.Handle("/query", &fileApiHandler{})
+		http.Handle(QueryRoute, &fileApiHandler{})
 	}
 
 	log.Log("file server [%s] starting...", addr)
 	initServerAddr(addr)
+	init.Done()
 	return http.ListenAndServe(addr, nil)
 }
 

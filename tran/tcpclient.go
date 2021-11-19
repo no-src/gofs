@@ -49,6 +49,8 @@ func (client *tcpClient) Write(data []byte) (err error) {
 		return clientNotConnected
 	}
 	writer := bufio.NewWriter(client.innerConn)
+	data = append(data, EndIdentity...)
+	data = append(data, LFBytes...)
 	_, err = writer.Write(data)
 	if err != nil {
 		client.checkAndTagState(err)
@@ -118,6 +120,7 @@ func (client *tcpClient) ReadAll() (result []byte, err error) {
 		if isEnd {
 			if hasError {
 				err = ServerExecuteError
+				log.Error(err, string(result))
 			}
 			return result, err
 		}

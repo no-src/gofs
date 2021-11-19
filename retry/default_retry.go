@@ -32,9 +32,9 @@ func (r *defaultRetry) Do(f func() error, desc string) Wait {
 			log.Warn("retry do recover from => %s", desc)
 		}
 	}()
-	wait := NewWaitFinish()
+	wait := NewWaitDone()
 	if f == nil || f() == nil || r.retryCount <= 0 {
-		wait.Finish()
+		wait.Done()
 		return wait
 	}
 	log.Warn("execute failed, wait to retry [%s] %d times, execute once per %s", desc, r.retryCount, r.retryWait)
@@ -46,9 +46,9 @@ func (r *defaultRetry) Do(f func() error, desc string) Wait {
 	return wait
 }
 
-func (r *defaultRetry) retry(wait WaitFinish, f func() error, desc string) {
+func (r *defaultRetry) retry(wait WaitDone, f func() error, desc string) {
 	defer func() {
-		wait.Finish()
+		wait.Done()
 	}()
 	for i := 0; i < r.retryCount; i++ {
 		err := f()

@@ -1,15 +1,15 @@
 package retry
 
-type WaitFinish interface {
+type WaitDone interface {
 	Wait
-	Finish()
+	Done()
 }
 
 type Wait interface {
 	Wait()
 }
 
-func NewWaitFinish() WaitFinish {
+func NewWaitDone() WaitDone {
 	w := &wait{
 		c: make(chan bool, 1),
 	}
@@ -24,6 +24,6 @@ func (w *wait) Wait() {
 	<-w.c
 }
 
-func (w *wait) Finish() {
+func (w *wait) Done() {
 	w.c <- true
 }

@@ -10,6 +10,7 @@ var serverAddr *net.TCPAddr
 const (
 	SrcRoutePrefix    = "/src/"
 	TargetRoutePrefix = "/target/"
+	QueryRoute="/query"
 )
 
 func initServerAddr(addr string) {

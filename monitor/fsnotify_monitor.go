@@ -12,12 +12,13 @@ import (
 )
 
 type fsNotifyMonitor struct {
-	watcher *fsnotify.Watcher
-	syncer  sync.Sync
-	retry   retry.Retry
+	watcher  *fsnotify.Watcher
+	syncer   sync.Sync
+	retry    retry.Retry
+	syncOnce bool
 }
 
-func NewFsNotifyMonitor(syncer sync.Sync, retry retry.Retry) (m Monitor, err error) {
+func NewFsNotifyMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool) (m Monitor, err error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
@@ -27,9 +28,10 @@ func NewFsNotifyMonitor(syncer sync.Sync, retry retry.Retry) (m Monitor, err err
 		return nil, err
 	}
 	m = &fsNotifyMonitor{
-		watcher: watcher,
-		syncer:  syncer,
-		retry:   retry,
+		watcher:  watcher,
+		syncer:   syncer,
+		retry:    retry,
+		syncOnce: syncOnce,
 	}
 	return m, nil
 }
@@ -65,6 +67,10 @@ func (m *fsNotifyMonitor) monitor(dir string) (err error) {
 
 func (m *fsNotifyMonitor) Start() error {
 	src := m.syncer.Source()
+	// check sync once command
+	if m.syncOnce {
+		return m.syncer.SyncOnce(src.Path())
+	}
 	if !src.IsDisk() && !src.Is(core.RemoteDisk) {
 		return errors.New("not local file system")
 	}

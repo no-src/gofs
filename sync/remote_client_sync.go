@@ -2,13 +2,16 @@ package sync
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
 	"io"
 	"io/fs"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -275,8 +278,64 @@ func (rs *remoteClientSync) fileInfo(path string) (size int64, hash string, cTim
 	return
 }
 
-func (rs *remoteClientSync) SyncOnce() error {
-	log.Debug("SyncOnce not implemented")
+func (rs *remoteClientSync) SyncOnce(path string) error {
+	remoteUrl, err := url.Parse(path)
+	if err != nil {
+		return err
+	}
+	syncPath := strings.Trim(remoteUrl.Path, "/")
+	return rs.sync(fmt.Sprintf("%s://%s", remoteUrl.Scheme, remoteUrl.Host), syncPath)
+}
+
+func (rs *remoteClientSync) sync(serverAddr, path string) error {
+	log.Debug("remote client sync path => %s", path)
+	queryUrl := fmt.Sprintf("%s%s?path=%s", serverAddr, server.QueryRoute, url.QueryEscape(path))
+	resp, err := http.Get(queryUrl)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	var apiResult server.ApiResult
+	err = json.Unmarshal(data, &apiResult)
+	if err != nil {
+		return err
+	}
+	if apiResult.Code != 0 {
+		return errors.New(fmt.Sprintf("query error:%s", apiResult.Message))
+	}
+	if apiResult.Data == nil {
+		return nil
+	}
+	dataBytes, err := json.Marshal(apiResult.Data)
+	if err != nil {
+		return err
+	}
+	var files []server.RemoteFile
+	err = json.Unmarshal(dataBytes, &files)
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		currentPath := path + "/" + file.Path
+		isDir := 0
+		if file.IsDir {
+			isDir = 1
+		}
+		syncPath := fmt.Sprintf("%s/%s?dir=%d&size=%d", serverAddr, currentPath, isDir, file.Size)
+		if file.IsDir {
+			// create directory
+			rs.Create(syncPath)
+			// sync current directory content
+			rs.sync(serverAddr, currentPath)
+		} else {
+			// sync remote file to local disk
+			rs.Write(syncPath)
+		}
+	}
 	return nil
 }
 

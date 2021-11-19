@@ -53,6 +53,18 @@ func main() {
 
 	// if enable daemon, start a worker to process the following
 
+	// start a file server
+	if FileServer {
+		waitInit := retry.NewWaitDone()
+		go func() {
+			err := server.StartFileServer(SourceVFS, TargetVFS, FileServerAddr, waitInit)
+			if err != nil {
+				log.Error(err, "start file server [%s] error", FileServerAddr)
+			}
+		}()
+		waitInit.Wait()
+	}
+
 	// create syncer
 	syncer, err := sync.NewSync(SourceVFS, TargetVFS, BufSize)
 	if err != nil {
@@ -60,22 +72,11 @@ func main() {
 		return
 	}
 
-	// process sync once
-	if SyncOnce {
-		err = syncer.SyncOnce()
-		if err != nil {
-			log.Error(err, "sync once error")
-		} else {
-			log.Log("sync once done!")
-		}
-		return
-	}
-
 	// create retry
 	retry := retry.NewRetry(RetryCount, RetryWait, RetryAsync)
 
 	// create monitor
-	monitor, err := monitor.NewMonitor(syncer, retry)
+	monitor, err := monitor.NewMonitor(syncer, retry, SyncOnce)
 	if err != nil {
 		log.Error(err, "create monitor error")
 		return
@@ -83,16 +84,6 @@ func main() {
 	defer func() {
 		if err = monitor.Close(); err != nil {
 			log.Error(err, "close monitor error")
-		}
-	}()
-
-	// start a file server
-	go func() {
-		if FileServer {
-			err := server.StartFileServer(SourceVFS, TargetVFS, FileServerAddr)
-			if err != nil {
-				log.Error(err, "start file server [%s] error", FileServerAddr)
-			}
 		}
 	}()
 
