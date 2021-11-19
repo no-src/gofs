@@ -2,7 +2,6 @@ package sync
 
 import (
 	"bufio"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/no-src/gofs/core"
@@ -300,7 +299,7 @@ func (rs *remoteClientSync) sync(serverAddr, path string) error {
 		return err
 	}
 	var apiResult server.ApiResult
-	err = json.Unmarshal(data, &apiResult)
+	err = util.Unmarshal(data, &apiResult)
 	if err != nil {
 		return err
 	}
@@ -310,12 +309,12 @@ func (rs *remoteClientSync) sync(serverAddr, path string) error {
 	if apiResult.Data == nil {
 		return nil
 	}
-	dataBytes, err := json.Marshal(apiResult.Data)
+	dataBytes, err := util.Marshal(apiResult.Data)
 	if err != nil {
 		return err
 	}
 	var files []server.RemoteFile
-	err = json.Unmarshal(dataBytes, &files)
+	err = util.Unmarshal(dataBytes, &files)
 	if err != nil {
 		return err
 	}

@@ -3,7 +3,6 @@ package sync
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/no-src/gofs/contract"
@@ -166,7 +165,7 @@ func (rs *remoteServerSync) send(action Action, path string) (err error) {
 		req.BaseUrl = rs.serverAddr + server.SrcRoutePrefix
 	}
 
-	data, err := json.Marshal(req)
+	data, err := util.Marshal(req)
 	if err != nil {
 		return err
 	}
@@ -204,7 +203,7 @@ func (rs *remoteServerSync) start() error {
 				TargetPath: server.TargetRoutePrefix,
 				QueryAddr:  server.QueryRoute,
 			}
-			result, err := json.Marshal(info)
+			result, err := util.Marshal(info)
 			if err != nil {
 				result = append(result, []byte(err.Error())...)
 				result = append(result, tran.ErrorEndIdentity...)

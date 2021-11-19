@@ -1,7 +1,6 @@
 package monitor
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/no-src/gofs/contract"
@@ -9,6 +8,7 @@ import (
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/tran"
+	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
 	"strings"
 )
@@ -65,7 +65,7 @@ func (m *remoteMonitor) Start() error {
 			if err != nil {
 				return err
 			}
-			err = json.Unmarshal(infoResult, &info)
+			err = util.Unmarshal(infoResult, &info)
 			if err != nil {
 				return err
 			}
@@ -117,7 +117,7 @@ func (m *remoteMonitor) processingMessage() {
 		message := <-m.messages
 		log.Info("client read request => %s", string(message.data))
 		var msg sync.Message
-		err := json.Unmarshal(message.data, &msg)
+		err := util.Unmarshal(message.data, &msg)
 		if err != nil {
 			log.Error(err, "client unmarshal data error")
 		} else if msg.Code != contract.Success {

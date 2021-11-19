@@ -1,6 +1,8 @@
 package server
 
-import "encoding/json"
+import (
+	"github.com/no-src/gofs/util"
+)
 
 type ApiResult struct {
 	Code    int         `json:"code"`
@@ -19,7 +21,7 @@ func NewApiResult(code int, message string, data interface{}) ApiResult {
 
 func NewApiResultBytes(code int, message string, data interface{}) []byte {
 	r := NewApiResult(code, message, data)
-	bytes, err := json.Marshal(r)
+	bytes, err := util.Marshal(r)
 	if err != nil {
 		return nil
 	}

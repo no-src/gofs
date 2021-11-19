@@ -4,9 +4,9 @@
 package server
 
 import (
-	"encoding/json"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/retry"
+	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
 	"io/ioutil"
 	"net/http"
@@ -90,7 +90,7 @@ func (h *fileApiHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 			})
 		}
 	}
-	bytes, err := json.Marshal(NewApiResult(0, "success", remoteFiles))
+	bytes, err := util.Marshal(NewApiResult(0, "success", remoteFiles))
 	if err != nil {
 		log.Error(err, "file server marshal error")
 		writer.Write(NewErrorApiResultBytes(-6, "marshal error"))
