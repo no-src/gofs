@@ -1,7 +1,7 @@
 package server
 
 type RemoteFile struct {
-	Path  string
-	IsDir bool
-	Size  int64
+	Path  string `json:"path"`
+	IsDir bool   `json:"is_dir"`
+	Size  int64  `json:"size"`
 }
