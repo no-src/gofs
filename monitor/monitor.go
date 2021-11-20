@@ -7,8 +7,11 @@ import (
 	"github.com/no-src/gofs/sync"
 )
 
+// Monitor file system monitor
 type Monitor interface {
+	// Start go to start the monitor to monitor the file change
 	Start() error
+	// Close stop the monitor
 	Close() error
 }
 

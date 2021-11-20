@@ -5,6 +5,7 @@ import (
 	"strconv"
 )
 
+// String parse the v to string
 func String(v interface{}) string {
 	switch v.(type) {
 	case int:
@@ -26,6 +27,7 @@ func String(v interface{}) string {
 	}
 }
 
+// Int64 parse the string to int64
 func Int64(v string) (int64, error) {
 	return strconv.ParseInt(v, 10, 64)
 }

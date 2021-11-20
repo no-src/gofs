@@ -11,7 +11,6 @@ import (
 )
 
 func main() {
-	// parse all flags
 	parseFlags()
 
 	// if current is subprocess, then reset the "kill_ppid" and "daemon"

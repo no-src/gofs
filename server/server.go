@@ -10,7 +10,7 @@ var serverAddr *net.TCPAddr
 const (
 	SrcRoutePrefix    = "/src/"
 	TargetRoutePrefix = "/target/"
-	QueryRoute="/query"
+	QueryRoute        = "/query"
 )
 
 func initServerAddr(addr string) {
@@ -22,10 +22,12 @@ func initServerAddr(addr string) {
 	}
 }
 
+// ServerAddr the addr of file server running
 func ServerAddr() *net.TCPAddr {
 	return serverAddr
 }
 
+// ServerPort the port of file server running
 func ServerPort() int {
 	if serverAddr != nil {
 		return serverAddr.Port

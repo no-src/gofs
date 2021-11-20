@@ -27,6 +27,7 @@ type message struct {
 	data []byte
 }
 
+// NewRemoteMonitor create an instance of remoteMonitor to monitor the remote file change
 func NewRemoteMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, host string, port int, messageQueue int) (m Monitor, err error) {
 	if syncer == nil {
 		err = errors.New("syncer can't be nil")

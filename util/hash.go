@@ -9,6 +9,7 @@ import (
 	"os"
 )
 
+// MD5FromFile calculate the hash value of the file
 func MD5FromFile(file *os.File, bufSize int) (hash string, err error) {
 	if file == nil {
 		err = errors.New("file is nil")

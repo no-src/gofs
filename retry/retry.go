@@ -2,8 +2,9 @@ package retry
 
 import "time"
 
+// Retry if execute return error, then retry to execute with the specified rule
 type Retry interface {
-	// Do if execute failed, retry execute many times
+	// Do execute work first, if execute failed, retry execute many times
 	Do(f func() error, desc string) Wait
 	// RetryCount retry count
 	RetryCount() int

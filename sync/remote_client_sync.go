@@ -27,6 +27,7 @@ type remoteClientSync struct {
 	bufSize       int
 }
 
+// NewRemoteClientSync create an instance of remoteClientSync to receive the file change message and execute it
 func NewRemoteClientSync(src, target core.VFS, bufSize int) (Sync, error) {
 	if len(src.Path()) == 0 {
 		return nil, errors.New("src is not found")

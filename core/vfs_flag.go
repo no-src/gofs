@@ -5,16 +5,21 @@ import (
 	"fmt"
 )
 
+// VFSVar defines a VFS flag with specified name, default value, and usage string.
+// The argument p points to a VFS variable in which to store the value of the flag.
 func VFSVar(p *VFS, name string, value VFS, usage string) {
 	flag.CommandLine.Var(newVFSValue(value, p), name, usage)
 }
 
+// VFSFlag defines a VFS flag with specified name, default value, and usage string.
+// The return value is the address of a VFS variable that stores the value of the flag.
 func VFSFlag(name string, value VFS, usage string) *VFS {
 	p := new(VFS)
 	VFSVar(p, name, value, usage)
 	return p
 }
 
+// vfsValue implement the flag.Value and flag.Getter interface
 type vfsValue VFS
 
 func newVFSValue(val VFS, p *VFS) *vfsValue {

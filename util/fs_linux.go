@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// GetFileTime get the create time, last access time, last modify time of the path
 func GetFileTime(path string) (cTime time.Time, aTime time.Time, mTime time.Time, err error) {
 	stat, err := os.Stat(path)
 	if err != nil {
@@ -15,6 +16,7 @@ func GetFileTime(path string) (cTime time.Time, aTime time.Time, mTime time.Time
 	return GetFileTimeBySys(stat.Sys())
 }
 
+// GetFileTimeBySys get the create time, last access time, last modify time of the FileInfo.Sys()
 func GetFileTimeBySys(sys interface{}) (cTime time.Time, aTime time.Time, mTime time.Time, err error) {
 	if sys != nil {
 		attr := sys.(*syscall.Stat_t)

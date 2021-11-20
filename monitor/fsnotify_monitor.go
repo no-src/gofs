@@ -18,6 +18,7 @@ type fsNotifyMonitor struct {
 	syncOnce bool
 }
 
+// NewFsNotifyMonitor create an instance of fsNotifyMonitor to monitor the disk change
 func NewFsNotifyMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool) (m Monitor, err error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {

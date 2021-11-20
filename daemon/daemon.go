@@ -11,6 +11,7 @@ import (
 
 const SubprocessTag = "sub"
 
+// Daemon running as a daemon process, and create a subprocess for working
 func Daemon(recordPid bool, daemonDelay time.Duration, monitorDelay time.Duration) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -31,7 +32,7 @@ func Daemon(recordPid bool, daemonDelay time.Duration, monitorDelay time.Duratio
 	}
 }
 
-// startSubprocess start a subprocess to work
+// startSubprocess start a subprocess for working
 func startSubprocess() (*os.Process, error) {
 	attr := &os.ProcAttr{Files: []*os.File{os.Stdin, os.Stdout, os.Stderr}}
 	// try to check stdin

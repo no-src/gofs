@@ -17,6 +17,7 @@ type tcpServer struct {
 	closed   bool
 }
 
+// NewServer create an instance of tcpServer
 func NewServer(ip string, port int) Server {
 	srv := &tcpServer{}
 	srv.ip = net.ParseIP(ip)

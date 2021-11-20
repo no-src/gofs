@@ -3,7 +3,10 @@ package contract
 type ApiType int
 
 const (
-	UnknownApi     ApiType = 0
+	// UnknownApi unknown api type
+	UnknownApi ApiType = 0
+	// SyncMessageApi send remote sync message api
 	SyncMessageApi ApiType = 1
-	InfoApi        ApiType = 2
+	// InfoApi query file server info api
+	InfoApi ApiType = 2
 )

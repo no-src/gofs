@@ -12,6 +12,7 @@ const (
 	SharedFolder
 )
 
+// String return the VFSType name
 func (t VFSType) String() string {
 	switch t {
 	case Disk:

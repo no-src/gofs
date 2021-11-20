@@ -23,6 +23,7 @@ var (
 	clientNotConnected = errors.New("client is not connected")
 )
 
+// NewClient create an instance of tcpClient
 func NewClient(host string, port int) Client {
 	client := &tcpClient{}
 	client.host = host

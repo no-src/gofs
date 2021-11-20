@@ -23,6 +23,7 @@ type remoteServerSync struct {
 	serverAddr string
 }
 
+// NewRemoteServerSync create an instance of remoteServerSync execute send file change message
 func NewRemoteServerSync(src, target core.VFS, bufSize int) (Sync, error) {
 	if len(src.Path()) == 0 {
 		return nil, errors.New("src is not found")

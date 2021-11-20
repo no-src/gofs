@@ -73,6 +73,7 @@ func (vfs *VFS) MessageQueue() int {
 	return vfs.msgQueue
 }
 
+// NewDiskVFS create an instance of VFS for the local disk file system
 func NewDiskVFS(path string) VFS {
 	vfs := VFS{
 		fsType: Disk,
@@ -81,6 +82,7 @@ func NewDiskVFS(path string) VFS {
 	return vfs
 }
 
+// NewEmptyVFS create an instance of VFS for the unknown file system
 func NewEmptyVFS() VFS {
 	vfs := VFS{
 		fsType: Unknown,
@@ -88,6 +90,7 @@ func NewEmptyVFS() VFS {
 	return vfs
 }
 
+// NewVFS auto recognition the file system and create an instance of VFS according to the path
 func NewVFS(path string) VFS {
 	vfs := NewDiskVFS(path)
 	lowerPath := strings.ToLower(path)
@@ -132,7 +135,7 @@ func parse(path string) (scheme string, host string, port int, localPath string,
 	if len(msgQueueStr) > 0 {
 		msgQueue, err = strconv.Atoi(msgQueueStr)
 		if err != nil || msgQueue <= 0 {
-			// default is 500 of message queue size
+			// if error happened, reset to the default value
 			msgQueue = defaultMsgQueue
 		}
 	} else {
