@@ -20,28 +20,19 @@ import (
 )
 
 type remoteClientSync struct {
-	src           core.VFS
-	target        core.VFS
-	srcAbsPath    string
+	src    core.VFS
+	target core.VFS
 	targetAbsPath string
 	bufSize       int
 }
 
 // NewRemoteClientSync create an instance of remoteClientSync to receive the file change message and execute it
 func NewRemoteClientSync(src, target core.VFS, bufSize int) (Sync, error) {
-	if len(src.Path()) == 0 {
-		return nil, errors.New("src is not found")
-	}
 	if len(target.Path()) == 0 {
 		return nil, errors.New("target is not found")
 	}
 	if bufSize <= 0 {
 		return nil, errors.New("bufSize must greater than zero")
-	}
-
-	srcAbsPath, err := filepath.Abs(src.Path())
-	if err != nil {
-		return nil, err
 	}
 
 	targetAbsPath, err := filepath.Abs(target.Path())
@@ -50,7 +41,6 @@ func NewRemoteClientSync(src, target core.VFS, bufSize int) (Sync, error) {
 	}
 
 	rs := &remoteClientSync{
-		srcAbsPath:    srcAbsPath,
 		targetAbsPath: targetAbsPath,
 		bufSize:       bufSize,
 		src:           src,
