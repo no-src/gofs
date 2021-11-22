@@ -65,36 +65,46 @@ func NewRemoteServerSync(src, target core.VFS, bufSize int) (Sync, error) {
 }
 
 func (rs *remoteServerSync) Create(path string) error {
-	if err := rs.diskSync.Create(path); err != nil {
-		return err
+	if !rs.src.LocalSyncDisabled() {
+		if err := rs.diskSync.Create(path); err != nil {
+			return err
+		}
 	}
 	return rs.send(CreateAction, path)
 }
 
 func (rs *remoteServerSync) Write(path string) error {
-	if err := rs.diskSync.Write(path); err != nil {
-		return err
+	if !rs.src.LocalSyncDisabled() {
+		if err := rs.diskSync.Write(path); err != nil {
+			return err
+		}
 	}
 	return rs.send(WriteAction, path)
 }
 
 func (rs *remoteServerSync) Remove(path string) error {
-	if err := rs.diskSync.Remove(path); err != nil {
-		return err
+	if !rs.src.LocalSyncDisabled() {
+		if err := rs.diskSync.Remove(path); err != nil {
+			return err
+		}
 	}
 	return rs.send(RemoveAction, path)
 }
 
 func (rs *remoteServerSync) Rename(path string) error {
-	if err := rs.diskSync.Rename(path); err != nil {
-		return err
+	if !rs.src.LocalSyncDisabled() {
+		if err := rs.diskSync.Rename(path); err != nil {
+			return err
+		}
 	}
 	return rs.send(RenameAction, path)
 }
 
 func (rs *remoteServerSync) Chmod(path string) error {
-	if err := rs.diskSync.Chmod(path); err != nil {
-		return err
+	if !rs.src.LocalSyncDisabled() {
+		if err := rs.diskSync.Chmod(path); err != nil {
+			return err
+		}
 	}
 	return rs.send(ChmodAction, path)
 }

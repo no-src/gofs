@@ -9,23 +9,26 @@ import (
 
 // VFS virtual file system
 type VFS struct {
-	path     string
-	fsType   VFSType
-	host     string
-	port     int
-	server   bool
-	fsServer string
-	msgQueue int
+	path              string
+	fsType            VFSType
+	host              string
+	port              int
+	server            bool
+	fsServer          string
+	msgQueue          int
+	localSyncDisabled bool
 }
 
 const (
-	paramPath            = "path"
-	paramMode            = "mode"
-	paramFsServer        = "fs_server"
-	paramMsgQueue        = "msg_queue"
-	valueModeServer      = "server"
-	valueDefaultMsgQueue = 500
-	RemoteServerSchema   = "rs://"
+	paramPath                = "path"
+	paramMode                = "mode"
+	paramFsServer            = "fs_server"
+	paramMsgQueue            = "msg_queue"
+	paramLocalSyncDisabled   = "local_sync_disabled"
+	valueModeServer          = "server"
+	valueDefaultMsgQueue     = 500
+	valueLocalSyncIsDisabled = "true"
+	RemoteServerSchema       = "rs://"
 )
 
 // Path file path
@@ -73,6 +76,11 @@ func (vfs *VFS) MessageQueue() int {
 	return vfs.msgQueue
 }
 
+// LocalSyncDisabled is local disk sync disabled
+func (vfs *VFS) LocalSyncDisabled() bool {
+	return vfs.localSyncDisabled
+}
+
 // NewDiskVFS create an instance of VFS for the local disk file system
 func NewDiskVFS(path string) VFS {
 	vfs := VFS{
@@ -98,7 +106,7 @@ func NewVFS(path string) VFS {
 	if strings.HasPrefix(lowerPath, RemoteServerSchema) {
 		// example of rs protocol to see README.md
 		vfs.fsType = RemoteDisk
-		_, vfs.host, vfs.port, vfs.path, vfs.server, vfs.fsServer, vfs.msgQueue, err = parse(path)
+		_, vfs.host, vfs.port, vfs.path, vfs.server, vfs.fsServer, vfs.msgQueue, vfs.localSyncDisabled, err = parse(path)
 	}
 	if err != nil {
 		return NewEmptyVFS()
@@ -106,7 +114,7 @@ func NewVFS(path string) VFS {
 	return vfs
 }
 
-func parse(path string) (scheme string, host string, port int, localPath string, isServer bool, fsServer string, msgQueue int, err error) {
+func parse(path string) (scheme string, host string, port int, localPath string, isServer bool, fsServer string, msgQueue int, localSyncDisabled bool, err error) {
 	parseUrl, err := url.Parse(path)
 	if err != nil {
 		return
@@ -140,6 +148,11 @@ func parse(path string) (scheme string, host string, port int, localPath string,
 		}
 	} else {
 		msgQueue = defaultMsgQueue
+	}
+
+	localSyncDisabledValue := parseUrl.Query().Get(paramLocalSyncDisabled)
+	if strings.ToLower(localSyncDisabledValue) == valueLocalSyncIsDisabled {
+		localSyncDisabled = true
 	}
 	return
 }
