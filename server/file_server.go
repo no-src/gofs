@@ -9,9 +9,7 @@ import (
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
-	"io/ioutil"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -31,7 +29,9 @@ func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.Wait
 	}
 
 	if enableFileApi {
-		http.Handle(QueryRoute, &fileApiHandler{})
+		http.Handle(QueryRoute, &fileApiHandler{
+			root: http.Dir(src.Path()),
+		})
 	}
 
 	log.Log("file server [%s] starting...", addr)
@@ -41,6 +41,7 @@ func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.Wait
 }
 
 type fileApiHandler struct {
+	root http.FileSystem
 }
 
 func (h *fileApiHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
@@ -59,13 +60,17 @@ func (h *fileApiHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 		writer.Write(NewErrorApiResultBytes(-1, "must start with src or target"))
 		return
 	}
+
 	path = filepath.Clean(path)
 	path = filepath.ToSlash(path)
 	if !strings.HasPrefix(strings.ToLower(path), srcPrefix) && !strings.HasPrefix(strings.ToLower(path), targetPrefix) {
 		writer.Write(NewErrorApiResultBytes(-2, "invalid path"))
 		return
 	}
-	f, err := os.Open(path)
+
+	path = strings.TrimLeft(path, srcPrefix)
+
+	f, err := h.root.Open(path)
 	if err != nil {
 		log.Error(err, "file server open path error")
 		writer.Write(NewErrorApiResultBytes(-3, "open path error"))
@@ -78,7 +83,7 @@ func (h *fileApiHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 		return
 	}
 	if stat.IsDir() {
-		files, err := ioutil.ReadDir(path)
+		files, err := f.Readdir(-1)
 		if err != nil {
 			log.Error(err, "file server read dir error")
 			writer.Write(NewErrorApiResultBytes(-5, "read dir error"))
