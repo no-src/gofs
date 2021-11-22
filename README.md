@@ -35,11 +35,11 @@ gofs -src=./src -target=./target -daemon -daemon_pid
 Start a remote disk server as a remote file source.
 
 ```bash
-gofs -src="rs://127.0.0.1:9016?mode=server&path=./src&fs_server=https://fs-server-domain.com" -target=./target -server
+gofs -src="rs://127.0.0.1:9016?mode=server&path=./src&fs_server=http://127.0.0.1:9015" -target=./target -server
 ```
 
 Start a remote disk client to sync files from remote disk server.
 
 ```bash
-gofs -src="rs://127.0.0.1:9016?path=./src&msg_queue=500" -target=./target
+gofs -src="rs://127.0.0.1:9016?msg_queue=500" -target=./target
 ```
