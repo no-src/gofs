@@ -120,7 +120,7 @@ func (rs *remoteClientSync) Write(path string) error {
 	}
 
 	if isDir {
-		// ignored
+		rs.SyncOnce(path)
 	} else {
 		resp, err := http.Get(path)
 		if err != nil {

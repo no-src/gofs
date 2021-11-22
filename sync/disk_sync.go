@@ -121,7 +121,7 @@ func (s *diskSync) Write(path string) error {
 	}
 
 	if isDir {
-		// ignored
+		s.SyncOnce(path)
 	} else {
 		srcFile, err := os.Open(path)
 		if err != nil {
