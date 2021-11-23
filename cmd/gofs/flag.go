@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/daemon"
 	"github.com/no-src/log"
@@ -35,6 +36,11 @@ var (
 	keyFile            string
 )
 
+const (
+	defaultAddrHttps = ":443"
+	defaultAddrHttp  = ":80"
+)
+
 func parseFlags() {
 	flag.BoolVar(&printVersion, "v", false, "print version info")
 	core.VFSVar(&sourceVFS, "src", core.NewEmptyVFS(), "source path by monitor")
@@ -56,9 +62,13 @@ func parseFlags() {
 	flag.BoolVar(&killPPid, "kill_ppid", false, "try to kill the parent process when it's running")
 	flag.BoolVar(&isSubprocess, daemon.SubprocessTag, false, "tag current process is subprocess")
 	flag.BoolVar(&fileServer, "server", false, "start a file server to browse source directory and target directory")
-	flag.StringVar(&fileServerAddr, "server_addr", ":9015", "a file server binding address")
-	flag.BoolVar(&fileServerTLS, "server_tls", true, "enable https for file server")
+	flag.StringVar(&fileServerAddr, "server_addr", defaultAddrHttps, "a file server binding address")
+	flag.BoolVar(&fileServerTLS, "server_tls", true, fmt.Sprintf("enable https for file server, if disable it, server_addr is \"%s\" default", defaultAddrHttp))
 	flag.StringVar(&certFile, "tls_cert_file", "gofs.pem", "cert file for https connections")
 	flag.StringVar(&keyFile, "tls_key_file", "gofs.key", "key file for https connections")
 	flag.Parse()
+
+	if !fileServerTLS && fileServerAddr == defaultAddrHttps {
+		fileServerAddr = defaultAddrHttp
+	}
 }
