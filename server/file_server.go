@@ -16,7 +16,7 @@ import (
 )
 
 // StartFileServer start a file server
-func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.WaitDone) error {
+func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.WaitDone, enableTLS bool, certFile string, keyFile string) error {
 	enableFileApi := false
 	if src.IsDisk() || src.Is(core.RemoteDisk) {
 		http.Handle(SrcRoutePrefix, http.StripPrefix(SrcRoutePrefix, http.FileServer(http.Dir(src.Path()))))
@@ -35,9 +35,15 @@ func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.Wait
 	}
 
 	log.Log("file server [%s] starting...", addr)
-	initServerAddr(addr)
+	initServerInfo(addr, enableTLS)
 	init.Done()
-	return http.ListenAndServe(addr, nil)
+
+	if enableTLS {
+		return http.ListenAndServeTLS(addr, certFile, keyFile, nil)
+	} else {
+		log.Warn("file server is not a security connection, you need the https replaced maybe!")
+		return http.ListenAndServe(addr, nil)
+	}
 }
 
 type fileApiHandler struct {

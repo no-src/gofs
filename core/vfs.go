@@ -134,7 +134,7 @@ func parse(path string) (scheme string, host string, port int, localPath string,
 	if len(fsServer) > 0 {
 		fsServerLower := strings.ToLower(fsServer)
 		if !strings.HasPrefix(fsServerLower, "http://") && !strings.HasPrefix(fsServerLower, "https://") {
-			fsServer = "http://" + fsServer
+			fsServer = "https://" + fsServer
 		}
 	}
 

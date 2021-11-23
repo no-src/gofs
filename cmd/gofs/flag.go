@@ -30,6 +30,9 @@ var (
 	isSubprocess       bool
 	fileServer         bool
 	fileServerAddr     string
+	fileServerTLS      bool
+	certFile           string
+	keyFile            string
 )
 
 func parseFlags() {
@@ -54,5 +57,8 @@ func parseFlags() {
 	flag.BoolVar(&isSubprocess, daemon.SubprocessTag, false, "tag current process is subprocess")
 	flag.BoolVar(&fileServer, "server", false, "start a file server to browse source directory and target directory")
 	flag.StringVar(&fileServerAddr, "server_addr", ":9015", "a file server binding address")
+	flag.BoolVar(&fileServerTLS, "server_tls", true, "enable https for file server")
+	flag.StringVar(&certFile, "tls_cert_file", "gofs.pem", "cert file for https connections")
+	flag.StringVar(&keyFile, "tls_key_file", "gofs.key", "key file for https connections")
 	flag.Parse()
 }

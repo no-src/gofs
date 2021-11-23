@@ -11,7 +11,6 @@ import (
 	"github.com/no-src/log"
 	"io"
 	"io/ioutil"
-	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -20,8 +19,8 @@ import (
 )
 
 type remoteClientSync struct {
-	src    core.VFS
-	target core.VFS
+	src           core.VFS
+	target        core.VFS
 	targetAbsPath string
 	bufSize       int
 }
@@ -112,7 +111,7 @@ func (rs *remoteClientSync) Write(path string) error {
 	if isDir {
 		rs.SyncOnce(path)
 	} else {
-		resp, err := http.Get(path)
+		resp, err := util.HttpGet(path)
 		if err != nil {
 			log.Error(err, "Write:download the src file failed")
 			return err
@@ -278,7 +277,7 @@ func (rs *remoteClientSync) SyncOnce(path string) error {
 func (rs *remoteClientSync) sync(serverAddr, path string) error {
 	log.Debug("remote client sync path => %s", path)
 	queryUrl := fmt.Sprintf("%s%s?%s", serverAddr, server.QueryRoute, util.ValuesEncode(contract.FsPath, path))
-	resp, err := http.Get(queryUrl)
+	resp, err := util.HttpGet(queryUrl)
 	if err != nil {
 		return err
 	}

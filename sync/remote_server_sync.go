@@ -14,6 +14,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -57,7 +58,17 @@ func NewRemoteServerSync(src, target core.VFS, bufSize int) (Sync, error) {
 		diskSync: ds,
 	}
 	rs.server = tran.NewServer(src.Host(), src.Port())
-	rs.serverAddr = fmt.Sprintf("http://%s:%d", rs.server.Host(), server.ServerPort())
+
+	if len(src.FsServer()) == 0 {
+		scheme := "https"
+		if !server.EnableTLS() {
+			scheme = "http"
+		}
+		rs.serverAddr = fmt.Sprintf("%s://%s:%d", scheme, rs.server.Host(), server.ServerPort())
+	} else {
+		rs.serverAddr = src.FsServer()
+	}
+	rs.serverAddr = strings.TrimRight(rs.serverAddr, "/")
 	if server.ServerPort() <= 0 {
 		log.Warn("create remote server sync warning, you should enable the file server with server flag")
 	}
@@ -163,17 +174,13 @@ func (rs *remoteServerSync) send(action Action, path string) (err error) {
 		Status:  contract.SuccessStatus(contract.SyncMessageApi),
 		Action:  action,
 		Path:    path,
-		BaseUrl: rs.src.FsServer(),
+		BaseUrl: rs.serverAddr + server.SrcRoutePrefix,
 		IsDir:   isDirValue,
 		Size:    size,
 		Hash:    hash,
 		CTime:   cTime.Unix(),
 		ATime:   aTime.Unix(),
 		MTime:   mTime.Unix(),
-	}
-
-	if len(rs.src.FsServer()) == 0 {
-		req.BaseUrl = rs.serverAddr + server.SrcRoutePrefix
 	}
 
 	data, err := util.Marshal(req)
