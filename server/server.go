@@ -19,8 +19,8 @@ const (
 const (
 	DefaultAddrHttps = ":443"
 	DefaultAddrHttp  = ":80"
-	ProtocolHttp     = "http"
-	ProtocolHttps    = "https"
+	SchemeHttp       = "http"
+	SchemeHttps      = "https"
 	DefaultPortHttp  = 80
 	DefaultPortHttps = 443
 )
@@ -54,15 +54,15 @@ func EnableTLS() bool {
 }
 
 // GenerateAddr generate http or https address
-func GenerateAddr(protocol, host string, port int) string {
+func GenerateAddr(scheme, host string, port int) string {
 	addr := ""
-	protocol = strings.ToLower(protocol)
-	if protocol == ProtocolHttp && port == DefaultPortHttp {
-		addr = fmt.Sprintf("%s://%s", ProtocolHttp, host)
-	} else if protocol == ProtocolHttps && port == DefaultPortHttps {
-		addr = fmt.Sprintf("%s://%s", ProtocolHttps, host)
+	scheme = strings.ToLower(scheme)
+	if scheme == SchemeHttp && port == DefaultPortHttp {
+		addr = fmt.Sprintf("%s://%s", SchemeHttp, host)
+	} else if scheme == SchemeHttps && port == DefaultPortHttps {
+		addr = fmt.Sprintf("%s://%s", SchemeHttps, host)
 	} else {
-		addr = fmt.Sprintf("%s://%s:%d", protocol, host, port)
+		addr = fmt.Sprintf("%s://%s:%d", scheme, host, port)
 	}
 	return addr
 }

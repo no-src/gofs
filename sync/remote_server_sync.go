@@ -59,9 +59,9 @@ func NewRemoteServerSync(src, target core.VFS, bufSize int) (Sync, error) {
 	rs.server = tran.NewServer(src.Host(), src.Port())
 
 	if len(src.FsServer()) == 0 {
-		scheme := server.ProtocolHttps
+		scheme := server.SchemeHttps
 		if !server.EnableTLS() {
-			scheme = server.ProtocolHttp
+			scheme = server.SchemeHttp
 		}
 		rs.serverAddr = server.GenerateAddr(scheme, rs.server.Host(), server.ServerPort())
 	} else {
