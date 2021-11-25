@@ -7,6 +7,7 @@ import (
 	"github.com/no-src/gofs/daemon"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/log"
+	"os"
 	"time"
 )
 
@@ -38,6 +39,12 @@ var (
 )
 
 func parseFlags() {
+
+	// print help info if no arguments
+	if len(os.Args) <= 1 {
+		os.Args = append(os.Args, "-h")
+	}
+
 	flag.BoolVar(&printVersion, "v", false, "print version info")
 	core.VFSVar(&sourceVFS, "src", core.NewEmptyVFS(), "source path by monitor")
 	core.VFSVar(&targetVFS, "target", core.NewEmptyVFS(), "target path to backup")
