@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"fmt"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/server"
@@ -60,11 +59,11 @@ func NewRemoteServerSync(src, target core.VFS, bufSize int) (Sync, error) {
 	rs.server = tran.NewServer(src.Host(), src.Port())
 
 	if len(src.FsServer()) == 0 {
-		scheme := "https"
+		scheme := server.ProtocolHttps
 		if !server.EnableTLS() {
-			scheme = "http"
+			scheme = server.ProtocolHttp
 		}
-		rs.serverAddr = fmt.Sprintf("%s://%s:%d", scheme, rs.server.Host(), server.ServerPort())
+		rs.serverAddr = server.GenerateAddr(scheme, rs.server.Host(), server.ServerPort())
 	} else {
 		rs.serverAddr = src.FsServer()
 	}

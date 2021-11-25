@@ -1,8 +1,10 @@
 package server
 
 import (
+	"fmt"
 	"github.com/no-src/log"
 	"net"
+	"strings"
 )
 
 var serverAddr *net.TCPAddr
@@ -12,6 +14,15 @@ const (
 	SrcRoutePrefix    = "/src/"
 	TargetRoutePrefix = "/target/"
 	QueryRoute        = "/query"
+)
+
+const (
+	DefaultAddrHttps = ":443"
+	DefaultAddrHttp  = ":80"
+	ProtocolHttp     = "http"
+	ProtocolHttps    = "https"
+	DefaultPortHttp  = 80
+	DefaultPortHttps = 443
 )
 
 func initServerInfo(addr string, tls bool) {
@@ -40,4 +51,18 @@ func ServerPort() int {
 // EnableTLS is using https on the file server
 func EnableTLS() bool {
 	return enableTLS
+}
+
+// GenerateAddr generate http or https address
+func GenerateAddr(protocol, host string, port int) string {
+	addr := ""
+	protocol = strings.ToLower(protocol)
+	if protocol == ProtocolHttp && port == DefaultPortHttp {
+		addr = fmt.Sprintf("%s://%s", ProtocolHttp, host)
+	} else if protocol == ProtocolHttps && port == DefaultPortHttps {
+		addr = fmt.Sprintf("%s://%s", ProtocolHttps, host)
+	} else {
+		addr = fmt.Sprintf("%s://%s:%d", protocol, host, port)
+	}
+	return addr
 }
