@@ -1,7 +1,7 @@
 //go:build no_server
 // +build no_server
 
-package server
+package fs
 
 import (
 	"github.com/no-src/gofs/core"

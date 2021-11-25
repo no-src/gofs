@@ -25,7 +25,7 @@ const (
 	DefaultPortHttps = 443
 )
 
-func initServerInfo(addr string, tls bool) {
+func InitServerInfo(addr string, tls bool) {
 	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err == nil {
 		serverAddr = tcpAddr
