@@ -29,7 +29,7 @@ func (h *fileApiHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 		}
 	}()
 	writer.Header().Set("Content-Type", "application/json; charset=utf-8")
-	var remoteFiles []server.RemoteFile
+	var fileList []contract.FileInfo
 	path := request.FormValue(contract.FsPath)
 	srcPrefix := strings.Trim(server.SrcRoutePrefix, "/")
 	targetPrefix := strings.Trim(server.TargetRoutePrefix, "/")
@@ -73,7 +73,7 @@ func (h *fileApiHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 				aTime = cTime
 				mTime = cTime
 			}
-			remoteFiles = append(remoteFiles, server.RemoteFile{
+			fileList = append(fileList, contract.FileInfo{
 				Path:  file.Name(),
 				IsDir: file.IsDir(),
 				Size:  file.Size(),
@@ -83,7 +83,7 @@ func (h *fileApiHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 			})
 		}
 	}
-	bytes, err := util.Marshal(server.NewApiResult(0, "success", remoteFiles))
+	bytes, err := util.Marshal(server.NewApiResult(0, "success", fileList))
 	if err != nil {
 		log.Error(err, "file server marshal error")
 		writer.Write(server.NewErrorApiResultBytes(-6, "marshal error"))

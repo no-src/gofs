@@ -301,7 +301,7 @@ func (rs *remoteClientSync) sync(serverAddr, path string) error {
 	if err != nil {
 		return err
 	}
-	var files []server.RemoteFile
+	var files []contract.FileInfo
 	err = util.Unmarshal(dataBytes, &files)
 	if err != nil {
 		return err

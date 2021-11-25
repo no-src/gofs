@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/retry"
-	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/tran"
 	"github.com/no-src/gofs/util"
@@ -14,7 +13,7 @@ import (
 	"strings"
 )
 
-type remoteMonitor struct {
+type remoteClientMonitor struct {
 	syncer   sync.Sync
 	retry    retry.Retry
 	client   tran.Client
@@ -27,13 +26,13 @@ type message struct {
 	data []byte
 }
 
-// NewRemoteMonitor create an instance of remoteMonitor to monitor the remote file change
-func NewRemoteMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, host string, port int, messageQueue int) (m Monitor, err error) {
+// NewRemoteClientMonitor create an instance of remoteClientMonitor to monitor the remote file change
+func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, host string, port int, messageQueue int) (m Monitor, err error) {
 	if syncer == nil {
 		err = errors.New("syncer can't be nil")
 		return nil, err
 	}
-	m = &remoteMonitor{
+	m = &remoteClientMonitor{
 		syncer:   syncer,
 		retry:    retry,
 		client:   tran.NewClient(host, port),
@@ -43,7 +42,7 @@ func NewRemoteMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, host s
 	return m, nil
 }
 
-func (m *remoteMonitor) Start() error {
+func (m *remoteClientMonitor) Start() error {
 	if m.client == nil {
 		return errors.New("remote sync client is nil")
 	}
@@ -61,7 +60,7 @@ func (m *remoteMonitor) Start() error {
 			}
 		}()
 
-		var info server.Info
+		var info contract.FileServerInfo
 		m.retry.Do(func() error {
 			infoResult, err := m.client.ReadAll()
 			if err != nil {
@@ -114,7 +113,7 @@ func (m *remoteMonitor) Start() error {
 	return nil
 }
 
-func (m *remoteMonitor) processingMessage() {
+func (m *remoteClientMonitor) processingMessage() {
 	for {
 		message := <-m.messages
 		log.Info("client read request => %s", string(message.data))
@@ -159,7 +158,7 @@ func (m *remoteMonitor) processingMessage() {
 	}
 }
 
-func (m *remoteMonitor) Close() error {
+func (m *remoteClientMonitor) Close() error {
 	m.closed = true
 	return m.client.Close()
 }

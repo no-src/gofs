@@ -1,7 +1,6 @@
-package server
+package contract
 
-// RemoteFile the remote file info
-type RemoteFile struct {
+type FileInfo struct {
 	// Path file path
 	Path string `json:"path"`
 	// IsDir is a dir the path

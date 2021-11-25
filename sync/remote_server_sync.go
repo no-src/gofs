@@ -213,7 +213,7 @@ func (rs *remoteServerSync) start() error {
 		log.Debug("receive message [%s] => %s", client.RemoteAddr().String(), string(data))
 		writer := bufio.NewWriter(client)
 		if bytes.Equal(data, contract.InfoCommand) {
-			info := server.Info{
+			info := contract.FileServerInfo{
 				Status:     contract.SuccessStatus(contract.InfoApi),
 				ServerAddr: rs.serverAddr,
 				SrcPath:    server.SrcRoutePrefix,

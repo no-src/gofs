@@ -1,10 +1,7 @@
-package server
+package contract
 
-import "github.com/no-src/gofs/contract"
-
-// Info file server info
-type Info struct {
-	contract.Status
+type FileServerInfo struct {
+	Status
 	ServerAddr string `json:"server_addr"`
 	SrcPath    string `json:"src_path"`
 	TargetPath string `json:"target_path"`

@@ -21,10 +21,12 @@ type Monitor interface {
 // syncOnce tag a sync once command, the sync once command will execute when call the Start
 func NewMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool) (Monitor, error) {
 	src := syncer.Source()
-	if src.IsDisk() || (src.Is(core.RemoteDisk) && src.Server()) {
+	if src.IsDisk() {
+		return NewFsNotifyMonitor(syncer, retry, syncOnce)
+	} else if src.Is(core.RemoteDisk) && src.Server() {
 		return NewFsNotifyMonitor(syncer, retry, syncOnce)
 	} else if src.Is(core.RemoteDisk) && !src.Server() {
-		return NewRemoteMonitor(syncer, retry, syncOnce, src.Host(), src.Port(), src.MessageQueue())
+		return NewRemoteClientMonitor(syncer, retry, syncOnce, src.Host(), src.Port(), src.MessageQueue())
 	}
 	return nil, fmt.Errorf("file system unsupported ! src=>%s", src.Type().String())
 
