@@ -32,6 +32,14 @@ Start a daemon to create subprocess to work, and record pid info to pid file.
 gofs -src=./src -target=./target -daemon -daemon_pid
 ```
 
+Start a file server for src path and target path.
+The file server is use HTTPS default, set the `tls_cert_file` and `tls_key_file` flags to customize the cert file and key file.
+You can disable the HTTPS by set the `server_tls` flag to `false` if you don't need it.
+
+```bash
+gofs -src=./src -target=./target -server
+```
+
 Start a remote disk server as a remote file source.
 
 ```bash

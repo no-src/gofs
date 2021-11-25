@@ -4,10 +4,12 @@
 package fs
 
 import (
+	"fmt"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/handler"
+	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
 	"net/http"
 )
@@ -37,6 +39,20 @@ func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.Wait
 	init.Done()
 
 	if enableTLS {
+		exist, err := util.FileExist(certFile)
+		if err != nil {
+			return err
+		}
+		if !exist {
+			return fmt.Errorf("cert file is not found for https => %s", certFile)
+		}
+		exist, err = util.FileExist(keyFile)
+		if err != nil {
+			return err
+		}
+		if !exist {
+			return fmt.Errorf("key file is not found for https => %s", keyFile)
+		}
 		return http.ListenAndServeTLS(addr, certFile, keyFile, nil)
 	} else {
 		log.Warn("file server is not a security connection, you need the https replaced maybe!")
