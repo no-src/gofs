@@ -25,6 +25,11 @@ const (
 	DefaultPortHttps = 443
 )
 
+const (
+	SessionName = "session_id"
+	SessionUser = "user"
+)
+
 func InitServerInfo(addr string, tls bool) {
 	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err == nil {

@@ -56,7 +56,7 @@ func main() {
 	if fileServer {
 		waitInit := retry.NewWaitDone()
 		go func() {
-			err := fs.StartFileServer(sourceVFS, targetVFS, fileServerAddr, waitInit, fileServerTLS, certFile, keyFile)
+			err := fs.StartFileServer(sourceVFS, targetVFS, fileServerAddr, waitInit, fileServerTLS, certFile, keyFile, fileServerUsers, fileServerTemplate)
 			if err != nil {
 				log.Error(err, "start the file server [%s] error", fileServerAddr)
 			}
