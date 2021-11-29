@@ -15,6 +15,7 @@ import (
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -22,8 +23,14 @@ import (
 func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.WaitDone, enableTLS bool, certFile string, keyFile string, serverUsers string, serverTemplate string) error {
 	enableFileApi := false
 
-	// disable gin debug log
-	// gin.DefaultWriter = log.NewEmptyLogger()
+	// change default mode is release
+	mode := os.Getenv(gin.EnvGinMode)
+	if mode == "" {
+		mode = gin.ReleaseMode
+	}
+	gin.SetMode(mode)
+	gin.DefaultWriter = log.DefaultLogger()
+
 	engine := gin.New()
 	engine.Use(gin.LoggerWithConfig(gin.LoggerConfig{
 		Formatter: defaultLogFormatter,
