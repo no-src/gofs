@@ -27,7 +27,12 @@ func main() {
 		if isDaemon {
 			filePrefix += "daemon_"
 		}
-		loggers = append(loggers, log.NewFileLoggerWithAutoFlush(log.Level(logLevel), logDir, filePrefix, logFlush, logFlushInterval))
+		flogger, err := log.NewFileLoggerWithAutoFlush(log.Level(logLevel), logDir, filePrefix, logFlush, logFlushInterval)
+		if err != nil {
+			log.Error(err, "init file logger error")
+			return
+		}
+		loggers = append(loggers, flogger)
 	}
 	log.InitDefaultLogger(log.NewMultiLogger(loggers...))
 	defer log.Close()

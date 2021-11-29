@@ -14,23 +14,21 @@ import (
 	"github.com/no-src/gofs/server/middleware/auth"
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
-	"io"
 	"net/http"
-	"os"
+	"time"
 )
 
 // StartFileServer start a file server by gin
 func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.WaitDone, enableTLS bool, certFile string, keyFile string, serverUsers string, serverTemplate string) error {
 	enableFileApi := false
 
-	// init log
-	ginLog, err := os.OpenFile("gin.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
-	if err != nil {
-		return err
-	}
-	gin.DefaultWriter = io.MultiWriter(ginLog, os.Stdout)
-
-	engine := gin.Default()
+	// disable gin debug log
+	// gin.DefaultWriter = log.NewEmptyLogger()
+	engine := gin.New()
+	engine.Use(gin.LoggerWithConfig(gin.LoggerConfig{
+		Formatter: defaultLogFormatter,
+		Output:    log.DefaultLogger(),
+	}), gin.Recovery())
 	engine.LoadHTMLGlob(serverTemplate)
 
 	// init session
@@ -99,4 +97,27 @@ func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.Wait
 		log.Warn("file server is not a security connection, you need the https replaced maybe!")
 		return engine.Run(addr)
 	}
+}
+
+var defaultLogFormatter = func(param gin.LogFormatterParams) string {
+	var statusColor, methodColor, resetColor string
+	if param.IsOutputColor() {
+		statusColor = param.StatusCodeColor()
+		methodColor = param.MethodColor()
+		resetColor = param.ResetColor()
+	}
+
+	if param.Latency > time.Minute {
+		// Truncate in a golang < 1.8 safe way
+		param.Latency = param.Latency - param.Latency%time.Second
+	}
+	return fmt.Sprintf("[%v] [GIN] |%s %3d %s| %13v | %15s |%s %-7s %s %#v\n%s",
+		param.TimeStamp.Format("2006-01-02 15:04:05"),
+		statusColor, param.StatusCode, resetColor,
+		param.Latency,
+		param.ClientIP,
+		methodColor, param.Method, resetColor,
+		param.Path,
+		param.ErrorMessage,
+	)
 }
