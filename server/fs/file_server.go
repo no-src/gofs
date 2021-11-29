@@ -31,7 +31,7 @@ func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.Wait
 		return err
 	}
 
-	http.Handle("/", auth.Auth(handler.NewDefaultHandler(), store))
+	http.Handle("/", auth.Auth(handler.NewDefaultHandler(serverTemplate), store))
 
 	http.HandleFunc("/login/index", func(writer http.ResponseWriter, request *http.Request) {
 		t.ExecuteTemplate(writer, "login.html", nil)

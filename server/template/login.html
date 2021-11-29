@@ -1,29 +1,47 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/html">
 <head>
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"/>
     <title>Login</title>
-    <style>
-        .login_form {
-            text-align: center;
-            margin-top: 50px;
-        }
-    </style>
+    <head>
+        <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css"/>
+        <script src="https://unpkg.com/vue@next"></script>
+        <script src="https://unpkg.com/element-plus"></script>
+    </head>
 </head>
 <body>
-<div class="login_form">
-    <form action="/login/submit" method="post">
-        <p>
-            <span>UserName:</span><input name="username" type="text">
-        </p>
-        <p>
-            <span>Password:</span><input name="password" type="password">
-        </p>
-        <p>
-            <button>Login</button>
-        </p>
-    </form>
-</div>
+<el-container id="app">
+    <el-row justify="center">
+        <el-card style="width: 400px;margin-top: 70px;">
+            <el-form ref="form" :model="form" label-width="95px" action="/login/submit" method="post">
+                <el-form-item label="UserName">
+                    <el-input name="username" v-model="username" placeholder="Please input your username"/>
+                </el-form-item>
+                <el-form-item label="Password">
+                    <el-input name="password" v-model="password" placeholder="Please input your password"
+                              show-password/>
+                </el-form-item>
+                <el-form-item>
+                    <el-button native-type="submit" type="primary" round :style="{width:'200px'}">Sign in</el-button>
+                </el-form-item>
+            </el-form>
+        </el-card>
+    </el-row>
+</el-container>
+
+<script>
+    const {defineComponent, ref} = Vue;
+    var Main = {
+        setup() {
+            return {
+                username: ref(''),
+                password: ref(''),
+            }
+        }
+    };
+
+    const app = Vue.createApp(Main).use(ElementPlus).mount("#app");
+</script>
 </body>
 </html>

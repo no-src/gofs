@@ -60,7 +60,7 @@ func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.Wait
 	})
 
 	rootGroup.GET("/", func(context *gin.Context) {
-		handler.NewDefaultHandler().ServeHTTP(context.Writer, context.Request)
+		handler.NewDefaultHandler(serverTemplate).ServeHTTP(context.Writer, context.Request)
 	})
 
 	if src.IsDisk() || src.Is(core.RemoteDisk) {
