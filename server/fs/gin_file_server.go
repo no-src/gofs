@@ -55,9 +55,15 @@ func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.Wait
 		auth.NewLoginHandler(store, users).ServeHTTP(context.Writer, context.Request)
 	})
 
-	rootGroup := engine.Group("/").Use(func(context *gin.Context) {
-		auth.Auth(nil, store).ServeHTTP(context.Writer, context.Request)
-	})
+	rootGroup := engine.Group("/")
+
+	if len(users) > 0 {
+		rootGroup.Use(func(context *gin.Context) {
+			auth.Auth(nil, store).ServeHTTP(context.Writer, context.Request)
+		})
+	} else {
+		server.PrintAnonymousAccessWarning()
+	}
 
 	rootGroup.GET("/", func(context *gin.Context) {
 		handler.NewDefaultHandler(serverTemplate).ServeHTTP(context.Writer, context.Request)

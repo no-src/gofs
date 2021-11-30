@@ -19,3 +19,11 @@ func Auth(h http.Handler, store sessions.Store) http.HandlerFunc {
 		}
 	}
 }
+
+func NoAuth(h http.Handler, store sessions.Store) http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		if h != nil {
+			h.ServeHTTP(writer, request)
+		}
+	}
+}

@@ -69,7 +69,7 @@ func parseFlags() {
 	flag.BoolVar(&fileServer, "server", false, "start a file server to browse source directory and target directory")
 	flag.StringVar(&fileServerAddr, "server_addr", server.DefaultAddrHttps, "a file server binding address")
 	flag.BoolVar(&fileServerTLS, "server_tls", true, fmt.Sprintf("enable https for file server, if disable it, server_addr is \"%s\" default", server.DefaultAddrHttp))
-	flag.StringVar(&fileServerUsers, "server_users", "", "the file server users, format like this, user1|password1,user2|password2")
+	flag.StringVar(&fileServerUsers, "server_users", "", "the file server accounts, the file server allows anonymous access if there is no effective account, format like this, user1|password1,user2|password2")
 	flag.StringVar(&fileServerTemplate, "server_tmpl", "./template/*.html", "the file server template pattern")
 	flag.StringVar(&certFile, "tls_cert_file", "gofs.pem", "cert file for https connections")
 	flag.StringVar(&keyFile, "tls_key_file", "gofs.key", "key file for https connections")

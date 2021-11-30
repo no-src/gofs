@@ -31,7 +31,13 @@ func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.Wait
 		return err
 	}
 
-	http.Handle("/", auth.Auth(handler.NewDefaultHandler(serverTemplate), store))
+	authFunc := auth.Auth
+	if len(users) == 0 {
+		server.PrintAnonymousAccessWarning()
+		authFunc = auth.NoAuth
+	}
+
+	http.Handle("/", authFunc(handler.NewDefaultHandler(serverTemplate), store))
 
 	http.HandleFunc(server.LoginIndexFullRoute, func(writer http.ResponseWriter, request *http.Request) {
 		t.ExecuteTemplate(writer, "login.html", nil)
@@ -40,17 +46,17 @@ func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.Wait
 	http.Handle(server.LoginRoute+server.LoginSignInRoute, auth.NewLoginHandler(store, users))
 
 	if src.IsDisk() || src.Is(core.RemoteDisk) {
-		http.Handle(server.SrcRoutePrefix, auth.Auth(http.StripPrefix(server.SrcRoutePrefix, http.FileServer(http.Dir(src.Path()))), store))
+		http.Handle(server.SrcRoutePrefix, authFunc(http.StripPrefix(server.SrcRoutePrefix, http.FileServer(http.Dir(src.Path()))), store))
 		enableFileApi = true
 	}
 
 	if target.IsDisk() {
-		http.Handle(server.TargetRoutePrefix, auth.Auth(http.StripPrefix(server.TargetRoutePrefix, http.FileServer(http.Dir(target.Path()))), store))
+		http.Handle(server.TargetRoutePrefix, authFunc(http.StripPrefix(server.TargetRoutePrefix, http.FileServer(http.Dir(target.Path()))), store))
 		enableFileApi = true
 	}
 
 	if enableFileApi {
-		http.Handle(server.QueryRoute, auth.Auth(handler.NewFileApiHandler(http.Dir(src.Path())), store))
+		http.Handle(server.QueryRoute, authFunc(handler.NewFileApiHandler(http.Dir(src.Path())), store))
 	}
 
 	log.Log("file server [%s] starting...", addr)
