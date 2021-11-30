@@ -5,7 +5,7 @@ import (
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/log"
 	"net/http"
-	"strings"
+	"net/url"
 )
 
 type loginHandler struct {
@@ -13,10 +13,10 @@ type loginHandler struct {
 	users []*User
 }
 
-func NewLoginHandler(store sessions.Store, serverUsers string) http.Handler {
+func NewLoginHandler(store sessions.Store, users []*User) http.Handler {
 	return &loginHandler{
 		store: store,
-		users: parseUsers(serverUsers),
+		users: users,
 	}
 }
 
@@ -28,8 +28,17 @@ func (h *loginHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reque
 		}
 	}()
 	request.ParseMultipartForm(32 << 20) // 32 MB
-	userName := request.PostForm.Get("username")
-	password := request.PostForm.Get("password")
+	userName := request.PostForm.Get(server.ServerParamUserName)
+	password := request.PostForm.Get(server.ServerParamPassword)
+	returnUrl := request.PostForm.Get(server.ServerParamReturnUrl)
+	if len(returnUrl) == 0 {
+		returnUrl = "/"
+	} else {
+		_, parseErr := url.Parse(returnUrl)
+		if parseErr != nil {
+			returnUrl = "/"
+		}
+	}
 
 	var loginUser *User
 	for _, user := range h.users {
@@ -48,34 +57,9 @@ func (h *loginHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reque
 			return
 		}
 		log.Debug("login success, userid=%d username=%s password=%s", loginUser.UserId, loginUser.UserName, loginUser.Password)
-		http.Redirect(writer, request, "/", http.StatusFound)
+		http.Redirect(writer, request, returnUrl, http.StatusFound)
 	} else {
 		log.Debug("login failed, username=%s password=%s", userName, password)
-		http.Redirect(writer, request, "/login/index", http.StatusFound)
+		http.Redirect(writer, request, server.LoginIndexFullRoute, http.StatusFound)
 	}
-}
-
-func parseUsers(serverUsers string) []*User {
-	var users []*User
-	if len(serverUsers) == 0 {
-		return users
-	}
-	all := strings.Split(serverUsers, ",")
-	userCount := 0
-	for _, user := range all {
-		userInfo := strings.Split(user, "|")
-		if len(userInfo) == 2 {
-			userName := strings.TrimSpace(userInfo[0])
-			password := strings.TrimSpace(userInfo[1])
-			if len(userName) > 0 && len(password) > 0 {
-				userCount++
-				users = append(users, &User{
-					UserId:   userCount,
-					UserName: userName,
-					Password: password,
-				})
-			}
-		}
-	}
-	return users
 }

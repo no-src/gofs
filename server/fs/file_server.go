@@ -17,7 +17,7 @@ import (
 )
 
 // StartFileServer start a file server
-func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.WaitDone, enableTLS bool, certFile string, keyFile string, serverUsers string, serverTemplate string) error {
+func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.WaitDone, enableTLS bool, certFile string, keyFile string, users []*auth.User, serverTemplate string) error {
 	enableFileApi := false
 
 	t, err := template.ParseGlob(serverTemplate)
@@ -33,11 +33,11 @@ func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.Wait
 
 	http.Handle("/", auth.Auth(handler.NewDefaultHandler(serverTemplate), store))
 
-	http.HandleFunc("/login/index", func(writer http.ResponseWriter, request *http.Request) {
+	http.HandleFunc(server.LoginIndexFullRoute, func(writer http.ResponseWriter, request *http.Request) {
 		t.ExecuteTemplate(writer, "login.html", nil)
 	})
 
-	http.Handle("/login/submit", auth.NewLoginHandler(store, serverUsers))
+	http.Handle(server.LoginRoute+server.LoginSignInRoute, auth.NewLoginHandler(store, users))
 
 	if src.IsDisk() || src.Is(core.RemoteDisk) {
 		http.Handle(server.SrcRoutePrefix, auth.Auth(http.StripPrefix(server.SrcRoutePrefix, http.FileServer(http.Dir(src.Path()))), store))

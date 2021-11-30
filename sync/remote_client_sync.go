@@ -7,10 +7,12 @@ import (
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/server"
+	"github.com/no-src/gofs/server/middleware/auth"
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -23,10 +25,12 @@ type remoteClientSync struct {
 	target        core.VFS
 	targetAbsPath string
 	bufSize       int
+	users         []*auth.User
+	cookies       []*http.Cookie
 }
 
 // NewRemoteClientSync create an instance of remoteClientSync to receive the file change message and execute it
-func NewRemoteClientSync(src, target core.VFS, bufSize int) (Sync, error) {
+func NewRemoteClientSync(src, target core.VFS, bufSize int, users []*auth.User) (Sync, error) {
 	if len(target.Path()) == 0 {
 		return nil, errors.New("target is not found")
 	}
@@ -44,6 +48,7 @@ func NewRemoteClientSync(src, target core.VFS, bufSize int) (Sync, error) {
 		bufSize:       bufSize,
 		src:           src,
 		target:        target,
+		users:         users,
 	}
 	return rs, nil
 }
@@ -111,7 +116,7 @@ func (rs *remoteClientSync) Write(path string) error {
 	if isDir {
 		rs.SyncOnce(path)
 	} else {
-		resp, err := util.HttpGet(path)
+		resp, err := rs.httpGetWithAuth(path)
 		if err != nil {
 			log.Error(err, "Write:download the src file failed")
 			return err
@@ -277,7 +282,7 @@ func (rs *remoteClientSync) SyncOnce(path string) error {
 func (rs *remoteClientSync) sync(serverAddr, path string) error {
 	log.Debug("remote client sync path => %s", path)
 	queryUrl := fmt.Sprintf("%s%s?%s", serverAddr, server.QueryRoute, util.ValuesEncode(contract.FsPath, path))
-	resp, err := util.HttpGet(queryUrl)
+	resp, err := rs.httpGetWithAuth(queryUrl)
 	if err != nil {
 		return err
 	}
@@ -365,4 +370,37 @@ func (rs *remoteClientSync) Source() core.VFS {
 
 func (rs *remoteClientSync) Target() core.VFS {
 	return rs.target
+}
+
+func (rs *remoteClientSync) httpGetWithAuth(rawURL string) (resp *http.Response, err error) {
+	resp, err = util.HttpGetWithCookie(rawURL, rs.cookies...)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == http.StatusUnauthorized && len(rs.users) > 0 {
+		// auto login
+		parseUrl, err := url.Parse(rawURL)
+		if err != nil {
+			return nil, err
+		}
+		loginUrl := fmt.Sprintf("%s://%s%s", parseUrl.Scheme, parseUrl.Host, server.LoginSignInFullRoute)
+		form := url.Values{}
+		user := rs.users[0]
+		form.Set(server.ServerParamUserName, user.UserName)
+		form.Set(server.ServerParamPassword, user.Password)
+		log.Debug("try to auto login file server %s=%s %s=%s", server.ServerParamUserName, user.UserName, server.ServerParamPassword, user.Password)
+		loginResp, err := util.HttpPostWithoutRedirect(loginUrl, form)
+		if err != nil {
+			return nil, err
+		}
+		if loginResp.StatusCode == http.StatusFound {
+			rs.cookies = loginResp.Cookies()
+			if len(rs.cookies) > 0 {
+				log.Debug("try to auto login file server success maybe, retry to get resource => %s", rawURL)
+				return util.HttpGetWithCookie(rawURL, rs.cookies...)
+			}
+		}
+		return nil, errors.New("file server is unauthorized")
+	}
+	return resp, err
 }

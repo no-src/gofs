@@ -20,7 +20,7 @@ import (
 )
 
 // StartFileServer start a file server by gin
-func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.WaitDone, enableTLS bool, certFile string, keyFile string, serverUsers string, serverTemplate string) error {
+func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.WaitDone, enableTLS bool, certFile string, keyFile string, users []*auth.User, serverTemplate string) error {
 	enableFileApi := false
 
 	// change default mode is release
@@ -45,18 +45,18 @@ func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.Wait
 	}
 	engine.Use(sessions.Sessions(server.SessionName, store))
 
-	loginGroup := engine.Group("/login")
+	loginGroup := engine.Group(server.LoginRoute)
 
-	loginGroup.GET("/index", func(context *gin.Context) {
+	loginGroup.GET(server.LoginIndexRoute, func(context *gin.Context) {
 		context.HTML(http.StatusOK, "login.html", nil)
 	})
 
-	loginGroup.POST("/submit", func(context *gin.Context) {
-		auth.NewLoginHandler(store, serverUsers).ServeHTTP(context.Writer, context.Request)
+	loginGroup.POST(server.LoginSignInRoute, func(context *gin.Context) {
+		auth.NewLoginHandler(store, users).ServeHTTP(context.Writer, context.Request)
 	})
 
 	rootGroup := engine.Group("/").Use(func(context *gin.Context) {
-		auth.NewAuthHandler(store).ServeHTTP(context.Writer, context.Request)
+		auth.Auth(nil, store).ServeHTTP(context.Writer, context.Request)
 	})
 
 	rootGroup.GET("/", func(context *gin.Context) {

@@ -5,6 +5,7 @@ import (
 	"github.com/no-src/gofs/monitor"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/server/fs"
+	"github.com/no-src/gofs/server/middleware/auth"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/version"
 	"github.com/no-src/log"
@@ -57,11 +58,13 @@ func main() {
 
 	// if enable daemon, start a worker to process the following
 
+	fsUsers := auth.ParseUsers(fileServerUsers)
+
 	// start a file server
 	if fileServer {
 		waitInit := retry.NewWaitDone()
 		go func() {
-			err := fs.StartFileServer(sourceVFS, targetVFS, fileServerAddr, waitInit, fileServerTLS, certFile, keyFile, fileServerUsers, fileServerTemplate)
+			err := fs.StartFileServer(sourceVFS, targetVFS, fileServerAddr, waitInit, fileServerTLS, certFile, keyFile, fsUsers, fileServerTemplate)
 			if err != nil {
 				log.Error(err, "start the file server [%s] error", fileServerAddr)
 			}
@@ -70,7 +73,7 @@ func main() {
 	}
 
 	// create syncer
-	syncer, err := sync.NewSync(sourceVFS, targetVFS, bufSize)
+	syncer, err := sync.NewSync(sourceVFS, targetVFS, bufSize, fsUsers)
 	if err != nil {
 		log.Error(err, "create DiskSync error")
 		return
