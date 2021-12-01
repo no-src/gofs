@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/daemon"
 	"github.com/no-src/gofs/server"
@@ -38,6 +39,9 @@ var (
 	keyFile            string
 	fileServerUsers    string
 	fileServerTemplate string
+	randomServerUser   int
+	randomUserNameLen  int
+	randomPasswordLen  int
 )
 
 func parseFlags() {
@@ -71,11 +75,39 @@ func parseFlags() {
 	flag.BoolVar(&fileServerTLS, "server_tls", true, fmt.Sprintf("enable https for file server, if disable it, server_addr is \"%s\" default", server.DefaultAddrHttp))
 	flag.StringVar(&fileServerUsers, "server_users", "", "the file server accounts, the file server allows anonymous access if there is no effective account, format like this, user1|password1,user2|password2")
 	flag.StringVar(&fileServerTemplate, "server_tmpl", "./template/*.html", "the file server template pattern")
+	flag.IntVar(&randomServerUser, "rand_server_user", 0, "the number of random server accounts, if it is greater than zero, random generate some accounts for server_users")
+	flag.IntVar(&randomUserNameLen, "rand_user_len", 6, "the length of the random user's username")
+	flag.IntVar(&randomPasswordLen, "rand_pwd_len", 10, "the length of the random user's password")
 	flag.StringVar(&certFile, "tls_cert_file", "gofs.pem", "cert file for https connections")
 	flag.StringVar(&keyFile, "tls_key_file", "gofs.key", "key file for https connections")
 	flag.Parse()
+}
 
+// initFlags init flags default value
+func initFlags() error {
 	if !fileServerTLS && fileServerAddr == server.DefaultAddrHttps {
 		fileServerAddr = server.DefaultAddrHttp
 	}
+
+	// if start a remote server monitor, auto enable file server
+	if sourceVFS.Server() {
+		fileServer = true
+	}
+
+	if randomServerUser > 0 && fileServer {
+		serverUsers := contract.RandomUser(randomServerUser, randomUserNameLen, randomPasswordLen)
+		randUserStr, err := contract.ParseStringUsers(serverUsers)
+		if err != nil {
+			return err
+		} else {
+			if len(fileServerUsers) > 0 {
+				fileServerUsers = fmt.Sprintf("%s,%s", fileServerUsers, randUserStr)
+			} else {
+				fileServerUsers = randUserStr
+			}
+			log.Info("generate random file server users success => [%s]", fileServerUsers)
+		}
+	}
+
+	return nil
 }

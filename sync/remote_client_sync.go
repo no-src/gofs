@@ -7,7 +7,6 @@ import (
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/server"
-	"github.com/no-src/gofs/server/middleware/auth"
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
 	"io"
@@ -25,12 +24,12 @@ type remoteClientSync struct {
 	target        core.VFS
 	targetAbsPath string
 	bufSize       int
-	users         []*auth.User
+	users         []*contract.User
 	cookies       []*http.Cookie
 }
 
 // NewRemoteClientSync create an instance of remoteClientSync to receive the file change message and execute it
-func NewRemoteClientSync(src, target core.VFS, bufSize int, users []*auth.User) (Sync, error) {
+func NewRemoteClientSync(src, target core.VFS, bufSize int, users []*contract.User) (Sync, error) {
 	if len(target.Path()) == 0 {
 		return nil, errors.New("target is not found")
 	}
@@ -386,9 +385,9 @@ func (rs *remoteClientSync) httpGetWithAuth(rawURL string) (resp *http.Response,
 		loginUrl := fmt.Sprintf("%s://%s%s", parseUrl.Scheme, parseUrl.Host, server.LoginSignInFullRoute)
 		form := url.Values{}
 		user := rs.users[0]
-		form.Set(server.ServerParamUserName, user.UserName)
-		form.Set(server.ServerParamPassword, user.Password)
-		log.Debug("try to auto login file server %s=%s %s=%s", server.ServerParamUserName, user.UserName, server.ServerParamPassword, user.Password)
+		form.Set(server.ServerParamUserName, user.UserName())
+		form.Set(server.ServerParamPassword, user.Password())
+		log.Debug("try to auto login file server %s=%s %s=%s", server.ServerParamUserName, user.UserName(), server.ServerParamPassword, user.Password())
 		loginResp, err := util.HttpPostWithoutRedirect(loginUrl, form)
 		if err != nil {
 			return nil, err

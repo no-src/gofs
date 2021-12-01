@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/server"
@@ -21,7 +22,7 @@ import (
 )
 
 // StartFileServer start a file server by gin
-func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.WaitDone, enableTLS bool, certFile string, keyFile string, users []*auth.User, serverTemplate string) error {
+func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.WaitDone, enableTLS bool, certFile string, keyFile string, users []*contract.User, serverTemplate string) error {
 	enableFileApi := false
 
 	err := server.ReleaseTemplate(filepath.Dir(serverTemplate))

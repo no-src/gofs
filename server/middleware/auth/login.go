@@ -1,7 +1,9 @@
 package auth
 
 import (
+	"fmt"
 	"github.com/gorilla/sessions"
+	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/log"
 	"net/http"
@@ -10,10 +12,10 @@ import (
 
 type loginHandler struct {
 	store sessions.Store
-	users []*User
+	users []*contract.User
 }
 
-func NewLoginHandler(store sessions.Store, users []*User) http.Handler {
+func NewLoginHandler(store sessions.Store, users []*contract.User) http.Handler {
 	return &loginHandler{
 		store: store,
 		users: users,
@@ -24,6 +26,7 @@ func (h *loginHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reque
 	defer func() {
 		e := recover()
 		if e != nil {
+			log.Error(fmt.Errorf("%v", e), "user login error")
 			writer.Write([]byte("user login error"))
 		}
 	}()
@@ -40,10 +43,10 @@ func (h *loginHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reque
 		}
 	}
 
-	var loginUser *User
+	var loginUser *contract.SessionUser
 	for _, user := range h.users {
-		if user.UserName == userName && user.Password == password {
-			loginUser = user
+		if user.UserName() == userName && user.Password() == password {
+			loginUser = contract.MapperToSessionUser(user)
 		}
 	}
 	if loginUser != nil {

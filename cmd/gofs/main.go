@@ -1,11 +1,11 @@
 package main
 
 import (
+	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/daemon"
 	"github.com/no-src/gofs/monitor"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/server/fs"
-	"github.com/no-src/gofs/server/middleware/auth"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/version"
 	"github.com/no-src/log"
@@ -44,6 +44,12 @@ func main() {
 		return
 	}
 
+	err := initFlags()
+	if err != nil {
+		log.Error(err, "init flags default value error")
+		return
+	}
+
 	// kill parent process
 	if killPPid {
 		daemon.KillPPid()
@@ -58,7 +64,11 @@ func main() {
 
 	// if enable daemon, start a worker to process the following
 
-	fsUsers := auth.ParseUsers(fileServerUsers)
+	fsUsers, err := contract.ParseUsers(fileServerUsers)
+	if err != nil {
+		log.Error(err, "parse file server user error => [%s]", fileServerUsers)
+		return
+	}
 
 	// start a file server
 	if fileServer {
