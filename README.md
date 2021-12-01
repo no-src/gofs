@@ -35,15 +35,17 @@ gofs -src=./src -target=./target -daemon -daemon_pid
 Start a file server for src path and target path.
 The file server is use HTTPS default, set the `tls_cert_file` and `tls_key_file` flags to customize the cert file and key file.
 You can disable the HTTPS by set the `server_tls` flag to `false` if you don't need it.
+You should set `rand_server_user` flag to auto generate some random users or set `server_users` flag to custom file server users for security reasons.
+The server users will output to log if you set the `rand_server_user` flag greater than zero.
 
 ```bash
-gofs -src=./src -target=./target -server
+gofs -src=./src -target=./target -server -rand_server_user=3
 ```
 
 Start a remote disk server as a remote file source.
 
 ```bash
-gofs -src="rs://127.0.0.1:9016?mode=server&local_sync_disabled=true&path=./src&fs_server=https://127.0.0.1" -target=./target -server
+gofs -src="rs://127.0.0.1:9016?mode=server&local_sync_disabled=true&path=./src&fs_server=https://127.0.0.1" -target=./target -rand_server_user=3
 ```
 
 Start a remote disk client to sync files from remote disk server.
