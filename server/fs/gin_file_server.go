@@ -16,12 +16,19 @@ import (
 	"github.com/no-src/log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 )
 
 // StartFileServer start a file server by gin
 func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.WaitDone, enableTLS bool, certFile string, keyFile string, users []*auth.User, serverTemplate string) error {
 	enableFileApi := false
+
+	err := server.ReleaseTemplate(filepath.Dir(serverTemplate))
+	if err != nil {
+		log.Error(err, "release template resource error")
+		return err
+	}
 
 	// change default mode is release
 	mode := os.Getenv(gin.EnvGinMode)

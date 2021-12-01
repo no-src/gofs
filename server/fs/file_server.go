@@ -14,11 +14,18 @@ import (
 	"github.com/no-src/log"
 	"html/template"
 	"net/http"
+	"path/filepath"
 )
 
 // StartFileServer start a file server
 func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.WaitDone, enableTLS bool, certFile string, keyFile string, users []*auth.User, serverTemplate string) error {
 	enableFileApi := false
+
+	err := server.ReleaseTemplate(filepath.Dir(serverTemplate))
+	if err != nil {
+		log.Error(err, "release template resource error")
+		return err
+	}
 
 	t, err := template.ParseGlob(serverTemplate)
 	if err != nil {
