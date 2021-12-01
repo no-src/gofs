@@ -7,13 +7,12 @@ import (
 	"fmt"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/no-src/gofs/contract"
+	auth2 "github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/handler"
 	"github.com/no-src/gofs/server/middleware/auth"
-	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
 	"net/http"
 	"os"
@@ -22,7 +21,7 @@ import (
 )
 
 // StartFileServer start a file server by gin
-func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.WaitDone, enableTLS bool, certFile string, keyFile string, users []*contract.User, serverTemplate string) error {
+func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.WaitDone, enableTLS bool, certFile string, keyFile string, users []*auth2.User, serverTemplate string) error {
 	enableFileApi := false
 
 	err := server.ReleaseTemplate(filepath.Dir(serverTemplate))
@@ -98,21 +97,6 @@ func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.Wait
 	init.Done()
 
 	if enableTLS {
-		exist, err := util.FileExist(certFile)
-		if err != nil {
-			return err
-		}
-		if !exist {
-			return fmt.Errorf("cert file is not found for https => %s", certFile)
-		}
-		exist, err = util.FileExist(keyFile)
-		if err != nil {
-			return err
-		}
-		if !exist {
-			return fmt.Errorf("key file is not found for https => %s", keyFile)
-		}
-
 		return engine.RunTLS(addr, certFile, keyFile)
 	} else {
 		log.Warn("file server is not a security connection, you need the https replaced maybe!")

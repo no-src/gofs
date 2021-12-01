@@ -35,3 +35,15 @@ func MD5FromFile(file *os.File, bufSize int) (hash string, err error) {
 	hash = hex.EncodeToString(sum)
 	return hash, nil
 }
+
+// MD5 calculate the hash value of the string
+func MD5(s string) (hash string, err error) {
+	md5Provider := md5.New()
+	_, err = md5Provider.Write([]byte(s))
+	if err != nil {
+		return hash, err
+	}
+	sum := md5Provider.Sum(nil)
+	hash = hex.EncodeToString(sum)
+	return hash, nil
+}

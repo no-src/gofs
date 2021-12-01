@@ -1,13 +1,13 @@
-package contract
+package auth
 
 import (
-	"encoding/gob"
 	"errors"
 	"fmt"
 	"github.com/no-src/gofs/util"
 	"strings"
 )
 
+// User a login user info
 type User struct {
 	userId   int
 	userName string
@@ -30,6 +30,23 @@ func (user *User) Password() string {
 	return user.password
 }
 
+// ToHashUser convert User to HashUser
+func (user *User) ToHashUser() (hashUser *HashUser, err error) {
+	hashUser = &HashUser{}
+	hashUser.UserNameHash, err = util.MD5(user.userName)
+	if err != nil {
+		return nil, err
+	}
+	hashUser.PasswordHash, err = util.MD5(user.password)
+	if err != nil {
+		return nil, err
+	}
+	hashUser.UserNameHash = hashUser.UserNameHash[:16]
+	hashUser.PasswordHash = hashUser.PasswordHash[:16]
+	return hashUser, err
+}
+
+// NewUser create a new user
 func NewUser(userId int, userName string, password string) (*User, error) {
 	if userId <= 0 {
 		return nil, errors.New("userId must greater than zero")
@@ -46,6 +63,7 @@ func NewUser(userId int, userName string, password string) (*User, error) {
 	return user, nil
 }
 
+// isValidUser check username and password is valid or not
 func isValidUser(user User) error {
 	if len(user.UserName()) == 0 {
 		return errors.New("userName can't be empty")
@@ -90,6 +108,10 @@ func ParseUsers(userStr string) (users []*User, err error) {
 	return users, nil
 }
 
+// RandomUser generate some user with random username and password
+// count is user count you want
+// userLen is the length of random username, max length is 20
+// pwdLen is the length of random password, max length is 20
 func RandomUser(count, userLen, pwdLen int) []*User {
 	var users []*User
 	for i := 1; i <= count; i++ {
@@ -103,6 +125,7 @@ func RandomUser(count, userLen, pwdLen int) []*User {
 	return users
 }
 
+// ParseStringUsers parse user list to user string
 func ParseStringUsers(users []*User) (userStr string, err error) {
 	if len(users) == 0 {
 		return userStr, nil
@@ -120,25 +143,4 @@ func ParseStringUsers(users []*User) (userStr string, err error) {
 	}
 	userStr = strings.Join(userResultList, ",")
 	return userStr, nil
-}
-
-type SessionUser struct {
-	UserId   int
-	UserName string
-	Password string
-}
-
-func MapperToSessionUser(user *User) *SessionUser {
-	if user == nil {
-		return nil
-	}
-	return &SessionUser{
-		UserId:   user.UserId(),
-		UserName: user.UserName(),
-		Password: user.Password(),
-	}
-}
-
-func init() {
-	gob.Register(SessionUser{})
 }

@@ -3,6 +3,7 @@ package tran
 import (
 	"bufio"
 	"bytes"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"github.com/no-src/log"
@@ -17,6 +18,7 @@ type tcpClient struct {
 	port      int
 	innerConn net.Conn
 	closed    bool
+	enableTLS bool
 }
 
 var (
@@ -24,18 +26,26 @@ var (
 )
 
 // NewClient create an instance of tcpClient
-func NewClient(host string, port int) Client {
-	client := &tcpClient{}
-	client.host = host
-	client.port = port
-	client.network = "tcp"
-	client.closed = true
+func NewClient(host string, port int, enableTLS bool) Client {
+	client := &tcpClient{
+		host:      host,
+		port:      port,
+		network:   "tcp",
+		closed:    true,
+		enableTLS: enableTLS,
+	}
 	return client
 }
 
 func (client *tcpClient) Connect() (err error) {
 	address := fmt.Sprintf("%s:%d", client.host, client.port)
-	client.innerConn, err = net.Dial(client.network, address)
+	if client.enableTLS {
+		client.innerConn, err = tls.Dial(client.network, address, &tls.Config{
+			InsecureSkipVerify: true,
+		})
+	} else {
+		client.innerConn, err = net.Dial(client.network, address)
+	}
 	if err != nil {
 		client.checkAndTagState(err)
 		log.Error(err, "client connect failed")

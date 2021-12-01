@@ -86,7 +86,7 @@ func GenerateAddr(scheme, host string, port int) string {
 }
 
 func PrintAnonymousAccessWarning() {
-	log.Warn("the file server allows anonymous access, you should set some server users for security reasons")
+	log.Warn("the file server allows anonymous access, you should set some server users by the -users or -rand_user_count flag for security reasons")
 }
 
 func ReleaseTemplate(releasePath string) error {

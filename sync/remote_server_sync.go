@@ -4,13 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/tran"
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
-	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,7 +24,7 @@ type remoteServerSync struct {
 }
 
 // NewRemoteServerSync create an instance of remoteServerSync execute send file change message
-func NewRemoteServerSync(src, target core.VFS, bufSize int) (Sync, error) {
+func NewRemoteServerSync(src, target core.VFS, bufSize int, enableTLS bool, certFile string, keyFile string, users []*auth.User) (Sync, error) {
 	if len(src.Path()) == 0 {
 		return nil, errors.New("src is not found")
 	}
@@ -56,7 +56,7 @@ func NewRemoteServerSync(src, target core.VFS, bufSize int) (Sync, error) {
 	rs := &remoteServerSync{
 		diskSync: ds,
 	}
-	rs.server = tran.NewServer(src.Host(), src.Port())
+	rs.server = tran.NewServer(src.Host(), src.Port(), enableTLS, certFile, keyFile, users)
 
 	if len(src.FsServer()) == 0 {
 		scheme := server.SchemeHttps
@@ -206,36 +206,61 @@ func (rs *remoteServerSync) start() error {
 	if err != nil {
 		return err
 	}
-	go rs.server.Accept(func(client net.Conn, data []byte) {
+	go rs.server.Accept(func(client *tran.Conn, data []byte) {
 		if bytes.HasSuffix(data, tran.EndIdentity) {
 			data = data[:len(data)-len(tran.EndIdentity)]
 		}
 		log.Debug("receive message [%s] => %s", client.RemoteAddr().String(), string(data))
 		writer := bufio.NewWriter(client)
+		var result []byte
+		var cmd contract.Command
 		if bytes.Equal(data, contract.InfoCommand) {
-			info := contract.FileServerInfo{
-				Status:     contract.SuccessStatus(contract.InfoApi),
-				ServerAddr: rs.serverAddr,
-				SrcPath:    server.SrcRoutePrefix,
-				TargetPath: server.TargetRoutePrefix,
-				QueryAddr:  server.QueryRoute,
-			}
-			result, err := util.Marshal(info)
-			if err != nil {
-				result = append(result, []byte(err.Error())...)
-				result = append(result, tran.ErrorEndIdentity...)
+			cmd = contract.InfoCommand
+			var info contract.FileServerInfo
+			if client.Authorized() {
+				info = contract.FileServerInfo{
+					Status:     contract.SuccessStatus(contract.InfoApi),
+					ServerAddr: rs.serverAddr,
+					SrcPath:    server.SrcRoutePrefix,
+					TargetPath: server.TargetRoutePrefix,
+					QueryAddr:  server.QueryRoute,
+				}
 			} else {
-				result = append(result, tran.EndIdentity...)
+				info = contract.FileServerInfo{
+					Status: contract.UnauthorizedStatus(contract.InfoApi),
+				}
 			}
-			result = append(result, tran.LFBytes...)
-			_, err = writer.Write(result)
-			if err != nil {
-				log.Error(err, "write info message error")
+			result, err = util.Marshal(info)
+		} else if bytes.HasPrefix(data, contract.AuthCommand) {
+			cmd = contract.AuthCommand
+			authData := contract.FailStatus(contract.AuthApi)
+			hashUser, err := auth.ParseAuthCommandData(data)
+			if err == nil && client != nil {
+				if rs.server.Auth(hashUser.UserNameHash, hashUser.PasswordHash) {
+					client.MarkAuthorized(hashUser.UserNameHash, hashUser.PasswordHash)
+					authData = contract.SuccessStatus(contract.AuthApi)
+				}
+			} else if err != nil {
+				log.Error(err, "parse auth command data error")
 			}
-			err = writer.Flush()
-			if err != nil {
-				log.Error(err, "flush info message error")
-			}
+			result, err = util.Marshal(authData)
+		}
+
+		// write to response
+		if err != nil {
+			result = append(result, []byte(err.Error())...)
+			result = append(result, tran.ErrorEndIdentity...)
+		} else {
+			result = append(result, tran.EndIdentity...)
+		}
+		result = append(result, tran.LFBytes...)
+		_, err = writer.Write(result)
+		if err != nil {
+			log.Error(err, "write %s message error", string(cmd))
+		}
+		err = writer.Flush()
+		if err != nil {
+			log.Error(err, "flush %s message error", string(cmd))
 		}
 	})
 	return nil

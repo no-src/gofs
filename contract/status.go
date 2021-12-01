@@ -11,9 +11,24 @@ type Status struct {
 
 // SuccessStatus create an instance of success status with specified api type
 func SuccessStatus(apiType ApiType) Status {
+	return NewStatus(Success, SuccessDesc, apiType)
+}
+
+// FailStatus create an instance of fail status with specified api type
+func FailStatus(apiType ApiType) Status {
+	return NewStatus(Fail, FailDesc, apiType)
+}
+
+// UnauthorizedStatus create an instance of unauthorized status with specified api type
+func UnauthorizedStatus(apiType ApiType) Status {
+	return NewStatus(Unauthorized, UnauthorizedDesc, apiType)
+}
+
+// NewStatus create an instance of Status
+func NewStatus(code Code, message string, apiType ApiType) Status {
 	return Status{
-		Code:    Success,
-		Message: SuccessDesc,
+		Code:    code,
+		Message: message,
 		ApiType: apiType,
 	}
 }

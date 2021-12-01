@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/server"
@@ -24,12 +25,12 @@ type remoteClientSync struct {
 	target        core.VFS
 	targetAbsPath string
 	bufSize       int
-	users         []*contract.User
+	currentUser   *auth.User
 	cookies       []*http.Cookie
 }
 
 // NewRemoteClientSync create an instance of remoteClientSync to receive the file change message and execute it
-func NewRemoteClientSync(src, target core.VFS, bufSize int, users []*contract.User) (Sync, error) {
+func NewRemoteClientSync(src, target core.VFS, bufSize int, users []*auth.User) (Sync, error) {
 	if len(target.Path()) == 0 {
 		return nil, errors.New("target is not found")
 	}
@@ -47,7 +48,9 @@ func NewRemoteClientSync(src, target core.VFS, bufSize int, users []*contract.Us
 		bufSize:       bufSize,
 		src:           src,
 		target:        target,
-		users:         users,
+	}
+	if len(users) > 0 {
+		rs.currentUser = users[0]
 	}
 	return rs, nil
 }
@@ -376,7 +379,7 @@ func (rs *remoteClientSync) httpGetWithAuth(rawURL string) (resp *http.Response,
 	if err != nil {
 		return nil, err
 	}
-	if resp.StatusCode == http.StatusUnauthorized && len(rs.users) > 0 {
+	if resp.StatusCode == http.StatusUnauthorized && rs.currentUser != nil {
 		// auto login
 		parseUrl, err := url.Parse(rawURL)
 		if err != nil {
@@ -384,7 +387,7 @@ func (rs *remoteClientSync) httpGetWithAuth(rawURL string) (resp *http.Response,
 		}
 		loginUrl := fmt.Sprintf("%s://%s%s", parseUrl.Scheme, parseUrl.Host, server.LoginSignInFullRoute)
 		form := url.Values{}
-		user := rs.users[0]
+		user := rs.currentUser
 		form.Set(server.ServerParamUserName, user.UserName())
 		form.Set(server.ServerParamPassword, user.Password())
 		log.Debug("try to auto login file server %s=%s %s=%s", server.ServerParamUserName, user.UserName(), server.ServerParamPassword, user.Password())

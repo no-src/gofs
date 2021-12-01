@@ -2,7 +2,7 @@ package sync
 
 import (
 	"fmt"
-	"github.com/no-src/gofs/contract"
+	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/core"
 )
 
@@ -29,11 +29,11 @@ type Sync interface {
 }
 
 // NewSync auto create an instance of the expected sync according to src and target
-func NewSync(src core.VFS, target core.VFS, bufSize int, users []*contract.User) (Sync, error) {
+func NewSync(src core.VFS, target core.VFS, bufSize int, enableTLS bool, certFile string, keyFile string, users []*auth.User) (Sync, error) {
 	if src.IsDisk() && target.IsDisk() {
 		return NewDiskSync(src, target, bufSize)
 	} else if src.Is(core.RemoteDisk) {
-		return NewRemoteSync(src, target, bufSize, users)
+		return NewRemoteSync(src, target, bufSize, enableTLS, certFile, keyFile, users)
 	}
 	return nil, fmt.Errorf("file system unsupported ! src=>%s target=>%s", src.Type().String(), target.Type().String())
 }

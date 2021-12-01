@@ -3,7 +3,7 @@ package auth
 import (
 	"fmt"
 	"github.com/gorilla/sessions"
-	"github.com/no-src/gofs/contract"
+	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/log"
 	"net/http"
@@ -12,10 +12,10 @@ import (
 
 type loginHandler struct {
 	store sessions.Store
-	users []*contract.User
+	users []*auth.User
 }
 
-func NewLoginHandler(store sessions.Store, users []*contract.User) http.Handler {
+func NewLoginHandler(store sessions.Store, users []*auth.User) http.Handler {
 	return &loginHandler{
 		store: store,
 		users: users,
@@ -43,10 +43,10 @@ func (h *loginHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reque
 		}
 	}
 
-	var loginUser *contract.SessionUser
+	var loginUser *auth.SessionUser
 	for _, user := range h.users {
 		if user.UserName() == userName && user.Password() == password {
-			loginUser = contract.MapperToSessionUser(user)
+			loginUser = auth.MapperToSessionUser(user)
 		}
 	}
 	if loginUser != nil {

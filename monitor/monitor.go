@@ -2,6 +2,7 @@ package monitor
 
 import (
 	"fmt"
+	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/sync"
@@ -19,14 +20,14 @@ type Monitor interface {
 // syncer a Sync component
 // retry a Retry component
 // syncOnce tag a sync once command, the sync once command will execute when call the Start
-func NewMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool) (Monitor, error) {
+func NewMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, enableTLS bool, certFile string, keyFile string, users []*auth.User) (Monitor, error) {
 	src := syncer.Source()
 	if src.IsDisk() {
 		return NewFsNotifyMonitor(syncer, retry, syncOnce)
 	} else if src.Is(core.RemoteDisk) && src.Server() {
 		return NewFsNotifyMonitor(syncer, retry, syncOnce)
 	} else if src.Is(core.RemoteDisk) && !src.Server() {
-		return NewRemoteClientMonitor(syncer, retry, syncOnce, src.Host(), src.Port(), src.MessageQueue())
+		return NewRemoteClientMonitor(syncer, retry, syncOnce, src.Host(), src.Port(), src.MessageQueue(), enableTLS, certFile, keyFile, users)
 	}
 	return nil, fmt.Errorf("file system unsupported ! src=>%s", src.Type().String())
 

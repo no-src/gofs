@@ -3,6 +3,7 @@ package monitor
 import (
 	"errors"
 	"fmt"
+	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/sync"
@@ -11,15 +12,18 @@ import (
 	"github.com/no-src/log"
 	"net/url"
 	"strings"
+	"time"
 )
 
 type remoteClientMonitor struct {
-	syncer   sync.Sync
-	retry    retry.Retry
-	client   tran.Client
-	closed   bool
-	messages chan message
-	syncOnce bool
+	syncer      sync.Sync
+	retry       retry.Retry
+	client      tran.Client
+	closed      bool
+	messages    chan message
+	syncOnce    bool
+	currentUser *auth.HashUser
+	authorized  bool
 }
 
 type message struct {
@@ -27,29 +31,101 @@ type message struct {
 }
 
 // NewRemoteClientMonitor create an instance of remoteClientMonitor to monitor the remote file change
-func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, host string, port int, messageQueue int) (m Monitor, err error) {
+func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, host string, port int, messageQueue int, enableTLS bool, certFile string, keyFile string, users []*auth.User) (Monitor, error) {
 	if syncer == nil {
-		err = errors.New("syncer can't be nil")
+		err := errors.New("syncer can't be nil")
 		return nil, err
 	}
-	m = &remoteClientMonitor{
+	m := &remoteClientMonitor{
 		syncer:   syncer,
 		retry:    retry,
-		client:   tran.NewClient(host, port),
+		client:   tran.NewClient(host, port, enableTLS),
 		messages: make(chan message, messageQueue),
 		syncOnce: syncOnce,
 	}
+	if len(users) > 0 {
+		user := users[0]
+		hashUser, err := user.ToHashUser()
+		if err != nil {
+			return nil, err
+		}
+		m.currentUser = hashUser
+	}
 	return m, nil
+}
+
+// auth send auth request
+func (m *remoteClientMonitor) auth() error {
+	if m.currentUser != nil {
+		go func() {
+			m.retry.Do(func() error {
+				authData := auth.GenerateAuthCommandData(m.currentUser.UserNameHash, m.currentUser.PasswordHash)
+				err := m.client.Write(authData)
+				return err
+			}, "send auth request").Wait()
+		}()
+
+		var status contract.Status
+		m.retry.Do(func() error {
+			result, err := m.client.ReadAll()
+			if err != nil {
+				return err
+			}
+			err = util.Unmarshal(result, &status)
+			if err != nil {
+				return err
+			}
+
+			if status.ApiType != contract.AuthApi {
+				err = errors.New("auth command is received other message")
+				log.Error(err, "retry to get auth response error")
+				return err
+			}
+
+			return nil
+		}, "receive auth command response").Wait()
+
+		if status.Code != contract.Success {
+			return errors.New("receive auth command response error => " + status.Message)
+		}
+
+		if status.ApiType != contract.AuthApi {
+			return errors.New("auth command is received other message")
+		}
+		// auth success
+		m.authorized = true
+		log.Debug("auth success, current client is authorized")
+		return nil
+	}
+	return nil
+}
+
+func (m *remoteClientMonitor) checkAuth() {
+	go func() {
+		for {
+			<-time.After(time.Second)
+			if !m.closed && !m.client.IsClosed() && m.currentUser != nil && !m.authorized {
+				log.Warn("check auth => current client is not authorized")
+			}
+		}
+	}()
 }
 
 func (m *remoteClientMonitor) Start() error {
 	if m.client == nil {
 		return errors.New("remote sync client is nil")
 	}
+	// connect -> auth -> info|read
 	err := m.client.Connect()
 	if err != nil {
 		return err
 	}
+
+	if err = m.auth(); err != nil {
+		return err
+	}
+
+	m.checkAuth()
 
 	// check sync once command
 	if m.syncOnce {
@@ -99,9 +175,19 @@ func (m *remoteClientMonitor) Start() error {
 		if err != nil {
 			log.Error(err, "client read data error")
 			if m.client.IsClosed() {
+				m.authorized = false
 				log.Debug("try reconnect to server %s:%d", m.client.Host(), m.client.Port())
 				m.retry.Do(func() error {
-					return m.client.Connect()
+					if m.client.IsClosed() {
+						innerErr := m.client.Connect()
+						if innerErr != nil {
+							return innerErr
+						}
+					}
+					if !m.authorized {
+						return m.auth()
+					}
+					return nil
 				}, fmt.Sprintf("client reconnect to %s:%d", m.client.Host(), m.client.Port()))
 			}
 		} else {

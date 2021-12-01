@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/no-src/gofs/contract"
+	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/daemon"
 	"github.com/no-src/gofs/monitor"
 	"github.com/no-src/gofs/retry"
@@ -23,7 +23,7 @@ func main() {
 	// init logger
 	var loggers []log.Logger
 	loggers = append(loggers, log.NewConsoleLogger(log.Level(logLevel)))
-	if fileLogger {
+	if enableFileLogger {
 		filePrefix := "gofs_"
 		if isDaemon {
 			filePrefix += "daemon_"
@@ -64,17 +64,17 @@ func main() {
 
 	// if enable daemon, start a worker to process the following
 
-	fsUsers, err := contract.ParseUsers(fileServerUsers)
+	userList, err := auth.ParseUsers(users)
 	if err != nil {
-		log.Error(err, "parse file server user error => [%s]", fileServerUsers)
+		log.Error(err, "parse users error => [%s]", users)
 		return
 	}
 
 	// start a file server
-	if fileServer {
+	if enableFileServer {
 		waitInit := retry.NewWaitDone()
 		go func() {
-			err := fs.StartFileServer(sourceVFS, targetVFS, fileServerAddr, waitInit, fileServerTLS, certFile, keyFile, fsUsers, fileServerTemplate)
+			err := fs.StartFileServer(sourceVFS, targetVFS, fileServerAddr, waitInit, enableTLS, tlsCertFile, tlsKeyFile, userList, fileServerTemplate)
 			if err != nil {
 				log.Error(err, "start the file server [%s] error", fileServerAddr)
 			}
@@ -83,9 +83,9 @@ func main() {
 	}
 
 	// create syncer
-	syncer, err := sync.NewSync(sourceVFS, targetVFS, bufSize, fsUsers)
+	syncer, err := sync.NewSync(sourceVFS, targetVFS, bufSize, enableTLS, tlsCertFile, tlsKeyFile, userList)
 	if err != nil {
-		log.Error(err, "create DiskSync error")
+		log.Error(err, "create the instance of Sync error")
 		return
 	}
 
@@ -93,9 +93,9 @@ func main() {
 	retry := retry.NewRetry(retryCount, retryWait, retryAsync)
 
 	// create monitor
-	monitor, err := monitor.NewMonitor(syncer, retry, syncOnce)
+	monitor, err := monitor.NewMonitor(syncer, retry, syncOnce, enableTLS, tlsCertFile, tlsKeyFile, userList)
 	if err != nil {
-		log.Error(err, "create monitor error")
+		log.Error(err, "create the instance of Monitor error")
 		return
 	}
 	defer func() {
@@ -105,7 +105,7 @@ func main() {
 	}()
 
 	// start monitor
-	log.Log("file monitor is starting...")
+	log.Log("monitor is starting...")
 	defer log.Log("gofs exited!")
 	defer monitor.Close()
 	err = monitor.Start()
