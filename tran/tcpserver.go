@@ -115,6 +115,7 @@ func (srv *tcpServer) addClient(conn *Conn) (clientCount int, err error) {
 	if conn == nil {
 		return clientCount, errors.New("conn is nil")
 	}
+	conn.StartAuthCheck()
 	addr := strings.ToLower(conn.RemoteAddr().String())
 	_, exist := srv.conns[addr]
 	srv.conns[addr] = conn
@@ -131,6 +132,7 @@ func (srv *tcpServer) removeClient(conn *Conn) (clientCount int, err error) {
 	if conn == nil {
 		return clientCount, errors.New("conn is nil")
 	}
+	conn.StopAuthCheck()
 	addr := strings.ToLower(conn.RemoteAddr().String())
 	delete(srv.conns, addr)
 	clientCount = srv.ClientCount()

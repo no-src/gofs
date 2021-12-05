@@ -43,6 +43,10 @@ func (client *tcpClient) Connect() (err error) {
 		client.innerConn, err = tls.Dial(client.network, address, &tls.Config{
 			InsecureSkipVerify: true,
 		})
+		// innerConn is not nil whatever err is nil or not
+		if err != nil {
+			client.innerConn = nil
+		}
 	} else {
 		client.innerConn, err = net.Dial(client.network, address)
 	}

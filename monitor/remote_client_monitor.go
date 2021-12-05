@@ -12,7 +12,6 @@ import (
 	"github.com/no-src/log"
 	"net/url"
 	"strings"
-	"time"
 )
 
 type remoteClientMonitor struct {
@@ -56,59 +55,47 @@ func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, 
 
 // auth send auth request
 func (m *remoteClientMonitor) auth() error {
-	if m.currentUser != nil {
-		go func() {
-			m.retry.Do(func() error {
-				authData := auth.GenerateAuthCommandData(m.currentUser.UserNameHash, m.currentUser.PasswordHash)
-				err := m.client.Write(authData)
-				return err
-			}, "send auth request").Wait()
-		}()
+	// if the currentUser is nil, it means to anonymous access
+	if m.currentUser == nil {
+		return nil
+	}
+	go m.retry.Do(func() error {
+		authData := auth.GenerateAuthCommandData(m.currentUser.UserNameHash, m.currentUser.PasswordHash)
+		err := m.client.Write(authData)
+		return err
+	}, "send auth request")
 
-		var status contract.Status
-		m.retry.Do(func() error {
-			result, err := m.client.ReadAll()
-			if err != nil {
-				return err
-			}
-			err = util.Unmarshal(result, &status)
-			if err != nil {
-				return err
-			}
-
-			if status.ApiType != contract.AuthApi {
-				err = errors.New("auth command is received other message")
-				log.Error(err, "retry to get auth response error")
-				return err
-			}
-
-			return nil
-		}, "receive auth command response").Wait()
-
-		if status.Code != contract.Success {
-			return errors.New("receive auth command response error => " + status.Message)
+	var status contract.Status
+	m.retry.Do(func() error {
+		result, err := m.client.ReadAll()
+		if err != nil {
+			return err
+		}
+		err = util.Unmarshal(result, &status)
+		if err != nil {
+			return err
 		}
 
 		if status.ApiType != contract.AuthApi {
-			return errors.New("auth command is received other message")
+			err = errors.New("auth command is received other message")
+			log.Error(err, "retry to get auth response error")
+			return err
 		}
-		// auth success
-		m.authorized = true
-		log.Debug("auth success, current client is authorized")
-		return nil
-	}
-	return nil
-}
 
-func (m *remoteClientMonitor) checkAuth() {
-	go func() {
-		for {
-			<-time.After(time.Second)
-			if !m.closed && !m.client.IsClosed() && m.currentUser != nil && !m.authorized {
-				log.Warn("check auth => current client is not authorized")
-			}
-		}
-	}()
+		return nil
+	}, "receive auth command response").Wait()
+
+	if status.Code != contract.Success {
+		return errors.New("receive auth command response error => " + status.Message)
+	}
+
+	if status.ApiType != contract.AuthApi {
+		return errors.New("auth command is received other message")
+	}
+	// auth success
+	m.authorized = true
+	log.Debug("auth success, current client is authorized")
+	return nil
 }
 
 func (m *remoteClientMonitor) Start() error {
@@ -124,8 +111,6 @@ func (m *remoteClientMonitor) Start() error {
 	if err = m.auth(); err != nil {
 		return err
 	}
-
-	m.checkAuth()
 
 	// check sync once command
 	if m.syncOnce {
@@ -246,5 +231,8 @@ func (m *remoteClientMonitor) processingMessage() {
 
 func (m *remoteClientMonitor) Close() error {
 	m.closed = true
-	return m.client.Close()
+	if m.client != nil {
+		return m.client.Close()
+	}
+	return nil
 }

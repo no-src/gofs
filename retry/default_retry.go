@@ -29,7 +29,7 @@ func (r *defaultRetry) Do(f func() error, desc string) Wait {
 	defer func() {
 		e := recover()
 		if e != nil {
-			log.Warn("retry do recover from => %s", desc)
+			log.Warn("retry do recover from => [%s] error => %v", desc, e)
 		}
 	}()
 	wait := NewWaitDone()

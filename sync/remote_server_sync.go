@@ -215,35 +215,9 @@ func (rs *remoteServerSync) start() error {
 		var result []byte
 		var cmd contract.Command
 		if bytes.Equal(data, contract.InfoCommand) {
-			cmd = contract.InfoCommand
-			var info contract.FileServerInfo
-			if client.Authorized() {
-				info = contract.FileServerInfo{
-					Status:     contract.SuccessStatus(contract.InfoApi),
-					ServerAddr: rs.serverAddr,
-					SrcPath:    server.SrcRoutePrefix,
-					TargetPath: server.TargetRoutePrefix,
-					QueryAddr:  server.QueryRoute,
-				}
-			} else {
-				info = contract.FileServerInfo{
-					Status: contract.UnauthorizedStatus(contract.InfoApi),
-				}
-			}
-			result, err = util.Marshal(info)
+			cmd, result, err = rs.infoCommand(client)
 		} else if bytes.HasPrefix(data, contract.AuthCommand) {
-			cmd = contract.AuthCommand
-			authData := contract.FailStatus(contract.AuthApi)
-			hashUser, err := auth.ParseAuthCommandData(data)
-			if err == nil && client != nil {
-				if rs.server.Auth(hashUser.UserNameHash, hashUser.PasswordHash) {
-					client.MarkAuthorized(hashUser.UserNameHash, hashUser.PasswordHash)
-					authData = contract.SuccessStatus(contract.AuthApi)
-				}
-			} else if err != nil {
-				log.Error(err, "parse auth command data error")
-			}
-			result, err = util.Marshal(authData)
+			cmd, result, err = rs.authCommand(client, data)
 		}
 
 		// write to response
@@ -264,4 +238,40 @@ func (rs *remoteServerSync) start() error {
 		}
 	})
 	return nil
+}
+
+func (rs *remoteServerSync) infoCommand(client *tran.Conn) (cmd contract.Command, result []byte, err error) {
+	cmd = contract.InfoCommand
+	var info contract.FileServerInfo
+	if client.Authorized() {
+		info = contract.FileServerInfo{
+			Status:     contract.SuccessStatus(contract.InfoApi),
+			ServerAddr: rs.serverAddr,
+			SrcPath:    server.SrcRoutePrefix,
+			TargetPath: server.TargetRoutePrefix,
+			QueryAddr:  server.QueryRoute,
+		}
+	} else {
+		info = contract.FileServerInfo{
+			Status: contract.UnauthorizedStatus(contract.InfoApi),
+		}
+	}
+	result, err = util.Marshal(info)
+	return
+}
+
+func (rs *remoteServerSync) authCommand(client *tran.Conn, data []byte) (cmd contract.Command, result []byte, err error) {
+	cmd = contract.AuthCommand
+	authData := contract.FailStatus(contract.AuthApi)
+	hashUser, err := auth.ParseAuthCommandData(data)
+	if err == nil && client != nil {
+		if rs.server.Auth(hashUser.UserNameHash, hashUser.PasswordHash) {
+			client.MarkAuthorized(hashUser.UserNameHash, hashUser.PasswordHash)
+			authData = contract.SuccessStatus(contract.AuthApi)
+		}
+	} else if err != nil {
+		log.Error(err, "parse auth command data error")
+	}
+	result, err = util.Marshal(authData)
+	return
 }
