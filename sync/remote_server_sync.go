@@ -210,6 +210,10 @@ func (rs *remoteServerSync) start() error {
 		if bytes.HasSuffix(data, tran.EndIdentity) {
 			data = data[:len(data)-len(tran.EndIdentity)]
 		}
+		if client == nil {
+			log.Warn("client conn is nil, data => %s", string(data))
+			return
+		}
 		log.Debug("receive message [%s] => %s", client.RemoteAddr().String(), string(data))
 		writer := bufio.NewWriter(client)
 		var result []byte
@@ -218,6 +222,8 @@ func (rs *remoteServerSync) start() error {
 			cmd, result, err = rs.infoCommand(client)
 		} else if bytes.HasPrefix(data, contract.AuthCommand) {
 			cmd, result, err = rs.authCommand(client, data)
+		} else {
+			cmd, result, err = rs.unknownCommand()
 		}
 
 		// write to response
@@ -230,11 +236,11 @@ func (rs *remoteServerSync) start() error {
 		result = append(result, tran.LFBytes...)
 		_, err = writer.Write(result)
 		if err != nil {
-			log.Error(err, "write %s message error", string(cmd))
+			log.Error(err, "[%s]=>[%s] write message error", client.RemoteAddr().String(), string(cmd))
 		}
 		err = writer.Flush()
 		if err != nil {
-			log.Error(err, "flush %s message error", string(cmd))
+			log.Error(err, "[%s]=>[%s] flush message error", client.RemoteAddr().String(), string(cmd))
 		}
 	})
 	return nil
@@ -273,5 +279,13 @@ func (rs *remoteServerSync) authCommand(client *tran.Conn, data []byte) (cmd con
 		log.Error(err, "parse auth command data error")
 	}
 	result, err = util.Marshal(authData)
+	return
+}
+
+func (rs *remoteServerSync) unknownCommand() (cmd contract.Command, result []byte, err error) {
+	cmd = contract.UnknownCommand
+	respData := contract.FailStatus(contract.UnknownApi)
+	respData.Message = "unknown command"
+	result, err = util.Marshal(respData)
 	return
 }

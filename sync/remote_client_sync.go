@@ -155,7 +155,7 @@ func (rs *remoteClientSync) Write(path string) error {
 		}
 
 		if size == 0 {
-			log.Info("write to the target file success [size=%d] [%s] -> [%s]", size, path, target)
+			log.Info("Write:write to the target file success [size=%d] [%s] -> [%s]", size, path, target)
 			return nil
 		}
 
@@ -194,7 +194,7 @@ func (rs *remoteClientSync) Write(path string) error {
 			err = os.Chtimes(target, aTime, mTime)
 		}
 		if err == nil {
-			log.Info("write to the target file success [size=%d] [%s] -> [%s]", size, path, target)
+			log.Info("Write:write to the target file success [size=%d] [%s] -> [%s]", size, path, target)
 		} else {
 			log.Error(err, "Write:flush to the target file failed [%s]", target)
 			return err
