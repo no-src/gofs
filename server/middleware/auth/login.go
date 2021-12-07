@@ -52,7 +52,7 @@ func (h *loginHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reque
 	}
 	if loginUser != nil {
 		session, err := h.store.New(request, server.SessionName)
-		if err != nil {
+		if err != nil && session == nil {
 			log.Error(err, "login handler => get session error, remote=%s", request.RemoteAddr)
 			writer.WriteHeader(http.StatusInternalServerError)
 			writer.Write([]byte("get session error"))

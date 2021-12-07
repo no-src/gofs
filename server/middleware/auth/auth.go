@@ -11,11 +11,11 @@ import (
 func Auth(h http.Handler, store sessions.Store) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		session, err := store.Get(request, server.SessionName)
-		if err != nil {
+		if err != nil && session == nil {
 			log.Error(err, "auth handler => get session error, remote=%s", request.RemoteAddr)
 		}
 		var user interface{}
-		if err == nil {
+		if session != nil {
 			user = session.Values[server.SessionUser]
 		}
 		if user == nil {
