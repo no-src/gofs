@@ -1,5 +1,5 @@
-//go:build gin_server
-// +build gin_server
+//go:build !no_server && !http_server
+// +build !no_server,!http_server
 
 package fs
 
