@@ -5,6 +5,7 @@ package fs
 
 import (
 	"fmt"
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	auth2 "github.com/no-src/gofs/auth"
@@ -39,6 +40,8 @@ func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.Wait
 	gin.DefaultWriter = log.DefaultLogger()
 
 	engine := gin.New()
+	// enable gzip
+	engine.Use(gzip.Gzip(gzip.DefaultCompression))
 	engine.Use(gin.LoggerWithConfig(gin.LoggerConfig{
 		Formatter: defaultLogFormatter,
 		Output:    log.DefaultLogger(),
