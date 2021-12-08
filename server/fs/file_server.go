@@ -20,7 +20,7 @@ func StartFileServer(opt server.Option) error {
 	src := opt.Src
 	target := opt.Target
 
-	err := server.ReleaseTemplate(filepath.Dir(opt.ServerTemplate))
+	err := server.ReleaseTemplate(filepath.Dir(opt.ServerTemplate), opt.ServerTemplateOverride)
 	if err != nil {
 		log.Error(err, "release template resource error")
 		return err

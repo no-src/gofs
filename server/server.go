@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"github.com/no-src/gofs"
+	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
 	"io/ioutil"
 	"net"
@@ -89,7 +90,7 @@ func PrintAnonymousAccessWarning() {
 	log.Warn("the file server allows anonymous access, you should set some server users by the -users or -rand_user_count flag for security reasons")
 }
 
-func ReleaseTemplate(releasePath string) error {
+func ReleaseTemplate(releasePath string, serverTemplateOverride bool) error {
 	files, err := gofs.Templates.ReadDir(ResourceTemplatePath)
 	if err != nil {
 		return err
@@ -108,7 +109,15 @@ func ReleaseTemplate(releasePath string) error {
 			if err != nil {
 				return err
 			}
-			err = ioutil.WriteFile(targetPath, data, os.ModePerm)
+			if serverTemplateOverride {
+				err = ioutil.WriteFile(targetPath, data, os.ModePerm)
+			} else {
+				var exist bool
+				exist, err = util.FileExist(targetPath)
+				if err == nil && !exist {
+					err = ioutil.WriteFile(targetPath, data, os.ModePerm)
+				}
+			}
 			if err != nil {
 				return err
 			}

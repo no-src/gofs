@@ -45,10 +45,11 @@ var (
 	isSubprocess       bool
 
 	// file server
-	enableFileServer         bool
-	fileServerAddr           string
-	fileServerTemplate       string
-	enableFileServerCompress bool
+	enableFileServer           bool
+	fileServerAddr             string
+	fileServerTemplate         string
+	fileServerTemplateOverride bool
+	enableFileServerCompress   bool
 
 	// tls transfer
 	enableTLS   bool
@@ -102,6 +103,7 @@ func parseFlags() {
 	flag.BoolVar(&enableFileServer, "server", false, "start a file server to browse source directory and target directory")
 	flag.StringVar(&fileServerAddr, "server_addr", server.DefaultAddrHttps, "a file server binding address")
 	flag.StringVar(&fileServerTemplate, "server_tmpl", "./template/*.html", "the file server template pattern")
+	flag.BoolVar(&fileServerTemplateOverride, "server_tmpl_override", true, "force override all template resources when it releases")
 	flag.BoolVar(&enableFileServerCompress, "server_compress", true, "enable response compression for the file server")
 
 	// tls transfer
