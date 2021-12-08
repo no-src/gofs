@@ -4,9 +4,7 @@
 package fs
 
 import (
-	auth2 "github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/core"
-	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/handler"
 	"github.com/no-src/gofs/server/middleware/auth"
@@ -17,16 +15,18 @@ import (
 )
 
 // StartFileServer start a file server
-func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.WaitDone, enableTLS bool, certFile string, keyFile string, users []*auth2.User, serverTemplate string) error {
+func StartFileServer(opt server.Option) error {
 	enableFileApi := false
+	src := opt.Src
+	target := opt.Target
 
-	err := server.ReleaseTemplate(filepath.Dir(serverTemplate))
+	err := server.ReleaseTemplate(filepath.Dir(opt.ServerTemplate))
 	if err != nil {
 		log.Error(err, "release template resource error")
 		return err
 	}
 
-	t, err := template.ParseGlob(serverTemplate)
+	t, err := template.ParseGlob(opt.ServerTemplate)
 	if err != nil {
 		return err
 	}
@@ -38,18 +38,22 @@ func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.Wait
 	}
 
 	authFunc := auth.Auth
-	if len(users) == 0 {
+	if len(opt.Users) == 0 {
 		server.PrintAnonymousAccessWarning()
 		authFunc = auth.NoAuth
 	}
 
-	http.Handle("/", authFunc(handler.NewDefaultHandler(serverTemplate), store))
+	if opt.EnableCompress {
+		log.Warn("the file server doesn't support response compress yet")
+	}
+
+	http.Handle("/", authFunc(handler.NewDefaultHandler(opt.ServerTemplate), store))
 
 	http.HandleFunc(server.LoginIndexFullRoute, func(writer http.ResponseWriter, request *http.Request) {
 		t.ExecuteTemplate(writer, "login.html", nil)
 	})
 
-	http.Handle(server.LoginRoute+server.LoginSignInRoute, auth.NewLoginHandler(store, users))
+	http.Handle(server.LoginRoute+server.LoginSignInRoute, auth.NewLoginHandler(store, opt.Users))
 
 	if src.IsDisk() || src.Is(core.RemoteDisk) {
 		http.Handle(server.SrcRoutePrefix, authFunc(http.StripPrefix(server.SrcRoutePrefix, http.FileServer(http.Dir(src.Path()))), store))
@@ -65,14 +69,14 @@ func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.Wait
 		http.Handle(server.QueryRoute, authFunc(handler.NewFileApiHandler(http.Dir(src.Path())), store))
 	}
 
-	log.Log("file server [%s] starting...", addr)
-	server.InitServerInfo(addr, enableTLS)
-	init.Done()
+	log.Log("file server [%s] starting...", opt.Addr)
+	server.InitServerInfo(opt.Addr, opt.EnableTLS)
+	opt.Init.Done()
 
-	if enableTLS {
-		return http.ListenAndServeTLS(addr, certFile, keyFile, nil)
+	if opt.EnableTLS {
+		return http.ListenAndServeTLS(opt.Addr, opt.CertFile, opt.KeyFile, nil)
 	} else {
 		log.Warn("file server is not a security connection, you need the https replaced maybe!")
-		return http.ListenAndServe(addr, nil)
+		return http.ListenAndServe(opt.Addr, nil)
 	}
 }

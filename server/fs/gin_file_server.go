@@ -8,9 +8,7 @@ import (
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	auth2 "github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/core"
-	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/handler"
 	"github.com/no-src/gofs/server/middleware/auth"
@@ -22,10 +20,12 @@ import (
 )
 
 // StartFileServer start a file server by gin
-func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.WaitDone, enableTLS bool, certFile string, keyFile string, users []*auth2.User, serverTemplate string) error {
+func StartFileServer(opt server.Option) error {
 	enableFileApi := false
+	src := opt.Src
+	target := opt.Target
 
-	err := server.ReleaseTemplate(filepath.Dir(serverTemplate))
+	err := server.ReleaseTemplate(filepath.Dir(opt.ServerTemplate))
 	if err != nil {
 		log.Error(err, "release template resource error")
 		return err
@@ -40,13 +40,15 @@ func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.Wait
 	gin.DefaultWriter = log.DefaultLogger()
 
 	engine := gin.New()
-	// enable gzip
-	engine.Use(gzip.Gzip(gzip.DefaultCompression))
+	if opt.EnableCompress {
+		// enable gzip compression
+		engine.Use(gzip.Gzip(gzip.DefaultCompression))
+	}
 	engine.Use(gin.LoggerWithConfig(gin.LoggerConfig{
 		Formatter: defaultLogFormatter,
 		Output:    log.DefaultLogger(),
 	}), gin.Recovery())
-	engine.LoadHTMLGlob(serverTemplate)
+	engine.LoadHTMLGlob(opt.ServerTemplate)
 
 	// init session
 	store, err := server.DefaultSessionStore()
@@ -62,12 +64,12 @@ func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.Wait
 	})
 
 	loginGroup.POST(server.LoginSignInRoute, func(context *gin.Context) {
-		auth.NewLoginHandler(store, users).ServeHTTP(context.Writer, context.Request)
+		auth.NewLoginHandler(store, opt.Users).ServeHTTP(context.Writer, context.Request)
 	})
 
 	rootGroup := engine.Group("/")
 
-	if len(users) > 0 {
+	if len(opt.Users) > 0 {
 		rootGroup.Use(func(context *gin.Context) {
 			auth.Auth(nil, store).ServeHTTP(context.Writer, context.Request)
 		})
@@ -76,7 +78,7 @@ func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.Wait
 	}
 
 	rootGroup.GET("/", func(context *gin.Context) {
-		handler.NewDefaultHandler(serverTemplate).ServeHTTP(context.Writer, context.Request)
+		handler.NewDefaultHandler(opt.ServerTemplate).ServeHTTP(context.Writer, context.Request)
 	})
 
 	if src.IsDisk() || src.Is(core.RemoteDisk) {
@@ -95,15 +97,15 @@ func StartFileServer(src core.VFS, target core.VFS, addr string, init retry.Wait
 		})
 	}
 
-	log.Log("file server [%s] starting...", addr)
-	server.InitServerInfo(addr, enableTLS)
-	init.Done()
+	log.Log("file server [%s] starting...", opt.Addr)
+	server.InitServerInfo(opt.Addr, opt.EnableTLS)
+	opt.Init.Done()
 
-	if enableTLS {
-		return engine.RunTLS(addr, certFile, keyFile)
+	if opt.EnableTLS {
+		return engine.RunTLS(opt.Addr, opt.CertFile, opt.KeyFile)
 	} else {
 		log.Warn("file server is not a security connection, you need the https replaced maybe!")
-		return engine.Run(addr)
+		return engine.Run(opt.Addr)
 	}
 }
 

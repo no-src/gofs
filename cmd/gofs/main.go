@@ -5,6 +5,7 @@ import (
 	"github.com/no-src/gofs/daemon"
 	"github.com/no-src/gofs/monitor"
 	"github.com/no-src/gofs/retry"
+	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/fs"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/version"
@@ -74,7 +75,7 @@ func main() {
 	if enableFileServer {
 		waitInit := retry.NewWaitDone()
 		go func() {
-			err := fs.StartFileServer(sourceVFS, targetVFS, fileServerAddr, waitInit, enableTLS, tlsCertFile, tlsKeyFile, userList, fileServerTemplate)
+			err := fs.StartFileServer(server.NewServerOption(sourceVFS, targetVFS, fileServerAddr, waitInit, enableTLS, tlsCertFile, tlsKeyFile, userList, fileServerTemplate, enableFileServerCompress))
 			if err != nil {
 				log.Error(err, "start the file server [%s] error", fileServerAddr)
 			}
