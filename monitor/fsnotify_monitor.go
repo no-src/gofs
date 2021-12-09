@@ -12,9 +12,8 @@ import (
 )
 
 type fsNotifyMonitor struct {
+	baseMonitor
 	watcher  *fsnotify.Watcher
-	syncer   sync.Sync
-	retry    retry.Retry
 	syncOnce bool
 }
 
@@ -29,10 +28,9 @@ func NewFsNotifyMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool) (m M
 		return nil, err
 	}
 	m = &fsNotifyMonitor{
-		watcher:  watcher,
-		syncer:   syncer,
-		retry:    retry,
-		syncOnce: syncOnce,
+		watcher:     watcher,
+		syncOnce:    syncOnce,
+		baseMonitor: newBaseMonitor(syncer, retry),
 	}
 	return m, nil
 }
@@ -79,6 +77,9 @@ func (m *fsNotifyMonitor) Start() error {
 		return err
 	}
 
+	go m.processWrite()
+	go m.startSyncWrite()
+
 	// action trigger
 	// cp => Create -> Write
 	// mv => Rename -> Create +->Write
@@ -93,18 +94,9 @@ func (m *fsNotifyMonitor) Start() error {
 				if !ok {
 					return errors.New("get watch event failed")
 				}
-				// on Windows, may trigger twice or more
 				log.Debug("notify received [%s] -> [%s]", event.Op.String(), event.Name)
 				if event.Op&fsnotify.Write == fsnotify.Write {
-					if m.retry != nil {
-						m.retry.Do(func() error {
-							return m.syncer.Write(event.Name)
-						}, event.String())
-					} else {
-						if err := m.syncer.Write(event.Name); err != nil {
-							log.Error(err, "Write event execute error => [%s]", event.Name)
-						}
-					}
+					m.addWrite(event.Name)
 				} else if event.Op&fsnotify.Create == fsnotify.Create {
 					err := m.syncer.Create(event.Name)
 					if err == nil {

@@ -15,8 +15,7 @@ import (
 )
 
 type remoteClientMonitor struct {
-	syncer      sync.Sync
-	retry       retry.Retry
+	baseMonitor
 	client      tran.Client
 	closed      bool
 	messages    chan message
@@ -36,11 +35,10 @@ func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, 
 		return nil, err
 	}
 	m := &remoteClientMonitor{
-		syncer:   syncer,
-		retry:    retry,
-		client:   tran.NewClient(host, port, enableTLS),
-		messages: make(chan message, messageQueue),
-		syncOnce: syncOnce,
+		client:      tran.NewClient(host, port, enableTLS),
+		messages:    make(chan message, messageQueue),
+		syncOnce:    syncOnce,
+		baseMonitor: newBaseMonitor(syncer, retry),
 	}
 	if len(users) > 0 {
 		user := users[0]
@@ -150,7 +148,8 @@ func (m *remoteClientMonitor) Start() error {
 		}
 		return m.syncer.SyncOnce(info.ServerAddr + info.SrcPath)
 	}
-
+	go m.processWrite()
+	go m.startSyncWrite()
 	go m.processingMessage()
 	for {
 		if m.closed {
@@ -213,7 +212,7 @@ func (m *remoteClientMonitor) processingMessage() {
 				m.syncer.Create(path)
 				break
 			case sync.WriteAction:
-				m.syncer.Write(path)
+				m.addWrite(path)
 				break
 			case sync.RemoveAction:
 				m.syncer.Remove(path)
