@@ -8,7 +8,7 @@ require (
 	github.com/gin-contrib/sessions v0.0.4
 	github.com/gin-gonic/gin v1.7.7
 	github.com/gorilla/sessions v1.2.0
-	github.com/no-src/log v0.0.6
+	github.com/no-src/log v0.0.7
 	golang.org/x/sys v0.0.0-20210806184541-e5e7981a1069 // indirect
 )
 
