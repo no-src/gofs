@@ -3,9 +3,9 @@ package daemon
 import (
 	"bufio"
 	"fmt"
+	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
 	"os"
-	"runtime"
 	"time"
 )
 
@@ -37,7 +37,7 @@ func startSubprocess() (*os.Process, error) {
 	attr := &os.ProcAttr{Files: []*os.File{os.Stdin, os.Stdout, os.Stderr}}
 	// try to check stdin
 	// if compile with [-ldflags="-H windowsgui"] on Windows system, stdin will get error
-	if isWindows() {
+	if util.IsWindows() {
 		_, stdInErr := os.Stdin.Stat()
 		if stdInErr != nil {
 			attr = &os.ProcAttr{Files: []*os.File{nil, nil, nil}}
@@ -109,10 +109,6 @@ func writePidFile(ppid, pid, subPid int) error {
 		err = f.Close()
 	}
 	return err
-}
-
-func isWindows() bool {
-	return runtime.GOOS == "windows"
 }
 
 // KillPPid kill parent process
