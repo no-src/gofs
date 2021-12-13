@@ -1,6 +1,7 @@
 package monitor
 
 import (
+	"container/list"
 	"errors"
 	"github.com/fsnotify/fsnotify"
 	"github.com/no-src/gofs/core"
@@ -10,13 +11,14 @@ import (
 	"github.com/no-src/log"
 	"io/fs"
 	"path/filepath"
+	"time"
 )
 
 type fsNotifyMonitor struct {
 	baseMonitor
 	watcher  *fsnotify.Watcher
 	syncOnce bool
-	events   chan fsnotify.Event
+	events   *list.List
 }
 
 // NewFsNotifyMonitor create an instance of fsNotifyMonitor to monitor the disk change
@@ -33,7 +35,7 @@ func NewFsNotifyMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool) (m M
 		watcher:     watcher,
 		syncOnce:    syncOnce,
 		baseMonitor: newBaseMonitor(syncer, retry),
-		events:      make(chan fsnotify.Event, 1000),
+		events:      list.New(),
 	}
 	return m, nil
 }
@@ -96,7 +98,7 @@ func (m *fsNotifyMonitor) listenEvents() error {
 					return errors.New("get fsnotify watch event failed")
 				}
 				log.Debug("notify received [%s] -> [%s]", event.Op.String(), event.Name)
-				m.events <- event
+				m.events.PushBack(event)
 			}
 		case err, ok := <-m.watcher.Errors:
 			{
@@ -119,56 +121,54 @@ func (m *fsNotifyMonitor) processEvents() error {
 	// touch => Create -> Chmod
 	// chmod => Chmod
 	for {
-		select {
-		case event, ok := <-m.events:
-			{
-				if !ok {
-					err := errors.New("get watch event failed")
-					log.Error(err, "processEvents get event error")
-					return err
-				}
-				log.Debug("process event => [%s] -> [%s]", event.Op.String(), event.Name)
-				if event.Op&fsnotify.Write == fsnotify.Write {
-					m.addWrite(event.Name)
-				} else if event.Op&fsnotify.Create == fsnotify.Create {
-					err := m.syncer.Create(event.Name)
-					if err == nil {
-						// if create a new dir, then monitor it
-						isDir, err := m.syncer.IsDir(event.Name)
-						if err == nil && isDir {
-							if err = m.monitor(event.Name); err != nil {
-								log.Error(err, "Create event execute monitor error => [%s]", event.Name)
-							}
-						}
-						if err == nil && (!isDir || (isDir && !util.IsWindows())) {
-							// rename a file, will not trigger the Write event
-							// rename a dir, will not trigger the Write event on Linux, but it will trigger the Write event for parent dir on Windows
-							// send a Write event manually
-							go func() {
-								log.Debug("prepare to send a Write event after Create event [%s]", event.Name)
-								m.events <- fsnotify.Event{
-									Name: event.Name,
-									Op:   fsnotify.Write,
-								}
-							}()
-						}
-					}
-				} else if event.Op&fsnotify.Remove == fsnotify.Remove {
-					if err := m.syncer.Remove(event.Name); err != nil {
-						log.Error(err, "Remove event execute error => [%s]", event.Name)
-					}
-				} else if event.Op&fsnotify.Rename == fsnotify.Rename {
-					if err := m.syncer.Rename(event.Name); err != nil {
-						log.Error(err, "Rename event execute error => [%s]", event.Name)
-					}
-				} else if event.Op&fsnotify.Chmod == fsnotify.Chmod {
-					if err := m.syncer.Chmod(event.Name); err != nil {
-						log.Error(err, "Chmod event execute error => [%s]", event.Name)
+		element := m.events.Front()
+		if element == nil || element.Value == nil {
+			if element != nil {
+				m.events.Remove(element)
+			}
+			<-time.After(time.Second)
+			continue
+		}
+
+		event := element.Value.(fsnotify.Event)
+		if event.Op&fsnotify.Write == fsnotify.Write {
+			m.addWrite(event.Name)
+		} else if event.Op&fsnotify.Create == fsnotify.Create {
+			err := m.syncer.Create(event.Name)
+			if err == nil {
+				// if create a new dir, then monitor it
+				isDir, err := m.syncer.IsDir(event.Name)
+				if err == nil && isDir {
+					if err = m.monitor(event.Name); err != nil {
+						log.Error(err, "Create event execute monitor error => [%s]", event.Name)
 					}
 				}
-				break
+				if err == nil && (!isDir || (isDir && !util.IsWindows())) {
+					// rename a file, will not trigger the Write event
+					// rename a dir, will not trigger the Write event on Linux, but it will trigger the Write event for parent dir on Windows
+					// send a Write event manually
+					log.Debug("prepare to send a Write event after Create event [%s]", event.Name)
+					m.events.PushBack(fsnotify.Event{
+						Name: event.Name,
+						Op:   fsnotify.Write,
+					})
+
+				}
+			}
+		} else if event.Op&fsnotify.Remove == fsnotify.Remove {
+			if err := m.syncer.Remove(event.Name); err != nil {
+				log.Error(err, "Remove event execute error => [%s]", event.Name)
+			}
+		} else if event.Op&fsnotify.Rename == fsnotify.Rename {
+			if err := m.syncer.Rename(event.Name); err != nil {
+				log.Error(err, "Rename event execute error => [%s]", event.Name)
+			}
+		} else if event.Op&fsnotify.Chmod == fsnotify.Chmod {
+			if err := m.syncer.Chmod(event.Name); err != nil {
+				log.Error(err, "Chmod event execute error => [%s]", event.Name)
 			}
 		}
+		m.events.Remove(element)
 	}
 }
 

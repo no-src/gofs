@@ -1,6 +1,7 @@
 package monitor
 
 import (
+	"container/list"
 	"errors"
 	"fmt"
 	"github.com/no-src/gofs/auth"
@@ -12,13 +13,14 @@ import (
 	"github.com/no-src/log"
 	"net/url"
 	"strings"
+	"time"
 )
 
 type remoteClientMonitor struct {
 	baseMonitor
 	client      tran.Client
 	closed      bool
-	messages    chan message
+	messages    *list.List
 	syncOnce    bool
 	currentUser *auth.HashUser
 	authorized  bool
@@ -29,14 +31,14 @@ type message struct {
 }
 
 // NewRemoteClientMonitor create an instance of remoteClientMonitor to monitor the remote file change
-func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, host string, port int, messageQueue int, enableTLS bool, certFile string, keyFile string, users []*auth.User) (Monitor, error) {
+func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, host string, port int, enableTLS bool, certFile string, keyFile string, users []*auth.User) (Monitor, error) {
 	if syncer == nil {
 		err := errors.New("syncer can't be nil")
 		return nil, err
 	}
 	m := &remoteClientMonitor{
 		client:      tran.NewClient(host, port, enableTLS),
-		messages:    make(chan message, messageQueue),
+		messages:    list.New(),
 		syncOnce:    syncOnce,
 		baseMonitor: newBaseMonitor(syncer, retry),
 	}
@@ -175,9 +177,9 @@ func (m *remoteClientMonitor) Start() error {
 				}, fmt.Sprintf("client reconnect to %s:%d", m.client.Host(), m.client.Port()))
 			}
 		} else {
-			m.messages <- message{
+			m.messages.PushBack(message{
 				data: data,
-			}
+			})
 		}
 	}
 	return nil
@@ -185,7 +187,15 @@ func (m *remoteClientMonitor) Start() error {
 
 func (m *remoteClientMonitor) processingMessage() {
 	for {
-		message := <-m.messages
+		element := m.messages.Front()
+		if element == nil || element.Value == nil {
+			if element != nil {
+				m.messages.Remove(element)
+			}
+			<-time.After(time.Second)
+			continue
+		}
+		message := element.Value.(message)
 		log.Info("client read request => %s", string(message.data))
 		var msg sync.Message
 		err := util.Unmarshal(message.data, &msg)
@@ -225,6 +235,7 @@ func (m *remoteClientMonitor) processingMessage() {
 				break
 			}
 		}
+		m.messages.Remove(element)
 	}
 }
 

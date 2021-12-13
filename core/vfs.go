@@ -15,7 +15,6 @@ type VFS struct {
 	port              int
 	server            bool
 	fsServer          string
-	msgQueue          int
 	localSyncDisabled bool
 }
 
@@ -23,10 +22,8 @@ const (
 	paramPath                = "path"
 	paramMode                = "mode"
 	paramFsServer            = "fs_server"
-	paramMsgQueue            = "msg_queue"
 	paramLocalSyncDisabled   = "local_sync_disabled"
 	valueModeServer          = "server"
-	valueDefaultMsgQueue     = 500
 	valueLocalSyncIsDisabled = "true"
 	RemoteServerSchema       = "rs://"
 )
@@ -71,11 +68,6 @@ func (vfs *VFS) FsServer() string {
 	return vfs.fsServer
 }
 
-// MessageQueue receive message queue size
-func (vfs *VFS) MessageQueue() int {
-	return vfs.msgQueue
-}
-
 // LocalSyncDisabled is local disk sync disabled
 func (vfs *VFS) LocalSyncDisabled() bool {
 	return vfs.localSyncDisabled
@@ -106,7 +98,7 @@ func NewVFS(path string) VFS {
 	if strings.HasPrefix(lowerPath, RemoteServerSchema) {
 		// example of rs protocol to see README.md
 		vfs.fsType = RemoteDisk
-		_, vfs.host, vfs.port, vfs.path, vfs.server, vfs.fsServer, vfs.msgQueue, vfs.localSyncDisabled, err = parse(path)
+		_, vfs.host, vfs.port, vfs.path, vfs.server, vfs.fsServer, vfs.localSyncDisabled, err = parse(path)
 	}
 	if err != nil {
 		return NewEmptyVFS()
@@ -114,7 +106,7 @@ func NewVFS(path string) VFS {
 	return vfs
 }
 
-func parse(path string) (scheme string, host string, port int, localPath string, isServer bool, fsServer string, msgQueue int, localSyncDisabled bool, err error) {
+func parse(path string) (scheme string, host string, port int, localPath string, isServer bool, fsServer string, localSyncDisabled bool, err error) {
 	parseUrl, err := url.Parse(path)
 	if err != nil {
 		return
@@ -136,18 +128,6 @@ func parse(path string) (scheme string, host string, port int, localPath string,
 		if !strings.HasPrefix(fsServerLower, "http://") && !strings.HasPrefix(fsServerLower, "https://") {
 			fsServer = "https://" + fsServer
 		}
-	}
-
-	defaultMsgQueue := valueDefaultMsgQueue
-	msgQueueStr := parseUrl.Query().Get(paramMsgQueue)
-	if len(msgQueueStr) > 0 {
-		msgQueue, err = strconv.Atoi(msgQueueStr)
-		if err != nil || msgQueue <= 0 {
-			// if error happened, reset to the default value
-			msgQueue = defaultMsgQueue
-		}
-	} else {
-		msgQueue = defaultMsgQueue
 	}
 
 	localSyncDisabledValue := parseUrl.Query().Get(paramLocalSyncDisabled)

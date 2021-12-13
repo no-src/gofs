@@ -51,5 +51,5 @@ gofs -src="rs://127.0.0.1:9016?mode=server&local_sync_disabled=true&path=./src&f
 Start a remote disk client to sync files from remote disk server.
 
 ```bash
-gofs -src="rs://127.0.0.1:9016?msg_queue=500" -target=./target
+gofs -src="rs://127.0.0.1:9016" -target=./target
 ```

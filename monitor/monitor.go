@@ -27,7 +27,7 @@ func NewMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, enableTLS bo
 	} else if src.Is(core.RemoteDisk) && src.Server() {
 		return NewFsNotifyMonitor(syncer, retry, syncOnce)
 	} else if src.Is(core.RemoteDisk) && !src.Server() {
-		return NewRemoteClientMonitor(syncer, retry, syncOnce, src.Host(), src.Port(), src.MessageQueue(), enableTLS, certFile, keyFile, users)
+		return NewRemoteClientMonitor(syncer, retry, syncOnce, src.Host(), src.Port(), enableTLS, certFile, keyFile, users)
 	}
 	return nil, fmt.Errorf("file system unsupported ! src=>%s", src.Type().String())
 
