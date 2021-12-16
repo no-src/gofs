@@ -98,7 +98,7 @@ func (rs *remoteClientSync) Create(path string) error {
 	if err != nil {
 		return err
 	}
-	log.Debug("create target file success [%s] -> [%s]", path, target)
+	log.Info("create the target file success [%s] -> [%s]", path, target)
 	return nil
 }
 
@@ -155,7 +155,7 @@ func (rs *remoteClientSync) Write(path string) error {
 		}
 
 		if size == 0 {
-			log.Info("Write:write to the target file success [size=%d] [%s] -> [%s]", size, path, target)
+			log.Info("write to the target file success [size=%d] [%s] -> [%s]", size, path, target)
 			return nil
 		}
 
@@ -194,7 +194,7 @@ func (rs *remoteClientSync) Write(path string) error {
 			err = os.Chtimes(target, aTime, mTime)
 		}
 		if err == nil {
-			log.Info("Write:write to the target file success [size=%d] [%s] -> [%s]", size, path, target)
+			log.Info("write to the target file success [size=%d] [%s] -> [%s]", size, path, target)
 		} else {
 			log.Error(err, "Write:flush to the target file failed [%s]", target)
 			return err
@@ -355,7 +355,7 @@ func (rs *remoteClientSync) same(srcHash string, targetFile *os.File) (bool, err
 	}
 	targetHash, err := util.MD5FromFile(targetFile, rs.bufSize)
 	if err != nil {
-		log.Error(err, "calc target file md5 error [%s]", targetFile.Name())
+		log.Error(err, "calc the target file md5 error [%s]", targetFile.Name())
 		return false, err
 	}
 

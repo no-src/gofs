@@ -66,10 +66,10 @@ func (h *loginHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reque
 			writer.Write([]byte("save session error"))
 			return
 		}
-		log.Debug("login success, userid=%d username=%s password=%s remote=%s", loginUser.UserId, loginUser.UserName, loginUser.Password, request.RemoteAddr)
+		log.Info("login success, userid=%d username=%s password=%s remote=%s", loginUser.UserId, loginUser.UserName, loginUser.Password, request.RemoteAddr)
 		http.Redirect(writer, request, returnUrl, http.StatusFound)
 	} else {
-		log.Debug("login failed, username=%s password=%s remote=%s", userName, password, request.RemoteAddr)
+		log.Info("login failed, username=%s password=%s remote=%s", userName, password, request.RemoteAddr)
 		http.Redirect(writer, request, server.LoginIndexFullRoute, http.StatusFound)
 	}
 }

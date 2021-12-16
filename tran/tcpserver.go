@@ -123,7 +123,7 @@ func (srv *tcpServer) addClient(conn *Conn) (clientCount int, err error) {
 		log.Debug("client[%s]conn is already exist, replace it now", conn.RemoteAddr().String())
 	}
 	clientCount = srv.ClientCount()
-	log.Debug("client[%s]conn succeed, current client connect count:%d", conn.RemoteAddr().String(), clientCount)
+	log.Info("client[%s]conn succeed, current client connect count:%d", conn.RemoteAddr().String(), clientCount)
 	return clientCount, err
 }
 
@@ -136,7 +136,7 @@ func (srv *tcpServer) removeClient(conn *Conn) (clientCount int, err error) {
 	addr := strings.ToLower(conn.RemoteAddr().String())
 	delete(srv.conns, addr)
 	clientCount = srv.ClientCount()
-	log.Debug("client[%s]conn removed, current client connect count:%d", conn.RemoteAddr().String(), clientCount)
+	log.Info("client[%s]conn removed, current client connect count:%d", conn.RemoteAddr().String(), clientCount)
 	return clientCount, err
 }
 

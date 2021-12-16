@@ -69,7 +69,7 @@ func NewRemoteServerSync(src, target core.VFS, bufSize int, enableTLS bool, cert
 	}
 	rs.serverAddr = strings.TrimRight(rs.serverAddr, "/")
 	if server.ServerPort() <= 0 {
-		log.Warn("create remote server sync warning, you should enable the file server with server flag")
+		log.Warn("create remote server sync warning, you should enable the file server with -server flag")
 	}
 	return rs, rs.start()
 }

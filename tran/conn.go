@@ -34,7 +34,7 @@ func (conn *Conn) MarkAuthorized(userName, password string) {
 	conn.password = password
 	now := time.Now()
 	conn.authTime = &now
-	log.Debug("the conn authorized [local=%s][remote=%s] => [username=%s password=%s]", conn.LocalAddr().String(), conn.RemoteAddr().String(), userName, password)
+	log.Info("the conn authorized [local=%s][remote=%s] => [username=%s password=%s]", conn.LocalAddr().String(), conn.RemoteAddr().String(), userName, password)
 }
 
 func (conn *Conn) Authorized() bool {
@@ -64,7 +64,7 @@ func (conn *Conn) authCheck() {
 				conn.startAuthCheck = false
 				break
 			} else if !conn.authorized && time.Now().After(conn.connTime.Add(time.Minute)) {
-				log.Debug("conn auth check ==> [%s] is unauthorized for more than one minute since connected ", conn.Conn.RemoteAddr().String())
+				log.Info("conn auth check ==> [%s] is unauthorized for more than one minute since connected ", conn.Conn.RemoteAddr().String())
 				if conn.Conn != nil {
 					conn.Close()
 				}

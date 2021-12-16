@@ -102,7 +102,7 @@ func (s *diskSync) Create(path string) error {
 	if err != nil {
 		return err
 	}
-	log.Debug("create target file success [%s] -> [%s]", path, target)
+	log.Info("create the target file success [%s] -> [%s]", path, target)
 	return nil
 }
 
@@ -183,7 +183,6 @@ func (s *diskSync) Write(path string) error {
 				log.Error(err, "Write:read from the src file bytes failed [%s]", path)
 				return err
 			}
-			log.Debug("Write:read from the src file [%d] bytes [%s]", n, path)
 			nn, err := writer.Write(block[:n])
 			if err != nil {
 				log.Error(err, "Write:write to the target file bytes failed [%s]", target)
@@ -211,13 +210,13 @@ func (s *diskSync) Write(path string) error {
 func (s *diskSync) same(srcFile *os.File, targetFile *os.File) (bool, error) {
 	srcHash, err := util.MD5FromFile(srcFile, s.bufSize)
 	if err != nil {
-		log.Error(err, "calc src file md5 error [%s]", srcFile.Name())
+		log.Error(err, "calc the src file md5 error [%s]", srcFile.Name())
 		return false, err
 	}
 
 	targetHash, err := util.MD5FromFile(targetFile, s.bufSize)
 	if err != nil {
-		log.Error(err, "calc target file md5 error [%s]", targetFile.Name())
+		log.Error(err, "calc the target file md5 error [%s]", targetFile.Name())
 		return false, err
 	}
 
