@@ -1,6 +1,7 @@
 package retry
 
 import (
+	"context"
 	"github.com/no-src/log"
 	"time"
 )
@@ -24,8 +25,11 @@ func NewRetry(retryCount int, retryWait time.Duration, retryAsync bool) Retry {
 	return r
 }
 
-// Do execute once first, if failed retry retryCount times, per wait Duration Sleep
 func (r *defaultRetry) Do(f func() error, desc string) Wait {
+	return r.DoWithContext(context.Background(), f, desc)
+}
+
+func (r *defaultRetry) DoWithContext(ctx context.Context, f func() error, desc string) Wait {
 	defer func() {
 		e := recover()
 		if e != nil {
@@ -39,18 +43,25 @@ func (r *defaultRetry) Do(f func() error, desc string) Wait {
 	}
 	log.Warn("execute failed, wait to retry [%s] %d times, execute once per %s", desc, r.retryCount, r.retryWait)
 	if r.retryAsync {
-		go r.retry(wait, f, desc)
+		go r.retry(ctx, wait, f, desc)
 	} else {
-		r.retry(wait, f, desc)
+		r.retry(ctx, wait, f, desc)
 	}
 	return wait
 }
 
-func (r *defaultRetry) retry(wait WaitDone, f func() error, desc string) {
+func (r *defaultRetry) retry(ctx context.Context, wait WaitDone, f func() error, desc string) {
 	defer func() {
 		wait.Done()
 	}()
 	for i := 0; i < r.retryCount; i++ {
+		select {
+		case <-ctx.Done():
+			log.Debug("retry [%d] [%s] done => %s", i+1, desc, ctx.Err())
+			return
+		default:
+
+		}
 		err := f()
 		if err == nil {
 			if i > 0 {
