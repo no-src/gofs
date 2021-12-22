@@ -16,7 +16,7 @@ type baseMonitor struct {
 	retry       retry.Retry
 	writeMap    map[string]*writeMessage
 	writeList   writeMessageList
-	writeChan   chan string
+	writeChan   chan *writeMessage
 	writeNotify chan bool
 	mu          goSync.Mutex
 }
@@ -26,7 +26,7 @@ func newBaseMonitor(syncer sync.Sync, retry retry.Retry) baseMonitor {
 		syncer:      syncer,
 		retry:       retry,
 		writeMap:    make(map[string]*writeMessage),
-		writeChan:   make(chan string, 100),
+		writeChan:   make(chan *writeMessage, 100),
 		writeNotify: make(chan bool, 100),
 	}
 }
@@ -50,6 +50,19 @@ func (m *baseMonitor) addWrite(name string) {
 	m.writeNotify <- true
 }
 
+// removeWrite remove write message
+func (m *baseMonitor) removeWrite(name string) {
+	m.mu.Lock()
+	wm := m.writeMap[name]
+	if wm != nil {
+		wm.cancel = true
+		delete(m.writeMap, name)
+		log.Debug("removeWrite => [%s]", name)
+	}
+	m.mu.Unlock()
+	m.writeNotify <- true
+}
+
 // processWrite process write list
 func (m *baseMonitor) processWrite() {
 	for {
@@ -61,7 +74,7 @@ func (m *baseMonitor) processWrite() {
 		now := time.Now().UnixNano()
 		if len(m.writeList) > 0 {
 			wm := m.writeList[0]
-			if wm != nil {
+			if wm != nil && !wm.cancel {
 				if (wm.count <= 2 && now-wm.last <= time.Second.Nanoseconds()) || (wm.count > 2 && now-wm.last <= 3*time.Second.Nanoseconds()) {
 					m.mu.Unlock()
 					go func() {
@@ -70,12 +83,12 @@ func (m *baseMonitor) processWrite() {
 					continue
 				}
 				go func() {
-					m.writeChan <- wm.name
+					m.writeChan <- wm
 				}()
-			}
 
+				delete(m.writeMap, wm.name)
+			}
 			m.writeList = m.writeList[1:]
-			delete(m.writeMap, wm.name)
 		}
 		m.mu.Unlock()
 	}
@@ -84,7 +97,11 @@ func (m *baseMonitor) processWrite() {
 // startSyncWrite write file to sync
 func (m *baseMonitor) startSyncWrite() {
 	for {
-		name := <-m.writeChan
+		wm := <-m.writeChan
+		if wm == nil || wm.cancel {
+			continue
+		}
+		name := wm.name
 		if m.retry != nil {
 			m.retry.Do(func() error {
 				err := m.syncer.Write(name)

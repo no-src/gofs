@@ -225,6 +225,7 @@ func (m *remoteClientMonitor) processingMessage() {
 				m.addWrite(path)
 				break
 			case sync.RemoveAction:
+				m.removeWrite(path)
 				m.syncer.Remove(path)
 				break
 			case sync.RenameAction:

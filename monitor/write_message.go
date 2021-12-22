@@ -9,13 +9,16 @@ type writeMessage struct {
 	count int
 	// last the last update time, unix nano
 	last int64
+	// cancel the current writeMessage is canceled or not
+	cancel bool
 }
 
 func newWriteMessage(name string, count int, last int64) *writeMessage {
 	return &writeMessage{
-		name:  name,
-		count: count,
-		last:  last,
+		name:   name,
+		count:  count,
+		last:   last,
+		cancel: false,
 	}
 }
 

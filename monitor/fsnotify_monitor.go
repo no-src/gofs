@@ -156,6 +156,7 @@ func (m *fsNotifyMonitor) processEvents() error {
 				}
 			}
 		} else if event.Op&fsnotify.Remove == fsnotify.Remove {
+			m.removeWrite(event.Name)
 			if err := m.syncer.Remove(event.Name); err != nil {
 				log.Error(err, "Remove event execute error => [%s]", event.Name)
 			}
