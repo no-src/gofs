@@ -5,6 +5,7 @@ import (
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/log"
+	"os"
 	"sort"
 	goSync "sync"
 	"time"
@@ -86,7 +87,13 @@ func (m *baseMonitor) startSyncWrite() {
 		name := <-m.writeChan
 		if m.retry != nil {
 			m.retry.Do(func() error {
-				return m.syncer.Write(name)
+				err := m.syncer.Write(name)
+				// if file or directory is not exist, ignore it and warning
+				if os.IsNotExist(err) {
+					log.Warn("write file failed => [%s]", err.Error())
+					return nil
+				}
+				return err
 			}, fmt.Sprintf("write file => %s", name))
 		} else {
 			if err := m.syncer.Write(name); err != nil {
