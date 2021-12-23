@@ -172,14 +172,16 @@ func (rs *remoteServerSync) send(action Action, path string) (err error) {
 	req := Message{
 		Status:  contract.SuccessStatus(contract.SyncMessageApi),
 		Action:  action,
-		Path:    path,
 		BaseUrl: rs.serverAddr + server.SrcRoutePrefix,
-		IsDir:   isDirValue,
-		Size:    size,
-		Hash:    hash,
-		CTime:   cTime.Unix(),
-		ATime:   aTime.Unix(),
-		MTime:   mTime.Unix(),
+		FileInfo: contract.FileInfo{
+			Path:  path,
+			IsDir: isDirValue,
+			Size:  size,
+			Hash:  hash,
+			CTime: cTime.Unix(),
+			ATime: aTime.Unix(),
+			MTime: mTime.Unix(),
+		},
 	}
 
 	data, err := util.Marshal(req)

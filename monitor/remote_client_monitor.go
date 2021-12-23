@@ -207,9 +207,9 @@ func (m *remoteClientMonitor) processingMessage() {
 			log.Debug("received other message, ignore it => %s", string(message.data))
 		} else {
 			values := url.Values{}
-			values.Add(contract.FsDir, util.String(msg.IsDir))
+			values.Add(contract.FsDir, msg.IsDir.String())
 			values.Add(contract.FsSize, util.String(msg.Size))
-			values.Add(contract.FsHash, util.String(msg.Hash))
+			values.Add(contract.FsHash, msg.Hash)
 			values.Add(contract.FsCtime, util.String(msg.CTime))
 			values.Add(contract.FsAtime, util.String(msg.ATime))
 			values.Add(contract.FsMtime, util.String(msg.MTime))

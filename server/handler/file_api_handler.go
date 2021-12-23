@@ -75,7 +75,7 @@ func (h *fileApiHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 			}
 			fileList = append(fileList, contract.FileInfo{
 				Path:  file.Name(),
-				IsDir: file.IsDir(),
+				IsDir: contract.ParseFsDirValue(file.IsDir()),
 				Size:  file.Size(),
 				ATime: aTime.Unix(),
 				CTime: cTime.Unix(),

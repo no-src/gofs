@@ -302,18 +302,14 @@ func (rs *remoteClientSync) sync(serverAddr, path string) error {
 	}
 	for _, file := range files {
 		currentPath := path + "/" + file.Path
-		isDir := contract.FsNotDir
-		if file.IsDir {
-			isDir = contract.FsIsDir
-		}
 		values := url.Values{}
-		values.Add(contract.FsDir, util.String(isDir))
+		values.Add(contract.FsDir, file.IsDir.String())
 		values.Add(contract.FsSize, util.String(file.Size))
 		values.Add(contract.FsCtime, util.String(file.CTime))
 		values.Add(contract.FsAtime, util.String(file.ATime))
 		values.Add(contract.FsMtime, util.String(file.MTime))
 		syncPath := fmt.Sprintf("%s/%s?%s", serverAddr, currentPath, values.Encode())
-		if file.IsDir {
+		if file.IsDir.Bool() {
 			// create directory
 			rs.Create(syncPath)
 			// sync current directory content
