@@ -47,3 +47,16 @@ func (v FsDirValue) Is(t string) bool {
 func (v FsDirValue) Not(t string) bool {
 	return v.String() != t
 }
+
+// Bool current path is a dir or not
+func (v FsDirValue) Bool() bool {
+	return v == FsIsDir
+}
+
+// ParseFsDirValue parse boolean to FsDirValue
+func ParseFsDirValue(isDir bool) FsDirValue {
+	if isDir {
+		return FsIsDir
+	}
+	return FsNotDir
+}
