@@ -5,9 +5,17 @@ import (
 	"strconv"
 )
 
+type ToString interface {
+	String() string
+}
+
 // String parse the v to string
 func String(v interface{}) string {
 	switch v.(type) {
+	case ToString:
+		return v.(ToString).String()
+	case string:
+		return v.(string)
 	case int:
 		return strconv.Itoa(v.(int))
 	case uint64:
