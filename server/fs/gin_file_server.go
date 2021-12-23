@@ -70,9 +70,7 @@ func StartFileServer(opt server.Option) error {
 	rootGroup := engine.Group("/")
 
 	if len(opt.Users) > 0 {
-		rootGroup.Use(func(context *gin.Context) {
-			auth.Auth(nil, store).ServeHTTP(context.Writer, context.Request)
-		})
+		rootGroup.Use(auth.GinAuth())
 	} else {
 		server.PrintAnonymousAccessWarning()
 	}

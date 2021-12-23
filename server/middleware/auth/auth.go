@@ -1,3 +1,6 @@
+//go:build http_server
+// +build http_server
+
 package auth
 
 import (
