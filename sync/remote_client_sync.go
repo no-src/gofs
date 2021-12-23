@@ -78,7 +78,7 @@ func (rs *remoteClientSync) Create(path string) error {
 			log.Error(err, "Create:create dir error")
 			return err
 		}
-		f, err := os.Create(target)
+		f, err := util.CreateFile(target)
 		defer func() {
 			if err = f.Close(); err != nil {
 				log.Error(err, "Create:close file error")
@@ -128,7 +128,7 @@ func (rs *remoteClientSync) Write(path string) error {
 			}
 		}()
 
-		targetFile, err := os.OpenFile(target, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+		targetFile, err := util.CreateFile(target)
 		if err != nil {
 			log.Error(err, "Write:create the target file failed")
 			return err
@@ -165,6 +165,17 @@ func (rs *remoteClientSync) Write(path string) error {
 				log.Debug("Write:ignored, the file is unmodified")
 				return nil
 			}
+			// reset the offset
+			if _, err = targetFile.Seek(0, 0); err != nil {
+				return err
+			}
+		}
+
+		// truncate first before write to file
+		err = targetFile.Truncate(0)
+		if err != nil {
+			log.Error(err, "Write:truncate the target file failed [%s]", target)
+			return err
 		}
 
 		n, err := reader.WriteTo(writer)
@@ -270,7 +281,10 @@ func (rs *remoteClientSync) SyncOnce(path string) error {
 
 func (rs *remoteClientSync) sync(serverAddr, path string) error {
 	log.Debug("remote client sync path => %s", path)
-	queryUrl := fmt.Sprintf("%s%s?%s", serverAddr, server.QueryRoute, util.ValuesEncode(contract.FsPath, path))
+	reqValues := url.Values{}
+	reqValues.Add(contract.FsPath, path)
+	reqValues.Add(contract.FsNeedHash, contract.FsNeedHashValueTrue)
+	queryUrl := fmt.Sprintf("%s%s?%s", serverAddr, server.QueryRoute, reqValues.Encode())
 	resp, err := rs.httpGetWithAuth(queryUrl)
 	if err != nil {
 		return err
@@ -305,6 +319,7 @@ func (rs *remoteClientSync) sync(serverAddr, path string) error {
 		values := url.Values{}
 		values.Add(contract.FsDir, file.IsDir.String())
 		values.Add(contract.FsSize, util.String(file.Size))
+		values.Add(contract.FsHash, file.Hash)
 		values.Add(contract.FsCtime, util.String(file.CTime))
 		values.Add(contract.FsAtime, util.String(file.ATime))
 		values.Add(contract.FsMtime, util.String(file.MTime))

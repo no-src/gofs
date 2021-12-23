@@ -82,7 +82,7 @@ func (s *diskSync) Create(path string) error {
 			log.Error(err, "Create:create dir error")
 			return err
 		}
-		f, err := os.Create(target)
+		f, err := util.CreateFile(target)
 		defer func() {
 			if err = f.Close(); err != nil {
 				log.Error(err, "Create:close file error")
@@ -138,7 +138,7 @@ func (s *diskSync) Write(path string) error {
 			return err
 		}
 
-		targetFile, err := os.OpenFile(target, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+		targetFile, err := util.CreateFile(target)
 		if err != nil {
 			log.Error(err, "Write:create the target file failed")
 			return err
@@ -169,6 +169,18 @@ func (s *diskSync) Write(path string) error {
 				log.Debug("Write:ignored, the file is unmodified")
 				return nil
 			}
+
+			// reset the offset
+			if _, err = targetFile.Seek(0, 0); err != nil {
+				return err
+			}
+		}
+
+		// truncate first before write to file
+		err = targetFile.Truncate(0)
+		if err != nil {
+			log.Error(err, "Write:truncate the target file failed [%s]", target)
+			return err
 		}
 
 		n, err := reader.WriteTo(writer)
