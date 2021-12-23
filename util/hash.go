@@ -10,7 +10,7 @@ import (
 )
 
 // MD5FromFile calculate the hash value of the file
-func MD5FromFile(file *os.File, bufSize int) (hash string, err error) {
+func MD5FromFile(file io.Reader, bufSize int) (hash string, err error) {
 	if file == nil {
 		err = errors.New("file is nil")
 		return hash, err
@@ -19,14 +19,14 @@ func MD5FromFile(file *os.File, bufSize int) (hash string, err error) {
 	md5Provider := md5.New()
 	reader := bufio.NewReader(file)
 	for {
-		_, err = reader.Read(block)
+		n, err := reader.Read(block)
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
 			return hash, err
 		}
-		_, err = md5Provider.Write(block)
+		_, err = md5Provider.Write(block[:n])
 		if err != nil {
 			return hash, err
 		}
@@ -34,6 +34,19 @@ func MD5FromFile(file *os.File, bufSize int) (hash string, err error) {
 	sum := md5Provider.Sum(nil)
 	hash = hex.EncodeToString(sum)
 	return hash, nil
+}
+
+// MD5FromFileName calculate the hash value of the file
+func MD5FromFileName(path string, bufSize int) (hash string, err error) {
+	if len(path) == 0 {
+		err = errors.New("file path can't be empty")
+		return hash, err
+	}
+	f, err := os.Open(path)
+	if err != nil {
+		return hash, err
+	}
+	return MD5FromFile(f, bufSize)
 }
 
 // MD5 calculate the hash value of the string
