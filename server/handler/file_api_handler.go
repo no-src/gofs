@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/util"
@@ -15,34 +16,34 @@ type fileApiHandler struct {
 	root http.FileSystem
 }
 
-func NewFileApiHandler(root http.FileSystem) http.Handler {
+func NewFileApiHandler(root http.FileSystem) GinHandler {
 	return &fileApiHandler{
 		root: root,
 	}
 }
 
-func (h *fileApiHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+func (h *fileApiHandler) Handle(c *gin.Context) {
 	defer func() {
 		e := recover()
 		if e != nil {
-			writer.Write(server.NewErrorApiResultBytes(-7, "server internal error"))
+			c.JSON(http.StatusOK, server.NewErrorApiResult(-7, "server internal error"))
 		}
 	}()
-	writer.Header().Set("Content-Type", "application/json; charset=utf-8")
+
 	var fileList []contract.FileInfo
-	path := request.FormValue(contract.FsPath)
-	needHash := request.FormValue(contract.FsNeedHash)
+	path := c.Query(contract.FsPath)
+	needHash := c.Query(contract.FsNeedHash)
 	srcPrefix := strings.Trim(server.SrcRoutePrefix, "/")
 	targetPrefix := strings.Trim(server.TargetRoutePrefix, "/")
 	if !strings.HasPrefix(strings.ToLower(path), srcPrefix) && !strings.HasPrefix(strings.ToLower(path), targetPrefix) {
-		writer.Write(server.NewErrorApiResultBytes(-1, "must start with src or target"))
+		c.JSON(http.StatusOK, server.NewErrorApiResult(-1, "must start with src or target"))
 		return
 	}
 
 	path = filepath.Clean(path)
 	path = filepath.ToSlash(path)
 	if !strings.HasPrefix(strings.ToLower(path), srcPrefix) && !strings.HasPrefix(strings.ToLower(path), targetPrefix) {
-		writer.Write(server.NewErrorApiResultBytes(-2, "invalid path"))
+		c.JSON(http.StatusOK, server.NewErrorApiResult(-2, "invalid path"))
 		return
 	}
 
@@ -51,20 +52,20 @@ func (h *fileApiHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 	f, err := h.root.Open(path)
 	if err != nil {
 		log.Error(err, "file server open path error")
-		writer.Write(server.NewErrorApiResultBytes(-3, "open path error"))
+		c.JSON(http.StatusOK, server.NewErrorApiResult(-3, "open path error"))
 		return
 	}
 	stat, err := f.Stat()
 	if err != nil {
 		log.Error(err, "file server get file stat error")
-		writer.Write(server.NewErrorApiResultBytes(-4, "get file stat error"))
+		c.JSON(http.StatusOK, server.NewErrorApiResult(-4, "get file stat error"))
 		return
 	}
 	if stat.IsDir() {
 		files, err := f.Readdir(-1)
 		if err != nil {
 			log.Error(err, "file server read dir error")
-			writer.Write(server.NewErrorApiResultBytes(-5, "read dir error"))
+			c.JSON(http.StatusOK, server.NewErrorApiResult(-5, "read dir error"))
 			return
 		}
 		for _, file := range files {
@@ -93,11 +94,6 @@ func (h *fileApiHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 			})
 		}
 	}
-	bytes, err := util.Marshal(server.NewApiResult(0, "success", fileList))
-	if err != nil {
-		log.Error(err, "file server marshal error")
-		writer.Write(server.NewErrorApiResultBytes(-6, "marshal error"))
-		return
-	}
-	writer.Write(bytes)
+
+	c.JSON(http.StatusOK, server.NewApiResult(0, "success", fileList))
 }

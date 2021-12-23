@@ -11,7 +11,7 @@ import (
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/handler"
-	"github.com/no-src/gofs/server/middleware/auth"
+	"github.com/no-src/gofs/server/middleware"
 	"github.com/no-src/log"
 	"net/http"
 	"os"
@@ -63,21 +63,17 @@ func StartFileServer(opt server.Option) error {
 		context.HTML(http.StatusOK, "login.html", nil)
 	})
 
-	loginGroup.POST(server.LoginSignInRoute, func(context *gin.Context) {
-		auth.NewLoginHandler(store, opt.Users).ServeHTTP(context.Writer, context.Request)
-	})
+	loginGroup.POST(server.LoginSignInRoute, middleware.NewLoginHandler(opt.Users).Handle)
 
 	rootGroup := engine.Group("/")
 
 	if len(opt.Users) > 0 {
-		rootGroup.Use(auth.GinAuth())
+		rootGroup.Use(middleware.NewAuthHandler().Handle)
 	} else {
 		server.PrintAnonymousAccessWarning()
 	}
 
-	rootGroup.GET("/", func(context *gin.Context) {
-		handler.NewDefaultHandler(opt.ServerTemplate).ServeHTTP(context.Writer, context.Request)
-	})
+	rootGroup.GET("/", handler.NewDefaultHandler().Handle)
 
 	if src.IsDisk() || src.Is(core.RemoteDisk) {
 		rootGroup.StaticFS(server.SrcRoutePrefix, http.Dir(src.Path()))
@@ -90,9 +86,7 @@ func StartFileServer(opt server.Option) error {
 	}
 
 	if enableFileApi {
-		rootGroup.GET(server.QueryRoute, func(context *gin.Context) {
-			handler.NewFileApiHandler(http.Dir(src.Path())).ServeHTTP(context.Writer, context.Request)
-		})
+		rootGroup.GET(server.QueryRoute, handler.NewFileApiHandler(http.Dir(src.Path())).Handle)
 	}
 
 	log.Log("file server [%s] starting...", opt.Addr)
