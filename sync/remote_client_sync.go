@@ -10,7 +10,6 @@ import (
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -168,33 +167,21 @@ func (rs *remoteClientSync) Write(path string) error {
 			}
 		}
 
-		block := make([]byte, rs.bufSize)
-		var wc int64 = 0
-		for {
-			n, err := reader.Read(block)
-			if err == io.EOF && n == 0 {
-				break
-			}
-			if err != nil && err != io.EOF {
-				log.Error(err, "Write:read from the src file bytes failed [%s]", path)
-				return err
-			}
-			log.Debug("Write:read from the src file [%d] bytes [%s]", n, path)
-			nn, err := writer.Write(block[:n])
-			if err != nil {
-				log.Error(err, "Write:write to the target file bytes failed [%s]", target)
-				return err
-			}
-			wc += int64(nn)
-			progress := float64(wc) / float64(size) * 100
-			log.Debug("Write:write to the target file [%d] bytes, current progress [%d/%d][%.2f%%] [%s]", nn, wc, size, progress, target)
+		n, err := reader.WriteTo(writer)
+		if err != nil {
+			log.Error(err, "Write:write to the target file failed [%s]", target)
+			return err
 		}
+
 		err = writer.Flush()
+
 		if err == nil {
-			err = os.Chtimes(target, aTime, mTime)
-		}
-		if err == nil {
-			log.Info("write to the target file success [size=%d] [%s] -> [%s]", size, path, target)
+			log.Info("write to the target file success, size[%d => %d] [%s] => [%s]", size, n, path, target)
+
+			// change file times
+			if err := os.Chtimes(target, aTime, mTime); err != nil {
+				log.Warn("Write:change file times error => %s =>[%s]", err.Error(), target)
+			}
 		} else {
 			log.Error(err, "Write:flush to the target file failed [%s]", target)
 			return err

@@ -6,7 +6,6 @@ import (
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
-	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -172,33 +171,25 @@ func (s *diskSync) Write(path string) error {
 			}
 		}
 
-		block := make([]byte, s.bufSize)
-		var wc int64 = 0
-		for {
-			n, err := reader.Read(block)
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				log.Error(err, "Write:read from the src file bytes failed [%s]", path)
-				return err
-			}
-			nn, err := writer.Write(block[:n])
-			if err != nil {
-				log.Error(err, "Write:write to the target file bytes failed [%s]", target)
-				return err
-			}
-			wc += int64(nn)
-			progress := float64(wc) / float64(srcStat.Size()) * 100
-			log.Debug("Write:write to the target file [%d] bytes, current progress [%d/%d][%.2f%%] [%s]", nn, wc, srcStat.Size(), progress, target)
+		n, err := reader.WriteTo(writer)
+		if err != nil {
+			log.Error(err, "Write:write to the target file failed [%s]", target)
+			return err
 		}
+
 		err = writer.Flush()
-		_, aTime, mTime, err := util.GetFileTime(path)
+
 		if err == nil {
-			err = os.Chtimes(target, aTime, mTime)
-		}
-		if err == nil {
-			log.Info("write to the target file success [size=%d] [%s] -> [%s]", srcStat.Size(), path, target)
+			log.Info("write to the target file success, size[%d => %d] [%s] => [%s]", srcStat.Size(), n, path, target)
+
+			// change file times
+			if _, aTime, mTime, err := util.GetFileTime(path); err == nil {
+				if err = os.Chtimes(target, aTime, mTime); err != nil {
+					log.Warn("Write:change file times error => %s =>[%s]", err.Error(), target)
+				}
+			} else {
+				log.Warn("Write:get file times error => %s =>[%s]", err.Error(), path)
+			}
 		} else {
 			log.Error(err, "Write:flush to the target file failed [%s]", target)
 			return err
