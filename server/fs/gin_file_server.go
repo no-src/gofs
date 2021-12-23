@@ -1,5 +1,5 @@
-//go:build !no_server && !http_server
-// +build !no_server,!http_server
+//go:build !no_server
+// +build !no_server
 
 package fs
 
