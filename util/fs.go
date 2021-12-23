@@ -15,3 +15,8 @@ func FileExist(path string) (exist bool, err error) {
 	}
 	return true, nil
 }
+
+// CreateFile create a file without truncate
+func CreateFile(name string) (*os.File, error) {
+	return os.OpenFile(name, os.O_RDWR|os.O_CREATE, 0666)
+}
