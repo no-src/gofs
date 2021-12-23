@@ -71,6 +71,7 @@ func (h *fileApiHandler) Handle(c *gin.Context) {
 		for _, file := range files {
 			cTime, aTime, mTime, fsTimeErr := util.GetFileTimeBySys(file.Sys())
 			if fsTimeErr != nil {
+				log.Error(fsTimeErr, "get file times error => %s", file.Name())
 				cTime = time.Now()
 				aTime = cTime
 				mTime = cTime

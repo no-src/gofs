@@ -21,9 +21,9 @@ func GetFileTimeBySys(sys interface{}) (cTime time.Time, aTime time.Time, mTime 
 	if sys != nil {
 		attr := sys.(*syscall.Stat_t)
 		if attr != nil {
-			cTime = time.Unix(int64(attr.Atim.Sec), int64(attr.Ctim.Nsec))
-			aTime = time.Unix(int64(attr.Atim.Sec), int64(attr.Atim.Nsec))
-			mTime = time.Unix(int64(attr.Atim.Sec), int64(attr.Mtim.Nsec))
+			cTime = time.Unix(attr.Ctim.Sec, attr.Ctim.Nsec)
+			aTime = time.Unix(attr.Atim.Sec, attr.Atim.Nsec)
+			mTime = time.Unix(attr.Mtim.Sec, attr.Mtim.Nsec)
 		}
 	} else {
 		err = errors.New("file sys info is nil")
