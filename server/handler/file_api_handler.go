@@ -31,6 +31,7 @@ func (h *fileApiHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 	writer.Header().Set("Content-Type", "application/json; charset=utf-8")
 	var fileList []contract.FileInfo
 	path := request.FormValue(contract.FsPath)
+	needHash := request.FormValue(contract.FsNeedHash)
 	srcPrefix := strings.Trim(server.SrcRoutePrefix, "/")
 	targetPrefix := strings.Trim(server.TargetRoutePrefix, "/")
 	if !strings.HasPrefix(strings.ToLower(path), srcPrefix) && !strings.HasPrefix(strings.ToLower(path), targetPrefix) {
@@ -73,10 +74,19 @@ func (h *fileApiHandler) ServeHTTP(writer http.ResponseWriter, request *http.Req
 				aTime = cTime
 				mTime = cTime
 			}
+
+			hash := ""
+			if needHash == contract.FsNeedHashValueTrue && !file.IsDir() {
+				if cf, err := h.root.Open(filepath.ToSlash(filepath.Join(path, file.Name()))); err == nil {
+					hash, _ = util.MD5FromFile(cf, 1024)
+				}
+			}
+
 			fileList = append(fileList, contract.FileInfo{
 				Path:  file.Name(),
 				IsDir: contract.ParseFsDirValue(file.IsDir()),
 				Size:  file.Size(),
+				Hash:  hash,
 				ATime: aTime.Unix(),
 				CTime: cTime.Unix(),
 				MTime: mTime.Unix(),

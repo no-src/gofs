@@ -19,6 +19,14 @@ const (
 	FsMtime = "mtime"
 	// FsPath file path
 	FsPath = "path"
+	// FsNeedHash return file hash or not
+	FsNeedHash = "need_hash"
+)
+
+const (
+	ParamValueTrue      = "1"
+	ParamValueFalse     = "0"
+	FsNeedHashValueTrue = ParamValueTrue
 )
 
 // FsDirValue the optional value of FsDir
