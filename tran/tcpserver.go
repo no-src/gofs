@@ -47,8 +47,6 @@ func NewServer(ip string, port int, enableTLS bool, certFile string, keyFile str
 	}
 	if len(srv.users) == 0 {
 		log.Warn("the tcp server allows anonymous access, you should set some server users by the -users or -rand_user_count flag for security reasons")
-	} else {
-
 	}
 	return srv
 }

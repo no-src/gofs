@@ -95,8 +95,7 @@ func ReleaseTemplate(releasePath string, serverTemplateOverride bool) error {
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(filepath.ToSlash(releasePath), os.ModePerm)
-	if err != nil {
+	if err = os.MkdirAll(filepath.ToSlash(releasePath), os.ModePerm); err != nil {
 		return err
 	}
 	for _, f := range files {

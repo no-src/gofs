@@ -25,8 +25,7 @@ func NewLoginHandler(users []*auth.User) handler.GinHandler {
 
 func (h *loginHandler) Handle(c *gin.Context) {
 	defer func() {
-		e := recover()
-		if e != nil {
+		if e := recover(); e != nil {
 			log.Error(fmt.Errorf("%v", e), "user login error")
 			c.String(http.StatusOK, "user login error")
 		}

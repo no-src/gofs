@@ -10,6 +10,7 @@ import (
 )
 
 // MD5FromFile calculate the hash value of the file
+// If you reuse the file reader, please set its offset to start position first, like os.File.Seek
 func MD5FromFile(file io.Reader, bufSize int) (hash string, err error) {
 	if file == nil {
 		err = errors.New("file is nil")

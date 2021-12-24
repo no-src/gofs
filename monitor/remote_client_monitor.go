@@ -31,7 +31,7 @@ type message struct {
 }
 
 // NewRemoteClientMonitor create an instance of remoteClientMonitor to monitor the remote file change
-func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, host string, port int, enableTLS bool, certFile string, keyFile string, users []*auth.User) (Monitor, error) {
+func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, host string, port int, enableTLS bool, users []*auth.User) (Monitor, error) {
 	if syncer == nil {
 		err := errors.New("syncer can't be nil")
 		return nil, err

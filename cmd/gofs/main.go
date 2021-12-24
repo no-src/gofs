@@ -99,11 +99,7 @@ func main() {
 		log.Error(err, "create the instance of Monitor error")
 		return
 	}
-	defer func() {
-		if err = monitor.Close(); err != nil {
-			log.Error(err, "close monitor error")
-		}
-	}()
+	defer monitor.Close()
 
 	// start monitor
 	log.Log("monitor is starting...")
