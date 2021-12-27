@@ -2,13 +2,8 @@ package server
 
 import (
 	"fmt"
-	"github.com/no-src/gofs"
-	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
-	"io/ioutil"
 	"net"
-	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -88,39 +83,4 @@ func GenerateAddr(scheme, host string, port int) string {
 
 func PrintAnonymousAccessWarning() {
 	log.Warn("the file server allows anonymous access, you should set some server users by the -users or -rand_user_count flag for security reasons")
-}
-
-func ReleaseTemplate(releasePath string, serverTemplateOverride bool) error {
-	files, err := gofs.Templates.ReadDir(ResourceTemplatePath)
-	if err != nil {
-		return err
-	}
-	if err = os.MkdirAll(filepath.ToSlash(releasePath), os.ModePerm); err != nil {
-		return err
-	}
-	for _, f := range files {
-		srcPath := filepath.ToSlash(filepath.Join(ResourceTemplatePath, f.Name()))
-		targetPath := filepath.ToSlash(filepath.Join(releasePath, f.Name()))
-		if f.IsDir() {
-			os.MkdirAll(targetPath, os.ModePerm)
-		} else {
-			data, err := gofs.Templates.ReadFile(srcPath)
-			if err != nil {
-				return err
-			}
-			if serverTemplateOverride {
-				err = ioutil.WriteFile(targetPath, data, os.ModePerm)
-			} else {
-				var exist bool
-				exist, err = util.FileExist(targetPath)
-				if err == nil && !exist {
-					err = ioutil.WriteFile(targetPath, data, os.ModePerm)
-				}
-			}
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
 }

@@ -8,14 +8,15 @@ import (
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/no-src/gofs"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/handler"
 	"github.com/no-src/gofs/server/middleware"
 	"github.com/no-src/log"
+	"html/template"
 	"net/http"
 	"os"
-	"path/filepath"
 	"time"
 )
 
@@ -24,12 +25,6 @@ func StartFileServer(opt server.Option) error {
 	enableFileApi := false
 	src := opt.Src
 	target := opt.Target
-
-	err := server.ReleaseTemplate(filepath.Dir(opt.ServerTemplate), opt.ServerTemplateOverride)
-	if err != nil {
-		log.Error(err, "release template resource error")
-		return err
-	}
 
 	// change default mode is release
 	mode := os.Getenv(gin.EnvGinMode)
@@ -48,7 +43,13 @@ func StartFileServer(opt server.Option) error {
 		Formatter: defaultLogFormatter,
 		Output:    log.DefaultLogger(),
 	}), gin.Recovery())
-	engine.LoadHTMLGlob(opt.ServerTemplate)
+
+	tmpl, err := template.ParseFS(gofs.Templates, "server/template/*")
+	if err != nil {
+		log.Error(err, "parse template fs error")
+		return err
+	}
+	engine.SetHTMLTemplate(tmpl)
 
 	// init session
 	store, err := server.DefaultSessionStore()
