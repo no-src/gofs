@@ -10,6 +10,7 @@ import (
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"time"
 )
@@ -132,7 +133,8 @@ func (m *fsNotifyMonitor) processEvents() error {
 
 		event := element.Value.(fsnotify.Event)
 		if event.Op&fsnotify.Write == fsnotify.Write {
-			if err := m.syncer.Create(event.Name); err != nil {
+			// ignore is not exist error
+			if err := m.syncer.Create(event.Name); err != nil && !os.IsNotExist(err) {
 				log.Error(err, "Write event execute create error => [%s]", event.Name)
 			}
 			m.addWrite(event.Name)

@@ -120,7 +120,7 @@ func (s *diskSync) Write(path string) error {
 	}
 
 	if isDir {
-		s.SyncOnce(path)
+		return s.SyncOnce(path)
 	} else {
 		srcFile, err := os.Open(path)
 		if err != nil {
@@ -262,7 +262,6 @@ func (s *diskSync) buildTargetAbsFile(srcFileAbs string) (string, error) {
 func (s *diskSync) IsDir(path string) (bool, error) {
 	f, err := os.Stat(path)
 	if err != nil {
-		log.Error(err, "check path stat error")
 		return false, err
 	}
 	return f.IsDir(), nil

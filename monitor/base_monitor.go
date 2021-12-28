@@ -108,9 +108,8 @@ func (m *baseMonitor) startSyncWrite() {
 		if m.retry != nil {
 			m.retry.Do(func() error {
 				err := m.syncer.Write(name)
-				// if file or directory is not exist, ignore it and warning
+				// if file or directory is not exist, ignore it
 				if os.IsNotExist(err) {
-					log.Warn("write file failed => [%s]", err.Error())
 					return nil
 				}
 				return err

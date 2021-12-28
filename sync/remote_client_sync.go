@@ -117,7 +117,7 @@ func (rs *remoteClientSync) Write(path string) error {
 	}
 
 	if isDir {
-		rs.SyncOnce(path)
+		return rs.SyncOnce(path)
 	} else {
 		resp, err := rs.httpGetWithAuth(path)
 		if err != nil {
@@ -316,14 +316,22 @@ func (rs *remoteClientSync) sync(serverAddr, path string) error {
 		values.Add(contract.FsAtime, util.String(file.ATime))
 		values.Add(contract.FsMtime, util.String(file.MTime))
 		syncPath := fmt.Sprintf("%s/%s?%s", serverAddr, currentPath, values.Encode())
+
+		// create directory or file
+		if err = rs.Create(syncPath); err != nil {
+			log.Error(err, "sync create directory or file error => [syncPath=%s]", syncPath)
+		}
+
 		if file.IsDir.Bool() {
-			// create directory
-			rs.Create(syncPath)
 			// sync current directory content
-			rs.sync(serverAddr, currentPath)
+			if err = rs.sync(serverAddr, currentPath); err != nil {
+				log.Error(err, "sync current directory content error => [serverAddr=%s] [currentPath=%s]", serverAddr, currentPath)
+			}
 		} else {
 			// sync remote file to local disk
-			rs.Write(syncPath)
+			if err = rs.Write(syncPath); err != nil {
+				log.Error(err, "sync remote file to local disk error => [syncPath=%s]", syncPath)
+			}
 		}
 	}
 	return nil

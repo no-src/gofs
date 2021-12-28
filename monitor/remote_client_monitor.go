@@ -12,6 +12,7 @@ import (
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 )
@@ -223,6 +224,10 @@ func (m *remoteClientMonitor) processingMessage() {
 				break
 			case sync.WriteAction:
 				err = m.syncer.Create(path)
+				// ignore is not exist error
+				if err != nil && os.IsNotExist(err) {
+					err = nil
+				}
 				m.addWrite(path)
 				break
 			case sync.RemoveAction:
