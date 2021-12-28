@@ -138,7 +138,7 @@ func (s *diskSync) Write(path string) error {
 			return err
 		}
 
-		targetFile, err := util.CreateFile(target)
+		targetFile, err := util.OpenRWFile(target)
 		if err != nil {
 			log.Error(err, "Write:create the target file failed")
 			return err

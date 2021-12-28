@@ -128,7 +128,7 @@ func (rs *remoteClientSync) Write(path string) error {
 			}
 		}()
 
-		targetFile, err := util.CreateFile(target)
+		targetFile, err := util.OpenRWFile(target)
 		if err != nil {
 			log.Error(err, "Write:create the target file failed")
 			return err

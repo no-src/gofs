@@ -20,3 +20,8 @@ func FileExist(path string) (exist bool, err error) {
 func CreateFile(name string) (*os.File, error) {
 	return os.OpenFile(name, os.O_RDWR|os.O_CREATE, 0666)
 }
+
+// OpenRWFile open a file with read write mode
+func OpenRWFile(name string) (*os.File, error) {
+	return os.OpenFile(name, os.O_RDWR, 0666)
+}
