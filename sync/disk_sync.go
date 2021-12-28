@@ -63,6 +63,13 @@ func (s *diskSync) Create(path string) error {
 	if err != nil {
 		return err
 	}
+	exist, err := util.FileExist(target)
+	if err != nil {
+		return err
+	}
+	if exist {
+		return nil
+	}
 	isDir, err := s.IsDir(path)
 	if err != nil {
 		return err

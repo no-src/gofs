@@ -222,6 +222,7 @@ func (m *remoteClientMonitor) processingMessage() {
 				err = m.syncer.Create(path)
 				break
 			case sync.WriteAction:
+				err = m.syncer.Create(path)
 				m.addWrite(path)
 				break
 			case sync.RemoveAction:

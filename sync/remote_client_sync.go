@@ -60,6 +60,14 @@ func (rs *remoteClientSync) Create(path string) error {
 		return err
 	}
 
+	exist, err := util.FileExist(target)
+	if err != nil {
+		return err
+	}
+	if exist {
+		return nil
+	}
+
 	isDir, err := rs.IsDir(path)
 	if err != nil {
 		return err

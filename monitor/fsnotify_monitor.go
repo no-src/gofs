@@ -132,6 +132,9 @@ func (m *fsNotifyMonitor) processEvents() error {
 
 		event := element.Value.(fsnotify.Event)
 		if event.Op&fsnotify.Write == fsnotify.Write {
+			if err := m.syncer.Create(event.Name); err != nil {
+				log.Error(err, "Write event execute create error => [%s]", event.Name)
+			}
 			m.addWrite(event.Name)
 		} else if event.Op&fsnotify.Create == fsnotify.Create {
 			err := m.syncer.Create(event.Name)
