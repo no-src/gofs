@@ -5,8 +5,10 @@ import (
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/log"
+	"net/url"
 	"os"
 	"sort"
+	"strings"
 	goSync "sync"
 	"time"
 )
@@ -34,10 +36,10 @@ func newBaseMonitor(syncer sync.Sync, retry retry.Retry) baseMonitor {
 // addWrite add or update a write message
 func (m *baseMonitor) addWrite(name string) {
 	m.mu.Lock()
-	wm := m.writeMap[name]
+	wm := m.writeMap[m.key(name)]
 	if wm == nil {
 		wm = newDefaultWriteMessage(name)
-		m.writeMap[name] = wm
+		m.writeMap[m.key(name)] = wm
 		m.writeList = append(m.writeList, wm)
 	} else {
 		wm.count++
@@ -53,10 +55,10 @@ func (m *baseMonitor) addWrite(name string) {
 // removeWrite remove write message
 func (m *baseMonitor) removeWrite(name string) {
 	m.mu.Lock()
-	wm := m.writeMap[name]
+	wm := m.writeMap[m.key(name)]
 	if wm != nil {
 		wm.cancel = true
-		delete(m.writeMap, name)
+		delete(m.writeMap, m.key(name))
 		log.Debug("removeWrite => [%s]", name)
 	}
 	m.mu.Unlock()
@@ -87,7 +89,7 @@ func (m *baseMonitor) processWrite() {
 					m.writeChan <- wm
 				}()
 
-				delete(m.writeMap, wm.name)
+				delete(m.writeMap, m.key(wm.name))
 			}
 			m.writeList = m.writeList[1:]
 		}
@@ -119,4 +121,13 @@ func (m *baseMonitor) startSyncWrite() {
 			}
 		}
 	}
+}
+
+// key return file identity as hash key, that removes the query section if the file name is an url
+func (m *baseMonitor) key(name string) string {
+	u, err := url.Parse(name)
+	if err != nil || u == nil || len(u.RawQuery) == 0 {
+		return name
+	}
+	return strings.ReplaceAll(name, "?"+u.RawQuery, "")
 }
