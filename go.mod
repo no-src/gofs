@@ -7,9 +7,8 @@ require (
 	github.com/gin-contrib/gzip v0.0.3
 	github.com/gin-contrib/sessions v0.0.4
 	github.com/gin-gonic/gin v1.7.7
-	github.com/gorilla/sessions v1.2.0
 	github.com/no-src/log v0.0.7
-	golang.org/x/sys v0.0.0-20210806184541-e5e7981a1069 // indirect
+
 )
 
 require (
@@ -20,6 +19,7 @@ require (
 	github.com/golang/protobuf v1.3.3 // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect
+	github.com/gorilla/sessions v1.2.0 // indirect
 	github.com/json-iterator/go v1.1.9 // indirect
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
@@ -28,5 +28,6 @@ require (
 	github.com/quasoft/memstore v0.0.0-20191010062613-2bce066d2b0b // indirect
 	github.com/ugorji/go/codec v1.1.7 // indirect
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
+	golang.org/x/sys v0.0.0-20210806184541-e5e7981a1069 // indirect
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 )
