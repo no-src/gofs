@@ -9,7 +9,12 @@ const (
 	userNameHashLength    = 16
 	PasswordHashLength    = 16
 	expireLength          = 14
+	versionLength         = 2
 	expireTimeFormat      = "20060102150405"
+)
+
+var (
+	authVersion = []byte{0, 1}
 )
 
 // HashUser store the hash info of User
@@ -20,6 +25,8 @@ type HashUser struct {
 	PasswordHash string
 	// Expire 14 bytes auth request info expire time of utc, format like "20060102150405"
 	Expire string
+	// Version 2 bytes of auth api version
+	Version []byte
 }
 
 // IsExpired auth request info is expired or not
@@ -39,6 +46,7 @@ func NewHashUser(userNameHash, passwordHash string) *HashUser {
 		UserNameHash: userNameHash,
 		PasswordHash: passwordHash,
 		Expire:       time.Now().UTC().Add(defaultExpireDuration).Format(expireTimeFormat),
+		Version:      authVersion,
 	}
 }
 
