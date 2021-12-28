@@ -32,17 +32,15 @@ func (user *User) Password() string {
 
 // ToHashUser convert User to HashUser
 func (user *User) ToHashUser() (hashUser *HashUser, err error) {
-	hashUser = &HashUser{}
-	hashUser.UserNameHash, err = util.MD5(user.userName)
+	userNameHash, err := util.MD5(user.userName)
 	if err != nil {
 		return nil, err
 	}
-	hashUser.PasswordHash, err = util.MD5(user.password)
+	passwordHash, err := util.MD5(user.password)
 	if err != nil {
 		return nil, err
 	}
-	hashUser.UserNameHash = hashUser.UserNameHash[:16]
-	hashUser.PasswordHash = hashUser.PasswordHash[:16]
+	hashUser = NewHashUser(userNameHash[:userNameHashLength], passwordHash[:PasswordHashLength])
 	return hashUser, err
 }
 

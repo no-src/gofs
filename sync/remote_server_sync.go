@@ -273,7 +273,7 @@ func (rs *remoteServerSync) authCommand(client *tran.Conn, data []byte) (cmd con
 	authData := contract.FailStatus(contract.AuthApi)
 	hashUser, err := auth.ParseAuthCommandData(data)
 	if err == nil && client != nil {
-		if rs.server.Auth(hashUser.UserNameHash, hashUser.PasswordHash) {
+		if rs.server.Auth(hashUser) {
 			client.MarkAuthorized(hashUser.UserNameHash, hashUser.PasswordHash)
 			authData = contract.SuccessStatus(contract.AuthApi)
 		}

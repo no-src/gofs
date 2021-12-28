@@ -175,16 +175,19 @@ func (srv *tcpServer) Close() error {
 	return srv.listener.Close()
 }
 
-func (srv *tcpServer) Auth(userNameHash, passwordHash string) bool {
+func (srv *tcpServer) Auth(user *auth.HashUser) bool {
 	if len(srv.users) == 0 {
 		return true
 	}
-	if len(userNameHash) == 0 || len(passwordHash) == 0 {
+	if user == nil || len(user.UserNameHash) == 0 || len(user.PasswordHash) == 0 {
+		return false
+	}
+	if user.IsExpired() {
 		return false
 	}
 	var loginUser *auth.HashUser
 	for _, user := range srv.users {
-		if user.UserNameHash == userNameHash && user.PasswordHash == passwordHash {
+		if user.UserNameHash == user.UserNameHash && user.PasswordHash == user.PasswordHash {
 			loginUser = user
 		}
 	}

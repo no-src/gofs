@@ -1,5 +1,7 @@
 package tran
 
+import "github.com/no-src/gofs/auth"
+
 // Server a network communication server
 type Server interface {
 	// Listen listen the specified port to wait client connect
@@ -17,5 +19,5 @@ type Server interface {
 	// Close close the server
 	Close() error
 	// Auth client sign in
-	Auth(userName, password string) bool
+	Auth(user *auth.HashUser) bool
 }
