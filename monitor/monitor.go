@@ -25,7 +25,7 @@ func NewMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, enableTLS bo
 	if src.IsDisk() {
 		return NewFsNotifyMonitor(syncer, retry, syncOnce)
 	} else if src.Is(core.RemoteDisk) && src.Server() {
-		return NewFsNotifyMonitor(syncer, retry, syncOnce)
+		return NewRemoteServerMonitor(syncer, retry, syncOnce)
 	} else if src.Is(core.RemoteDisk) && !src.Server() {
 		return NewRemoteClientMonitor(syncer, retry, syncOnce, src.Host(), src.Port(), enableTLS, users)
 	}

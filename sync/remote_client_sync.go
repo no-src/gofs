@@ -62,20 +62,17 @@ func (rs *remoteClientSync) Create(path string) error {
 
 	isDir, err := rs.IsDir(path)
 	if err != nil {
-		log.Error(err, "Create:check if the path is dir error")
 		return err
 	}
 	if isDir {
 		err = os.MkdirAll(target, os.ModePerm)
 		if err != nil {
-			log.Error(err, "Create:create dir error")
 			return err
 		}
 	} else {
 		dir := filepath.Dir(target)
 		err = os.MkdirAll(dir, os.ModePerm)
 		if err != nil {
-			log.Error(err, "Create:create dir error")
 			return err
 		}
 		f, err := util.CreateFile(target)
@@ -85,7 +82,6 @@ func (rs *remoteClientSync) Create(path string) error {
 			}
 		}()
 		if err != nil {
-			log.Error(err, "Create:create file error")
 			return err
 		}
 	}
@@ -104,13 +100,11 @@ func (rs *remoteClientSync) Create(path string) error {
 func (rs *remoteClientSync) Write(path string) error {
 	target, err := rs.buildTargetAbsFile(path)
 	if err != nil {
-		log.Error(err, "Write:build to target abs file error [%s]", path)
 		return err
 	}
 
 	isDir, err := rs.IsDir(path)
 	if err != nil {
-		log.Error(err, "Write:check if the path is dir error")
 		return err
 	}
 
@@ -119,7 +113,6 @@ func (rs *remoteClientSync) Write(path string) error {
 	} else {
 		resp, err := rs.httpGetWithAuth(path)
 		if err != nil {
-			log.Error(err, "Write:download the src file failed")
 			return err
 		}
 		defer func() {
@@ -130,7 +123,6 @@ func (rs *remoteClientSync) Write(path string) error {
 
 		targetFile, err := util.OpenRWFile(target)
 		if err != nil {
-			log.Error(err, "Write:create the target file failed")
 			return err
 		}
 		defer func() {
@@ -140,7 +132,6 @@ func (rs *remoteClientSync) Write(path string) error {
 		}()
 		targetStat, err := targetFile.Stat()
 		if err != nil {
-			log.Error(err, "Write:get the target file stat failed")
 			return err
 		}
 
@@ -149,7 +140,6 @@ func (rs *remoteClientSync) Write(path string) error {
 
 		size, hash, _, aTime, mTime, err := rs.fileInfo(path)
 		if err != nil {
-			log.Error(err, "Write:get src file info error")
 			return err
 		}
 
@@ -174,13 +164,11 @@ func (rs *remoteClientSync) Write(path string) error {
 		// truncate first before write to file
 		err = targetFile.Truncate(0)
 		if err != nil {
-			log.Error(err, "Write:truncate the target file failed [%s]", target)
 			return err
 		}
 
 		n, err := reader.WriteTo(writer)
 		if err != nil {
-			log.Error(err, "Write:write to the target file failed [%s]", target)
 			return err
 		}
 
@@ -194,7 +182,6 @@ func (rs *remoteClientSync) Write(path string) error {
 				log.Warn("Write:change file times error => %s =>[%s]", err.Error(), target)
 			}
 		} else {
-			log.Error(err, "Write:flush to the target file failed [%s]", target)
 			return err
 		}
 	}
@@ -204,13 +191,10 @@ func (rs *remoteClientSync) Write(path string) error {
 func (rs *remoteClientSync) Remove(path string) error {
 	target, err := rs.buildTargetAbsFile(path)
 	if err != nil {
-		log.Error(err, "Remove:build to target abs file error [%s]", path)
 		return err
 	}
 	err = os.RemoveAll(target)
-	if err != nil {
-		log.Error(err, "Remove:remove the target file error")
-	} else {
+	if err == nil {
 		log.Info("remove file success [%s] -> [%s]", path, target)
 	}
 	return err
@@ -222,7 +206,7 @@ func (rs *remoteClientSync) Rename(path string) error {
 }
 
 func (rs *remoteClientSync) Chmod(path string) error {
-	log.Debug("Chmod not implemented [%s]", path)
+	log.Debug("Chmod is unimplemented [%s]", path)
 	return nil
 }
 
@@ -353,7 +337,7 @@ func (rs *remoteClientSync) same(srcHash string, targetFile *os.File) (bool, err
 	}
 	targetHash, err := util.MD5FromFile(targetFile, rs.bufSize)
 	if err != nil {
-		log.Error(err, "calc the target file md5 error [%s]", targetFile.Name())
+		log.Error(err, "calculate md5 hash of the target file error [%s]", targetFile.Name())
 		return false, err
 	}
 

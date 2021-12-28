@@ -219,21 +219,24 @@ func (m *remoteClientMonitor) processingMessage() {
 
 			switch msg.Action {
 			case sync.CreateAction:
-				m.syncer.Create(path)
+				err = m.syncer.Create(path)
 				break
 			case sync.WriteAction:
 				m.addWrite(path)
 				break
 			case sync.RemoveAction:
 				m.removeWrite(path)
-				m.syncer.Remove(path)
+				err = m.syncer.Remove(path)
 				break
 			case sync.RenameAction:
-				m.syncer.Rename(path)
+				err = m.syncer.Rename(path)
 				break
 			case sync.ChmodAction:
-				m.syncer.Chmod(path)
+				err = m.syncer.Chmod(path)
 				break
+			}
+			if err != nil {
+				log.Error(err, "%s action execute error => [%s]", msg.Action.String(), path)
 			}
 		}
 		m.messages.Remove(element)
