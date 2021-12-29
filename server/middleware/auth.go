@@ -12,16 +12,19 @@ import (
 )
 
 type authHandler struct {
+	logger log.Logger
 }
 
-func NewAuthHandler() handler.GinHandler {
-	return &authHandler{}
+func NewAuthHandler(logger log.Logger) handler.GinHandler {
+	return &authHandler{
+		logger: logger,
+	}
 }
 
 func (h *authHandler) Handle(c *gin.Context) {
 	session := sessions.Default(c)
 	if session == nil {
-		log.Error(errors.New("session is nil"), "auth handler => get session error, remote=%s", c.Request.RemoteAddr)
+		h.logger.Error(errors.New("session is nil"), "auth handler => get session error, remote=%s", c.Request.RemoteAddr)
 	}
 	var user interface{}
 	if session != nil {

@@ -25,6 +25,7 @@ func StartFileServer(opt server.Option) error {
 	enableFileApi := false
 	src := opt.Src
 	target := opt.Target
+	logger := opt.Logger
 
 	// change default mode is release
 	mode := os.Getenv(gin.EnvGinMode)
@@ -32,7 +33,7 @@ func StartFileServer(opt server.Option) error {
 		mode = gin.ReleaseMode
 	}
 	gin.SetMode(mode)
-	gin.DefaultWriter = log.DefaultLogger()
+	gin.DefaultWriter = logger
 
 	engine := gin.New()
 	if opt.EnableCompress {
@@ -41,7 +42,7 @@ func StartFileServer(opt server.Option) error {
 	}
 	engine.Use(gin.LoggerWithConfig(gin.LoggerConfig{
 		Formatter: defaultLogFormatter,
-		Output:    log.DefaultLogger(),
+		Output:    logger,
 	}), gin.Recovery())
 
 	tmpl, err := template.ParseFS(gofs.Templates, "server/template/*")
@@ -64,17 +65,17 @@ func StartFileServer(opt server.Option) error {
 		context.HTML(http.StatusOK, "login.html", nil)
 	})
 
-	loginGroup.POST(server.LoginSignInRoute, middleware.NewLoginHandler(opt.Users).Handle)
+	loginGroup.POST(server.LoginSignInRoute, middleware.NewLoginHandler(opt.Users, logger).Handle)
 
 	rootGroup := engine.Group("/")
 
 	if len(opt.Users) > 0 {
-		rootGroup.Use(middleware.NewAuthHandler().Handle)
+		rootGroup.Use(middleware.NewAuthHandler(logger).Handle)
 	} else {
 		server.PrintAnonymousAccessWarning()
 	}
 
-	rootGroup.GET("/", handler.NewDefaultHandler().Handle)
+	rootGroup.GET("/", handler.NewDefaultHandler(logger).Handle)
 
 	if src.IsDisk() || src.Is(core.RemoteDisk) {
 		rootGroup.StaticFS(server.SrcRoutePrefix, http.Dir(src.Path()))
@@ -87,7 +88,7 @@ func StartFileServer(opt server.Option) error {
 	}
 
 	if enableFileApi {
-		rootGroup.GET(server.QueryRoute, handler.NewFileApiHandler(http.Dir(src.Path())).Handle)
+		rootGroup.GET(server.QueryRoute, handler.NewFileApiHandler(http.Dir(src.Path()), logger).Handle)
 	}
 
 	log.Log("file server [%s] starting...", opt.Addr)

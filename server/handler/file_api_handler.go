@@ -13,12 +13,14 @@ import (
 )
 
 type fileApiHandler struct {
-	root http.FileSystem
+	root   http.FileSystem
+	logger log.Logger
 }
 
-func NewFileApiHandler(root http.FileSystem) GinHandler {
+func NewFileApiHandler(root http.FileSystem, logger log.Logger) GinHandler {
 	return &fileApiHandler{
-		root: root,
+		root:   root,
+		logger: logger,
 	}
 }
 
@@ -51,27 +53,27 @@ func (h *fileApiHandler) Handle(c *gin.Context) {
 
 	f, err := h.root.Open(path)
 	if err != nil {
-		log.Error(err, "file server open path error")
+		h.logger.Error(err, "file server open path error")
 		c.JSON(http.StatusOK, server.NewErrorApiResult(-3, "open path error"))
 		return
 	}
 	stat, err := f.Stat()
 	if err != nil {
-		log.Error(err, "file server get file stat error")
+		h.logger.Error(err, "file server get file stat error")
 		c.JSON(http.StatusOK, server.NewErrorApiResult(-4, "get file stat error"))
 		return
 	}
 	if stat.IsDir() {
 		files, err := f.Readdir(-1)
 		if err != nil {
-			log.Error(err, "file server read dir error")
+			h.logger.Error(err, "file server read dir error")
 			c.JSON(http.StatusOK, server.NewErrorApiResult(-5, "read dir error"))
 			return
 		}
 		for _, file := range files {
 			cTime, aTime, mTime, fsTimeErr := util.GetFileTimeBySys(file.Sys())
 			if fsTimeErr != nil {
-				log.Error(fsTimeErr, "get file times error => %s", file.Name())
+				h.logger.Error(fsTimeErr, "get file times error => %s", file.Name())
 				cTime = time.Now()
 				aTime = cTime
 				mTime = cTime

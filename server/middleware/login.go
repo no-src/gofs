@@ -14,19 +14,21 @@ import (
 )
 
 type loginHandler struct {
-	users []*auth.User
+	users  []*auth.User
+	logger log.Logger
 }
 
-func NewLoginHandler(users []*auth.User) handler.GinHandler {
+func NewLoginHandler(users []*auth.User, logger log.Logger) handler.GinHandler {
 	return &loginHandler{
-		users: users,
+		users:  users,
+		logger: logger,
 	}
 }
 
 func (h *loginHandler) Handle(c *gin.Context) {
 	defer func() {
 		if e := recover(); e != nil {
-			log.Error(fmt.Errorf("%v", e), "user login error")
+			h.logger.Error(fmt.Errorf("%v", e), "user login error")
 			c.String(http.StatusOK, "user login error")
 		}
 	}()
@@ -52,21 +54,21 @@ func (h *loginHandler) Handle(c *gin.Context) {
 	if loginUser != nil {
 		session := sessions.Default(c)
 		if session == nil {
-			log.Error(errors.New("session is nil"), "login handler => get session error, remote=%s", c.Request.RemoteAddr)
+			h.logger.Error(errors.New("session is nil"), "login handler => get session error, remote=%s", c.Request.RemoteAddr)
 			c.String(http.StatusInternalServerError, "get session error")
 			return
 		}
 		session.Set(server.SessionUser, loginUser)
 		err := session.Save()
 		if err != nil {
-			log.Error(err, "save session error, remote=%s", c.Request.RemoteAddr)
+			h.logger.Error(err, "save session error, remote=%s", c.Request.RemoteAddr)
 			c.String(http.StatusInternalServerError, "save session error")
 			return
 		}
-		log.Info("login success, userid=%d username=%s password=%s remote=%s", loginUser.UserId, loginUser.UserName, loginUser.Password, c.Request.RemoteAddr)
+		h.logger.Info("login success, userid=%d username=%s password=%s remote=%s", loginUser.UserId, loginUser.UserName, loginUser.Password, c.Request.RemoteAddr)
 		c.Redirect(http.StatusFound, returnUrl)
 	} else {
-		log.Info("login failed, username=%s password=%s remote=%s", userName, password, c.Request.RemoteAddr)
+		h.logger.Info("login failed, username=%s password=%s remote=%s", userName, password, c.Request.RemoteAddr)
 		c.Redirect(http.StatusFound, server.LoginIndexFullRoute)
 	}
 }

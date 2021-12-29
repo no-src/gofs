@@ -4,6 +4,7 @@ import (
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/retry"
+	"github.com/no-src/log"
 )
 
 type Option struct {
@@ -16,9 +17,10 @@ type Option struct {
 	KeyFile        string
 	Users          []*auth.User
 	EnableCompress bool
+	Logger         log.Logger
 }
 
-func NewServerOption(src core.VFS, target core.VFS, addr string, init retry.WaitDone, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableCompress bool) Option {
+func NewServerOption(src core.VFS, target core.VFS, addr string, init retry.WaitDone, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableCompress bool, logger log.Logger) Option {
 	opt := Option{
 		Src:            src,
 		Target:         target,
@@ -29,6 +31,7 @@ func NewServerOption(src core.VFS, target core.VFS, addr string, init retry.Wait
 		KeyFile:        keyFile,
 		Users:          users,
 		EnableCompress: enableCompress,
+		Logger:         logger,
 	}
 	return opt
 }
