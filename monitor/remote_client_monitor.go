@@ -95,7 +95,7 @@ func (m *remoteClientMonitor) auth() error {
 	}
 	// auth success
 	m.authorized = true
-	log.Debug("auth success, current client is authorized")
+	log.Info("auth success, current client is authorized")
 	return nil
 }
 

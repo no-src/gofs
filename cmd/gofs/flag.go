@@ -45,9 +45,9 @@ var (
 	isSubprocess       bool
 
 	// file server
-	enableFileServer           bool
-	fileServerAddr             string
-	enableFileServerCompress   bool
+	enableFileServer         bool
+	fileServerAddr           string
+	enableFileServerCompress bool
 
 	// tls transfer
 	enableTLS   bool
@@ -148,14 +148,14 @@ func initFlags() error {
 			return err
 		}
 		if !exist {
-			return fmt.Errorf("cert file is not found for tls => %s", tlsCertFile)
+			return fmt.Errorf("cert file is not found for tls => [%s], for more information, see -tls and -tls_cert_file flags", tlsCertFile)
 		}
 		exist, err = util.FileExist(tlsKeyFile)
 		if err != nil {
 			return err
 		}
 		if !exist {
-			return fmt.Errorf("key file is not found for tls => %s", tlsKeyFile)
+			return fmt.Errorf("key file is not found for tls => [%s], for more information, see -tls and -tls_key_file flags", tlsKeyFile)
 		}
 	}
 

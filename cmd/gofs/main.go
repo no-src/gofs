@@ -15,7 +15,7 @@ import (
 func main() {
 	parseFlags()
 
-	// if current is subprocess, then reset the "kill_ppid" and "daemon"
+	// if current is subprocess, then reset the "-kill_ppid" and "-daemon"
 	if isSubprocess {
 		killPPid = false
 		isDaemon = false
@@ -78,7 +78,7 @@ func main() {
 	if enableFileLogger && enableFileServer {
 		webFileLogger, err := log.NewFileLoggerWithAutoFlush(log.Level(logLevel), logDir, "web_", logFlush, logFlushInterval)
 		if err != nil {
-			log.Error(err, "init web file logger error")
+			log.Error(err, "init the web server file logger error")
 			return
 		}
 		webLogger = log.NewMultiLogger(webFileLogger, webLogger)
