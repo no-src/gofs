@@ -36,7 +36,7 @@ const (
 )
 
 const (
-	ResourceTemplatePath = "server/template"
+	ResourceTemplatePath = "server/template/*"
 )
 
 func InitServerInfo(addr string, tls bool) {

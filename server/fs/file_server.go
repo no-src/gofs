@@ -36,16 +36,20 @@ func StartFileServer(opt server.Option) error {
 	gin.DefaultWriter = logger
 
 	engine := gin.New()
+
+	engine.NoRoute(middleware.NoRoute)
+
 	if opt.EnableCompress {
 		// enable gzip compression
 		engine.Use(gzip.Gzip(gzip.DefaultCompression))
 	}
+
 	engine.Use(gin.LoggerWithConfig(gin.LoggerConfig{
 		Formatter: defaultLogFormatter,
 		Output:    logger,
 	}), gin.Recovery())
 
-	tmpl, err := template.ParseFS(gofs.Templates, "server/template/*")
+	tmpl, err := template.ParseFS(gofs.Templates, server.ResourceTemplatePath)
 	if err != nil {
 		log.Error(err, "parse template fs error")
 		return err
@@ -91,7 +95,7 @@ func StartFileServer(opt server.Option) error {
 		rootGroup.GET(server.QueryRoute, handler.NewFileApiHandler(http.Dir(src.Path()), logger).Handle)
 	}
 
-	log.Log("file server [%s] starting...", opt.Addr)
+	log.Info("file server [%s] starting...", opt.Addr)
 	server.InitServerInfo(opt.Addr, opt.EnableTLS)
 	opt.Init.Done()
 
