@@ -24,7 +24,6 @@ func main() {
 	// init logger
 	var loggers []log.Logger
 	loggers = append(loggers, log.NewConsoleLogger(log.Level(logLevel)))
-	var webLogger = log.NewConsoleLogger(log.Level(logLevel))
 	if enableFileLogger {
 		filePrefix := "gofs_"
 		if isDaemon {
@@ -36,18 +35,10 @@ func main() {
 			return
 		}
 		loggers = append(loggers, flogger)
-
-		webFileLogger, err := log.NewFileLoggerWithAutoFlush(log.Level(logLevel), logDir, "web_", logFlush, logFlushInterval)
-		if err != nil {
-			log.Error(err, "init web file logger error")
-			return
-		}
-		webLogger = log.NewMultiLogger(webFileLogger, webLogger)
 	}
 
 	log.InitDefaultLogger(log.NewMultiLogger(loggers...))
 	defer log.Close()
-	defer webLogger.Close()
 
 	// print version info
 	if printVersion {
@@ -79,6 +70,18 @@ func main() {
 	if err != nil {
 		log.Error(err, "parse users error => [%s]", users)
 		return
+	}
+
+	// init web server logger
+	var webLogger = log.NewConsoleLogger(log.Level(logLevel))
+	defer webLogger.Close()
+	if enableFileLogger && enableFileServer {
+		webFileLogger, err := log.NewFileLoggerWithAutoFlush(log.Level(logLevel), logDir, "web_", logFlush, logFlushInterval)
+		if err != nil {
+			log.Error(err, "init web file logger error")
+			return
+		}
+		webLogger = log.NewMultiLogger(webFileLogger, webLogger)
 	}
 
 	// start a file server
