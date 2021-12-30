@@ -24,16 +24,37 @@ go install -tags "no_server" github.com/no-src/gofs/...@latest
 
 ## Quick Start
 
-### Local Disk
+### Prerequisites
 
-For example, monitor src directory and sync change files to target directory.
+Please ensure the src directory and target directory exists first, replace the following path with your real path.
 
 ```bash
-# Please ensure the src directory and target directory exists first
-# Replace the following path with your real path
-mkdir src target
+$ mkdir src target
+```
 
-gofs -src=./src -target=./target
+Generate the TLS cert file and key file for testing purposes.
+
+The TLS cert and key files are just used by [File Server](#file-server) and [Remote Disk Server](#remote-disk-server).
+
+```bash
+$ go run $GOROOT/src/crypto/tls/generate_cert.go --host 127.0.0.1
+2021/12/30 17:21:54 wrote cert.pem
+2021/12/30 17:21:54 wrote key.pem
+```
+
+Look up our workspace.
+
+```bash
+$ ls
+cert.pem  key.pem  src  target
+```
+
+### Local Disk
+
+Monitor src directory and sync change files to target directory.
+
+```bash
+$ gofs -src=./src -target=./target
 ```
 
 ### SyncOnce
@@ -41,7 +62,7 @@ gofs -src=./src -target=./target
 Sync the whole path immediately from src directory to target directory.
 
 ```bash
-gofs -src=./src -target=./target -sync_once
+$ gofs -src=./src -target=./target -sync_once
 ```
 
 ### Daemon Mode
@@ -49,7 +70,7 @@ gofs -src=./src -target=./target -sync_once
 Start a daemon to create subprocess to work, and record pid info to pid file.
 
 ```bash
-gofs -src=./src -target=./target -daemon -daemon_pid
+$  gofs -src=./src -target=./target -daemon -daemon_pid
 ```
 
 ### File Server
@@ -65,16 +86,9 @@ You should set the `rand_user_count` flag to auto generate some random users or 
 The server users will output to log if you set the `rand_user_count` flag greater than zero.
 
 ```bash
-# Please ensure the src directory and target directory exists first
-# Replace the following path with your real path
-mkdir src target
-
-# Generate the TLS cert file and key file for testing purposes
-go run $GOROOT/src/crypto/tls/generate_cert.go --host 127.0.0.1
-
 # Start a file server and create three random users
 # Replace the `tls_cert_file` and `tls_key_file` flags with your real cert files in the production environment
-gofs -src=./src -target=./target -server -tls_cert_file=cert.pem -tls_key_file=key.pem -rand_user_count=3
+$ gofs -src=./src -target=./target -server -tls_cert_file=cert.pem -tls_key_file=key.pem -rand_user_count=3
 ```
 
 ### Remote Disk Server
@@ -82,17 +96,10 @@ gofs -src=./src -target=./target -server -tls_cert_file=cert.pem -tls_key_file=k
 Start a remote disk server as a remote file source.
 
 ```bash
-# Please ensure the src directory and target directory exists first
-# Replace the following path with your real path
-mkdir src target
-
-# Generate the TLS cert file and key file for testing purposes
-go run $GOROOT/src/crypto/tls/generate_cert.go --host 127.0.0.1
-
 # Start a remote disk server
 # Replace the `tls_cert_file` and `tls_key_file` flags with your real cert files in the production environment
 # Replace the `users` flag with complex username and password for security
-gofs -src="rs://127.0.0.1:9016?mode=server&local_sync_disabled=true&path=./src&fs_server=https://127.0.0.1" -target=./target -users="gofs|password" -tls_cert_file=cert.pem -tls_key_file=key.pem
+$ gofs -src="rs://127.0.0.1:9016?mode=server&local_sync_disabled=true&path=./src&fs_server=https://127.0.0.1" -target=./target -users="gofs|password" -tls_cert_file=cert.pem -tls_key_file=key.pem
 ```
 
 ### Remote Disk Client
@@ -102,13 +109,9 @@ Start a remote disk client to sync change files from remote disk server.
 You can sync the whole path immediately from remote disk server to local target directory with the `sync_once` flag, like [SyncOnce](#synconce).
 
 ```bash
-# Please ensure the target directory exists first
-# Replace the following path with your real path
-mkdir target
-
 # Start a remote disk client
 # Replace the `users` flag with your real username and password
-gofs -src="rs://127.0.0.1:9016" -target=./target -users="gofs|password"
+$ gofs -src="rs://127.0.0.1:9016" -target=./target -users="gofs|password"
 ```
 
 ## For More Information
@@ -116,11 +119,11 @@ gofs -src="rs://127.0.0.1:9016" -target=./target -users="gofs|password"
 ### Help Info
 
 ```bash
-gofs -h
+$ gofs -h
 ```
 
 ### Version Info
 
 ```bash
-gofs -v
+$ gofs -v
 ```
