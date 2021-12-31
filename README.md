@@ -1,14 +1,18 @@
 # gofs
 
+English | [简体中文](README-CN.md)
+
+A file synchronization tool out of the box based on golang.
+
 ## Installation
 
 ```bash
 go install github.com/no-src/gofs/...@latest
 ```
 
-### Hide Windows GUI 
+### Run In the Background
 
-You can install a no windows gui program using the following command on Windows.
+You can install a program run in the background using the following command on Windows.
 
 ```bat
 go install -ldflags="-H windowsgui" github.com/no-src/gofs/...@latest
