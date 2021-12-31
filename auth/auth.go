@@ -8,7 +8,7 @@ import (
 // ParseAuthCommandData parse auth command request data
 func ParseAuthCommandData(data []byte) (user *HashUser, err error) {
 	authCmdLen := len(contract.AuthCommand)
-	length := authCmdLen + versionLength + userNameHashLength + PasswordHashLength + expireLength
+	length := authCmdLen + versionLength + userNameHashLength + PasswordHashLength + expiresLength
 	if len(data) != length {
 		return nil, fmt.Errorf("auth command data is invalid => [%s]", string(data))
 	}
@@ -16,7 +16,7 @@ func ParseAuthCommandData(data []byte) (user *HashUser, err error) {
 		Version:      data[authCmdLen : authCmdLen+versionLength],
 		UserNameHash: string(data[authCmdLen+versionLength : authCmdLen+versionLength+userNameHashLength]),
 		PasswordHash: string(data[authCmdLen+versionLength+userNameHashLength : authCmdLen+versionLength+userNameHashLength+PasswordHashLength]),
-		Expire:       string(data[authCmdLen+versionLength+userNameHashLength+PasswordHashLength : length]),
+		Expires:      string(data[authCmdLen+versionLength+userNameHashLength+PasswordHashLength : length]),
 	}
 	return user, nil
 }
@@ -30,6 +30,6 @@ func GenerateAuthCommandData(user *HashUser) []byte {
 	authData = append(authData, user.Version...)
 	authData = append(authData, []byte(user.UserNameHash)...)
 	authData = append(authData, []byte(user.PasswordHash)...)
-	authData = append(authData, []byte(user.Expire)...)
+	authData = append(authData, []byte(user.Expires)...)
 	return authData
 }

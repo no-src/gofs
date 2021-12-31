@@ -61,6 +61,7 @@ func (m *remoteClientMonitor) auth() error {
 		return nil
 	}
 	go m.retry.Do(func() error {
+		m.currentUser.RefreshExpires()
 		authData := auth.GenerateAuthCommandData(m.currentUser)
 		err := m.client.Write(authData)
 		return err

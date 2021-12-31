@@ -5,12 +5,12 @@ import (
 )
 
 const (
-	defaultExpireDuration = time.Second * 15
-	userNameHashLength    = 16
-	PasswordHashLength    = 16
-	expireLength          = 14
-	versionLength         = 2
-	expireTimeFormat      = "20060102150405"
+	userNameHashLength     = 16
+	PasswordHashLength     = 16
+	versionLength          = 2
+	expiresLength          = 14
+	expiresFormat          = "20060102150405"
+	defaultExpiresDuration = time.Second * 15
 )
 
 var (
@@ -23,31 +23,38 @@ type HashUser struct {
 	UserNameHash string
 	// PasswordHash a 16 bytes hash of password
 	PasswordHash string
-	// Expire 14 bytes auth request info expire time of utc, format like "20060102150405"
-	Expire string
+	// Expires 14 bytes auth request info expires of utc, format like "20060102150405"
+	Expires string
 	// Version 2 bytes of auth api version
 	Version []byte
 }
 
 // IsExpired auth request info is expired or not
 func (h *HashUser) IsExpired() bool {
-	if len(h.Expire) != expireLength {
+	if len(h.Expires) != expiresLength {
 		return true
 	}
-	expire, err := time.Parse(expireTimeFormat, h.Expire)
+	expires, err := time.Parse(expiresFormat, h.Expires)
 	if err != nil {
 		return true
 	}
-	return time.Now().UTC().After(expire)
+	return time.Now().UTC().After(expires)
+}
+
+// RefreshExpires refresh expires with current utc time
+func (h *HashUser) RefreshExpires() string {
+	h.Expires = time.Now().UTC().Add(defaultExpiresDuration).Format(expiresFormat)
+	return h.Expires
 }
 
 func NewHashUser(userNameHash, passwordHash string) *HashUser {
-	return &HashUser{
+	h := &HashUser{
 		UserNameHash: userNameHash,
 		PasswordHash: passwordHash,
-		Expire:       time.Now().UTC().Add(defaultExpireDuration).Format(expireTimeFormat),
 		Version:      authVersion,
 	}
+	h.RefreshExpires()
+	return h
 }
 
 // ToHashUserList convert User list to HashUser list

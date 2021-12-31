@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"github.com/no-src/gofs/auth"
+	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
 	"net"
 	"strings"
@@ -183,6 +184,7 @@ func (srv *tcpServer) Auth(user *auth.HashUser) bool {
 		return false
 	}
 	if user.IsExpired() {
+		log.Warn("user auth request info is expired, user => %s", util.String(user))
 		return false
 	}
 	var loginUser *auth.HashUser
