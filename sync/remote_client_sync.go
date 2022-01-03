@@ -160,7 +160,7 @@ func (rs *remoteClientSync) Write(path string) error {
 		if size > 0 && size == targetStat.Size() {
 			isSame, err := rs.same(hash, targetFile)
 			if err == nil && isSame {
-				log.Debug("Write:ignored, the file is unmodified")
+				log.Debug("Write:ignored, the file is unmodified => %s", path)
 				return nil
 			}
 			// reset the offset

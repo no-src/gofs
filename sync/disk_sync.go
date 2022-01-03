@@ -162,7 +162,7 @@ func (s *diskSync) Write(path string) error {
 		if srcStat.Size() > 0 && srcStat.Size() == targetStat.Size() {
 			isSame, err := s.same(srcFile, targetFile)
 			if err == nil && isSame {
-				log.Debug("Write:ignored, the file is unmodified")
+				log.Debug("Write:ignored, the file is unmodified => %s", path)
 				return nil
 			}
 
