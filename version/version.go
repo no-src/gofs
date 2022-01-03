@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"github.com/no-src/gofs"
 	"github.com/no-src/log"
+	"strings"
 )
 
 const VERSION = "v0.2.2"
 
 func PrintVersionInfo() {
 	v := fmt.Sprintf("gofs version %s", VERSION)
-	commit, err := gofs.Version.ReadFile("version/commit")
-	if err == nil && len(commit) > 0 {
-		v += fmt.Sprintf("\ngit commit %s", string(commit))
+	if commit := strings.TrimSpace(gofs.Commit); len(commit) > 0 {
+		v += fmt.Sprintf("\ngit commit %s", commit)
 	}
 	log.Log(v)
 }
