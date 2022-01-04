@@ -1,4 +1,4 @@
-package middleware
+package handler
 
 import (
 	"errors"
@@ -7,7 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/server"
-	"github.com/no-src/gofs/server/handler"
 	"github.com/no-src/log"
 	"net/http"
 	"net/url"
@@ -18,7 +17,7 @@ type loginHandler struct {
 	logger log.Logger
 }
 
-func NewLoginHandler(users []*auth.User, logger log.Logger) handler.GinHandler {
+func NewLoginHandler(users []*auth.User, logger log.Logger) GinHandler {
 	return &loginHandler{
 		users:  users,
 		logger: logger,

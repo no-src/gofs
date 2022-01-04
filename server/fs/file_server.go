@@ -69,7 +69,7 @@ func StartFileServer(opt server.Option) error {
 		context.HTML(http.StatusOK, "login.html", nil)
 	})
 
-	loginGroup.POST(server.LoginSignInRoute, middleware.NewLoginHandler(opt.Users, logger).Handle)
+	loginGroup.POST(server.LoginSignInRoute, handler.NewLoginHandler(opt.Users, logger).Handle)
 
 	rootGroup := engine.Group("/")
 
