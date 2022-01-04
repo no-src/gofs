@@ -23,6 +23,7 @@ var (
 	targetVFS core.VFS
 	bufSize   int
 	syncOnce  bool
+	syncCron  string
 
 	// retry
 	retryCount int
@@ -76,6 +77,7 @@ func parseFlags() {
 	core.VFSVar(&targetVFS, "target", core.NewEmptyVFS(), "the target path to backup")
 	flag.IntVar(&bufSize, "buf_size", 1024*1024, "read and write buffer byte size")
 	flag.BoolVar(&syncOnce, "sync_once", false, "sync src directory to target directory once")
+	flag.StringVar(&syncCron, "sync_cron", "", "sync src directory to target directory with cron")
 
 	// retry
 	flag.IntVar(&retryCount, "retry_count", 15, "if execute failed, then retry to work -retry_count times")

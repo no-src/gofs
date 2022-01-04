@@ -114,6 +114,12 @@ func main() {
 	}
 	defer monitor.Close()
 
+	err = monitor.SyncCron(syncCron)
+	if err != nil {
+		log.Error(err, "register sync cron task error")
+		return
+	}
+
 	// start monitor
 	log.Log("monitor is starting...")
 	defer log.Log("gofs exited!")

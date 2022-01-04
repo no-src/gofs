@@ -1,10 +1,12 @@
 package monitor
 
 import (
+	"errors"
 	"fmt"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/log"
+	"github.com/robfig/cron/v3"
 	"net/url"
 	"os"
 	"sort"
@@ -21,6 +23,8 @@ type baseMonitor struct {
 	writeChan   chan *writeMessage
 	writeNotify chan bool
 	mu          goSync.Mutex
+	syncSpec    string
+	cronChan    chan bool
 }
 
 func newBaseMonitor(syncer sync.Sync, retry retry.Retry) baseMonitor {
@@ -30,6 +34,7 @@ func newBaseMonitor(syncer sync.Sync, retry retry.Retry) baseMonitor {
 		writeMap:    make(map[string]*writeMessage),
 		writeChan:   make(chan *writeMessage, 100),
 		writeNotify: make(chan bool, 100),
+		cronChan:    make(chan bool, 1),
 	}
 }
 
@@ -129,4 +134,48 @@ func (m *baseMonitor) key(name string) string {
 		return name
 	}
 	return strings.ReplaceAll(name, "?"+u.RawQuery, "")
+}
+
+func (m *baseMonitor) startCron(f func() error) error {
+	if len(m.syncSpec) == 0 {
+		return nil
+	}
+	c := cron.New(cron.WithSeconds())
+	id, err := c.AddFunc(m.syncSpec, func() {
+		defer func() {
+			<-m.cronChan
+			if e := recover(); e != nil {
+				log.Error(errors.New("cron task execute panic"), "%v", e)
+			}
+		}()
+		m.cronChan <- true
+		log.Info("start execute cron task, spec=[%s]", m.syncSpec)
+		err := f()
+		if err != nil {
+			log.Error(err, "execute cron error spec=[%s]", m.syncSpec)
+		} else {
+			log.Info("execute cron task finished, spec=[%s]", m.syncSpec)
+		}
+	})
+	if err != nil {
+		return err
+	}
+	log.Info("cron task starting, spec=[%s] id=[%d]", m.syncSpec, id)
+	c.Start()
+	return nil
+}
+
+func (m *baseMonitor) SyncCron(spec string) error {
+	spec = strings.TrimSpace(spec)
+	if len(spec) == 0 {
+		return nil
+	}
+	parser := cron.NewParser(
+		cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor,
+	)
+	_, err := parser.Parse(spec)
+	if err == nil {
+		m.syncSpec = spec
+	}
+	return err
 }

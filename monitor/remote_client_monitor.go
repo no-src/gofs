@@ -105,10 +105,16 @@ func (m *remoteClientMonitor) Start() error {
 		return err
 	}
 
-	// check sync once command
+	// execute -sync_once flag
 	if m.syncOnce {
 		return m.sync()
 	}
+
+	// execute -sync_cron flag
+	if err := m.startCron(m.sync); err != nil {
+		return err
+	}
+
 	go m.processWrite()
 	go m.startSyncWrite()
 	go m.processingMessage()
