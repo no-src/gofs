@@ -25,11 +25,15 @@ type remoteClientMonitor struct {
 	syncOnce    bool
 	currentUser *auth.HashUser
 	authorized  bool
+	authChan    chan contract.Status
+	infoChan    chan message
 }
 
 type message struct {
 	data []byte
 }
+
+const timeout = time.Minute * 3
 
 // NewRemoteClientMonitor create an instance of remoteClientMonitor to monitor the remote file change
 func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, host string, port int, enableTLS bool, users []*auth.User) (Monitor, error) {
@@ -42,6 +46,8 @@ func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, 
 		messages:    list.New(),
 		syncOnce:    syncOnce,
 		baseMonitor: newBaseMonitor(syncer, retry),
+		authChan:    make(chan contract.Status, 100),
+		infoChan:    make(chan message, 100),
 	}
 	if len(users) > 0 {
 		user := users[0]
@@ -68,32 +74,15 @@ func (m *remoteClientMonitor) auth() error {
 	}, "send auth request")
 
 	var status contract.Status
-	m.retry.Do(func() error {
-		result, err := m.client.ReadAll()
-		if err != nil {
-			return err
-		}
-		err = util.Unmarshal(result, &status)
-		if err != nil {
-			return err
-		}
-
-		if status.ApiType != contract.AuthApi {
-			err = errors.New("auth command is received other message")
-			log.Error(err, "retry to get auth response error")
-			return err
-		}
-
-		return nil
-	}, "receive auth command response").Wait()
-
+	select {
+	case status = <-m.authChan:
+	case <-time.After(timeout):
+		return fmt.Errorf("auth timeout for %s", timeout.String())
+	}
 	if status.Code != contract.Success {
 		return errors.New("receive auth command response error => " + status.Message)
 	}
 
-	if status.ApiType != contract.AuthApi {
-		return errors.New("auth command is received other message")
-	}
 	// auth success
 	m.authorized = true
 	log.Info("auth success, current client is authorized")
@@ -110,81 +99,106 @@ func (m *remoteClientMonitor) Start() error {
 		return err
 	}
 
+	w := m.receive()
+
 	if err = m.auth(); err != nil {
 		return err
 	}
 
 	// check sync once command
 	if m.syncOnce {
-		go func() {
-			err = m.client.Write(contract.InfoCommand)
-			if err != nil {
-				log.Error(err, "write info command error")
-			}
-		}()
-
-		var info contract.FileServerInfo
-		m.retry.Do(func() error {
-			infoResult, err := m.client.ReadAll()
-			if err != nil {
-				return err
-			}
-			err = util.Unmarshal(infoResult, &info)
-			if err != nil {
-				return err
-			}
-
-			if info.ApiType != contract.InfoApi {
-				err = errors.New("info command is received other message")
-				log.Error(err, "retry to get info response error")
-				return err
-			}
-
-			return nil
-		}, "receive info command response").Wait()
-
-		if info.Code != contract.Success {
-			return errors.New("receive info command response error => " + info.Message)
-		}
-
-		if info.ApiType != contract.InfoApi {
-			return errors.New("info command is received other message")
-		}
-		return m.syncer.SyncOnce(info.ServerAddr + info.SrcPath)
+		return m.sync()
 	}
 	go m.processWrite()
 	go m.startSyncWrite()
 	go m.processingMessage()
-	for {
-		if m.closed {
-			return errors.New("remote monitor is closed")
-		}
-		data, err := m.client.ReadAll()
+
+	return w.Wait()
+}
+
+func (m *remoteClientMonitor) sync() (err error) {
+	go func() {
+		err = m.client.Write(contract.InfoCommand)
 		if err != nil {
-			log.Error(err, "client read data error")
-			if m.client.IsClosed() {
-				m.authorized = false
-				log.Debug("try reconnect to server %s:%d", m.client.Host(), m.client.Port())
-				m.retry.Do(func() error {
-					if m.client.IsClosed() {
-						innerErr := m.client.Connect()
-						if innerErr != nil {
-							return innerErr
-						}
-					}
-					if !m.authorized {
-						return m.auth()
-					}
-					return nil
-				}, fmt.Sprintf("client reconnect to %s:%d", m.client.Host(), m.client.Port()))
-			}
-		} else {
-			m.messages.PushBack(message{
-				data: data,
-			})
+			log.Error(err, "write info command error")
 		}
+	}()
+	var info contract.FileServerInfo
+	var infoMsg message
+	select {
+	case infoMsg = <-m.infoChan:
+	case <-time.After(timeout):
+		return fmt.Errorf("sync timeout for %s", timeout.String())
 	}
-	return nil
+	err = util.Unmarshal(infoMsg.data, &info)
+	if err != nil {
+		return err
+	}
+
+	if info.Code != contract.Success {
+		return errors.New("receive info command response error => " + info.Message)
+	}
+
+	return m.syncer.SyncOnce(info.ServerAddr + info.SrcPath)
+}
+
+func (m *remoteClientMonitor) receive() retry.Wait {
+	wd := retry.NewWaitDone()
+	go func() {
+		for {
+			if m.closed {
+				wd.DoneWithError(errors.New("remote monitor is closed"))
+				break
+			}
+			data, err := m.client.ReadAll()
+			if err != nil {
+				log.Error(err, "remote client monitor read data error")
+				if m.client.IsClosed() {
+					m.authorized = false
+					log.Debug("try reconnect to server %s:%d", m.client.Host(), m.client.Port())
+					m.retry.Do(func() error {
+						if m.client.IsClosed() {
+							innerErr := m.client.Connect()
+							if innerErr != nil {
+								return innerErr
+							}
+						}
+						if !m.authorized {
+							return m.auth()
+						}
+						return nil
+					}, fmt.Sprintf("client reconnect to %s:%d", m.client.Host(), m.client.Port()))
+				}
+			} else {
+				var status contract.Status
+				err = util.Unmarshal(data, &status)
+				if err != nil {
+					log.Error(err, "remote client monitor unmarshal data error")
+					continue
+				}
+
+				switch status.ApiType {
+				case contract.AuthApi:
+					m.authChan <- status
+					break
+				case contract.InfoApi:
+					m.infoChan <- message{
+						data: data,
+					}
+					break
+				case contract.SyncMessageApi:
+					m.messages.PushBack(message{
+						data: data,
+					})
+					break
+				default:
+					log.Warn("remote client monitor received a unknown data => %s", string(data))
+					break
+				}
+			}
+		}
+	}()
+	return wd
 }
 
 func (m *remoteClientMonitor) processingMessage() {
@@ -205,8 +219,6 @@ func (m *remoteClientMonitor) processingMessage() {
 			log.Error(err, "client unmarshal data error")
 		} else if msg.Code != contract.Success {
 			log.Error(errors.New(msg.Message), "remote monitor received the error message")
-		} else if msg.ApiType != contract.SyncMessageApi {
-			log.Debug("received other message, ignore it => %s", string(message.data))
 		} else {
 			values := url.Values{}
 			values.Add(contract.FsDir, msg.IsDir.String())
