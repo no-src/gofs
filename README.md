@@ -61,12 +61,21 @@ Monitor src directory and sync change files to target directory.
 $ gofs -src=./src -target=./target
 ```
 
-### SyncOnce
+### Sync Once
 
 Sync the whole path immediately from src directory to target directory.
 
 ```bash
 $ gofs -src=./src -target=./target -sync_once
+```
+
+### Sync Cron
+
+Sync the whole path from src directory to target directory with cron.
+
+```bash
+# Per 30 seconds sync the whole path from src directory to target directory
+$ gofs -src=./src -target=./target -sync_cron="*/30 * * * * *"
 ```
 
 ### Daemon Mode
@@ -110,7 +119,9 @@ $ gofs -src="rs://127.0.0.1:9016?mode=server&local_sync_disabled=true&path=./src
 
 Start a remote disk client to sync change files from remote disk server.
 
-You can sync the whole path immediately from remote disk server to local target directory with the `sync_once` flag, like [SyncOnce](#synconce).
+Use the `sync_once` flag to sync the whole path immediately from remote disk server to local target directory, like [Sync Once](#sync-once).
+
+Use the `sync_cron` flag to sync the whole path from remote disk server to local target directory with cron, like [Sync Cron](#sync-cron).
 
 ```bash
 # Start a remote disk client
