@@ -107,7 +107,7 @@ func main() {
 	retry := retry.NewRetry(retryCount, retryWait, retryAsync)
 
 	// create monitor
-	monitor, err := monitor.NewMonitor(syncer, retry, syncOnce, enableTLS, tlsCertFile, tlsKeyFile, userList)
+	monitor, err := monitor.NewMonitor(syncer, retry, syncOnce, enableTLS, userList)
 	if err != nil {
 		log.Error(err, "create the instance of Monitor error")
 		return

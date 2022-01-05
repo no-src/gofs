@@ -22,7 +22,7 @@ type Monitor interface {
 // syncer a Sync component
 // retry a Retry component
 // syncOnce tag a sync once command, the sync once command will execute when call the Start
-func NewMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, enableTLS bool, certFile string, keyFile string, users []*auth.User) (Monitor, error) {
+func NewMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, enableTLS bool, users []*auth.User) (Monitor, error) {
 	src := syncer.Source()
 	if src.IsDisk() {
 		return NewFsNotifyMonitor(syncer, retry, syncOnce)
