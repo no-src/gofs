@@ -7,7 +7,7 @@ require (
 	github.com/gin-contrib/gzip v0.0.5
 	github.com/gin-contrib/sessions v0.0.4
 	github.com/gin-gonic/gin v1.7.7
-	github.com/no-src/log v0.0.7
+	github.com/no-src/log v0.0.8
 	github.com/robfig/cron/v3 v3.0.1
 )
 
