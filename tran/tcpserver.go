@@ -145,7 +145,7 @@ func (srv *tcpServer) ClientCount() int {
 
 func (srv *tcpServer) Send(data []byte) error {
 	for _, c := range srv.conns {
-		if !c.authorized {
+		if !c.authorized.Get() {
 			continue
 		}
 		writer := bufio.NewWriter(c)

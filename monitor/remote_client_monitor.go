@@ -1,11 +1,11 @@
 package monitor
 
 import (
-	"container/list"
 	"errors"
 	"fmt"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
+	"github.com/no-src/gofs/internal/clist"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/tran"
@@ -21,7 +21,7 @@ type remoteClientMonitor struct {
 	baseMonitor
 	client      tran.Client
 	closed      bool
-	messages    *list.List
+	messages    *clist.CList
 	syncOnce    bool
 	currentUser *auth.HashUser
 	authorized  bool
@@ -43,7 +43,7 @@ func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, 
 	}
 	m := &remoteClientMonitor{
 		client:      tran.NewClient(host, port, enableTLS),
-		messages:    list.New(),
+		messages:    clist.New(),
 		syncOnce:    syncOnce,
 		baseMonitor: newBaseMonitor(syncer, retry),
 		authChan:    make(chan contract.Status, 100),

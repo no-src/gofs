@@ -1,6 +1,7 @@
 package tran
 
 import (
+	"github.com/no-src/gofs/internal/cbool"
 	"github.com/no-src/log"
 	"net"
 	"time"
@@ -8,7 +9,7 @@ import (
 
 type Conn struct {
 	net.Conn
-	authorized     bool
+	authorized     *cbool.CBool
 	userName       string
 	password       string
 	connTime       *time.Time
@@ -20,7 +21,7 @@ func NewConn(conn net.Conn) *Conn {
 	now := time.Now()
 	c := &Conn{
 		Conn:           conn,
-		authorized:     false,
+		authorized:     cbool.New(false),
 		connTime:       &now,
 		authTime:       nil,
 		startAuthCheck: false,
@@ -29,7 +30,7 @@ func NewConn(conn net.Conn) *Conn {
 }
 
 func (conn *Conn) MarkAuthorized(userName, password string) {
-	conn.authorized = true
+	conn.authorized.Set(true)
 	conn.userName = userName
 	conn.password = password
 	now := time.Now()
@@ -38,7 +39,7 @@ func (conn *Conn) MarkAuthorized(userName, password string) {
 }
 
 func (conn *Conn) Authorized() bool {
-	return conn.authorized
+	return conn.authorized.Get()
 }
 
 // StartAuthCheck auto check auth state per second, close the connection if unauthorized after one minute
@@ -60,10 +61,11 @@ func (conn *Conn) authCheck() {
 			if !conn.startAuthCheck {
 				break
 			}
-			if conn.authorized {
+			authorized := conn.authorized.Get()
+			if authorized {
 				conn.startAuthCheck = false
 				break
-			} else if !conn.authorized && time.Now().After(conn.connTime.Add(time.Minute)) {
+			} else if !authorized && time.Now().After(conn.connTime.Add(time.Minute)) {
 				log.Info("conn auth check ==> [%s] is unauthorized for more than one minute since connected ", conn.Conn.RemoteAddr().String())
 				if conn.Conn != nil {
 					conn.Close()
