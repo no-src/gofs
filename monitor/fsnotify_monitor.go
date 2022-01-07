@@ -1,10 +1,10 @@
 package monitor
 
 import (
-	"container/list"
 	"errors"
 	"github.com/fsnotify/fsnotify"
 	"github.com/no-src/gofs/core"
+	"github.com/no-src/gofs/internal/clist"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/util"
@@ -19,7 +19,7 @@ type fsNotifyMonitor struct {
 	baseMonitor
 	watcher  *fsnotify.Watcher
 	syncOnce bool
-	events   *list.List
+	events   *clist.CList
 }
 
 // NewFsNotifyMonitor create an instance of fsNotifyMonitor to monitor the disk change
@@ -36,7 +36,7 @@ func NewFsNotifyMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool) (m M
 		watcher:     watcher,
 		syncOnce:    syncOnce,
 		baseMonitor: newBaseMonitor(syncer, retry),
-		events:      list.New(),
+		events:      clist.New(),
 	}
 	return m, nil
 }
