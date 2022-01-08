@@ -4,19 +4,19 @@ import "sync"
 
 type CBool struct {
 	v  bool
-	mu sync.Mutex
+	mu sync.RWMutex
 }
 
 func New(v bool) *CBool {
 	return &CBool{
-		mu: sync.Mutex{},
+		mu: sync.RWMutex{},
 		v:  v,
 	}
 }
 
 func (cb *CBool) Get() bool {
-	cb.mu.Lock()
-	defer cb.mu.Unlock()
+	cb.mu.RLock()
+	defer cb.mu.RUnlock()
 	return cb.v
 }
 
