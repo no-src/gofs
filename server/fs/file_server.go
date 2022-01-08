@@ -6,6 +6,7 @@ package fs
 import (
 	"fmt"
 	"github.com/gin-contrib/gzip"
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/no-src/gofs"
@@ -80,6 +81,10 @@ func StartFileServer(opt server.Option) error {
 	}
 
 	rootGroup.GET("/", handler.NewDefaultHandler(logger).Handle)
+
+	if opt.EnablePprof {
+		pprof.RouteRegister(rootGroup, "pprof")
+	}
 
 	if src.IsDisk() || src.Is(core.RemoteDisk) {
 		rootGroup.StaticFS(server.SrcRoutePrefix, http.Dir(src.Path()))

@@ -18,9 +18,10 @@ type Option struct {
 	Users          []*auth.User
 	EnableCompress bool
 	Logger         log.Logger
+	EnablePprof    bool
 }
 
-func NewServerOption(src core.VFS, target core.VFS, addr string, init retry.WaitDone, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableCompress bool, logger log.Logger) Option {
+func NewServerOption(src core.VFS, target core.VFS, addr string, init retry.WaitDone, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableCompress bool, logger log.Logger, enablePprof bool) Option {
 	opt := Option{
 		Src:            src,
 		Target:         target,
@@ -32,6 +33,7 @@ func NewServerOption(src core.VFS, target core.VFS, addr string, init retry.Wait
 		Users:          users,
 		EnableCompress: enableCompress,
 		Logger:         logger,
+		EnablePprof:    enablePprof,
 	}
 	return opt
 }
