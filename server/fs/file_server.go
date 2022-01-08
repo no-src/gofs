@@ -83,7 +83,11 @@ func StartFileServer(opt server.Option) error {
 	rootGroup.GET("/", handler.NewDefaultHandler(logger).Handle)
 
 	if opt.EnablePprof {
-		pprof.RouteRegister(rootGroup, "pprof")
+		debugGroup := rootGroup.Group("/debug")
+		if opt.PprofPrivate {
+			debugGroup.Use(middleware.NewPrivateIPHandler(logger).Handle)
+		}
+		pprof.RouteRegister(debugGroup, "pprof")
 	}
 
 	if src.IsDisk() || src.Is(core.RemoteDisk) {
