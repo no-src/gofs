@@ -25,6 +25,7 @@ type baseMonitor struct {
 	mu          goSync.Mutex
 	syncSpec    string
 	cronChan    chan bool
+	shutdown    chan bool
 }
 
 func newBaseMonitor(syncer sync.Sync, retry retry.Retry) baseMonitor {
@@ -35,6 +36,7 @@ func newBaseMonitor(syncer sync.Sync, retry retry.Retry) baseMonitor {
 		writeChan:   make(chan *writeMessage, 100),
 		writeNotify: make(chan bool, 100),
 		cronChan:    make(chan bool, 1),
+		shutdown:    make(chan bool, 1),
 	}
 }
 
@@ -177,5 +179,16 @@ func (m *baseMonitor) SyncCron(spec string) error {
 	if err == nil {
 		m.syncSpec = spec
 	}
+	return err
+}
+
+func (m *baseMonitor) Shutdown() (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%v", r)
+		}
+	}()
+	m.shutdown <- true
+	close(m.shutdown)
 	return err
 }

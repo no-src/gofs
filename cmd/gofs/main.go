@@ -10,6 +10,9 @@ import (
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/version"
 	"github.com/no-src/log"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -112,7 +115,6 @@ func main() {
 		log.Error(err, "create the instance of Monitor error")
 		return
 	}
-	defer monitor.Close()
 
 	err = monitor.SyncCron(syncCron)
 	if err != nil {
@@ -121,11 +123,36 @@ func main() {
 	}
 
 	// start monitor
-	log.Log("monitor is starting...")
-	defer log.Log("gofs exited!")
+	log.Info("monitor is starting...")
+	defer log.Info("gofs exited!")
+	go notify(monitor.Shutdown)
 	defer monitor.Close()
 	err = monitor.Start()
 	if err != nil {
 		log.Error(err, "start to monitor failed")
+	}
+}
+
+func notify(shutdown func() error) {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGABRT, syscall.SIGKILL, syscall.SIGTERM)
+	for {
+		s := <-c
+		switch s {
+		case syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGABRT, syscall.SIGKILL, syscall.SIGTERM:
+			log.Debug("received a signal [%s], waiting to exit", s.String())
+			err := shutdown()
+			if err != nil {
+				log.Error(err, "shutdown error")
+				break
+			} else {
+				signal.Stop(c)
+				close(c)
+				return
+			}
+		default:
+			log.Debug("received a signal [%s], ignore it", s.String())
+			break
+		}
 	}
 }

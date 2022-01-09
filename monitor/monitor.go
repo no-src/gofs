@@ -16,6 +16,8 @@ type Monitor interface {
 	Close() error
 	// SyncCron register sync cron task, if spec is empty then ignore it
 	SyncCron(spec string) error
+	// Shutdown exit the Start
+	Shutdown() error
 }
 
 // NewMonitor create a monitor instance

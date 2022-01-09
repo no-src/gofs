@@ -116,7 +116,12 @@ func (m *fsNotifyMonitor) listenEvents() error {
 				}
 				log.Error(err, "watcher error")
 			}
-
+		case shutdown := <-m.shutdown:
+			{
+				if shutdown {
+					return nil
+				}
+			}
 		}
 	}
 }
