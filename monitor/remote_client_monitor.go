@@ -152,6 +152,16 @@ func (m *remoteClientMonitor) receive() retry.Wait {
 	wd := retry.NewWaitDone()
 	go func() {
 		for {
+			select {
+			case shutdown := <-m.shutdown:
+				{
+					if shutdown {
+						wd.Done()
+						return
+					}
+				}
+			default:
+			}
 			if m.closed {
 				wd.DoneWithError(errors.New("remote monitor is closed"))
 				break
