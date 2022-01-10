@@ -150,24 +150,31 @@ func (m *remoteClientMonitor) sync() (err error) {
 
 func (m *remoteClientMonitor) receive() retry.Wait {
 	wd := retry.NewWaitDone()
+	shutdown := false
+	go func() {
+		select {
+		case shutdown = <-m.shutdown:
+			{
+				if shutdown {
+					if err := m.Close(); err != nil {
+						log.Error(err, "close remote client monitor error")
+					}
+					wd.Done()
+				}
+			}
+		}
+	}()
 	go func() {
 		for {
-			select {
-			case shutdown := <-m.shutdown:
-				{
-					if shutdown {
-						wd.Done()
-						return
-					}
-				}
-			default:
-			}
 			if m.closed {
 				wd.DoneWithError(errors.New("remote monitor is closed"))
 				break
 			}
 			data, err := m.client.ReadAll()
 			if err != nil {
+				if shutdown {
+					break
+				}
 				log.Error(err, "remote client monitor read data error")
 				if m.client.IsClosed() {
 					m.authorized = false

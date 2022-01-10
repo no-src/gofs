@@ -123,7 +123,7 @@ func main() {
 
 	// start monitor
 	log.Info("monitor is starting...")
-	defer log.Info("gofs exited!")
+	defer log.Info("gofs exited")
 	go signal.Notify(monitor.Shutdown)
 	defer monitor.Close()
 	err = monitor.Start()
