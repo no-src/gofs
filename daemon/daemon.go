@@ -11,6 +11,8 @@ import (
 
 const SubprocessTag = "sub"
 
+var shutdown = make(chan bool, 1)
+
 // Daemon running as a daemon process, and create a subprocess for working
 func Daemon(recordPid bool, daemonDelay time.Duration, monitorDelay time.Duration) {
 	defer func() {
@@ -18,8 +20,11 @@ func Daemon(recordPid bool, daemonDelay time.Duration, monitorDelay time.Duratio
 			log.Warn("daemon process error. %v", r)
 		}
 	}()
+
 	for {
-		<-time.After(daemonDelay)
+		if wait(daemonDelay) {
+			return
+		}
 		p, err := startSubprocess()
 		if err == nil && p != nil {
 			if recordPid {
@@ -27,7 +32,9 @@ func Daemon(recordPid bool, daemonDelay time.Duration, monitorDelay time.Duratio
 					log.Error(err, "write pid info to file error")
 				}
 			}
-			monitor(p.Pid, monitorDelay)
+			if monitor(p.Pid, monitorDelay) {
+				return
+			}
 		}
 	}
 }
@@ -62,9 +69,12 @@ func startSubprocess() (*os.Process, error) {
 }
 
 // monitor start to monitor the subprocess, create a new subprocess to work if subprocess is dead
-func monitor(pid int, monitorDelay time.Duration) {
+func monitor(pid int, monitorDelay time.Duration) (isShutdown bool) {
 	for {
-		<-time.After(monitorDelay)
+		if wait(monitorDelay) {
+			return true
+		}
+
 		p, err := os.FindProcess(pid)
 		if err != nil {
 			log.Error(err, "[%d] subprocess status error", pid)
@@ -128,4 +138,29 @@ func KillPPid() {
 		}
 	}
 
+}
+
+func Shutdown() (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%v", r)
+		}
+	}()
+	shutdown <- true
+	close(shutdown)
+	return err
+}
+
+func wait(d time.Duration) (isShutdown bool) {
+	select {
+	case isShutdown = <-shutdown:
+		{
+			if isShutdown {
+				return isShutdown
+			}
+		}
+	case <-time.After(d):
+
+	}
+	return false
 }

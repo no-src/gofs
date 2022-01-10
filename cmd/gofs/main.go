@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/daemon"
+	"github.com/no-src/gofs/internal/signal"
 	"github.com/no-src/gofs/monitor"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/server"
@@ -10,9 +11,6 @@ import (
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/version"
 	"github.com/no-src/log"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 func main() {
@@ -62,8 +60,9 @@ func main() {
 
 	// start the daemon
 	if isDaemon {
+		go signal.Notify(daemon.Shutdown)
 		daemon.Daemon(daemonPid, daemonDelay, daemonMonitorDelay)
-		log.Log("daemon exited")
+		log.Info("daemon exited")
 		return
 	}
 
@@ -125,34 +124,10 @@ func main() {
 	// start monitor
 	log.Info("monitor is starting...")
 	defer log.Info("gofs exited!")
-	go notify(monitor.Shutdown)
+	go signal.Notify(monitor.Shutdown)
 	defer monitor.Close()
 	err = monitor.Start()
 	if err != nil {
 		log.Error(err, "start to monitor failed")
-	}
-}
-
-func notify(shutdown func() error) {
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGABRT, syscall.SIGKILL, syscall.SIGTERM)
-	for {
-		s := <-c
-		switch s {
-		case syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGABRT, syscall.SIGKILL, syscall.SIGTERM:
-			log.Debug("received a signal [%s], waiting to exit", s.String())
-			err := shutdown()
-			if err != nil {
-				log.Error(err, "shutdown error")
-				break
-			} else {
-				signal.Stop(c)
-				close(c)
-				return
-			}
-		default:
-			log.Debug("received a signal [%s], ignore it", s.String())
-			break
-		}
 	}
 }
