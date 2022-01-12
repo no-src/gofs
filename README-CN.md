@@ -129,6 +129,24 @@ $ gofs -src="rs://127.0.0.1:9016?mode=server&local_sync_disabled=true&path=./src
 $ gofs -src="rs://127.0.0.1:9016" -target=./target -users="gofs|password"
 ```
 
+### 性能分析
+
+基于[Web文件服务器](#web文件服务器)启用性能分析工具pprof
+
+默认情况下，仅允许私有地址和回环地址访问pprof相关路由
+
+你可以通过将`pprof_private`设置为`false`来禁用默认行为，允许公网IP访问pprof路由
+
+```bash
+$ gofs -src=./src -target=./target -server -tls_cert_file=cert.pem -tls_key_file=key.pem -rand_user_count=3 -pprof
+```
+
+pprof访问地址如下：
+
+```
+https://127.0.0.1/debug/pprof/
+```
+
 ## 更多信息
 
 ### 帮助信息

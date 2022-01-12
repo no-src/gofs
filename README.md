@@ -129,6 +129,24 @@ Use the `sync_cron` flag to sync the whole path from remote disk server to local
 $ gofs -src="rs://127.0.0.1:9016" -target=./target -users="gofs|password"
 ```
 
+### Profiling
+
+Enable pprof base [File Server](#file-server).
+
+By default, allow to access pprof route by private address and loopback address only.
+
+You can disable it by setting the `pprof_private` to `false`.
+
+```bash
+$ gofs -src=./src -target=./target -server -tls_cert_file=cert.pem -tls_key_file=key.pem -rand_user_count=3 -pprof
+```
+
+The pprof url address like this
+
+```
+https://127.0.0.1/debug/pprof/
+```
+
 ## For More Information
 
 ### Help Info
