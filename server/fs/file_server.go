@@ -85,7 +85,7 @@ func StartFileServer(opt server.Option) error {
 	if opt.EnablePprof {
 		debugGroup := rootGroup.Group("/debug")
 		if opt.PprofPrivate {
-			debugGroup.Use(middleware.NewPrivateIPHandler(logger).Handle)
+			debugGroup.Use(middleware.NewPrivateAccessHandler(logger).Handle)
 		}
 		pprof.RouteRegister(debugGroup, "pprof")
 	}

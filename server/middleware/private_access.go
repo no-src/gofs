@@ -8,19 +8,19 @@ import (
 	"net/http"
 )
 
-type privateIPHandler struct {
+type privateAccessHandler struct {
 	logger log.Logger
 }
 
-func NewPrivateIPHandler(logger log.Logger) handler.GinHandler {
-	return &privateIPHandler{
+func NewPrivateAccessHandler(logger log.Logger) handler.GinHandler {
+	return &privateAccessHandler{
 		logger: logger,
 	}
 }
 
-func (h *privateIPHandler) Handle(c *gin.Context) {
+func (h *privateAccessHandler) Handle(c *gin.Context) {
 	ip := net.ParseIP(c.ClientIP())
-	if !ip.IsPrivate() {
+	if !ip.IsPrivate() && !ip.IsLoopback() {
 		h.logger.Warn("access deny, client ip is [%s], path is [%s]", c.ClientIP(), c.FullPath())
 		c.String(http.StatusUnauthorized, "access deny")
 		c.Abort()
