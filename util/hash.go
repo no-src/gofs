@@ -47,6 +47,7 @@ func MD5FromFileName(path string, bufSize int) (hash string, err error) {
 	if err != nil {
 		return hash, err
 	}
+	defer f.Close()
 	return MD5FromFile(f, bufSize)
 }
 
