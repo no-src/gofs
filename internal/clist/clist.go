@@ -34,3 +34,9 @@ func (cl *CList) Remove(e *list.Element) interface{} {
 	defer cl.mu.Unlock()
 	return cl.v.Remove(e)
 }
+
+func (cl *CList) Len() int {
+	cl.mu.Lock()
+	defer cl.mu.Unlock()
+	return cl.v.Len()
+}
