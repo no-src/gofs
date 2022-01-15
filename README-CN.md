@@ -147,6 +147,25 @@ pprof访问地址如下：
 https://127.0.0.1/debug/pprof/
 ```
 
+### 日志
+
+默认情况下会启用文件日志与控制台日志，你可以将`log_file`命令行参数设置为`false`来禁用文件日志
+
+使用`log_level`命令行参数设置日志的等级，默认级别是`INFO`，可选项为：`DEBUG=0` `INFO=1` `WARN=2` `ERROR=3`
+
+使用`log_dir`命令行参数来设置日志文件目录，默认为`./logs/`
+
+使用`log_flush`命令行参数来设置自动刷新日志到文件中，默认启用
+
+使用`log_flush_interval`命令行参数设置自动刷新日志到文件中的频率，默认为`3s`
+
+使用`log_event`命令行参数启用事件日志，所有事件都会记录到文件中，默认为禁用
+
+```bash
+# 在"本地磁盘"模式下设置日志信息
+$ gofs -src=./src -target=./target -log_file -log_level=0 -log_dir="./logs/" -log_flush -log_flush_interval=3s -log_event
+```
+
 ## 更多信息
 
 ### 帮助信息

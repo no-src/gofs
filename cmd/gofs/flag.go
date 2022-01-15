@@ -90,7 +90,7 @@ func parseFlags() {
 	// log
 	flag.IntVar(&logLevel, "log_level", int(log.InfoLevel), "set log level, default is INFO. DEBUG=0 INFO=1 WARN=2 ERROR=3")
 	flag.BoolVar(&enableFileLogger, "log_file", true, "enable the file logger")
-	flag.StringVar(&logDir, "log_dir", "./logs/", "set the directory of log file")
+	flag.StringVar(&logDir, "log_dir", "./logs/", "set the directory of the log file")
 	flag.BoolVar(&logFlush, "log_flush", true, "enable auto flush log with interval")
 	flag.DurationVar(&logFlushInterval, "log_flush_interval", time.Second*3, "set the log flush interval duration, you need to enable -log_flush first")
 	flag.BoolVar(&enableEventLog, "log_event", false, "enable the event log")

@@ -147,6 +147,25 @@ The pprof url address like this
 https://127.0.0.1/debug/pprof/
 ```
 
+### Logger
+
+Enable the file logger and console logger by default, and you can disable the file logger by setting the `log_file` flag to `false`.
+
+Use the `log_level` flag to set the log level, default is `INFO`, (`DEBUG=0` `INFO=1` `WARN=2` `ERROR=3`).
+
+Use the `log_dir` flag to set the directory of the log file, default is `./logs/`.
+
+Use the `log_flush` flag to enable auto flush log with interval, default is `true`.
+
+Use the `log_flush_interval` flag to set the log flush interval duration, default is `3s`.
+
+Use the `log_event` flag to enable the event log, write to file, default is `false`.
+
+```bash
+# set the logger config in "Local Disk" mode
+$ gofs -src=./src -target=./target -log_file -log_level=0 -log_dir="./logs/" -log_flush -log_flush_interval=3s -log_event
+```
+
 ## For More Information
 
 ### Help Info
