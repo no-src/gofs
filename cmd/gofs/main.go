@@ -108,8 +108,20 @@ func main() {
 	// create retry
 	retry := retry.NewRetry(retryCount, retryWait, retryAsync)
 
+	// init event log
+	var eventLogger = log.NewEmptyLogger()
+	defer eventLogger.Close()
+	if enableEventLog {
+		eventFileLogger, err := log.NewFileLoggerWithAutoFlush(log.Level(logLevel), logDir, "event_", logFlush, logFlushInterval)
+		if err != nil {
+			log.Error(err, "init the event file logger error")
+			return
+		}
+		eventLogger = eventFileLogger
+	}
+
 	// create monitor
-	monitor, err := monitor.NewMonitor(syncer, retry, syncOnce, enableTLS, userList)
+	monitor, err := monitor.NewMonitor(syncer, retry, syncOnce, enableTLS, userList, eventLogger)
 	if err != nil {
 		log.Error(err, "create the instance of Monitor error")
 		return

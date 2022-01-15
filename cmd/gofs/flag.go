@@ -36,6 +36,7 @@ var (
 	logDir           string
 	logFlush         bool
 	logFlushInterval time.Duration
+	enableEventLog   bool
 
 	// daemon
 	isDaemon           bool
@@ -92,6 +93,7 @@ func parseFlags() {
 	flag.StringVar(&logDir, "log_dir", "./logs/", "set the directory of log file")
 	flag.BoolVar(&logFlush, "log_flush", true, "enable auto flush log with interval")
 	flag.DurationVar(&logFlushInterval, "log_flush_interval", time.Second*3, "set the log flush interval duration, you need to enable -log_flush first")
+	flag.BoolVar(&enableEventLog, "log_event", false, "enable the event log")
 
 	// daemon
 	flag.BoolVar(&isDaemon, "daemon", false, "enable daemon to create and monitor a subprocess to work, you can use [go build -ldflags=\"-H windowsgui\"] to build on Windows")

@@ -3,10 +3,12 @@ package monitor
 import (
 	"errors"
 	"fmt"
+	"github.com/no-src/gofs/eventlog"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/log"
 	"github.com/robfig/cron/v3"
+	"io"
 	"net/url"
 	"os"
 	"sort"
@@ -26,9 +28,10 @@ type baseMonitor struct {
 	syncSpec    string
 	cronChan    chan bool
 	shutdown    chan bool
+	el          eventlog.EventLog
 }
 
-func newBaseMonitor(syncer sync.Sync, retry retry.Retry) baseMonitor {
+func newBaseMonitor(syncer sync.Sync, retry retry.Retry, eventWriter io.Writer) baseMonitor {
 	return baseMonitor{
 		syncer:      syncer,
 		retry:       retry,
@@ -37,6 +40,7 @@ func newBaseMonitor(syncer sync.Sync, retry retry.Retry) baseMonitor {
 		writeNotify: make(chan bool, 100),
 		cronChan:    make(chan bool, 1),
 		shutdown:    make(chan bool, 1),
+		el:          eventlog.New(eventWriter),
 	}
 }
 

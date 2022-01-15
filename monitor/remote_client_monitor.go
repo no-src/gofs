@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
+	"github.com/no-src/gofs/eventlog"
 	"github.com/no-src/gofs/internal/clist"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/tran"
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
+	"io"
 	"net/url"
 	"os"
 	"strings"
@@ -36,7 +38,7 @@ type message struct {
 const timeout = time.Minute * 3
 
 // NewRemoteClientMonitor create an instance of remoteClientMonitor to monitor the remote file change
-func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, host string, port int, enableTLS bool, users []*auth.User) (Monitor, error) {
+func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, host string, port int, enableTLS bool, users []*auth.User, eventWriter io.Writer) (Monitor, error) {
 	if syncer == nil {
 		err := errors.New("syncer can't be nil")
 		return nil, err
@@ -45,7 +47,7 @@ func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, 
 		client:      tran.NewClient(host, port, enableTLS),
 		messages:    clist.New(),
 		syncOnce:    syncOnce,
-		baseMonitor: newBaseMonitor(syncer, retry),
+		baseMonitor: newBaseMonitor(syncer, retry, eventWriter),
 		authChan:    make(chan contract.Status, 100),
 		infoChan:    make(chan message, 100),
 	}
@@ -277,6 +279,9 @@ func (m *remoteClientMonitor) processingMessage() {
 				err = m.syncer.Chmod(path)
 				break
 			}
+
+			m.el.Write(eventlog.NewEvent(path, msg.Action.String()))
+
 			if err != nil {
 				log.Error(err, "%s action execute error => [%s]", msg.Action.String(), path)
 			}

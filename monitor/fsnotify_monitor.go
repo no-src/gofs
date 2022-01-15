@@ -4,11 +4,13 @@ import (
 	"errors"
 	"github.com/fsnotify/fsnotify"
 	"github.com/no-src/gofs/core"
+	"github.com/no-src/gofs/eventlog"
 	"github.com/no-src/gofs/internal/clist"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -23,7 +25,7 @@ type fsNotifyMonitor struct {
 }
 
 // NewFsNotifyMonitor create an instance of fsNotifyMonitor to monitor the disk change
-func NewFsNotifyMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool) (m Monitor, err error) {
+func NewFsNotifyMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, eventWriter io.Writer) (m Monitor, err error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
@@ -35,7 +37,7 @@ func NewFsNotifyMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool) (m M
 	m = &fsNotifyMonitor{
 		watcher:     watcher,
 		syncOnce:    syncOnce,
-		baseMonitor: newBaseMonitor(syncer, retry),
+		baseMonitor: newBaseMonitor(syncer, retry, eventWriter),
 		events:      clist.New(),
 	}
 	return m, nil
@@ -188,6 +190,7 @@ func (m *fsNotifyMonitor) processEvents() error {
 			}
 		}
 		m.events.Remove(element)
+		m.el.Write(eventlog.NewEvent(event.Name, event.Op.String()))
 	}
 }
 
