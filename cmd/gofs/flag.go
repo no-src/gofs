@@ -106,7 +106,7 @@ func parseFlags() {
 	// file server
 	flag.BoolVar(&enableFileServer, "server", false, "start a file server to browse source directory and target directory")
 	flag.StringVar(&fileServerAddr, "server_addr", server.DefaultAddrHttps, "a file server binding address")
-	flag.BoolVar(&enableFileServerCompress, "server_compress", true, "enable response compression for the file server")
+	flag.BoolVar(&enableFileServerCompress, "server_compress", false, "enable response compression for the file server")
 	flag.BoolVar(&enablePprof, "pprof", false, "enable the pprof route")
 	flag.BoolVar(&pprofPrivate, "pprof_private", true, "allow to access pprof route by private address and loopback address only")
 
