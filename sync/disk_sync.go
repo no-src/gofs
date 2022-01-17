@@ -12,6 +12,7 @@ import (
 )
 
 type diskSync struct {
+	baseSync
 	src           core.VFS
 	target        core.VFS
 	srcAbsPath    string
@@ -23,7 +24,7 @@ type diskSync struct {
 // src is source path to read
 // target is target path to write
 // bufSize is read and write buffer byte size
-func NewDiskSync(src, target core.VFS, bufSize int) (s Sync, err error) {
+func NewDiskSync(src, target core.VFS, bufSize int, enableLogicallyDelete bool) (s Sync, err error) {
 	if len(src.Path()) == 0 {
 		err = errors.New("src is not found")
 		return nil, err
@@ -53,6 +54,7 @@ func NewDiskSync(src, target core.VFS, bufSize int) (s Sync, err error) {
 		bufSize:       bufSize,
 		src:           src,
 		target:        target,
+		baseSync:      newBaseSync(enableLogicallyDelete),
 	}
 	return s, nil
 }
@@ -229,7 +231,11 @@ func (s *diskSync) Remove(path string) error {
 	if err != nil {
 		return err
 	}
-	err = os.RemoveAll(target)
+	if s.enableLogicallyDelete {
+		err = s.LogicallyDelete(target)
+	} else {
+		err = os.RemoveAll(target)
+	}
 	if err == nil {
 		log.Info("remove file success [%s] -> [%s]", path, target)
 	}

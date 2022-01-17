@@ -19,11 +19,12 @@ var (
 	printVersion bool
 
 	// file sync
-	sourceVFS core.VFS
-	targetVFS core.VFS
-	bufSize   int
-	syncOnce  bool
-	syncCron  string
+	sourceVFS             core.VFS
+	targetVFS             core.VFS
+	bufSize               int
+	syncOnce              bool
+	syncCron              string
+	enableLogicallyDelete bool
 
 	// retry
 	retryCount int
@@ -81,6 +82,7 @@ func parseFlags() {
 	flag.IntVar(&bufSize, "buf_size", 1024*1024, "read and write buffer byte size")
 	flag.BoolVar(&syncOnce, "sync_once", false, "sync src directory to target directory once")
 	flag.StringVar(&syncCron, "sync_cron", "", "sync src directory to target directory with cron")
+	flag.BoolVar(&enableLogicallyDelete, "logically_delete", false, "delete target file logically")
 
 	// retry
 	flag.IntVar(&retryCount, "retry_count", 15, "if execute failed, then retry to work -retry_count times")

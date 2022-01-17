@@ -24,7 +24,7 @@ type remoteServerSync struct {
 }
 
 // NewRemoteServerSync create an instance of remoteServerSync execute send file change message
-func NewRemoteServerSync(src, target core.VFS, bufSize int, enableTLS bool, certFile string, keyFile string, users []*auth.User) (Sync, error) {
+func NewRemoteServerSync(src, target core.VFS, bufSize int, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
 	if len(src.Path()) == 0 {
 		return nil, errors.New("src is not found")
 	}
@@ -51,6 +51,7 @@ func NewRemoteServerSync(src, target core.VFS, bufSize int, enableTLS bool, cert
 		bufSize:       bufSize,
 		src:           src,
 		target:        target,
+		baseSync:      newBaseSync(enableLogicallyDelete),
 	}
 
 	rs := &remoteServerSync{

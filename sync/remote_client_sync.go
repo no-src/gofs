@@ -20,6 +20,7 @@ import (
 )
 
 type remoteClientSync struct {
+	baseSync
 	src           core.VFS
 	target        core.VFS
 	targetAbsPath string
@@ -29,7 +30,7 @@ type remoteClientSync struct {
 }
 
 // NewRemoteClientSync create an instance of remoteClientSync to receive the file change message and execute it
-func NewRemoteClientSync(src, target core.VFS, bufSize int, users []*auth.User) (Sync, error) {
+func NewRemoteClientSync(src, target core.VFS, bufSize int, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
 	if len(target.Path()) == 0 {
 		return nil, errors.New("target is not found")
 	}
@@ -47,6 +48,7 @@ func NewRemoteClientSync(src, target core.VFS, bufSize int, users []*auth.User) 
 		bufSize:       bufSize,
 		src:           src,
 		target:        target,
+		baseSync:      newBaseSync(enableLogicallyDelete),
 	}
 	if len(users) > 0 {
 		rs.currentUser = users[0]
@@ -201,7 +203,11 @@ func (rs *remoteClientSync) Remove(path string) error {
 	if err != nil {
 		return err
 	}
-	err = os.RemoveAll(target)
+	if rs.enableLogicallyDelete {
+		err = rs.LogicallyDelete(target)
+	} else {
+		err = os.RemoveAll(target)
+	}
 	if err == nil {
 		log.Info("remove file success [%s] -> [%s]", path, target)
 	}
