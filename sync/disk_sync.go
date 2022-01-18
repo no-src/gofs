@@ -17,24 +17,18 @@ type diskSync struct {
 	target        core.VFS
 	srcAbsPath    string
 	targetAbsPath string
-	bufSize       int
 }
 
 // NewDiskSync create a diskSync instance
 // src is source path to read
 // target is target path to write
-// bufSize is read and write buffer byte size
-func NewDiskSync(src, target core.VFS, bufSize int, enableLogicallyDelete bool) (s Sync, err error) {
+func NewDiskSync(src, target core.VFS, enableLogicallyDelete bool) (s Sync, err error) {
 	if len(src.Path()) == 0 {
 		err = errors.New("src is not found")
 		return nil, err
 	}
 	if len(target.Path()) == 0 {
 		err = errors.New("target is not found")
-		return nil, err
-	}
-	if bufSize <= 0 {
-		err = errors.New("bufSize must greater than zero")
 		return nil, err
 	}
 
@@ -51,7 +45,6 @@ func NewDiskSync(src, target core.VFS, bufSize int, enableLogicallyDelete bool) 
 	s = &diskSync{
 		srcAbsPath:    srcAbsPath,
 		targetAbsPath: targetAbsPath,
-		bufSize:       bufSize,
 		src:           src,
 		target:        target,
 		baseSync:      newBaseSync(enableLogicallyDelete),
@@ -206,13 +199,13 @@ func (s *diskSync) Write(path string) error {
 }
 
 func (s *diskSync) same(srcFile *os.File, targetFile *os.File) (bool, error) {
-	srcHash, err := util.MD5FromFile(srcFile, s.bufSize)
+	srcHash, err := util.MD5FromFile(srcFile)
 	if err != nil {
 		log.Error(err, "calculate md5 hash of the src file error [%s]", srcFile.Name())
 		return false, err
 	}
 
-	targetHash, err := util.MD5FromFile(targetFile, s.bufSize)
+	targetHash, err := util.MD5FromFile(targetFile)
 	if err != nil {
 		log.Error(err, "calculate md5 hash of the target file error [%s]", targetFile.Name())
 		return false, err

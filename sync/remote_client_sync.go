@@ -24,18 +24,14 @@ type remoteClientSync struct {
 	src           core.VFS
 	target        core.VFS
 	targetAbsPath string
-	bufSize       int
 	currentUser   *auth.User
 	cookies       []*http.Cookie
 }
 
 // NewRemoteClientSync create an instance of remoteClientSync to receive the file change message and execute it
-func NewRemoteClientSync(src, target core.VFS, bufSize int, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
+func NewRemoteClientSync(src, target core.VFS, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
 	if len(target.Path()) == 0 {
 		return nil, errors.New("target is not found")
-	}
-	if bufSize <= 0 {
-		return nil, errors.New("bufSize must greater than zero")
 	}
 
 	targetAbsPath, err := filepath.Abs(target.Path())
@@ -45,7 +41,6 @@ func NewRemoteClientSync(src, target core.VFS, bufSize int, users []*auth.User, 
 
 	rs := &remoteClientSync{
 		targetAbsPath: targetAbsPath,
-		bufSize:       bufSize,
 		src:           src,
 		target:        target,
 		baseSync:      newBaseSync(enableLogicallyDelete),
@@ -357,7 +352,7 @@ func (rs *remoteClientSync) same(srcHash string, targetFile *os.File) (bool, err
 	if len(srcHash) == 0 {
 		return false, nil
 	}
-	targetHash, err := util.MD5FromFile(targetFile, rs.bufSize)
+	targetHash, err := util.MD5FromFile(targetFile)
 	if err != nil {
 		log.Error(err, "calculate md5 hash of the target file error [%s]", targetFile.Name())
 		return false, err

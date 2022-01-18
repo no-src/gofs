@@ -99,7 +99,7 @@ func main() {
 	}
 
 	// create syncer
-	syncer, err := sync.NewSync(sourceVFS, targetVFS, bufSize, enableTLS, tlsCertFile, tlsKeyFile, userList, enableLogicallyDelete)
+	syncer, err := sync.NewSync(sourceVFS, targetVFS, enableTLS, tlsCertFile, tlsKeyFile, userList, enableLogicallyDelete)
 	if err != nil {
 		log.Error(err, "create the instance of Sync error")
 		return

@@ -29,11 +29,11 @@ type Sync interface {
 }
 
 // NewSync auto create an instance of the expected sync according to src and target
-func NewSync(src core.VFS, target core.VFS, bufSize int, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
+func NewSync(src core.VFS, target core.VFS, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
 	if src.IsDisk() && target.IsDisk() {
-		return NewDiskSync(src, target, bufSize, enableLogicallyDelete)
+		return NewDiskSync(src, target, enableLogicallyDelete)
 	} else if src.Is(core.RemoteDisk) {
-		return NewRemoteSync(src, target, bufSize, enableTLS, certFile, keyFile, users, enableLogicallyDelete)
+		return NewRemoteSync(src, target, enableTLS, certFile, keyFile, users, enableLogicallyDelete)
 	}
 	return nil, fmt.Errorf("file system unsupported ! src=>%s target=>%s", src.Type().String(), target.Type().String())
 }

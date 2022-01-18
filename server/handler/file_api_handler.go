@@ -82,7 +82,7 @@ func (h *fileApiHandler) Handle(c *gin.Context) {
 			hash := ""
 			if needHash == contract.FsNeedHashValueTrue && !file.IsDir() {
 				if cf, err := h.root.Open(filepath.ToSlash(filepath.Join(path, file.Name()))); err == nil {
-					hash, _ = util.MD5FromFile(cf, 1024)
+					hash, _ = util.MD5FromFile(cf)
 				}
 			}
 

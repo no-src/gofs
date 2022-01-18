@@ -24,15 +24,12 @@ type remoteServerSync struct {
 }
 
 // NewRemoteServerSync create an instance of remoteServerSync execute send file change message
-func NewRemoteServerSync(src, target core.VFS, bufSize int, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
+func NewRemoteServerSync(src, target core.VFS, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
 	if len(src.Path()) == 0 {
 		return nil, errors.New("src is not found")
 	}
 	if len(target.Path()) == 0 {
 		return nil, errors.New("target is not found")
-	}
-	if bufSize <= 0 {
-		return nil, errors.New("bufSize must greater than zero")
 	}
 
 	srcAbsPath, err := filepath.Abs(src.Path())
@@ -48,7 +45,6 @@ func NewRemoteServerSync(src, target core.VFS, bufSize int, enableTLS bool, cert
 	ds := diskSync{
 		srcAbsPath:    srcAbsPath,
 		targetAbsPath: targetAbsPath,
-		bufSize:       bufSize,
 		src:           src,
 		target:        target,
 		baseSync:      newBaseSync(enableLogicallyDelete),
@@ -146,7 +142,7 @@ func (rs *remoteServerSync) send(action Action, path string) (err error) {
 		}
 		size = fileInfo.Size()
 		if size > 0 {
-			hash, err = util.MD5FromFile(file, rs.bufSize)
+			hash, err = util.MD5FromFile(file)
 			if err != nil {
 				return err
 			}

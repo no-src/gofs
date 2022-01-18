@@ -21,7 +21,6 @@ var (
 	// file sync
 	sourceVFS             core.VFS
 	targetVFS             core.VFS
-	bufSize               int
 	syncOnce              bool
 	syncCron              string
 	enableLogicallyDelete bool
@@ -79,7 +78,6 @@ func parseFlags() {
 	// file sync
 	core.VFSVar(&sourceVFS, "src", core.NewEmptyVFS(), "the source path by monitor")
 	core.VFSVar(&targetVFS, "target", core.NewEmptyVFS(), "the target path to backup")
-	flag.IntVar(&bufSize, "buf_size", 1024*1024, "read and write buffer byte size")
 	flag.BoolVar(&syncOnce, "sync_once", false, "sync src directory to target directory once")
 	flag.StringVar(&syncCron, "sync_cron", "", "sync src directory to target directory with cron")
 	flag.BoolVar(&enableLogicallyDelete, "logically_delete", false, "delete target file logically")
