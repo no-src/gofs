@@ -31,7 +31,7 @@ func (h *authHandler) Handle(c *gin.Context) {
 		user = session.Get(server.SessionUser)
 	}
 	if user == nil {
-		c.Data(http.StatusUnauthorized, "text/html; charset=utf-8", []byte(fmt.Sprintf("<html><head><script>window.location.href='%s';</script></head></html>", server.LoginIndexFullRoute)))
 		c.Abort()
+		c.Data(http.StatusUnauthorized, "text/html; charset=utf-8", []byte(fmt.Sprintf("<html><head><script>window.location.href='%s';</script></head></html>", server.LoginIndexFullRoute)))
 	}
 }

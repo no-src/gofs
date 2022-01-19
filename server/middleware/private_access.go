@@ -22,7 +22,7 @@ func (h *privateAccessHandler) Handle(c *gin.Context) {
 	ip := net.ParseIP(c.ClientIP())
 	if !ip.IsPrivate() && !ip.IsLoopback() {
 		h.logger.Warn("access deny, client ip is [%s], path is [%s]", c.ClientIP(), c.FullPath())
-		c.String(http.StatusUnauthorized, "access deny")
 		c.Abort()
+		c.String(http.StatusUnauthorized, "access deny")
 	}
 }
