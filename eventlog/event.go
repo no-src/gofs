@@ -7,6 +7,7 @@ type event struct {
 	op   string
 }
 
+// NewEvent create an event instance
 func NewEvent(name, op string) event {
 	return event{
 		name: name,
@@ -14,6 +15,7 @@ func NewEvent(name, op string) event {
 	}
 }
 
+// String return the format event info
 func (e *event) String() string {
 	return fmt.Sprintf("[%s][%s]", e.op, e.name)
 }

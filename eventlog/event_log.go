@@ -7,6 +7,7 @@ import (
 )
 
 type EventLog interface {
+	// Write write event info to output writer
 	Write(event event)
 }
 
@@ -14,6 +15,7 @@ type eventLog struct {
 	w io.Writer
 }
 
+// New create an EventLog instance with io.Writer
 func New(w io.Writer) EventLog {
 	return &eventLog{
 		w: w,
