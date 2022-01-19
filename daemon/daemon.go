@@ -107,7 +107,7 @@ func monitor(pid int, monitorDelay time.Duration) (isShutdown bool) {
 // row 3: record subprocess pid (worker)
 func writePidFile(ppid, pid, subPid int) error {
 	fName := "pid"
-	f, err := os.OpenFile(fName, os.O_CREATE|os.O_WRONLY, 0775)
+	f, err := os.Create(fName)
 	if err == nil {
 		writer := bufio.NewWriter(f)
 		if _, err = writer.WriteString(fmt.Sprintf("%d\n%d\n%d\n", ppid, pid, subPid)); err != nil {
