@@ -57,6 +57,8 @@ cert.pem  key.pem  src  target
 
 监控本地源目录将变更同步到目标目录
 
+你可以使用`logically_delete`命令行参数来启用逻辑删除，从而避免误删数据
+
 ```bash
 $ gofs -src=./src -target=./target
 ```

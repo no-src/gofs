@@ -57,6 +57,8 @@ cert.pem  key.pem  src  target
 
 Monitor src directory and sync change files to target directory.
 
+You can use the `logically_delete` flag to enable the logically delete and avoid deleting files by mistake.
+
 ```bash
 $ gofs -src=./src -target=./target
 ```
