@@ -194,11 +194,15 @@ func (rs *remoteClientSync) Write(path string) error {
 }
 
 func (rs *remoteClientSync) Remove(path string) error {
+	return rs.remove(path, false)
+}
+
+func (rs *remoteClientSync) remove(path string, forceDelete bool) error {
 	target, err := rs.buildTargetAbsFile(path)
 	if err != nil {
 		return err
 	}
-	if rs.enableLogicallyDelete {
+	if !forceDelete && rs.enableLogicallyDelete {
 		err = rs.LogicallyDelete(target)
 	} else {
 		err = os.RemoveAll(target)
@@ -211,7 +215,7 @@ func (rs *remoteClientSync) Remove(path string) error {
 
 func (rs *remoteClientSync) Rename(path string) error {
 	// delete old file, then trigger Create
-	return rs.Remove(path)
+	return rs.remove(path, true)
 }
 
 func (rs *remoteClientSync) Chmod(path string) error {

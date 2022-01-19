@@ -220,6 +220,10 @@ func (s *diskSync) same(srcFile *os.File, targetFile *os.File) (bool, error) {
 
 // Remove removes the source file or dir in target
 func (s *diskSync) Remove(path string) error {
+	return s.remove(path, false)
+}
+
+func (s *diskSync) remove(path string, forceDelete bool) error {
 	target, err := s.buildTargetAbsFile(path)
 	if err != nil {
 		return err
@@ -238,7 +242,7 @@ func (s *diskSync) Remove(path string) error {
 // Rename removes the source file or dir in target, the same as Remove
 func (s *diskSync) Rename(path string) error {
 	// delete old file, then trigger Create
-	return s.Remove(path)
+	return s.remove(path, true)
 }
 
 func (s *diskSync) Chmod(path string) error {
