@@ -1,6 +1,7 @@
 package core
 
 import (
+	"github.com/no-src/log"
 	"net/url"
 	"path/filepath"
 	"strconv"
@@ -25,7 +26,8 @@ const (
 	paramLocalSyncDisabled   = "local_sync_disabled"
 	valueModeServer          = "server"
 	valueLocalSyncIsDisabled = "true"
-	RemoteServerSchema       = "rs://"
+	RemoteServerScheme       = "rs://"
+	RemoteServerDefaultPort  = 8105
 )
 
 // Path file path
@@ -95,7 +97,7 @@ func NewVFS(path string) VFS {
 	vfs := NewDiskVFS(path)
 	lowerPath := strings.ToLower(path)
 	var err error
-	if strings.HasPrefix(lowerPath, RemoteServerSchema) {
+	if strings.HasPrefix(lowerPath, RemoteServerScheme) {
 		// example of rs protocol to see README.md
 		vfs.fsType = RemoteDisk
 		_, vfs.host, vfs.port, vfs.path, vfs.server, vfs.fsServer, vfs.localSyncDisabled, err = parse(path)
@@ -115,7 +117,9 @@ func parse(path string) (scheme string, host string, port int, localPath string,
 	host = parseUrl.Hostname()
 	port, err = strconv.Atoi(parseUrl.Port())
 	if err != nil {
-		return
+		port = RemoteServerDefaultPort
+		err = nil
+		log.Info("no remote server source port is specified, use default port => %d", port)
 	}
 	localPath = filepath.Clean(parseUrl.Query().Get(paramPath))
 	mode := parseUrl.Query().Get(paramMode)
