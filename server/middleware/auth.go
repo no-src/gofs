@@ -22,8 +22,6 @@ func NewAuthHandler(logger log.Logger) handler.GinHandler {
 }
 
 func (h *authHandler) Handle(c *gin.Context) {
-	ip, _ := c.RemoteIP()
-	ip.IsPrivate()
 	session := sessions.Default(c)
 	if session == nil {
 		h.logger.Error(errors.New("session is nil"), "auth handler => get session error, remote=%s", c.Request.RemoteAddr)
