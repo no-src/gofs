@@ -110,11 +110,13 @@ $ gofs -src=./src -target=./target -server -tls_cert_file=cert.pem -tls_key_file
 
 Start a remote disk server as a remote file source.
 
+The `src` flag detail see [Remote Server Source Protocol](#remote-server-source-protocol).
+
 ```bash
 # Start a remote disk server
 # Replace the `tls_cert_file` and `tls_key_file` flags with your real cert files in the production environment
 # Replace the `users` flag with complex username and password for security
-$ gofs -src="rs://127.0.0.1:9016?mode=server&local_sync_disabled=true&path=./src&fs_server=https://127.0.0.1" -target=./target -users="gofs|password" -tls_cert_file=cert.pem -tls_key_file=key.pem
+$ gofs -src="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./src&fs_server=https://127.0.0.1" -target=./target -users="gofs|password" -tls_cert_file=cert.pem -tls_key_file=key.pem
 ```
 
 ### Remote Disk Client
@@ -125,10 +127,49 @@ Use the `sync_once` flag to sync the whole path immediately from remote disk ser
 
 Use the `sync_cron` flag to sync the whole path from remote disk server to local target directory with cron, like [Sync Cron](#sync-cron).
 
+The `src` flag detail see [Remote Server Source Protocol](#remote-server-source-protocol).
+
 ```bash
 # Start a remote disk client
 # Replace the `users` flag with your real username and password
-$ gofs -src="rs://127.0.0.1:9016" -target=./target -users="gofs|password"
+$ gofs -src="rs://127.0.0.1:8105" -target=./target -users="gofs|password"
+```
+
+### Remote Server Source Protocol
+
+The remote server source protocol is based on URI, see [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986.html).
+
+#### Scheme
+
+The scheme name is `rs`.
+
+#### Host
+
+The remote server source uses `0.0.0.0` or other local ip address as host in [Remote Disk Server](#remote-disk-server) mode, and 
+use ip address or domain name as host in [Remote Disk Client](#remote-disk-client) mode.
+
+#### Port
+
+The remote server source port, default is `8105`.
+
+#### Parameter
+
+Use the following parameters in [Remote Disk Server](#remote-disk-server) mode only.
+
+- `path` the [Remote Disk Server](#remote-disk-server) actual local src directory
+- `mode` running mode, in [Remote Disk Server](#remote-disk-server) mode is `server`, default is running in [Remote Disk Client](#remote-disk-client) mode
+- `fs_server` [File Server](#file-server) address, like `https://127.0.0.1`
+- `local_sync_disabled` disabled [Remote Disk Server](#remote-disk-server) sync changes to its local target path, `true` or `false`, default is `false`
+
+#### Example
+
+For example, in [Remote Disk Server](#remote-disk-server) mode.
+
+```text
+ rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./src&fs_server=https://127.0.0.1
+ \_/  \_______/ \__/ \_________________________________________________________________________/
+  |       |       |                                      |
+scheme   host    port                                parameter
 ```
 
 ### Profiling

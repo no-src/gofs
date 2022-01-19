@@ -110,11 +110,13 @@ $ gofs -src=./src -target=./target -server -tls_cert_file=cert.pem -tls_key_file
 
 启动一个远程磁盘服务端作为一个远程文件数据源
 
+`src`命令行参数详见[远程磁盘服务端数据源协议](#远程磁盘服务端数据源协议)
+
 ```bash
 # 启动一个远程磁盘服务端
 # 在生产环境中请将`tls_cert_file`和`tls_key_file`命令行参数替换为正式的证书和密钥文件
 # 为了安全起见，请使用复杂的账户密码来设置`users`命令行参数
-$ gofs -src="rs://127.0.0.1:9016?mode=server&local_sync_disabled=true&path=./src&fs_server=https://127.0.0.1" -target=./target -users="gofs|password" -tls_cert_file=cert.pem -tls_key_file=key.pem
+$ gofs -src="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./src&fs_server=https://127.0.0.1" -target=./target -users="gofs|password" -tls_cert_file=cert.pem -tls_key_file=key.pem
 ```
 
 ### 远程磁盘客户端
@@ -125,10 +127,49 @@ $ gofs -src="rs://127.0.0.1:9016?mode=server&local_sync_disabled=true&path=./src
 
 使用`sync_cron`命令行参数，可以定时将远程磁盘服务端的文件整个全量同步到本地目标目录，就跟[定时同步](#定时同步)一样
 
+`src`命令行参数详见[远程磁盘服务端数据源协议](#远程磁盘服务端数据源协议)
+
 ```bash
 # 启动一个远程磁盘客户端
 # 请将`users`命令行参数替换为上面设置的实际账户名密码
-$ gofs -src="rs://127.0.0.1:9016" -target=./target -users="gofs|password"
+$ gofs -src="rs://127.0.0.1:8105" -target=./target -users="gofs|password"
+```
+
+### 远程磁盘服务端数据源协议
+
+远程磁盘服务端数据源协议基于URI基本语法,详见[RFC 3986](https://www.rfc-editor.org/rfc/rfc3986.html)
+
+#### 方案
+
+方案名称为`rs`
+
+#### 主机名
+
+远程磁盘服务端数据源在[远程磁盘服务端](#远程磁盘服务端)模式下使用`0.0.0.0`或者其他本地网卡IP地址作为主机名，在[远程磁盘客户端](#远程磁盘客户端)
+模式下使用远程磁盘服务端的IP地址或者域名作为主机名
+
+#### 端口号
+
+远程磁盘服务端数据源端口号，默认为`8105`
+
+#### 参数
+
+仅在[远程磁盘服务端](#远程磁盘服务端)模式下设置以下参数
+
+- `path` [远程磁盘服务端](#远程磁盘服务端)真实的本地源目录
+- `mode` 指定运行模式，只有在[远程磁盘服务端](#远程磁盘服务端)模式下需要手动指定为`server`，默认为[远程磁盘客户端](#远程磁盘客户端)模式
+- `fs_server` [Web文件服务器](#web文件服务器)地址，例如`https://127.0.0.1`
+- `local_sync_disabled` 是否将[远程磁盘服务端](#远程磁盘服务端)的文件变更同步到远程本地的目标目录,可选值为`true`或`false`，默认值为`false`
+
+#### 示例
+
+[远程磁盘服务端](#远程磁盘服务端)模式下的示例
+
+```text
+ rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./src&fs_server=https://127.0.0.1
+ \_/  \_______/ \__/ \_________________________________________________________________________/
+  |       |       |                                      |
+ 方案   主机名   端口号                                  参数
 ```
 
 ### 性能分析
