@@ -96,9 +96,13 @@ The file server is use HTTPS default, set the `tls_cert_file` and `tls_key_file`
 
 You can disable the HTTPS by set the `tls` flag to `false` if you don't need it.
 
+If you set the `tls` to `true`, the file server default port is `443`, otherwise it is `80`, and you can customize the default port with the `server_addr` flag, like `-server_addr=":443"`.
+
 You should set the `rand_user_count` flag to auto generate some random users or set the `users` flag to customize server users for security reasons.
 
 The server users will output to log if you set the `rand_user_count` flag greater than zero.
+
+If you need to compress the files, add the `server_compress` flag to enable gzip compression for response, but it is not fast now.
 
 ```bash
 # Start a file server and create three random users
