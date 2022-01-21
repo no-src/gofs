@@ -186,7 +186,7 @@ $ gofs -src=./src -target=./target -server -tls_cert_file=cert.pem -tls_key_file
 
 pprof访问地址如下：
 
-```
+```text
 https://127.0.0.1/debug/pprof/
 ```
 

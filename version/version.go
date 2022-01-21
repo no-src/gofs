@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-const VERSION = "v0.2.3"
+const VERSION = "v0.2.4"
 
 func PrintVersionInfo() {
 	v := fmt.Sprintf("gofs version %s", VERSION)
