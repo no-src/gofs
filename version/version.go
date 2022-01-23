@@ -7,8 +7,10 @@ import (
 	"strings"
 )
 
+// VERSION the current program version info
 const VERSION = "v0.2.4"
 
+// PrintVersionInfo print the current version info, and append the commit info if the commit file is not empty
 func PrintVersionInfo() {
 	v := fmt.Sprintf("gofs version %s", VERSION)
 	if commit := strings.TrimSpace(gofs.Commit); len(commit) > 0 {

@@ -17,6 +17,7 @@ type Conn struct {
 	startAuthCheck *cbool.CBool
 }
 
+// NewConn create a Conn instance
 func NewConn(conn net.Conn) *Conn {
 	now := time.Now()
 	c := &Conn{

@@ -1,5 +1,6 @@
 package contract
 
+// FileInfo the basic file info description
 type FileInfo struct {
 	// Path the file path
 	Path string `json:"path"`

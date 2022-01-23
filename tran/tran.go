@@ -19,5 +19,6 @@ const (
 )
 
 var (
+	// ServerExecuteError the remote server execute error
 	ServerExecuteError = errors.New("server execute error")
 )

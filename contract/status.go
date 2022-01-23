@@ -1,5 +1,6 @@
 package contract
 
+// Status the api response status info
 type Status struct {
 	// Code current status code
 	Code Code `json:"code"`

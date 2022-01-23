@@ -14,18 +14,22 @@ type User struct {
 	password string
 }
 
+// String return format user info
 func (user *User) String() string {
 	return fmt.Sprintf("%s|%s", user.userName, user.password)
 }
 
+// UserId return user id
 func (user *User) UserId() int {
 	return user.userId
 }
 
+// UserName return username
 func (user *User) UserName() string {
 	return user.userName
 }
 
+// Password return user password
 func (user *User) Password() string {
 	return user.password
 }

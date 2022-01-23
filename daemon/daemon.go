@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// SubprocessTag mark the current process is subprocess
 const SubprocessTag = "sub"
 
 var shutdown = make(chan bool, 1)
@@ -140,6 +141,7 @@ func KillPPid() {
 
 }
 
+// Shutdown send a shutdown notify to the current daemon
 func Shutdown() (err error) {
 	defer func() {
 		if r := recover(); r != nil {

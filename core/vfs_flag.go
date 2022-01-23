@@ -27,14 +27,17 @@ func newVFSValue(val VFS, p *VFS) *vfsValue {
 	return (*vfsValue)(p)
 }
 
+// Set implement the Set function for the flag.Value interface
 func (d *vfsValue) Set(s string) error {
 	v := NewVFS(s)
 	*d = vfsValue(v)
 	return nil
 }
 
+// Get implement the Get function for the flag.Value interface
 func (d *vfsValue) Get() interface{} { return VFS(*d) }
 
+// String implement the String function for the flag.Value interface
 func (d *vfsValue) String() string {
 	vfs := (*VFS)(d)
 	return fmt.Sprintf("%s:%s", vfs.Type(), vfs.Path())

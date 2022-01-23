@@ -47,6 +47,7 @@ func (h *HashUser) RefreshExpires() string {
 	return h.Expires
 }
 
+// NewHashUser create a HashUser instance
 func NewHashUser(userNameHash, passwordHash string) *HashUser {
 	h := &HashUser{
 		UserNameHash: userNameHash,

@@ -1,16 +1,24 @@
 package contract
 
+// Code the status code info
 type Code int
 
 const (
-	Unknown      Code = 0
-	Success      Code = 1
-	Fail         Code = -1
+	// Unknown the unknown status code
+	Unknown Code = 0
+	// Success the success status code
+	Success Code = 1
+	// Fail the standard fail status code
+	Fail Code = -1
+	// Unauthorized the unauthorized status code, the current user needs to sign in
 	Unauthorized Code = -2
 )
 
 const (
-	SuccessDesc      = "success"
-	FailDesc         = "fail"
+	// SuccessDesc the description of Success code
+	SuccessDesc = "success"
+	// FailDesc the description of Fail code
+	FailDesc = "fail"
+	// UnauthorizedDesc the description of Unauthorized code
 	UnauthorizedDesc = "unauthorized"
 )

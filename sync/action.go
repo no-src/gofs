@@ -3,6 +3,7 @@ package sync
 type Action int
 
 const (
+	// UnknownAction the unknown file operation
 	UnknownAction Action = iota
 	// CreateAction the action of create a file
 	CreateAction
@@ -16,6 +17,7 @@ const (
 	ChmodAction
 )
 
+// String return the action description name
 func (action Action) String() string {
 	desc := ""
 	switch action {

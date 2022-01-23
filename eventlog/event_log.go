@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// EventLog the event log recorder
 type EventLog interface {
 	// Write write event info to output writer
 	Write(event event)

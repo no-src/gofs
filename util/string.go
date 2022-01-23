@@ -6,6 +6,7 @@ import (
 )
 
 type ToString interface {
+	// String return current format info
 	String() string
 }
 

@@ -203,7 +203,7 @@ func (rs *remoteClientSync) remove(path string, forceDelete bool) error {
 		return err
 	}
 	if !forceDelete && rs.enableLogicallyDelete {
-		err = rs.LogicallyDelete(target)
+		err = rs.logicallyDelete(target)
 	} else {
 		err = os.RemoveAll(target)
 	}

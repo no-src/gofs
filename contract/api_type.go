@@ -1,5 +1,6 @@
 package contract
 
+// ApiType the api type identity between client and server
 type ApiType int
 
 const (
