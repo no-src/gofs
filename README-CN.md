@@ -33,7 +33,7 @@ go install -tags "no_server" github.com/no-src/gofs/...@latest
 请确保文件同步的源目录和目标目录都已经存在，如果目录不存在，则用你实际的目录替换下面的路径进行提前创建
 
 ```bash
-$ mkdir src dest
+$ mkdir source dest
 ```
 
 生成仅用于测试的证书和密钥文件，生产中请替换为正式的证书
@@ -50,7 +50,7 @@ $ go run $GOROOT/src/crypto/tls/generate_cert.go --host 127.0.0.1
 
 ```bash
 $ ls
-cert.pem  key.pem  src  dest
+cert.pem  key.pem  source  dest
 ```
 
 ### 本地磁盘
@@ -60,7 +60,7 @@ cert.pem  key.pem  src  dest
 你可以使用`logically_delete`命令行参数来启用逻辑删除，从而避免误删数据
 
 ```bash
-$ gofs -src=./src -dest=./dest
+$ gofs -source=./source -dest=./dest
 ```
 
 ### 全量同步
@@ -68,7 +68,7 @@ $ gofs -src=./src -dest=./dest
 执行一次全量同步，直接将整个源目录同步到目标目录
 
 ```bash
-$ gofs -src=./src -dest=./dest -sync_once
+$ gofs -source=./source -dest=./dest -sync_once
 ```
 
 ### 定时同步
@@ -77,7 +77,7 @@ $ gofs -src=./src -dest=./dest -sync_once
 
 ```bash
 # 每30秒钟将源目录全量同步到目标目录
-$ gofs -src=./src -dest=./dest -sync_cron="*/30 * * * * *"
+$ gofs -source=./source -dest=./dest -sync_cron="*/30 * * * * *"
 ```
 
 ### 守护进程模式
@@ -85,7 +85,7 @@ $ gofs -src=./src -dest=./dest -sync_cron="*/30 * * * * *"
 启动守护进程来创建一个工作进程处理实际的任务，并将相关进程的pid信息记录到pid文件中
 
 ```bash
-$  gofs -src=./src -dest=./dest -daemon -daemon_pid
+$  gofs -source=./source -dest=./dest -daemon -daemon_pid
 ```
 
 ### Web文件服务器
@@ -107,20 +107,20 @@ Web文件服务器默认使用HTTPS协议，使用`tls_cert_file`和`tls_key_fil
 ```bash
 # 启动一个Web文件服务器并随机创建3个用户
 # 在生产环境中请将`tls_cert_file`和`tls_key_file`命令行参数替换为正式的证书和密钥文件
-$ gofs -src=./src -dest=./dest -server -tls_cert_file=cert.pem -tls_key_file=key.pem -rand_user_count=3
+$ gofs -source=./source -dest=./dest -server -tls_cert_file=cert.pem -tls_key_file=key.pem -rand_user_count=3
 ```
 
 ### 远程磁盘服务端
 
 启动一个远程磁盘服务端作为一个远程文件数据源
 
-`src`命令行参数详见[远程磁盘服务端数据源协议](#远程磁盘服务端数据源协议)
+`source`命令行参数详见[远程磁盘服务端数据源协议](#远程磁盘服务端数据源协议)
 
 ```bash
 # 启动一个远程磁盘服务端
 # 在生产环境中请将`tls_cert_file`和`tls_key_file`命令行参数替换为正式的证书和密钥文件
 # 为了安全起见，请使用复杂的账户密码来设置`users`命令行参数
-$ gofs -src="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./src&fs_server=https://127.0.0.1" -dest=./dest -users="gofs|password" -tls_cert_file=cert.pem -tls_key_file=key.pem
+$ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1" -dest=./dest -users="gofs|password" -tls_cert_file=cert.pem -tls_key_file=key.pem
 ```
 
 ### 远程磁盘客户端
@@ -131,12 +131,12 @@ $ gofs -src="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./src
 
 使用`sync_cron`命令行参数，可以定时将远程磁盘服务端的文件整个全量同步到本地目标目录，就跟[定时同步](#定时同步)一样
 
-`src`命令行参数详见[远程磁盘服务端数据源协议](#远程磁盘服务端数据源协议)
+`source`命令行参数详见[远程磁盘服务端数据源协议](#远程磁盘服务端数据源协议)
 
 ```bash
 # 启动一个远程磁盘客户端
 # 请将`users`命令行参数替换为上面设置的实际账户名密码
-$ gofs -src="rs://127.0.0.1:8105" -dest=./dest -users="gofs|password"
+$ gofs -source="rs://127.0.0.1:8105" -dest=./dest -users="gofs|password"
 ```
 
 ### 远程磁盘服务端数据源协议
@@ -170,10 +170,10 @@ $ gofs -src="rs://127.0.0.1:8105" -dest=./dest -users="gofs|password"
 [远程磁盘服务端](#远程磁盘服务端)模式下的示例
 
 ```text
- rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./src&fs_server=https://127.0.0.1
- \_/  \_______/ \__/ \_________________________________________________________________________/
+ rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1
+ \_/  \_______/ \__/ \____________________________________________________________________________/
   |       |       |                                      |
- 方案   主机名   端口号                                  参数
+ 方案   主机名   端口号                                    参数
 ```
 
 ### 性能分析
@@ -185,7 +185,7 @@ $ gofs -src="rs://127.0.0.1:8105" -dest=./dest -users="gofs|password"
 你可以通过将`pprof_private`设置为`false`来禁用默认行为，允许公网IP访问pprof路由
 
 ```bash
-$ gofs -src=./src -dest=./dest -server -tls_cert_file=cert.pem -tls_key_file=key.pem -rand_user_count=3 -pprof
+$ gofs -source=./source -dest=./dest -server -tls_cert_file=cert.pem -tls_key_file=key.pem -rand_user_count=3 -pprof
 ```
 
 pprof访问地址如下：
@@ -210,7 +210,7 @@ https://127.0.0.1/debug/pprof/
 
 ```bash
 # 在"本地磁盘"模式下设置日志信息
-$ gofs -src=./src -dest=./dest -log_file -log_level=0 -log_dir="./logs/" -log_flush -log_flush_interval=3s -log_event
+$ gofs -source=./source -dest=./dest -log_file -log_level=0 -log_dir="./logs/" -log_flush -log_flush_interval=3s -log_event
 ```
 
 ## 更多信息

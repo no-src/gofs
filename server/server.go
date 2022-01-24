@@ -11,8 +11,8 @@ var serverAddr *net.TCPAddr
 var enableTLS bool
 
 const (
-	SrcRoutePrefix       = "/src/"
-	DestRoutePrefix      = "/dest/"
+	SourceRoutePrefix = "/source/"
+	DestRoutePrefix   = "/dest/"
 	QueryRoute           = "/query"
 	LoginRoute           = "/login"
 	LoginIndexRoute      = "/index"

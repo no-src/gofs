@@ -26,14 +26,14 @@ type Monitor interface {
 // retry a Retry component
 // syncOnce tag a sync once command, the sync once command will execute when call the Start
 func NewMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, enableTLS bool, users []*auth.User, eventWriter io.Writer) (Monitor, error) {
-	src := syncer.Source()
-	if src.IsDisk() {
+	source := syncer.Source()
+	if source.IsDisk() {
 		return NewFsNotifyMonitor(syncer, retry, syncOnce, eventWriter)
-	} else if src.Is(core.RemoteDisk) && src.Server() {
+	} else if source.Is(core.RemoteDisk) && source.Server() {
 		return NewRemoteServerMonitor(syncer, retry, syncOnce, eventWriter)
-	} else if src.Is(core.RemoteDisk) && !src.Server() {
-		return NewRemoteClientMonitor(syncer, retry, syncOnce, src.Host(), src.Port(), enableTLS, users, eventWriter)
+	} else if source.Is(core.RemoteDisk) && !source.Server() {
+		return NewRemoteClientMonitor(syncer, retry, syncOnce, source.Host(), source.Port(), enableTLS, users, eventWriter)
 	}
-	return nil, fmt.Errorf("file system unsupported ! src=>%s", src.Type().String())
+	return nil, fmt.Errorf("file system unsupported ! source=>%s", source.Type().String())
 
 }

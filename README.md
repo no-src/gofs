@@ -30,10 +30,10 @@ go install -tags "no_server" github.com/no-src/gofs/...@latest
 
 ### Prerequisites
 
-Please ensure the src directory and dest directory exists first, replace the following path with your real path.
+Please ensure the source directory and dest directory exists first, replace the following path with your real path.
 
 ```bash
-$ mkdir src dest
+$ mkdir source dest
 ```
 
 Generate the TLS cert file and key file for testing purposes.
@@ -50,34 +50,34 @@ Look up our workspace.
 
 ```bash
 $ ls
-cert.pem  key.pem  src  dest
+cert.pem  key.pem  source  dest
 ```
 
 ### Local Disk
 
-Monitor src directory and sync change files to dest directory.
+Monitor source directory and sync change files to dest directory.
 
 You can use the `logically_delete` flag to enable the logically delete and avoid deleting files by mistake.
 
 ```bash
-$ gofs -src=./src -dest=./dest
+$ gofs -source=./source -dest=./dest
 ```
 
 ### Sync Once
 
-Sync the whole path immediately from src directory to dest directory.
+Sync the whole path immediately from source directory to dest directory.
 
 ```bash
-$ gofs -src=./src -dest=./dest -sync_once
+$ gofs -source=./source -dest=./dest -sync_once
 ```
 
 ### Sync Cron
 
-Sync the whole path from src directory to dest directory with cron.
+Sync the whole path from source directory to dest directory with cron.
 
 ```bash
-# Per 30 seconds sync the whole path from src directory to dest directory
-$ gofs -src=./src -dest=./dest -sync_cron="*/30 * * * * *"
+# Per 30 seconds sync the whole path from source directory to dest directory
+$ gofs -source=./source -dest=./dest -sync_cron="*/30 * * * * *"
 ```
 
 ### Daemon Mode
@@ -85,12 +85,12 @@ $ gofs -src=./src -dest=./dest -sync_cron="*/30 * * * * *"
 Start a daemon to create subprocess to work, and record pid info to pid file.
 
 ```bash
-$  gofs -src=./src -dest=./dest -daemon -daemon_pid
+$  gofs -source=./source -dest=./dest -daemon -daemon_pid
 ```
 
 ### File Server
 
-Start a file server for src directory and dest directory.
+Start a file server for source directory and dest directory.
 
 The file server is use HTTPS default, set the `tls_cert_file` and `tls_key_file` flags to customize the cert file and key file.
 
@@ -107,20 +107,20 @@ If you need to compress the files, add the `server_compress` flag to enable gzip
 ```bash
 # Start a file server and create three random users
 # Replace the `tls_cert_file` and `tls_key_file` flags with your real cert files in the production environment
-$ gofs -src=./src -dest=./dest -server -tls_cert_file=cert.pem -tls_key_file=key.pem -rand_user_count=3
+$ gofs -source=./source -dest=./dest -server -tls_cert_file=cert.pem -tls_key_file=key.pem -rand_user_count=3
 ```
 
 ### Remote Disk Server
 
 Start a remote disk server as a remote file source.
 
-The `src` flag detail see [Remote Server Source Protocol](#remote-server-source-protocol).
+The `source` flag detail see [Remote Server Source Protocol](#remote-server-source-protocol).
 
 ```bash
 # Start a remote disk server
 # Replace the `tls_cert_file` and `tls_key_file` flags with your real cert files in the production environment
 # Replace the `users` flag with complex username and password for security
-$ gofs -src="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./src&fs_server=https://127.0.0.1" -dest=./dest -users="gofs|password" -tls_cert_file=cert.pem -tls_key_file=key.pem
+$ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1" -dest=./dest -users="gofs|password" -tls_cert_file=cert.pem -tls_key_file=key.pem
 ```
 
 ### Remote Disk Client
@@ -131,12 +131,12 @@ Use the `sync_once` flag to sync the whole path immediately from remote disk ser
 
 Use the `sync_cron` flag to sync the whole path from remote disk server to local dest directory with cron, like [Sync Cron](#sync-cron).
 
-The `src` flag detail see [Remote Server Source Protocol](#remote-server-source-protocol).
+The `source` flag detail see [Remote Server Source Protocol](#remote-server-source-protocol).
 
 ```bash
 # Start a remote disk client
 # Replace the `users` flag with your real username and password
-$ gofs -src="rs://127.0.0.1:8105" -dest=./dest -users="gofs|password"
+$ gofs -source="rs://127.0.0.1:8105" -dest=./dest -users="gofs|password"
 ```
 
 ### Remote Server Source Protocol
@@ -160,7 +160,7 @@ The remote server source port, default is `8105`.
 
 Use the following parameters in [Remote Disk Server](#remote-disk-server) mode only.
 
-- `path` the [Remote Disk Server](#remote-disk-server) actual local src directory
+- `path` the [Remote Disk Server](#remote-disk-server) actual local source directory
 - `mode` running mode, in [Remote Disk Server](#remote-disk-server) mode is `server`, default is running in [Remote Disk Client](#remote-disk-client) mode
 - `fs_server` [File Server](#file-server) address, like `https://127.0.0.1`
 - `local_sync_disabled` disabled [Remote Disk Server](#remote-disk-server) sync changes to its local dest path, `true` or `false`, default is `false`
@@ -170,8 +170,8 @@ Use the following parameters in [Remote Disk Server](#remote-disk-server) mode o
 For example, in [Remote Disk Server](#remote-disk-server) mode.
 
 ```text
- rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./src&fs_server=https://127.0.0.1
- \_/  \_______/ \__/ \_________________________________________________________________________/
+ rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1
+ \_/  \_______/ \__/ \____________________________________________________________________________/
   |       |       |                                      |
 scheme   host    port                                parameter
 ```
@@ -185,7 +185,7 @@ By default, allow to access pprof route by private address and loopback address 
 You can disable it by setting the `pprof_private` to `false`.
 
 ```bash
-$ gofs -src=./src -dest=./dest -server -tls_cert_file=cert.pem -tls_key_file=key.pem -rand_user_count=3 -pprof
+$ gofs -source=./source -dest=./dest -server -tls_cert_file=cert.pem -tls_key_file=key.pem -rand_user_count=3 -pprof
 ```
 
 The pprof url address like this
@@ -210,7 +210,7 @@ Use the `log_event` flag to enable the event log, write to file, default is `fal
 
 ```bash
 # set the logger config in "Local Disk" mode
-$ gofs -src=./src -dest=./dest -log_file -log_level=0 -log_dir="./logs/" -log_flush -log_flush_interval=3s -log_event
+$ gofs -source=./source -dest=./dest -log_file -log_level=0 -log_dir="./logs/" -log_flush -log_flush_interval=3s -log_event
 ```
 
 ## For More Information

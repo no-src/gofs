@@ -76,10 +76,10 @@ func parseFlags() {
 	flag.BoolVar(&printVersion, "v", false, "print the version info")
 
 	// file sync
-	core.VFSVar(&source, "src", core.NewEmptyVFS(), "the source path by monitor")
+	core.VFSVar(&source, "source", core.NewEmptyVFS(), "the source path by monitor")
 	core.VFSVar(&dest, "dest", core.NewEmptyVFS(), "the dest path to backup")
-	flag.BoolVar(&syncOnce, "sync_once", false, "sync src directory to dest directory once")
-	flag.StringVar(&syncCron, "sync_cron", "", "sync src directory to dest directory with cron")
+	flag.BoolVar(&syncOnce, "sync_once", false, "sync source directory to dest directory once")
+	flag.StringVar(&syncCron, "sync_cron", "", "sync source directory to dest directory with cron")
 	flag.BoolVar(&enableLogicallyDelete, "logically_delete", false, "delete dest file logically")
 
 	// retry

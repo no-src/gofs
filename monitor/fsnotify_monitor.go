@@ -73,23 +73,23 @@ func (m *fsNotifyMonitor) monitor(dir string) (err error) {
 }
 
 func (m *fsNotifyMonitor) Start() error {
-	src := m.syncer.Source()
+	source := m.syncer.Source()
 	// execute -sync_once flag
 	if m.syncOnce {
-		return m.syncer.SyncOnce(src.Path())
+		return m.syncer.SyncOnce(source.Path())
 	}
 
 	// execute -sync_cron flag
 	if err := m.startCron(func() error {
-		return m.syncer.SyncOnce(src.Path())
+		return m.syncer.SyncOnce(source.Path())
 	}); err != nil {
 		return err
 	}
 
-	if !src.IsDisk() && !src.Is(core.RemoteDisk) {
+	if !source.IsDisk() && !source.Is(core.RemoteDisk) {
 		return errors.New("not local file system")
 	}
-	if err := m.monitor(src.Path()); err != nil {
+	if err := m.monitor(source.Path()); err != nil {
 		return err
 	}
 

@@ -24,7 +24,7 @@ import (
 // StartFileServer start a file server by gin
 func StartFileServer(opt server.Option) error {
 	enableFileApi := false
-	src := opt.Src
+	source := opt.Source
 	dest := opt.Dest
 	logger := opt.Logger
 
@@ -90,8 +90,8 @@ func StartFileServer(opt server.Option) error {
 		pprof.RouteRegister(debugGroup, "pprof")
 	}
 
-	if src.IsDisk() || src.Is(core.RemoteDisk) {
-		rootGroup.StaticFS(server.SrcRoutePrefix, http.Dir(src.Path()))
+	if source.IsDisk() || source.Is(core.RemoteDisk) {
+		rootGroup.StaticFS(server.SourceRoutePrefix, http.Dir(source.Path()))
 		enableFileApi = true
 	}
 
@@ -101,7 +101,7 @@ func StartFileServer(opt server.Option) error {
 	}
 
 	if enableFileApi {
-		rootGroup.GET(server.QueryRoute, handler.NewFileApiHandler(http.Dir(src.Path()), logger).Handle)
+		rootGroup.GET(server.QueryRoute, handler.NewFileApiHandler(http.Dir(source.Path()), logger).Handle)
 	}
 
 	log.Info("file server [%s] starting...", opt.Addr)

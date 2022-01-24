@@ -24,15 +24,15 @@ type remoteServerSync struct {
 }
 
 // NewRemoteServerSync create an instance of remoteServerSync execute send file change message
-func NewRemoteServerSync(src, dest core.VFS, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
-	if len(src.Path()) == 0 {
-		return nil, errors.New("src is not found")
+func NewRemoteServerSync(source, dest core.VFS, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
+	if len(source.Path()) == 0 {
+		return nil, errors.New("source is not found")
 	}
 	if len(dest.Path()) == 0 {
 		return nil, errors.New("dest is not found")
 	}
 
-	srcAbsPath, err := filepath.Abs(src.Path())
+	sourceAbsPath, err := filepath.Abs(source.Path())
 	if err != nil {
 		return nil, err
 	}
@@ -43,26 +43,26 @@ func NewRemoteServerSync(src, dest core.VFS, enableTLS bool, certFile string, ke
 	}
 
 	ds := diskSync{
-		srcAbsPath:  srcAbsPath,
-		destAbsPath: destAbsPath,
-		src:         src,
-		dest:        dest,
-		baseSync:    newBaseSync(enableLogicallyDelete),
+		sourceAbsPath: sourceAbsPath,
+		destAbsPath:   destAbsPath,
+		source:        source,
+		dest:          dest,
+		baseSync:      newBaseSync(enableLogicallyDelete),
 	}
 
 	rs := &remoteServerSync{
 		diskSync: ds,
 	}
-	rs.server = tran.NewServer(src.Host(), src.Port(), enableTLS, certFile, keyFile, users)
+	rs.server = tran.NewServer(source.Host(), source.Port(), enableTLS, certFile, keyFile, users)
 
-	if len(src.FsServer()) == 0 {
+	if len(source.FsServer()) == 0 {
 		scheme := server.SchemeHttps
 		if !server.EnableTLS() {
 			scheme = server.SchemeHttp
 		}
 		rs.serverAddr = server.GenerateAddr(scheme, rs.server.Host(), server.ServerPort())
 	} else {
-		rs.serverAddr = src.FsServer()
+		rs.serverAddr = source.FsServer()
 	}
 	rs.serverAddr = strings.TrimRight(rs.serverAddr, "/")
 	if server.ServerPort() <= 0 {
@@ -72,7 +72,7 @@ func NewRemoteServerSync(src, dest core.VFS, enableTLS bool, certFile string, ke
 }
 
 func (rs *remoteServerSync) Create(path string) error {
-	if !rs.src.LocalSyncDisabled() {
+	if !rs.source.LocalSyncDisabled() {
 		if err := rs.diskSync.Create(path); err != nil {
 			return err
 		}
@@ -81,7 +81,7 @@ func (rs *remoteServerSync) Create(path string) error {
 }
 
 func (rs *remoteServerSync) Write(path string) error {
-	if !rs.src.LocalSyncDisabled() {
+	if !rs.source.LocalSyncDisabled() {
 		if err := rs.diskSync.Write(path); err != nil {
 			return err
 		}
@@ -90,7 +90,7 @@ func (rs *remoteServerSync) Write(path string) error {
 }
 
 func (rs *remoteServerSync) Remove(path string) error {
-	if !rs.src.LocalSyncDisabled() {
+	if !rs.source.LocalSyncDisabled() {
 		if err := rs.diskSync.Remove(path); err != nil {
 			return err
 		}
@@ -99,7 +99,7 @@ func (rs *remoteServerSync) Remove(path string) error {
 }
 
 func (rs *remoteServerSync) Rename(path string) error {
-	if !rs.src.LocalSyncDisabled() {
+	if !rs.source.LocalSyncDisabled() {
 		if err := rs.diskSync.Rename(path); err != nil {
 			return err
 		}
@@ -108,7 +108,7 @@ func (rs *remoteServerSync) Rename(path string) error {
 }
 
 func (rs *remoteServerSync) Chmod(path string) error {
-	if !rs.src.LocalSyncDisabled() {
+	if !rs.source.LocalSyncDisabled() {
 		if err := rs.diskSync.Chmod(path); err != nil {
 			return err
 		}
@@ -164,12 +164,12 @@ func (rs *remoteServerSync) send(action Action, path string) (err error) {
 		isDirValue = contract.FsNotDir
 	}
 
-	path, err = filepath.Rel(rs.srcAbsPath, path)
+	path, err = filepath.Rel(rs.sourceAbsPath, path)
 	path = filepath.ToSlash(path)
 	req := Message{
 		Status:  contract.SuccessStatus(contract.SyncMessageApi),
 		Action:  action,
-		BaseUrl: rs.serverAddr + server.SrcRoutePrefix,
+		BaseUrl: rs.serverAddr + server.SourceRoutePrefix,
 		FileInfo: contract.FileInfo{
 			Path:  path,
 			IsDir: isDirValue,
@@ -252,7 +252,7 @@ func (rs *remoteServerSync) infoCommand(client *tran.Conn) (cmd contract.Command
 		info = contract.FileServerInfo{
 			Status:     contract.SuccessStatus(contract.InfoApi),
 			ServerAddr: rs.serverAddr,
-			SrcPath:    server.SrcRoutePrefix,
+			SourcePath: server.SourceRoutePrefix,
 			DestPath:   server.DestRoutePrefix,
 			QueryAddr:  server.QueryRoute,
 		}
