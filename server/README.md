@@ -7,7 +7,7 @@
 | Navigation Page                       | /              |    GET    |              |
 | Login Page                            | /login/index   |    GET    |              |
 | User Sign In API                      | /signin        |    POST   |              |
-| Src File Server                       | /src/          |    GET    |              |
+| Source File Server                    | /source/       |    GET    |              |
 | DestPath File Server                  | /dest/         |    GET    |              |
 | [File Query API](#file-query-api)     | /query         |    GET    |              |
 | PProf API                             | /debug/pprof   |    GET    |              |
@@ -15,7 +15,7 @@
 
 ### File Query API
 
-Support query src or dest path from [File Server](/README.md#file-server).
+Support query source or dest path from [File Server](/README.md#file-server).
 
 #### Method
 
@@ -23,7 +23,7 @@ Support query src or dest path from [File Server](/README.md#file-server).
 
 #### Parameter
 
-- `path` query file path, for example `path=src`
+- `path` query file path, for example `path=source`
 - `need_hash` return file hash or not, `1` or `0`, default is `0`
 
 #### Response
@@ -31,7 +31,7 @@ Support query src or dest path from [File Server](/README.md#file-server).
 For example:
 
 ```text
-http://127.0.0.1/query?path=src&need_hash=1
+http://127.0.0.1/query?path=source&need_hash=1
 ```
 
 Response field description:

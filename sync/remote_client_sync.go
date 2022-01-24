@@ -21,15 +21,15 @@ import (
 
 type remoteClientSync struct {
 	baseSync
-	src         core.VFS
-	dest        core.VFS
+	source core.VFS
+	dest   core.VFS
 	destAbsPath string
 	currentUser *auth.User
 	cookies     []*http.Cookie
 }
 
 // NewRemoteClientSync create an instance of remoteClientSync to receive the file change message and execute it
-func NewRemoteClientSync(src, dest core.VFS, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
+func NewRemoteClientSync(source, dest core.VFS, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
 	if len(dest.Path()) == 0 {
 		return nil, errors.New("dest is not found")
 	}
@@ -41,7 +41,7 @@ func NewRemoteClientSync(src, dest core.VFS, users []*auth.User, enableLogically
 
 	rs := &remoteClientSync{
 		destAbsPath: destAbsPath,
-		src:         src,
+		source:      source,
 		dest:        dest,
 		baseSync:    newBaseSync(enableLogicallyDelete),
 	}
@@ -153,7 +153,7 @@ func (rs *remoteClientSync) Write(path string) error {
 			return nil
 		}
 
-		// if src and dest is the same file, ignore the following steps and return directly
+		// if source and dest is the same file, ignore the following steps and return directly
 		if size > 0 && size == destStat.Size() {
 			isSame, err := rs.same(hash, destFile)
 			if err == nil && isSame {
@@ -342,17 +342,17 @@ func (rs *remoteClientSync) sync(serverAddr, path string) error {
 	return nil
 }
 
-func (rs *remoteClientSync) buildDestAbsFile(srcFileAbs string) (string, error) {
-	remoteUrl, err := url.Parse(srcFileAbs)
+func (rs *remoteClientSync) buildDestAbsFile(sourceFileAbs string) (string, error) {
+	remoteUrl, err := url.Parse(sourceFileAbs)
 	if err != nil {
-		log.Error(err, "parse url error, srcFileAbs=%s", srcFileAbs)
+		log.Error(err, "parse url error, sourceFileAbs=%s", sourceFileAbs)
 		return "", err
 	}
-	return filepath.Join(rs.destAbsPath, strings.TrimPrefix(remoteUrl.Path, server.SrcRoutePrefix)), nil
+	return filepath.Join(rs.destAbsPath, strings.TrimPrefix(remoteUrl.Path, server.SourceRoutePrefix)), nil
 }
 
-func (rs *remoteClientSync) same(srcHash string, destFile *os.File) (bool, error) {
-	if len(srcHash) == 0 {
+func (rs *remoteClientSync) same(sourceHash string, destFile *os.File) (bool, error) {
+	if len(sourceHash) == 0 {
 		return false, nil
 	}
 	destHash, err := util.MD5FromFile(destFile)
@@ -361,14 +361,14 @@ func (rs *remoteClientSync) same(srcHash string, destFile *os.File) (bool, error
 		return false, err
 	}
 
-	if len(srcHash) > 0 && srcHash == destHash {
+	if len(sourceHash) > 0 && sourceHash == destHash {
 		return true, nil
 	}
 	return false, nil
 }
 
 func (rs *remoteClientSync) Source() core.VFS {
-	return rs.src
+	return rs.source
 }
 
 func (rs *remoteClientSync) Dest() core.VFS {

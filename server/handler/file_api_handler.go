@@ -35,21 +35,21 @@ func (h *fileApiHandler) Handle(c *gin.Context) {
 	var fileList []contract.FileInfo
 	path := c.Query(contract.FsPath)
 	needHash := c.Query(contract.FsNeedHash)
-	srcPrefix := strings.Trim(server.SrcRoutePrefix, "/")
+	sourcePrefix := strings.Trim(server.SourceRoutePrefix, "/")
 	destPrefix := strings.Trim(server.DestRoutePrefix, "/")
-	if !strings.HasPrefix(strings.ToLower(path), srcPrefix) && !strings.HasPrefix(strings.ToLower(path), destPrefix) {
-		c.JSON(http.StatusOK, server.NewErrorApiResult(-1, "must start with src or dest"))
+	if !strings.HasPrefix(strings.ToLower(path), sourcePrefix) && !strings.HasPrefix(strings.ToLower(path), destPrefix) {
+		c.JSON(http.StatusOK, server.NewErrorApiResult(-1, "must start with source or dest"))
 		return
 	}
 
 	path = filepath.Clean(path)
 	path = filepath.ToSlash(path)
-	if !strings.HasPrefix(strings.ToLower(path), srcPrefix) && !strings.HasPrefix(strings.ToLower(path), destPrefix) {
+	if !strings.HasPrefix(strings.ToLower(path), sourcePrefix) && !strings.HasPrefix(strings.ToLower(path), destPrefix) {
 		c.JSON(http.StatusOK, server.NewErrorApiResult(-2, "invalid path"))
 		return
 	}
 
-	path = strings.TrimLeft(path, srcPrefix)
+	path = strings.TrimLeft(path, sourcePrefix)
 
 	f, err := h.root.Open(path)
 	if err != nil {

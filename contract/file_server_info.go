@@ -5,8 +5,8 @@ type FileServerInfo struct {
 	Status
 	// ServerAddr the server running address
 	ServerAddr string `json:"server_addr"`
-	// SrcPath the src base path of the file server
-	SrcPath string `json:"src_path"`
+	// SourcePath the source base path of the file server
+	SourcePath string `json:"source_path"`
 	// DestPath the dest base path of the file server
 	DestPath string `json:"dest_path"`
 	// QueryAddr the query api path of the file server

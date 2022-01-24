@@ -147,7 +147,7 @@ func (m *remoteClientMonitor) sync() (err error) {
 		return errors.New("receive info command response error => " + info.Message)
 	}
 
-	return m.syncer.SyncOnce(info.ServerAddr + info.SrcPath)
+	return m.syncer.SyncOnce(info.ServerAddr + info.SourcePath)
 }
 
 func (m *remoteClientMonitor) receive() retry.Wait {

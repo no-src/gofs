@@ -13,18 +13,18 @@ import (
 
 type diskSync struct {
 	baseSync
-	src         core.VFS
-	dest        core.VFS
-	srcAbsPath  string
-	destAbsPath string
+	source        core.VFS
+	dest          core.VFS
+	sourceAbsPath string
+	destAbsPath   string
 }
 
 // NewDiskSync create a diskSync instance
-// src is source path to read
+// source is source path to read
 // dest is dest path to write
-func NewDiskSync(src, dest core.VFS, enableLogicallyDelete bool) (s Sync, err error) {
-	if len(src.Path()) == 0 {
-		err = errors.New("src is not found")
+func NewDiskSync(source, dest core.VFS, enableLogicallyDelete bool) (s Sync, err error) {
+	if len(source.Path()) == 0 {
+		err = errors.New("source is not found")
 		return nil, err
 	}
 	if len(dest.Path()) == 0 {
@@ -32,7 +32,7 @@ func NewDiskSync(src, dest core.VFS, enableLogicallyDelete bool) (s Sync, err er
 		return nil, err
 	}
 
-	srcAbsPath, err := filepath.Abs(src.Path())
+	sourceAbsPath, err := filepath.Abs(source.Path())
 	if err != nil {
 		return nil, err
 	}
@@ -43,11 +43,11 @@ func NewDiskSync(src, dest core.VFS, enableLogicallyDelete bool) (s Sync, err er
 	}
 
 	s = &diskSync{
-		srcAbsPath:  srcAbsPath,
-		destAbsPath: destAbsPath,
-		src:         src,
-		dest:        dest,
-		baseSync:    newBaseSync(enableLogicallyDelete),
+		sourceAbsPath: sourceAbsPath,
+		destAbsPath:   destAbsPath,
+		source:        source,
+		dest:          dest,
+		baseSync:      newBaseSync(enableLogicallyDelete),
 	}
 	return s, nil
 }
@@ -102,7 +102,7 @@ func (s *diskSync) Create(path string) error {
 	return nil
 }
 
-// Write sync the src file to the dest
+// Write sync the source file to the dest
 func (s *diskSync) Write(path string) error {
 	dest, err := s.buildDestAbsFile(path)
 	if err != nil {
@@ -117,16 +117,16 @@ func (s *diskSync) Write(path string) error {
 	if isDir {
 		return s.SyncOnce(path)
 	} else {
-		srcFile, err := os.Open(path)
+		sourceFile, err := os.Open(path)
 		if err != nil {
 			return err
 		}
 		defer func() {
-			if err = srcFile.Close(); err != nil {
-				log.Error(err, "Write:close the src file error")
+			if err = sourceFile.Close(); err != nil {
+				log.Error(err, "Write:close the source file error")
 			}
 		}()
-		srcStat, err := srcFile.Stat()
+		sourceStat, err := sourceFile.Stat()
 		if err != nil {
 			return err
 		}
@@ -145,17 +145,17 @@ func (s *diskSync) Write(path string) error {
 			return err
 		}
 
-		if srcStat.Size() == 0 {
-			log.Info("write to the dest file success [size=%d] [%s] -> [%s]", srcStat.Size(), path, dest)
+		if sourceStat.Size() == 0 {
+			log.Info("write to the dest file success [size=%d] [%s] -> [%s]", sourceStat.Size(), path, dest)
 			return nil
 		}
 
-		reader := bufio.NewReader(srcFile)
+		reader := bufio.NewReader(sourceFile)
 		writer := bufio.NewWriter(destFile)
 
-		// if src and dest is the same file, ignore the following steps and return directly
-		if srcStat.Size() > 0 && srcStat.Size() == destStat.Size() {
-			isSame, err := s.same(srcFile, destFile)
+		// if source and dest is the same file, ignore the following steps and return directly
+		if sourceStat.Size() > 0 && sourceStat.Size() == destStat.Size() {
+			isSame, err := s.same(sourceFile, destFile)
 			if err == nil && isSame {
 				log.Debug("Write:ignored, the file is unmodified => %s", path)
 				return nil
@@ -181,7 +181,7 @@ func (s *diskSync) Write(path string) error {
 		err = writer.Flush()
 
 		if err == nil {
-			log.Info("write to the dest file success, size[%d => %d] [%s] => [%s]", srcStat.Size(), n, path, dest)
+			log.Info("write to the dest file success, size[%d => %d] [%s] => [%s]", sourceStat.Size(), n, path, dest)
 
 			// change file times
 			if _, aTime, mTime, err := util.GetFileTime(path); err == nil {
@@ -198,10 +198,10 @@ func (s *diskSync) Write(path string) error {
 	return nil
 }
 
-func (s *diskSync) same(srcFile *os.File, destFile *os.File) (bool, error) {
-	srcHash, err := util.MD5FromFile(srcFile)
+func (s *diskSync) same(sourceFile *os.File, destFile *os.File) (bool, error) {
+	sourceHash, err := util.MD5FromFile(sourceFile)
 	if err != nil {
-		log.Error(err, "calculate md5 hash of the src file error [%s]", srcFile.Name())
+		log.Error(err, "calculate md5 hash of the source file error [%s]", sourceFile.Name())
 		return false, err
 	}
 
@@ -211,7 +211,7 @@ func (s *diskSync) same(srcFile *os.File, destFile *os.File) (bool, error) {
 		return false, err
 	}
 
-	if len(srcHash) > 0 && srcHash == destHash {
+	if len(sourceHash) > 0 && sourceHash == destHash {
 		return true, nil
 	}
 
@@ -251,14 +251,14 @@ func (s *diskSync) Chmod(path string) error {
 }
 
 // buildDestAbsFile build dest abs file path
-// srcFileAbs: src abs file path
-func (s *diskSync) buildDestAbsFile(srcFileAbs string) (string, error) {
-	srcFileRel, err := filepath.Rel(s.srcAbsPath, srcFileAbs)
+// sourceFileAbs: source abs file path
+func (s *diskSync) buildDestAbsFile(sourceFileAbs string) (string, error) {
+	sourceFileRel, err := filepath.Rel(s.sourceAbsPath, sourceFileAbs)
 	if err != nil {
-		log.Error(err, "parse rel path error, basePath=%s destPath=%s", s.srcAbsPath, srcFileRel)
+		log.Error(err, "parse rel path error, basePath=%s destPath=%s", s.sourceAbsPath, sourceFileRel)
 		return "", err
 	}
-	return filepath.Join(s.destAbsPath, srcFileRel), nil
+	return filepath.Join(s.destAbsPath, sourceFileRel), nil
 }
 
 func (s *diskSync) IsDir(path string) (bool, error) {
@@ -269,7 +269,7 @@ func (s *diskSync) IsDir(path string) (bool, error) {
 	return f.IsDir(), nil
 }
 
-// SyncOnce auto sync src directory to dest directory once.
+// SyncOnce auto sync source directory to dest directory once.
 func (s *diskSync) SyncOnce(path string) error {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
@@ -292,7 +292,7 @@ func (s *diskSync) SyncOnce(path string) error {
 }
 
 func (s *diskSync) Source() core.VFS {
-	return s.src
+	return s.source
 }
 
 func (s *diskSync) Dest() core.VFS {
