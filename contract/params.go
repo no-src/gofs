@@ -46,12 +46,12 @@ func (v FsDirValue) String() string {
 	return strconv.Itoa(int(v))
 }
 
-// Is is current value equal to target
+// Is is current value equal to dest
 func (v FsDirValue) Is(t string) bool {
 	return v.String() == t
 }
 
-// Not is current value not equal to target
+// Not is current value not equal to dest
 func (v FsDirValue) Not(t string) bool {
 	return v.String() != t
 }

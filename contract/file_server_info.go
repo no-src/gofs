@@ -7,8 +7,8 @@ type FileServerInfo struct {
 	ServerAddr string `json:"server_addr"`
 	// SrcPath the src base path of the file server
 	SrcPath string `json:"src_path"`
-	// TargetPath the target base path of the file server
-	TargetPath string `json:"target_path"`
+	// DestPath the dest base path of the file server
+	DestPath string `json:"dest_path"`
 	// QueryAddr the query api path of the file server
 	QueryAddr string `json:"query_addr"`
 }

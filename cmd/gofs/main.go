@@ -90,7 +90,7 @@ func main() {
 	if enableFileServer {
 		waitInit := retry.NewWaitDone()
 		go func() {
-			err := fs.StartFileServer(server.NewServerOption(sourceVFS, targetVFS, fileServerAddr, waitInit, enableTLS, tlsCertFile, tlsKeyFile, userList, enableFileServerCompress, webLogger, enablePprof, pprofPrivate))
+			err := fs.StartFileServer(server.NewServerOption(source, dest, fileServerAddr, waitInit, enableTLS, tlsCertFile, tlsKeyFile, userList, enableFileServerCompress, webLogger, enablePprof, pprofPrivate))
 			if err != nil {
 				log.Error(err, "start the file server [%s] error", fileServerAddr)
 			}
@@ -99,7 +99,7 @@ func main() {
 	}
 
 	// create syncer
-	syncer, err := sync.NewSync(sourceVFS, targetVFS, enableTLS, tlsCertFile, tlsKeyFile, userList, enableLogicallyDelete)
+	syncer, err := sync.NewSync(source, dest, enableTLS, tlsCertFile, tlsKeyFile, userList, enableLogicallyDelete)
 	if err != nil {
 		log.Error(err, "create the instance of Sync error")
 		return

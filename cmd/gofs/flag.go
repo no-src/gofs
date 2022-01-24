@@ -19,8 +19,8 @@ var (
 	printVersion bool
 
 	// file sync
-	sourceVFS             core.VFS
-	targetVFS             core.VFS
+	source                core.VFS
+	dest                  core.VFS
 	syncOnce              bool
 	syncCron              string
 	enableLogicallyDelete bool
@@ -76,11 +76,11 @@ func parseFlags() {
 	flag.BoolVar(&printVersion, "v", false, "print the version info")
 
 	// file sync
-	core.VFSVar(&sourceVFS, "src", core.NewEmptyVFS(), "the source path by monitor")
-	core.VFSVar(&targetVFS, "target", core.NewEmptyVFS(), "the target path to backup")
-	flag.BoolVar(&syncOnce, "sync_once", false, "sync src directory to target directory once")
-	flag.StringVar(&syncCron, "sync_cron", "", "sync src directory to target directory with cron")
-	flag.BoolVar(&enableLogicallyDelete, "logically_delete", false, "delete target file logically")
+	core.VFSVar(&source, "src", core.NewEmptyVFS(), "the source path by monitor")
+	core.VFSVar(&dest, "dest", core.NewEmptyVFS(), "the dest path to backup")
+	flag.BoolVar(&syncOnce, "sync_once", false, "sync src directory to dest directory once")
+	flag.StringVar(&syncCron, "sync_cron", "", "sync src directory to dest directory with cron")
+	flag.BoolVar(&enableLogicallyDelete, "logically_delete", false, "delete dest file logically")
 
 	// retry
 	flag.IntVar(&retryCount, "retry_count", 15, "if execute failed, then retry to work -retry_count times")
@@ -104,7 +104,7 @@ func parseFlags() {
 	flag.BoolVar(&isSubprocess, daemon.SubprocessTag, false, "tag current process is subprocess")
 
 	// file server
-	flag.BoolVar(&enableFileServer, "server", false, "start a file server to browse source directory and target directory")
+	flag.BoolVar(&enableFileServer, "server", false, "start a file server to browse source directory and dest directory")
 	flag.StringVar(&fileServerAddr, "server_addr", server.DefaultAddrHttps, "a file server binding address")
 	flag.BoolVar(&enableFileServerCompress, "server_compress", false, "enable response compression for the file server")
 	flag.BoolVar(&enablePprof, "pprof", false, "enable the pprof route")
@@ -131,7 +131,7 @@ func initFlags() error {
 	}
 
 	// if start a remote server monitor, auto enable file server
-	if sourceVFS.Server() {
+	if source.Server() {
 		enableFileServer = true
 	}
 
@@ -150,7 +150,7 @@ func initFlags() error {
 		}
 	}
 
-	if enableTLS && (sourceVFS.Server() || enableFileServer) {
+	if enableTLS && (source.Server() || enableFileServer) {
 		exist, err := util.FileExist(tlsCertFile)
 		if err != nil {
 			return err

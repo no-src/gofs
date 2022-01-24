@@ -21,29 +21,29 @@ import (
 
 type remoteClientSync struct {
 	baseSync
-	src           core.VFS
-	target        core.VFS
-	targetAbsPath string
-	currentUser   *auth.User
-	cookies       []*http.Cookie
+	src         core.VFS
+	dest        core.VFS
+	destAbsPath string
+	currentUser *auth.User
+	cookies     []*http.Cookie
 }
 
 // NewRemoteClientSync create an instance of remoteClientSync to receive the file change message and execute it
-func NewRemoteClientSync(src, target core.VFS, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
-	if len(target.Path()) == 0 {
-		return nil, errors.New("target is not found")
+func NewRemoteClientSync(src, dest core.VFS, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
+	if len(dest.Path()) == 0 {
+		return nil, errors.New("dest is not found")
 	}
 
-	targetAbsPath, err := filepath.Abs(target.Path())
+	destAbsPath, err := filepath.Abs(dest.Path())
 	if err != nil {
 		return nil, err
 	}
 
 	rs := &remoteClientSync{
-		targetAbsPath: targetAbsPath,
-		src:           src,
-		target:        target,
-		baseSync:      newBaseSync(enableLogicallyDelete),
+		destAbsPath: destAbsPath,
+		src:         src,
+		dest:        dest,
+		baseSync:    newBaseSync(enableLogicallyDelete),
 	}
 	if len(users) > 0 {
 		rs.currentUser = users[0]
@@ -52,12 +52,12 @@ func NewRemoteClientSync(src, target core.VFS, users []*auth.User, enableLogical
 }
 
 func (rs *remoteClientSync) Create(path string) error {
-	target, err := rs.buildTargetAbsFile(path)
+	dest, err := rs.buildDestAbsFile(path)
 	if err != nil {
 		return err
 	}
 
-	exist, err := util.FileExist(target)
+	exist, err := util.FileExist(dest)
 	if err != nil {
 		return err
 	}
@@ -70,17 +70,17 @@ func (rs *remoteClientSync) Create(path string) error {
 		return err
 	}
 	if isDir {
-		err = os.MkdirAll(target, os.ModePerm)
+		err = os.MkdirAll(dest, os.ModePerm)
 		if err != nil {
 			return err
 		}
 	} else {
-		dir := filepath.Dir(target)
+		dir := filepath.Dir(dest)
 		err = os.MkdirAll(dir, os.ModePerm)
 		if err != nil {
 			return err
 		}
-		f, err := util.CreateFile(target)
+		f, err := util.CreateFile(dest)
 		defer func() {
 			if err = f.Close(); err != nil {
 				log.Error(err, "Create:close file error")
@@ -94,16 +94,16 @@ func (rs *remoteClientSync) Create(path string) error {
 	if err != nil {
 		return err
 	}
-	err = os.Chtimes(target, aTime, mTime)
+	err = os.Chtimes(dest, aTime, mTime)
 	if err != nil {
 		return err
 	}
-	log.Info("create the target file success [%s] -> [%s]", path, target)
+	log.Info("create the dest file success [%s] -> [%s]", path, dest)
 	return nil
 }
 
 func (rs *remoteClientSync) Write(path string) error {
-	target, err := rs.buildTargetAbsFile(path)
+	dest, err := rs.buildDestAbsFile(path)
 	if err != nil {
 		return err
 	}
@@ -126,22 +126,22 @@ func (rs *remoteClientSync) Write(path string) error {
 			}
 		}()
 
-		targetFile, err := util.OpenRWFile(target)
+		destFile, err := util.OpenRWFile(dest)
 		if err != nil {
 			return err
 		}
 		defer func() {
-			if err = targetFile.Close(); err != nil {
-				log.Error(err, "Write:close the target file error")
+			if err = destFile.Close(); err != nil {
+				log.Error(err, "Write:close the dest file error")
 			}
 		}()
-		targetStat, err := targetFile.Stat()
+		destStat, err := destFile.Stat()
 		if err != nil {
 			return err
 		}
 
 		reader := bufio.NewReader(resp.Body)
-		writer := bufio.NewWriter(targetFile)
+		writer := bufio.NewWriter(destFile)
 
 		size, hash, _, aTime, mTime, err := rs.fileInfo(path)
 		if err != nil {
@@ -149,25 +149,25 @@ func (rs *remoteClientSync) Write(path string) error {
 		}
 
 		if size == 0 {
-			log.Info("write to the target file success [size=%d] [%s] -> [%s]", size, path, target)
+			log.Info("write to the dest file success [size=%d] [%s] -> [%s]", size, path, dest)
 			return nil
 		}
 
-		// if src and target is the same file, ignore the following steps and return directly
-		if size > 0 && size == targetStat.Size() {
-			isSame, err := rs.same(hash, targetFile)
+		// if src and dest is the same file, ignore the following steps and return directly
+		if size > 0 && size == destStat.Size() {
+			isSame, err := rs.same(hash, destFile)
 			if err == nil && isSame {
 				log.Debug("Write:ignored, the file is unmodified => %s", path)
 				return nil
 			}
 			// reset the offset
-			if _, err = targetFile.Seek(0, 0); err != nil {
+			if _, err = destFile.Seek(0, 0); err != nil {
 				return err
 			}
 		}
 
 		// truncate first before write to file
-		err = targetFile.Truncate(0)
+		err = destFile.Truncate(0)
 		if err != nil {
 			return err
 		}
@@ -180,11 +180,11 @@ func (rs *remoteClientSync) Write(path string) error {
 		err = writer.Flush()
 
 		if err == nil {
-			log.Info("write to the target file success, size[%d => %d] [%s] => [%s]", size, n, path, target)
+			log.Info("write to the dest file success, size[%d => %d] [%s] => [%s]", size, n, path, dest)
 
 			// change file times
-			if err := os.Chtimes(target, aTime, mTime); err != nil {
-				log.Warn("Write:change file times error => %s =>[%s]", err.Error(), target)
+			if err := os.Chtimes(dest, aTime, mTime); err != nil {
+				log.Warn("Write:change file times error => %s =>[%s]", err.Error(), dest)
 			}
 		} else {
 			return err
@@ -198,17 +198,17 @@ func (rs *remoteClientSync) Remove(path string) error {
 }
 
 func (rs *remoteClientSync) remove(path string, forceDelete bool) error {
-	target, err := rs.buildTargetAbsFile(path)
+	dest, err := rs.buildDestAbsFile(path)
 	if err != nil {
 		return err
 	}
 	if !forceDelete && rs.enableLogicallyDelete {
-		err = rs.logicallyDelete(target)
+		err = rs.logicallyDelete(dest)
 	} else {
-		err = os.RemoveAll(target)
+		err = os.RemoveAll(dest)
 	}
 	if err == nil {
-		log.Info("remove file success [%s] -> [%s]", path, target)
+		log.Info("remove file success [%s] -> [%s]", path, dest)
 	}
 	return err
 }
@@ -342,30 +342,28 @@ func (rs *remoteClientSync) sync(serverAddr, path string) error {
 	return nil
 }
 
-func (rs *remoteClientSync) buildTargetAbsFile(srcFileAbs string) (string, error) {
+func (rs *remoteClientSync) buildDestAbsFile(srcFileAbs string) (string, error) {
 	remoteUrl, err := url.Parse(srcFileAbs)
 	if err != nil {
 		log.Error(err, "parse url error, srcFileAbs=%s", srcFileAbs)
 		return "", err
 	}
-	target := filepath.Join(rs.targetAbsPath, strings.TrimPrefix(remoteUrl.Path, server.SrcRoutePrefix))
-	return target, nil
+	return filepath.Join(rs.destAbsPath, strings.TrimPrefix(remoteUrl.Path, server.SrcRoutePrefix)), nil
 }
 
-func (rs *remoteClientSync) same(srcHash string, targetFile *os.File) (bool, error) {
+func (rs *remoteClientSync) same(srcHash string, destFile *os.File) (bool, error) {
 	if len(srcHash) == 0 {
 		return false, nil
 	}
-	targetHash, err := util.MD5FromFile(targetFile)
+	destHash, err := util.MD5FromFile(destFile)
 	if err != nil {
-		log.Error(err, "calculate md5 hash of the target file error [%s]", targetFile.Name())
+		log.Error(err, "calculate md5 hash of the dest file error [%s]", destFile.Name())
 		return false, err
 	}
 
-	if len(srcHash) > 0 && srcHash == targetHash {
+	if len(srcHash) > 0 && srcHash == destHash {
 		return true, nil
 	}
-
 	return false, nil
 }
 
@@ -373,8 +371,8 @@ func (rs *remoteClientSync) Source() core.VFS {
 	return rs.src
 }
 
-func (rs *remoteClientSync) Target() core.VFS {
-	return rs.target
+func (rs *remoteClientSync) Dest() core.VFS {
+	return rs.dest
 }
 
 func (rs *remoteClientSync) httpGetWithAuth(rawURL string) (resp *http.Response, err error) {

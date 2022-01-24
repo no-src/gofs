@@ -36,15 +36,15 @@ func (h *fileApiHandler) Handle(c *gin.Context) {
 	path := c.Query(contract.FsPath)
 	needHash := c.Query(contract.FsNeedHash)
 	srcPrefix := strings.Trim(server.SrcRoutePrefix, "/")
-	targetPrefix := strings.Trim(server.TargetRoutePrefix, "/")
-	if !strings.HasPrefix(strings.ToLower(path), srcPrefix) && !strings.HasPrefix(strings.ToLower(path), targetPrefix) {
-		c.JSON(http.StatusOK, server.NewErrorApiResult(-1, "must start with src or target"))
+	destPrefix := strings.Trim(server.DestRoutePrefix, "/")
+	if !strings.HasPrefix(strings.ToLower(path), srcPrefix) && !strings.HasPrefix(strings.ToLower(path), destPrefix) {
+		c.JSON(http.StatusOK, server.NewErrorApiResult(-1, "must start with src or dest"))
 		return
 	}
 
 	path = filepath.Clean(path)
 	path = filepath.ToSlash(path)
-	if !strings.HasPrefix(strings.ToLower(path), srcPrefix) && !strings.HasPrefix(strings.ToLower(path), targetPrefix) {
+	if !strings.HasPrefix(strings.ToLower(path), srcPrefix) && !strings.HasPrefix(strings.ToLower(path), destPrefix) {
 		c.JSON(http.StatusOK, server.NewErrorApiResult(-2, "invalid path"))
 		return
 	}

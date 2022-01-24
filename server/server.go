@@ -12,7 +12,7 @@ var enableTLS bool
 
 const (
 	SrcRoutePrefix       = "/src/"
-	TargetRoutePrefix    = "/target/"
+	DestRoutePrefix      = "/dest/"
 	QueryRoute           = "/query"
 	LoginRoute           = "/login"
 	LoginIndexRoute      = "/index"
