@@ -25,7 +25,7 @@ import (
 func StartFileServer(opt server.Option) error {
 	enableFileApi := false
 	src := opt.Src
-	target := opt.Target
+	dest := opt.Dest
 	logger := opt.Logger
 
 	// change default mode is release
@@ -95,8 +95,8 @@ func StartFileServer(opt server.Option) error {
 		enableFileApi = true
 	}
 
-	if target.IsDisk() {
-		rootGroup.StaticFS(server.TargetRoutePrefix, http.Dir(target.Path()))
+	if dest.IsDisk() {
+		rootGroup.StaticFS(server.DestRoutePrefix, http.Dir(dest.Path()))
 		enableFileApi = true
 	}
 

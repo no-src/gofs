@@ -24,12 +24,12 @@ type remoteServerSync struct {
 }
 
 // NewRemoteServerSync create an instance of remoteServerSync execute send file change message
-func NewRemoteServerSync(src, target core.VFS, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
+func NewRemoteServerSync(src, dest core.VFS, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
 	if len(src.Path()) == 0 {
 		return nil, errors.New("src is not found")
 	}
-	if len(target.Path()) == 0 {
-		return nil, errors.New("target is not found")
+	if len(dest.Path()) == 0 {
+		return nil, errors.New("dest is not found")
 	}
 
 	srcAbsPath, err := filepath.Abs(src.Path())
@@ -37,17 +37,17 @@ func NewRemoteServerSync(src, target core.VFS, enableTLS bool, certFile string, 
 		return nil, err
 	}
 
-	targetAbsPath, err := filepath.Abs(target.Path())
+	destAbsPath, err := filepath.Abs(dest.Path())
 	if err != nil {
 		return nil, err
 	}
 
 	ds := diskSync{
-		srcAbsPath:    srcAbsPath,
-		targetAbsPath: targetAbsPath,
-		src:           src,
-		target:        target,
-		baseSync:      newBaseSync(enableLogicallyDelete),
+		srcAbsPath:  srcAbsPath,
+		destAbsPath: destAbsPath,
+		src:         src,
+		dest:        dest,
+		baseSync:    newBaseSync(enableLogicallyDelete),
 	}
 
 	rs := &remoteServerSync{
@@ -253,7 +253,7 @@ func (rs *remoteServerSync) infoCommand(client *tran.Conn) (cmd contract.Command
 			Status:     contract.SuccessStatus(contract.InfoApi),
 			ServerAddr: rs.serverAddr,
 			SrcPath:    server.SrcRoutePrefix,
-			TargetPath: server.TargetRoutePrefix,
+			DestPath:   server.DestRoutePrefix,
 			QueryAddr:  server.QueryRoute,
 		}
 	} else {

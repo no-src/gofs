@@ -9,7 +9,7 @@ import (
 
 type Option struct {
 	Src            core.VFS
-	Target         core.VFS
+	Dest           core.VFS
 	Addr           string
 	Init           retry.WaitDone
 	EnableTLS      bool
@@ -22,10 +22,10 @@ type Option struct {
 	PprofPrivate   bool
 }
 
-func NewServerOption(src core.VFS, target core.VFS, addr string, init retry.WaitDone, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableCompress bool, logger log.Logger, enablePprof bool, pprofPrivate bool) Option {
+func NewServerOption(src core.VFS, dest core.VFS, addr string, init retry.WaitDone, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableCompress bool, logger log.Logger, enablePprof bool, pprofPrivate bool) Option {
 	opt := Option{
 		Src:            src,
-		Target:         target,
+		Dest:           dest,
 		Addr:           addr,
 		Init:           init,
 		EnableTLS:      enableTLS,

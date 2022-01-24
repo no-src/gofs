@@ -8,14 +8,14 @@
 | Login Page                            | /login/index   |    GET    |              |
 | User Sign In API                      | /signin        |    POST   |              |
 | Src File Server                       | /src/          |    GET    |              |
-| Target File Server                    | /target/       |    GET    |              |
+| DestPath File Server                  | /dest/         |    GET    |              |
 | [File Query API](#file-query-api)     | /query         |    GET    |              |
 | PProf API                             | /debug/pprof   |    GET    |              |
 
 
 ### File Query API
 
-Support query src or target path from [File Server](/README.md#file-server).
+Support query src or dest path from [File Server](/README.md#file-server).
 
 #### Method
 

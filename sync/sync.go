@@ -20,20 +20,20 @@ type Sync interface {
 	Chmod(path string) error
 	// IsDir is a dir the path
 	IsDir(path string) (bool, error)
-	// SyncOnce sync the path to target once
+	// SyncOnce sync the path to dest once
 	SyncOnce(path string) error
 	// Source the source file system
 	Source() core.VFS
-	// Target the target file system
-	Target() core.VFS
+	// Dest the destination file system
+	Dest() core.VFS
 }
 
-// NewSync auto create an instance of the expected sync according to src and target
-func NewSync(src core.VFS, target core.VFS, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
-	if src.IsDisk() && target.IsDisk() {
-		return NewDiskSync(src, target, enableLogicallyDelete)
+// NewSync auto create an instance of the expected sync according to src and dest
+func NewSync(src core.VFS, dest core.VFS, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
+	if src.IsDisk() && dest.IsDisk() {
+		return NewDiskSync(src, dest, enableLogicallyDelete)
 	} else if src.Is(core.RemoteDisk) {
-		return NewRemoteSync(src, target, enableTLS, certFile, keyFile, users, enableLogicallyDelete)
+		return NewRemoteSync(src, dest, enableTLS, certFile, keyFile, users, enableLogicallyDelete)
 	}
-	return nil, fmt.Errorf("file system unsupported ! src=>%s target=>%s", src.Type().String(), target.Type().String())
+	return nil, fmt.Errorf("file system unsupported ! src=>%s dest=>%s", src.Type().String(), dest.Type().String())
 }
