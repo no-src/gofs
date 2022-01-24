@@ -17,20 +17,20 @@ func main() {
 	parseFlags()
 
 	// if current is subprocess, then reset the "-kill_ppid" and "-daemon"
-	if isSubprocess {
-		killPPid = false
-		isDaemon = false
+	if config.IsSubprocess {
+		config.KillPPid = false
+		config.IsDaemon = false
 	}
 
 	// init logger
 	var loggers []log.Logger
-	loggers = append(loggers, log.NewConsoleLogger(log.Level(logLevel)))
-	if enableFileLogger {
+	loggers = append(loggers, log.NewConsoleLogger(log.Level(config.LogLevel)))
+	if config.EnableFileLogger {
 		filePrefix := "gofs_"
-		if isDaemon {
+		if config.IsDaemon {
 			filePrefix += "daemon_"
 		}
-		flogger, err := log.NewFileLoggerWithAutoFlush(log.Level(logLevel), logDir, filePrefix, logFlush, logFlushInterval)
+		flogger, err := log.NewFileLoggerWithAutoFlush(log.Level(config.LogLevel), config.LogDir, filePrefix, config.LogFlush, config.LogFlushInterval)
 		if err != nil {
 			log.Error(err, "init file logger error")
 			return
@@ -42,7 +42,7 @@ func main() {
 	defer log.Close()
 
 	// print version info
-	if printVersion {
+	if config.PrintVersion {
 		version.PrintVersionInfo()
 		return
 	}
@@ -54,31 +54,31 @@ func main() {
 	}
 
 	// kill parent process
-	if killPPid {
+	if config.KillPPid {
 		daemon.KillPPid()
 	}
 
 	// start the daemon
-	if isDaemon {
+	if config.IsDaemon {
 		go signal.Notify(daemon.Shutdown)
-		daemon.Daemon(daemonPid, daemonDelay, daemonMonitorDelay)
+		daemon.Daemon(config.DaemonPid, config.DaemonDelay, config.DaemonMonitorDelay)
 		log.Info("daemon exited")
 		return
 	}
 
 	// if enable daemon, start a worker to process the following
 
-	userList, err := auth.ParseUsers(users)
+	userList, err := auth.ParseUsers(config.Users)
 	if err != nil {
-		log.Error(err, "parse users error => [%s]", users)
+		log.Error(err, "parse users error => [%s]", config.Users)
 		return
 	}
 
 	// init web server logger
-	var webLogger = log.NewConsoleLogger(log.Level(logLevel))
+	var webLogger = log.NewConsoleLogger(log.Level(config.LogLevel))
 	defer webLogger.Close()
-	if enableFileLogger && enableFileServer {
-		webFileLogger, err := log.NewFileLoggerWithAutoFlush(log.Level(logLevel), logDir, "web_", logFlush, logFlushInterval)
+	if config.EnableFileLogger && config.EnableFileServer {
+		webFileLogger, err := log.NewFileLoggerWithAutoFlush(log.Level(config.LogLevel), config.LogDir, "web_", config.LogFlush, config.LogFlushInterval)
 		if err != nil {
 			log.Error(err, "init the web server file logger error")
 			return
@@ -87,32 +87,32 @@ func main() {
 	}
 
 	// start a file server
-	if enableFileServer {
+	if config.EnableFileServer {
 		waitInit := retry.NewWaitDone()
 		go func() {
-			err := fs.StartFileServer(server.NewServerOption(source, dest, fileServerAddr, waitInit, enableTLS, tlsCertFile, tlsKeyFile, userList, enableFileServerCompress, webLogger, enablePprof, pprofPrivate))
+			err := fs.StartFileServer(server.NewServerOption(config.Source, config.Dest, config.FileServerAddr, waitInit, config.EnableTLS, config.TLSCertFile, config.TLSKeyFile, userList, config.EnableFileServerCompress, webLogger, config.EnablePProf, config.PProfPrivate))
 			if err != nil {
-				log.Error(err, "start the file server [%s] error", fileServerAddr)
+				log.Error(err, "start the file server [%s] error", config.FileServerAddr)
 			}
 		}()
 		waitInit.Wait()
 	}
 
 	// create syncer
-	syncer, err := sync.NewSync(source, dest, enableTLS, tlsCertFile, tlsKeyFile, userList, enableLogicallyDelete)
+	syncer, err := sync.NewSync(config.Source, config.Dest, config.EnableTLS, config.TLSCertFile, config.TLSKeyFile, userList, config.EnableLogicallyDelete)
 	if err != nil {
 		log.Error(err, "create the instance of Sync error")
 		return
 	}
 
 	// create retry
-	retry := retry.NewRetry(retryCount, retryWait, retryAsync)
+	retry := retry.NewRetry(config.RetryCount, config.RetryWait, config.RetryAsync)
 
 	// init event log
 	var eventLogger = log.NewEmptyLogger()
 	defer eventLogger.Close()
-	if enableEventLog {
-		eventFileLogger, err := log.NewFileLoggerWithAutoFlush(log.Level(logLevel), logDir, "event_", logFlush, logFlushInterval)
+	if config.EnableEventLog {
+		eventFileLogger, err := log.NewFileLoggerWithAutoFlush(log.Level(config.LogLevel), config.LogDir, "event_", config.LogFlush, config.LogFlushInterval)
 		if err != nil {
 			log.Error(err, "init the event file logger error")
 			return
@@ -121,13 +121,13 @@ func main() {
 	}
 
 	// create monitor
-	monitor, err := monitor.NewMonitor(syncer, retry, syncOnce, enableTLS, userList, eventLogger)
+	monitor, err := monitor.NewMonitor(syncer, retry, config.SyncOnce, config.EnableTLS, userList, eventLogger)
 	if err != nil {
 		log.Error(err, "create the instance of Monitor error")
 		return
 	}
 
-	err = monitor.SyncCron(syncCron)
+	err = monitor.SyncCron(config.SyncCron)
 	if err != nil {
 		log.Error(err, "register sync cron task error")
 		return
