@@ -27,6 +27,7 @@ func parseFlags() {
 
 	// other
 	flag.BoolVar(&config.PrintVersion, "v", false, "print the version info")
+	flag.BoolVar(&config.PrintAbout, "about", false, "print the about info")
 
 	// file sync
 	core.VFSVar(&config.Source, "source", core.NewEmptyVFS(), "the source path by monitor")

@@ -226,3 +226,9 @@ $ gofs -h
 ```bash
 $ gofs -v
 ```
+
+### About Info
+
+```bash
+$ gofs -about
+```

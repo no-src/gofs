@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/no-src/gofs/about"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/daemon"
 	"github.com/no-src/gofs/internal/signal"
@@ -43,7 +44,13 @@ func main() {
 
 	// print version info
 	if config.PrintVersion {
-		version.PrintVersionInfo()
+		version.PrintVersion()
+		return
+	}
+
+	// print about info
+	if config.PrintAbout {
+		about.PrintAbout()
 		return
 	}
 

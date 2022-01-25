@@ -8,6 +8,7 @@ import (
 type Config struct {
 	// other
 	PrintVersion bool
+	PrintAbout   bool
 
 	// file sync
 	Source                core.VFS
