@@ -188,11 +188,12 @@ func (m *remoteClientMonitor) receive() retry.Wait {
 								return innerErr
 							}
 						}
-						if !m.authorized {
-							return m.auth()
-						}
 						return nil
 					}, fmt.Sprintf("client reconnect to %s:%d", m.client.Host(), m.client.Port()))
+
+					if !m.authorized {
+						go m.auth()
+					}
 				}
 			} else {
 				var status contract.Status
