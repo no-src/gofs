@@ -90,9 +90,11 @@ func (client *tcpClient) isClosedError(err error) bool {
 	err = errors.Unwrap(err)
 	syscallErr := &os.SyscallError{}
 	if errors.As(err, &syscallErr) {
-		syscallErr = interface{}(err).(*os.SyscallError)
-		if syscallErr.Syscall == "wsarecv" || syscallErr.Syscall == "connectex" {
+		syscall := syscallErr.Syscall
+		if syscall == "wsarecv" || syscall == "connectex" || syscall == "read" || syscall == "connect" {
 			return true
+		} else {
+			log.Error(err, "get a unknown error")
 		}
 	}
 	return false
