@@ -21,8 +21,8 @@ import (
 
 type remoteClientSync struct {
 	baseSync
-	source core.VFS
-	dest   core.VFS
+	source      core.VFS
+	dest        core.VFS
 	destAbsPath string
 	currentUser *auth.User
 	cookies     []*http.Cookie
@@ -296,7 +296,10 @@ func (rs *remoteClientSync) sync(serverAddr, path string) error {
 	if err != nil {
 		return err
 	}
-	if apiResult.Code != 0 {
+	if apiResult.Code == contract.NotFound {
+		// cancel retry to write when the file does not exist
+		return os.ErrNotExist
+	} else if apiResult.Code != contract.Success {
 		return errors.New(fmt.Sprintf("query error:%s", apiResult.Message))
 	}
 	if apiResult.Data == nil {
@@ -379,6 +382,9 @@ func (rs *remoteClientSync) httpGetWithAuth(rawURL string) (resp *http.Response,
 	resp, err = util.HttpGetWithCookie(rawURL, rs.cookies...)
 	if err != nil {
 		return nil, err
+	}
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, os.ErrNotExist
 	}
 	if resp.StatusCode == http.StatusUnauthorized && rs.currentUser != nil {
 		// auto login

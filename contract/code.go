@@ -12,6 +12,8 @@ const (
 	Fail Code = -1
 	// Unauthorized the unauthorized status code, the current user needs to sign in
 	Unauthorized Code = -2
+	// NotFound the resource not found status code
+	NotFound Code = -3
 )
 
 const (
@@ -21,4 +23,6 @@ const (
 	FailDesc = "fail"
 	// UnauthorizedDesc the description of Unauthorized code
 	UnauthorizedDesc = "unauthorized"
+	// NotFoundDesc the description of NotFound code
+	NotFoundDesc = "not found"
 )
