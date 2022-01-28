@@ -7,6 +7,7 @@ import (
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/core"
+	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
@@ -57,7 +58,7 @@ func (rs *remoteClientSync) Create(path string) error {
 		return err
 	}
 
-	exist, err := util.FileExist(dest)
+	exist, err := fs.FileExist(dest)
 	if err != nil {
 		return err
 	}
@@ -80,7 +81,7 @@ func (rs *remoteClientSync) Create(path string) error {
 		if err != nil {
 			return err
 		}
-		f, err := util.CreateFile(dest)
+		f, err := fs.CreateFile(dest)
 		defer func() {
 			if err = f.Close(); err != nil {
 				log.Error(err, "Create:close file error")
@@ -126,7 +127,7 @@ func (rs *remoteClientSync) Write(path string) error {
 			}
 		}()
 
-		destFile, err := util.OpenRWFile(dest)
+		destFile, err := fs.OpenRWFile(dest)
 		if err != nil {
 			return err
 		}

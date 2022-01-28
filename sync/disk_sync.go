@@ -4,9 +4,10 @@ import (
 	"bufio"
 	"errors"
 	"github.com/no-src/gofs/core"
+	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
-	"io/fs"
+	iofs "io/fs"
 	"os"
 	"path/filepath"
 )
@@ -58,7 +59,7 @@ func (s *diskSync) Create(path string) error {
 	if err != nil {
 		return err
 	}
-	exist, err := util.FileExist(dest)
+	exist, err := fs.FileExist(dest)
 	if err != nil {
 		return err
 	}
@@ -80,7 +81,7 @@ func (s *diskSync) Create(path string) error {
 		if err != nil {
 			return err
 		}
-		f, err := util.CreateFile(dest)
+		f, err := fs.CreateFile(dest)
 		defer func() {
 			if err = f.Close(); err != nil {
 				log.Error(err, "Create:close file error")
@@ -90,7 +91,7 @@ func (s *diskSync) Create(path string) error {
 			return err
 		}
 	}
-	_, aTime, mTime, err := util.GetFileTime(path)
+	_, aTime, mTime, err := fs.GetFileTime(path)
 	if err != nil {
 		return err
 	}
@@ -131,7 +132,7 @@ func (s *diskSync) Write(path string) error {
 			return err
 		}
 
-		destFile, err := util.OpenRWFile(dest)
+		destFile, err := fs.OpenRWFile(dest)
 		if err != nil {
 			return err
 		}
@@ -184,7 +185,7 @@ func (s *diskSync) Write(path string) error {
 			log.Info("write to the dest file success, size[%d => %d] [%s] => [%s]", sourceStat.Size(), n, path, dest)
 
 			// change file times
-			if _, aTime, mTime, err := util.GetFileTime(path); err == nil {
+			if _, aTime, mTime, err := fs.GetFileTime(path); err == nil {
 				if err = os.Chtimes(dest, aTime, mTime); err != nil {
 					log.Warn("Write:change file times error => %s =>[%s]", err.Error(), dest)
 				}
@@ -275,7 +276,7 @@ func (s *diskSync) SyncOnce(path string) error {
 	if err != nil {
 		return err
 	}
-	return filepath.WalkDir(absPath, func(currentPath string, d fs.DirEntry, err error) error {
+	return filepath.WalkDir(absPath, func(currentPath string, d iofs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}

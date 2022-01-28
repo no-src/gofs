@@ -7,8 +7,8 @@ import (
 	"github.com/no-src/gofs/conf"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/daemon"
+	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/server"
-	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
 	"os"
 	"time"
@@ -105,14 +105,14 @@ func initFlags() error {
 	}
 
 	if config.EnableTLS && (config.Source.Server() || config.EnableFileServer) {
-		exist, err := util.FileExist(config.TLSCertFile)
+		exist, err := fs.FileExist(config.TLSCertFile)
 		if err != nil {
 			return err
 		}
 		if !exist {
 			return fmt.Errorf("cert file is not found for tls => [%s], for more information, see -tls and -tls_cert_file flags", config.TLSCertFile)
 		}
-		exist, err = util.FileExist(config.TLSKeyFile)
+		exist, err = fs.FileExist(config.TLSKeyFile)
 		if err != nil {
 			return err
 		}

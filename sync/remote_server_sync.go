@@ -7,6 +7,7 @@ import (
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/core"
+	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/tran"
 	"github.com/no-src/gofs/util"
@@ -151,7 +152,7 @@ func (rs *remoteServerSync) send(action Action, path string) (err error) {
 
 	if action == WriteAction || action == CreateAction {
 		var timeErr error
-		cTime, aTime, mTime, timeErr = util.GetFileTime(path)
+		cTime, aTime, mTime, timeErr = fs.GetFileTime(path)
 		if timeErr != nil {
 			return timeErr
 		}

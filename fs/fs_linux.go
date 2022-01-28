@@ -1,4 +1,4 @@
-package util
+package fs
 
 import (
 	"errors"
@@ -19,11 +19,11 @@ func GetFileTime(path string) (cTime time.Time, aTime time.Time, mTime time.Time
 // GetFileTimeBySys get the create time, last access time, last modify time of the FileInfo.Sys()
 func GetFileTimeBySys(sys interface{}) (cTime time.Time, aTime time.Time, mTime time.Time, err error) {
 	if sys != nil {
-		attr := sys.(*syscall.Win32FileAttributeData)
+		attr := sys.(*syscall.Stat_t)
 		if attr != nil {
-			cTime = time.Unix(0, attr.CreationTime.Nanoseconds())
-			aTime = time.Unix(0, attr.LastAccessTime.Nanoseconds())
-			mTime = time.Unix(0, attr.LastWriteTime.Nanoseconds())
+			cTime = time.Unix(attr.Ctim.Sec, attr.Ctim.Nsec)
+			aTime = time.Unix(attr.Atim.Sec, attr.Atim.Nsec)
+			mTime = time.Unix(attr.Mtim.Sec, attr.Mtim.Nsec)
 		}
 	} else {
 		err = errors.New("file sys info is nil")

@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/no-src/gofs/contract"
+	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
@@ -77,7 +78,7 @@ func (h *fileApiHandler) Handle(c *gin.Context) {
 			return
 		}
 		for _, file := range files {
-			cTime, aTime, mTime, fsTimeErr := util.GetFileTimeBySys(file.Sys())
+			cTime, aTime, mTime, fsTimeErr := fs.GetFileTimeBySys(file.Sys())
 			if fsTimeErr != nil {
 				h.logger.Error(fsTimeErr, "get file times error => %s", file.Name())
 				cTime = time.Now()
