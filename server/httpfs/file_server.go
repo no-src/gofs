@@ -1,7 +1,7 @@
 //go:build !no_server
 // +build !no_server
 
-package fs
+package httpfs
 
 import (
 	"fmt"
