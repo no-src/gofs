@@ -26,19 +26,19 @@ type remoteServerSync struct {
 
 // NewRemoteServerSync create an instance of remoteServerSync execute send file change message
 func NewRemoteServerSync(source, dest core.VFS, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
-	if len(source.Path()) == 0 {
+	if source.IsEmpty() {
 		return nil, errors.New("source is not found")
 	}
-	if len(dest.Path()) == 0 {
+	if dest.IsEmpty() {
 		return nil, errors.New("dest is not found")
 	}
 
-	sourceAbsPath, err := filepath.Abs(source.Path())
+	sourceAbsPath, err := source.Abs()
 	if err != nil {
 		return nil, err
 	}
 
-	destAbsPath, err := filepath.Abs(dest.Path())
+	destAbsPath, err := dest.Abs()
 	if err != nil {
 		return nil, err
 	}

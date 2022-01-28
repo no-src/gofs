@@ -35,6 +35,16 @@ func (vfs *VFS) Path() string {
 	return vfs.path
 }
 
+// Abs returns an absolute representation of path
+func (vfs *VFS) Abs() (string, error) {
+	return filepath.Abs(vfs.Path())
+}
+
+// IsEmpty whether the file path is empty
+func (vfs *VFS) IsEmpty() bool {
+	return len(vfs.Path()) == 0
+}
+
 // Type file system type
 func (vfs *VFS) Type() VFSType {
 	return vfs.fsType

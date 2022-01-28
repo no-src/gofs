@@ -24,21 +24,21 @@ type diskSync struct {
 // source is source path to read
 // dest is dest path to write
 func NewDiskSync(source, dest core.VFS, enableLogicallyDelete bool) (s Sync, err error) {
-	if len(source.Path()) == 0 {
+	if source.IsEmpty() {
 		err = errors.New("source is not found")
 		return nil, err
 	}
-	if len(dest.Path()) == 0 {
+	if dest.IsEmpty() {
 		err = errors.New("dest is not found")
 		return nil, err
 	}
 
-	sourceAbsPath, err := filepath.Abs(source.Path())
+	sourceAbsPath, err := source.Abs()
 	if err != nil {
 		return nil, err
 	}
 
-	destAbsPath, err := filepath.Abs(dest.Path())
+	destAbsPath, err := dest.Abs()
 	if err != nil {
 		return nil, err
 	}

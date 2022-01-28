@@ -31,11 +31,11 @@ type remoteClientSync struct {
 
 // NewRemoteClientSync create an instance of remoteClientSync to receive the file change message and execute it
 func NewRemoteClientSync(source, dest core.VFS, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
-	if len(dest.Path()) == 0 {
+	if dest.IsEmpty() {
 		return nil, errors.New("dest is not found")
 	}
 
-	destAbsPath, err := filepath.Abs(dest.Path())
+	destAbsPath, err := dest.Abs()
 	if err != nil {
 		return nil, err
 	}
