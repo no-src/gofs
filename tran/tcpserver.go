@@ -10,6 +10,7 @@ import (
 	"github.com/no-src/log"
 	"net"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -18,7 +19,7 @@ type tcpServer struct {
 	ip        net.IP
 	port      int
 	listener  net.Listener
-	conns     map[string]*Conn
+	conns     sync.Map
 	closed    bool
 	users     []*auth.HashUser
 	certFile  string
@@ -32,7 +33,6 @@ func NewServer(ip string, port int, enableTLS bool, certFile string, keyFile str
 		ip:        net.ParseIP(ip),
 		port:      port,
 		network:   "tcp",
-		conns:     make(map[string]*Conn),
 		enableTLS: enableTLS,
 		certFile:  certFile,
 		keyFile:   keyFile,
@@ -116,8 +116,8 @@ func (srv *tcpServer) addClient(conn *Conn) (clientCount int, err error) {
 	}
 	conn.StartAuthCheck()
 	addr := strings.ToLower(conn.RemoteAddr().String())
-	_, exist := srv.conns[addr]
-	srv.conns[addr] = conn
+	_, exist := srv.conns.Load(addr)
+	srv.conns.Store(addr, conn)
 	if exist {
 		log.Debug("client[%s]conn is already exist, replace it now", conn.RemoteAddr().String())
 	}
@@ -133,20 +133,29 @@ func (srv *tcpServer) removeClient(conn *Conn) (clientCount int, err error) {
 	}
 	conn.StopAuthCheck()
 	addr := strings.ToLower(conn.RemoteAddr().String())
-	delete(srv.conns, addr)
+	srv.conns.Delete(addr)
 	clientCount = srv.ClientCount()
 	log.Info("client[%s]conn removed, current client connect count:%d", conn.RemoteAddr().String(), clientCount)
 	return clientCount, err
 }
 
 func (srv *tcpServer) ClientCount() int {
-	return len(srv.conns)
+	count := 0
+	srv.conns.Range(func(key, value interface{}) bool {
+		count++
+		return true
+	})
+	return count
 }
 
 func (srv *tcpServer) Send(data []byte) error {
-	for _, c := range srv.conns {
-		if !c.authorized.Get() {
-			continue
+	srv.conns.Range(func(key, value interface{}) bool {
+		if value == nil {
+			return true
+		}
+		c := value.(*Conn)
+		if c == nil || !c.authorized.Get() {
+			return true
 		}
 		writer := bufio.NewWriter(c)
 		result := append(data, EndIdentity...)
@@ -159,7 +168,8 @@ func (srv *tcpServer) Send(data []byte) error {
 		if err != nil {
 			log.Error(err, "tcp server:Send message error => Flush")
 		}
-	}
+		return true
+	})
 	return nil
 }
 
