@@ -6,6 +6,7 @@ import (
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/eventlog"
+	"github.com/no-src/gofs/internal/cbool"
 	"github.com/no-src/gofs/internal/clist"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/sync"
@@ -22,7 +23,7 @@ import (
 type remoteClientMonitor struct {
 	baseMonitor
 	client      tran.Client
-	closed      bool
+	closed      *cbool.CBool
 	messages    *clist.CList
 	syncOnce    bool
 	currentUser *auth.HashUser
@@ -50,6 +51,7 @@ func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, 
 		baseMonitor: newBaseMonitor(syncer, retry, eventWriter),
 		authChan:    make(chan contract.Status, 100),
 		infoChan:    make(chan message, 100),
+		closed:      cbool.New(false),
 	}
 	if len(users) > 0 {
 		user := users[0]
@@ -152,12 +154,12 @@ func (m *remoteClientMonitor) sync() (err error) {
 
 func (m *remoteClientMonitor) receive() retry.Wait {
 	wd := retry.NewWaitDone()
-	shutdown := false
+	shutdown := cbool.New(false)
 	go func() {
 		select {
-		case shutdown = <-m.shutdown:
+		case <-shutdown.SetC(<-m.shutdown):
 			{
-				if shutdown {
+				if shutdown.Get() {
 					if err := m.Close(); err != nil {
 						log.Error(err, "close remote client monitor error")
 					}
@@ -168,13 +170,13 @@ func (m *remoteClientMonitor) receive() retry.Wait {
 	}()
 	go func() {
 		for {
-			if m.closed {
+			if m.closed.Get() {
 				wd.DoneWithError(errors.New("remote monitor is closed"))
 				break
 			}
 			data, err := m.client.ReadAll()
 			if err != nil {
-				if shutdown {
+				if shutdown.Get() {
 					break
 				}
 				log.Error(err, "remote client monitor read data error")
@@ -292,7 +294,7 @@ func (m *remoteClientMonitor) processingMessage() {
 }
 
 func (m *remoteClientMonitor) Close() error {
-	m.closed = true
+	m.closed.Set(true)
 	if m.client != nil {
 		return m.client.Close()
 	}

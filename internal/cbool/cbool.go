@@ -25,3 +25,12 @@ func (cb *CBool) Set(v bool) {
 	defer cb.mu.Unlock()
 	cb.v = v
 }
+
+func (cb *CBool) SetC(v bool) <-chan bool {
+	cb.mu.Lock()
+	defer cb.mu.Unlock()
+	cb.v = v
+	c := make(chan bool, 1)
+	c <- v
+	return c
+}

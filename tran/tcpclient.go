@@ -6,10 +6,12 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/no-src/gofs/internal/cbool"
 	"github.com/no-src/log"
 	"io"
 	"net"
 	"os"
+	"sync"
 )
 
 type tcpClient struct {
@@ -17,8 +19,9 @@ type tcpClient struct {
 	host      string
 	port      int
 	innerConn net.Conn
-	closed    bool
+	closed    *cbool.CBool
 	enableTLS bool
+	mu        sync.Mutex
 }
 
 var (
@@ -31,8 +34,9 @@ func NewClient(host string, port int, enableTLS bool) Client {
 		host:      host,
 		port:      port,
 		network:   "tcp",
-		closed:    true,
+		closed:    cbool.New(true),
 		enableTLS: enableTLS,
+		mu:        sync.Mutex{},
 	}
 	return client
 }
@@ -54,7 +58,7 @@ func (client *tcpClient) Connect() (err error) {
 		client.checkAndTagState(err)
 		log.Error(err, "client connect failed")
 	} else {
-		client.closed = false
+		client.closed.Set(false)
 	}
 	return err
 }
@@ -153,7 +157,9 @@ func (client *tcpClient) Port() int {
 }
 
 func (client *tcpClient) Close() error {
-	client.closed = true
+	client.mu.Lock()
+	defer client.mu.Unlock()
+	client.closed.Set(true)
 	if client.innerConn != nil {
 		return client.innerConn.Close()
 	}
@@ -162,8 +168,10 @@ func (client *tcpClient) Close() error {
 }
 
 func (client *tcpClient) IsClosed() bool {
-	if client.closed || client.innerConn == nil {
-		client.closed = true
+	client.mu.Lock()
+	defer client.mu.Unlock()
+	if client.closed.Get() || client.innerConn == nil {
+		client.closed.Set(true)
 		return true
 	}
 	return false
