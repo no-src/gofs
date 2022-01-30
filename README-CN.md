@@ -1,5 +1,11 @@
 # gofs
 
+[![Chat](https://img.shields.io/discord/936876326722363472)](https://discord.gg/Ww6bXCcsgv)
+[![Build](https://img.shields.io/github/workflow/status/no-src/gofs/Go)](https://github.com/no-src/gofs/actions)
+[![License](https://img.shields.io/github/license/no-src/gofs)](https://github.com/no-src/gofs/blob/main/LICENSE)
+[![Go Reference](https://pkg.go.dev/badge/github.com/no-src/gofs.svg)](https://pkg.go.dev/github.com/no-src/gofs)
+[![Release](https://img.shields.io/github/v/release/no-src/gofs)](https://github.com/no-src/gofs/releases)
+
 [English](README.md) | 简体中文
 
 基于golang开发的一款开箱即用的文件同步工具
