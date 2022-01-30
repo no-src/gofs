@@ -128,8 +128,7 @@ func (m *remoteClientMonitor) Start() error {
 
 func (m *remoteClientMonitor) sync() (err error) {
 	go func() {
-		err = m.client.Write(contract.InfoCommand)
-		if err != nil {
+		if err := m.client.Write(contract.InfoCommand); err != nil {
 			log.Error(err, "write info command error")
 		}
 	}()
