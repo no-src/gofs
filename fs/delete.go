@@ -14,6 +14,9 @@ var deletedPathRegexp *regexp.Regexp
 
 // LogicallyDelete delete the path logically
 func LogicallyDelete(path string) error {
+	if IsDeleted(path) {
+		return nil
+	}
 	deletedFile := toDeletedPath(path)
 	err := os.Rename(path, deletedFile)
 	if os.IsNotExist(err) {
