@@ -161,7 +161,9 @@ func (client *tcpClient) Close() error {
 	defer client.mu.Unlock()
 	client.closed.Set(true)
 	if client.innerConn != nil {
-		return client.innerConn.Close()
+		if err := client.innerConn.Close(); err != nil {
+			return err
+		}
 	}
 	client.innerConn = nil
 	return nil

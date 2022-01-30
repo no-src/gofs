@@ -111,7 +111,7 @@ func (m *remoteClientMonitor) Start() error {
 
 	// execute -sync_once flag
 	if m.syncOnce {
-		return m.sync()
+		return m.syncAndWaitShutdown(w)
 	}
 
 	// execute -sync_cron flag
@@ -149,6 +149,16 @@ func (m *remoteClientMonitor) sync() (err error) {
 	}
 
 	return m.syncer.SyncOnce(info.ServerAddr + info.SourcePath)
+}
+
+func (m *remoteClientMonitor) syncAndWaitShutdown(w retry.Wait) (err error) {
+	if err = m.sync(); err != nil {
+		return err
+	}
+	if err = m.Shutdown(); err != nil {
+		return err
+	}
+	return w.Wait()
 }
 
 func (m *remoteClientMonitor) receive() retry.Wait {

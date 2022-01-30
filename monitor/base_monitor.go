@@ -193,6 +193,5 @@ func (m *baseMonitor) Shutdown() (err error) {
 		}
 	}()
 	m.shutdown <- true
-	close(m.shutdown)
 	return err
 }
