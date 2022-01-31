@@ -35,5 +35,4 @@ func NewMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, enableTLS bo
 		return NewRemoteClientMonitor(syncer, retry, syncOnce, source.Host(), source.Port(), enableTLS, users, eventWriter)
 	}
 	return nil, fmt.Errorf("file system unsupported ! source=>%s", source.Type().String())
-
 }

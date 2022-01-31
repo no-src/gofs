@@ -289,11 +289,3 @@ func (s *diskSync) SyncOnce(path string) error {
 		return err
 	})
 }
-
-func (s *diskSync) Source() core.VFS {
-	return s.source
-}
-
-func (s *diskSync) Dest() core.VFS {
-	return s.dest
-}

@@ -23,3 +23,11 @@ func newBaseSync(source, dest core.VFS, enableLogicallyDelete bool) baseSync {
 func (s *baseSync) logicallyDelete(path string) error {
 	return fs.LogicallyDelete(path)
 }
+
+func (s *baseSync) Source() core.VFS {
+	return s.source
+}
+
+func (s *baseSync) Dest() core.VFS {
+	return s.dest
+}

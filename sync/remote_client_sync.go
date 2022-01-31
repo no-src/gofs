@@ -367,14 +367,6 @@ func (rs *remoteClientSync) same(sourceHash string, destFile *os.File) (bool, er
 	return false, nil
 }
 
-func (rs *remoteClientSync) Source() core.VFS {
-	return rs.source
-}
-
-func (rs *remoteClientSync) Dest() core.VFS {
-	return rs.dest
-}
-
 func (rs *remoteClientSync) httpGetWithAuth(rawURL string) (resp *http.Response, err error) {
 	resp, err = util.HttpGetWithCookie(rawURL, rs.cookies...)
 	if err != nil {
