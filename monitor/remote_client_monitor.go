@@ -25,7 +25,6 @@ type remoteClientMonitor struct {
 	client      tran.Client
 	closed      *cbool.CBool
 	messages    *clist.CList
-	syncOnce    bool
 	currentUser *auth.HashUser
 	authorized  bool
 	authChan    chan contract.Status
@@ -47,8 +46,7 @@ func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, 
 	m := &remoteClientMonitor{
 		client:      tran.NewClient(host, port, enableTLS),
 		messages:    clist.New(),
-		syncOnce:    syncOnce,
-		baseMonitor: newBaseMonitor(syncer, retry, eventWriter),
+		baseMonitor: newBaseMonitor(syncer, retry, syncOnce, eventWriter),
 		authChan:    make(chan contract.Status, 100),
 		infoChan:    make(chan message, 100),
 		closed:      cbool.New(false),

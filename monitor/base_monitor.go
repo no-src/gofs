@@ -28,10 +28,11 @@ type baseMonitor struct {
 	syncSpec    string
 	cronChan    chan bool
 	shutdown    chan bool
+	syncOnce    bool
 	el          eventlog.EventLog
 }
 
-func newBaseMonitor(syncer sync.Sync, retry retry.Retry, eventWriter io.Writer) baseMonitor {
+func newBaseMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, eventWriter io.Writer) baseMonitor {
 	return baseMonitor{
 		syncer:      syncer,
 		retry:       retry,
@@ -40,6 +41,7 @@ func newBaseMonitor(syncer sync.Sync, retry retry.Retry, eventWriter io.Writer) 
 		writeNotify: make(chan bool, 100),
 		cronChan:    make(chan bool, 1),
 		shutdown:    make(chan bool, 1),
+		syncOnce:    syncOnce,
 		el:          eventlog.New(eventWriter),
 	}
 }

@@ -20,7 +20,6 @@ import (
 type fsNotifyMonitor struct {
 	baseMonitor
 	watcher  *fsnotify.Watcher
-	syncOnce bool
 	events   *clist.CList
 }
 
@@ -36,8 +35,7 @@ func NewFsNotifyMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, even
 	}
 	m = &fsNotifyMonitor{
 		watcher:     watcher,
-		syncOnce:    syncOnce,
-		baseMonitor: newBaseMonitor(syncer, retry, eventWriter),
+		baseMonitor: newBaseMonitor(syncer, retry, syncOnce,eventWriter),
 		events:      clist.New(),
 	}
 	return m, nil
