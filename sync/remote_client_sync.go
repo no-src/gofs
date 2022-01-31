@@ -22,8 +22,6 @@ import (
 
 type remoteClientSync struct {
 	baseSync
-	source      core.VFS
-	dest        core.VFS
 	destAbsPath string
 	currentUser *auth.User
 	cookies     []*http.Cookie
@@ -42,9 +40,7 @@ func NewRemoteClientSync(source, dest core.VFS, users []*auth.User, enableLogica
 
 	rs := &remoteClientSync{
 		destAbsPath: destAbsPath,
-		source:      source,
-		dest:        dest,
-		baseSync:    newBaseSync(enableLogicallyDelete),
+		baseSync:    newBaseSync(source, dest, enableLogicallyDelete),
 	}
 	if len(users) > 0 {
 		rs.currentUser = users[0]

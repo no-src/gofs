@@ -1,15 +1,20 @@
 package sync
 
 import (
+	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/fs"
 )
 
 type baseSync struct {
+	source                core.VFS
+	dest                  core.VFS
 	enableLogicallyDelete bool
 }
 
-func newBaseSync(enableLogicallyDelete bool) baseSync {
+func newBaseSync(source, dest core.VFS, enableLogicallyDelete bool) baseSync {
 	return baseSync{
+		source:                source,
+		dest:                  dest,
 		enableLogicallyDelete: enableLogicallyDelete,
 	}
 }

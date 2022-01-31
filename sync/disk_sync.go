@@ -14,8 +14,6 @@ import (
 
 type diskSync struct {
 	baseSync
-	source        core.VFS
-	dest          core.VFS
 	sourceAbsPath string
 	destAbsPath   string
 }
@@ -24,13 +22,15 @@ type diskSync struct {
 // source is source path to read
 // dest is dest path to write
 func NewDiskSync(source, dest core.VFS, enableLogicallyDelete bool) (s Sync, err error) {
+	return newDiskSync(source, dest, enableLogicallyDelete)
+}
+
+func newDiskSync(source, dest core.VFS, enableLogicallyDelete bool) (s *diskSync, err error) {
 	if source.IsEmpty() {
-		err = errors.New("source is not found")
-		return nil, err
+		return nil, errors.New("source is not found")
 	}
 	if dest.IsEmpty() {
-		err = errors.New("dest is not found")
-		return nil, err
+		return nil, errors.New("dest is not found")
 	}
 
 	sourceAbsPath, err := source.Abs()
@@ -46,9 +46,7 @@ func NewDiskSync(source, dest core.VFS, enableLogicallyDelete bool) (s Sync, err
 	s = &diskSync{
 		sourceAbsPath: sourceAbsPath,
 		destAbsPath:   destAbsPath,
-		source:        source,
-		dest:          dest,
-		baseSync:      newBaseSync(enableLogicallyDelete),
+		baseSync:      newBaseSync(source, dest, enableLogicallyDelete),
 	}
 	return s, nil
 }

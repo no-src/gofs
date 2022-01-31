@@ -26,33 +26,13 @@ type remoteServerSync struct {
 
 // NewRemoteServerSync create an instance of remoteServerSync execute send file change message
 func NewRemoteServerSync(source, dest core.VFS, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
-	if source.IsEmpty() {
-		return nil, errors.New("source is not found")
-	}
-	if dest.IsEmpty() {
-		return nil, errors.New("dest is not found")
-	}
-
-	sourceAbsPath, err := source.Abs()
+	ds, err := newDiskSync(source, dest, enableLogicallyDelete)
 	if err != nil {
 		return nil, err
-	}
-
-	destAbsPath, err := dest.Abs()
-	if err != nil {
-		return nil, err
-	}
-
-	ds := diskSync{
-		sourceAbsPath: sourceAbsPath,
-		destAbsPath:   destAbsPath,
-		source:        source,
-		dest:          dest,
-		baseSync:      newBaseSync(enableLogicallyDelete),
 	}
 
 	rs := &remoteServerSync{
-		diskSync: ds,
+		diskSync: *ds,
 	}
 	rs.server = tran.NewServer(source.Host(), source.Port(), enableTLS, certFile, keyFile, users)
 
