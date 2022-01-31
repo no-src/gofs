@@ -229,7 +229,7 @@ func (s *diskSync) remove(path string, forceDelete bool) error {
 	if err != nil {
 		return err
 	}
-	if s.enableLogicallyDelete {
+	if !forceDelete && s.enableLogicallyDelete {
 		err = s.logicallyDelete(dest)
 	} else {
 		err = os.RemoveAll(dest)
