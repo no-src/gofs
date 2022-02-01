@@ -122,7 +122,7 @@ func main() {
 	}
 
 	// create retry
-	retry := retry.NewRetry(config.RetryCount, config.RetryWait, config.RetryAsync)
+	r := retry.NewRetry(config.RetryCount, config.RetryWait, config.RetryAsync)
 
 	// init event log
 	var eventLogger = log.NewEmptyLogger()
@@ -137,13 +137,13 @@ func main() {
 	}
 
 	// create monitor
-	monitor, err := monitor.NewMonitor(syncer, retry, config.SyncOnce, config.EnableTLS, userList, eventLogger)
+	m, err := monitor.NewMonitor(syncer, r, config.SyncOnce, config.EnableTLS, userList, eventLogger)
 	if err != nil {
 		log.Error(err, "create the instance of Monitor error")
 		return
 	}
 
-	err = monitor.SyncCron(config.SyncCron)
+	err = m.SyncCron(config.SyncCron)
 	if err != nil {
 		log.Error(err, "register sync cron task error")
 		return
@@ -152,9 +152,9 @@ func main() {
 	// start monitor
 	log.Info("monitor is starting...")
 	defer log.Info("gofs exited")
-	go signal.Notify(monitor.Shutdown)
-	defer monitor.Close()
-	err = monitor.Start()
+	go signal.Notify(m.Shutdown)
+	defer m.Close()
+	err = m.Start()
 	if err != nil {
 		log.Error(err, "start to monitor failed")
 	}

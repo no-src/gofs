@@ -41,12 +41,12 @@ func NewRemoteServerSync(source, dest core.VFS, enableTLS bool, certFile string,
 		if !server.EnableTLS() {
 			scheme = server.SchemeHttp
 		}
-		rs.serverAddr = server.GenerateAddr(scheme, rs.server.Host(), server.ServerPort())
+		rs.serverAddr = server.GenerateAddr(scheme, rs.server.Host(), server.Port())
 	} else {
 		rs.serverAddr = source.FsServer()
 	}
 	rs.serverAddr = strings.TrimRight(rs.serverAddr, "/")
-	if server.ServerPort() <= 0 {
+	if server.Port() <= 0 {
 		log.Warn("create remote server sync warning, you should enable the file server with -server flag")
 	}
 	return rs, rs.start()

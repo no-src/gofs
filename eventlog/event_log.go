@@ -9,7 +9,7 @@ import (
 // EventLog the event log recorder
 type EventLog interface {
 	// Write write event info to output writer
-	Write(event event)
+	Write(event event) error
 }
 
 type eventLog struct {
@@ -23,6 +23,7 @@ func New(w io.Writer) EventLog {
 	}
 }
 
-func (el *eventLog) Write(event event) {
-	el.w.Write([]byte(fmt.Sprintf("[%s]%s\n", time.Now().Format("2006-01-02 15:04:05.999"), event.String())))
+func (el *eventLog) Write(event event) error {
+	_, err := el.w.Write([]byte(fmt.Sprintf("[%s]%s\n", time.Now().Format("2006-01-02 15:04:05.999"), event.String())))
+	return err
 }

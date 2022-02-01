@@ -384,9 +384,9 @@ func (rs *remoteClientSync) httpGetWithAuth(rawURL string) (resp *http.Response,
 		loginUrl := fmt.Sprintf("%s://%s%s", parseUrl.Scheme, parseUrl.Host, server.LoginSignInFullRoute)
 		form := url.Values{}
 		user := rs.currentUser
-		form.Set(server.ServerParamUserName, user.UserName())
-		form.Set(server.ServerParamPassword, user.Password())
-		log.Debug("try to auto login file server %s=%s %s=%s", server.ServerParamUserName, user.UserName(), server.ServerParamPassword, user.Password())
+		form.Set(server.ParamUserName, user.UserName())
+		form.Set(server.ParamPassword, user.Password())
+		log.Debug("try to auto login file server %s=%s %s=%s", server.ParamUserName, user.UserName(), server.ParamPassword, user.Password())
 		loginResp, err := util.HttpPostWithoutRedirect(loginUrl, form)
 		if err != nil {
 			return nil, err

@@ -107,7 +107,6 @@ func (srv *tcpServer) Accept(process func(client *Conn, data []byte)) (err error
 
 		}()
 	}
-	return err
 }
 
 func (srv *tcpServer) addClient(conn *Conn) (clientCount int, err error) {

@@ -32,9 +32,9 @@ func (h *loginHandler) Handle(c *gin.Context) {
 		}
 	}()
 
-	userName := c.PostForm(server.ServerParamUserName)
-	password := c.PostForm(server.ServerParamPassword)
-	returnUrl := c.PostForm(server.ServerParamReturnUrl)
+	userName := c.PostForm(server.ParamUserName)
+	password := c.PostForm(server.ParamPassword)
+	returnUrl := c.PostForm(server.ParamReturnUrl)
 	if len(returnUrl) == 0 {
 		returnUrl = "/"
 	} else {

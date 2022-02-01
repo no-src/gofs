@@ -1,7 +1,7 @@
 package server
 
 const (
-	ServerParamUserName  = "username"
-	ServerParamPassword  = "password"
-	ServerParamReturnUrl = "return_url"
+	ParamUserName  = "username"
+	ParamPassword  = "password"
+	ParamReturnUrl = "return_url"
 )

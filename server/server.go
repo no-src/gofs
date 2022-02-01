@@ -11,8 +11,8 @@ var serverAddr *net.TCPAddr
 var enableTLS bool
 
 const (
-	SourceRoutePrefix = "/source/"
-	DestRoutePrefix   = "/dest/"
+	SourceRoutePrefix    = "/source/"
+	DestRoutePrefix      = "/dest/"
 	QueryRoute           = "/query"
 	LoginRoute           = "/login"
 	LoginIndexRoute      = "/index"
@@ -49,13 +49,13 @@ func InitServerInfo(addr string, tls bool) {
 	enableTLS = tls
 }
 
-// ServerAddr the addr of file server running
-func ServerAddr() *net.TCPAddr {
+// Addr the addr of file server running
+func Addr() *net.TCPAddr {
 	return serverAddr
 }
 
-// ServerPort the port of file server running
-func ServerPort() int {
+// Port the port of file server running
+func Port() int {
 	if serverAddr != nil {
 		return serverAddr.Port
 	}
