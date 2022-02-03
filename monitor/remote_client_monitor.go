@@ -6,6 +6,7 @@ import (
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/eventlog"
+	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/internal/cbool"
 	"github.com/no-src/gofs/internal/clist"
 	"github.com/no-src/gofs/retry"
@@ -254,6 +255,9 @@ func (m *remoteClientMonitor) processingMessage() {
 			log.Error(err, "client unmarshal data error")
 		} else if msg.Code != contract.Success {
 			log.Error(errors.New(msg.Message), "remote monitor received the error message")
+		} else if fs.IsDeleted(msg.Path) {
+			// ignore
+			log.Debug("[remote client monitor] ignore deleted file [%s] => [%s]", msg.Action.String(), msg.Path)
 		} else {
 			values := url.Values{}
 			values.Add(contract.FsDir, msg.IsDir.String())

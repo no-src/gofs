@@ -312,6 +312,10 @@ func (rs *remoteClientSync) sync(serverAddr, path string) error {
 		return err
 	}
 	for _, file := range files {
+		if fs.IsDeleted(file.Path) {
+			log.Debug("[remote client sync] sync once ignore deleted file => [%s]", file.Path)
+			continue
+		}
 		currentPath := path + "/" + file.Path
 		values := url.Values{}
 		values.Add(contract.FsDir, file.IsDir.String())

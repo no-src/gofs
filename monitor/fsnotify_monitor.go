@@ -5,13 +5,14 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/eventlog"
+	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/internal/clist"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
 	"io"
-	"io/fs"
+	iofs "io/fs"
 	"os"
 	"path/filepath"
 	"time"
@@ -19,8 +20,8 @@ import (
 
 type fsNotifyMonitor struct {
 	baseMonitor
-	watcher  *fsnotify.Watcher
-	events   *clist.CList
+	watcher *fsnotify.Watcher
+	events  *clist.CList
 }
 
 // NewFsNotifyMonitor create an instance of fsNotifyMonitor to monitor the disk change
@@ -35,7 +36,7 @@ func NewFsNotifyMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, even
 	}
 	m = &fsNotifyMonitor{
 		watcher:     watcher,
-		baseMonitor: newBaseMonitor(syncer, retry, syncOnce,eventWriter),
+		baseMonitor: newBaseMonitor(syncer, retry, syncOnce, eventWriter),
 		events:      clist.New(),
 	}
 	return m, nil
@@ -47,7 +48,7 @@ func (m *fsNotifyMonitor) monitor(dir string) (err error) {
 		log.Error(err, "parse dir to abs dir error")
 		return err
 	}
-	err = filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+	err = filepath.WalkDir(dir, func(path string, d iofs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -127,13 +128,6 @@ func (m *fsNotifyMonitor) listenEvents() error {
 }
 
 func (m *fsNotifyMonitor) processEvents() error {
-	// action trigger
-	// cp => Create -> Write
-	// mv => Rename -> Create +->Write
-	// rm => Remove
-	// echo => Write
-	// touch => Create -> Chmod
-	// chmod => Chmod
 	for {
 		element := m.events.Front()
 		if element == nil || element.Value == nil {
@@ -145,7 +139,10 @@ func (m *fsNotifyMonitor) processEvents() error {
 		}
 
 		event := element.Value.(fsnotify.Event)
-		if event.Op&fsnotify.Write == fsnotify.Write {
+		if fs.IsDeleted(event.Name) {
+			// ignore
+			log.Debug("[monitor] ignore deleted file [%s] => [%s]", event.Op.String(), event.Name)
+		} else if event.Op&fsnotify.Write == fsnotify.Write {
 			// ignore is not exist error
 			if err := m.syncer.Create(event.Name); err != nil && !os.IsNotExist(err) {
 				log.Error(err, "Write event execute create error => [%s]", event.Name)

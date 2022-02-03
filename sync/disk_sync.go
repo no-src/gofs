@@ -278,6 +278,10 @@ func (s *diskSync) SyncOnce(path string) error {
 		if err != nil {
 			return err
 		}
+		if fs.IsDeleted(currentPath) {
+			log.Debug("[disk sync] sync once ignore deleted file => [%s]", currentPath)
+			return nil
+		}
 		if d.IsDir() {
 			err = s.Create(currentPath)
 		} else {
