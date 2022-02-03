@@ -57,5 +57,5 @@ func toDeletedPath(path string) string {
 }
 
 func init() {
-	deletedPathRegexp = regexp.MustCompile(`^[\s\S]+\.[0-9]{10,}\.deleted$`)
+	deletedPathRegexp = regexp.MustCompile(`^[\s\S]+\.[0-9]{10,}\.(?i)deleted$`)
 }
