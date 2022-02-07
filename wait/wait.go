@@ -1,4 +1,4 @@
-package retry
+package wait
 
 // WaitDone support execute the work synchronously
 type WaitDone interface {

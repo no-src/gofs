@@ -13,6 +13,7 @@ import (
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/tran"
 	"github.com/no-src/gofs/util"
+	"github.com/no-src/gofs/wait"
 	"github.com/no-src/log"
 	"io"
 	"net/url"
@@ -150,7 +151,7 @@ func (m *remoteClientMonitor) sync() (err error) {
 	return m.syncer.SyncOnce(info.ServerAddr + info.SourcePath)
 }
 
-func (m *remoteClientMonitor) syncAndWaitShutdown(w retry.Wait) (err error) {
+func (m *remoteClientMonitor) syncAndWaitShutdown(w wait.Wait) (err error) {
 	if err = m.sync(); err != nil {
 		return err
 	}
@@ -160,8 +161,8 @@ func (m *remoteClientMonitor) syncAndWaitShutdown(w retry.Wait) (err error) {
 	return w.Wait()
 }
 
-func (m *remoteClientMonitor) receive() retry.Wait {
-	wd := retry.NewWaitDone()
+func (m *remoteClientMonitor) receive() wait.Wait {
+	wd := wait.NewWaitDone()
 	shutdown := cbool.New(false)
 	go func() {
 		select {

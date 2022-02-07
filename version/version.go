@@ -8,7 +8,7 @@ import (
 )
 
 // VERSION the current program version info
-const VERSION = "v0.2.4"
+const VERSION = "v0.3.0"
 
 // PrintVersion print the current version info, and append the commit info if the commit file is not empty
 func PrintVersion() {

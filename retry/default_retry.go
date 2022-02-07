@@ -2,59 +2,60 @@ package retry
 
 import (
 	"context"
+	"github.com/no-src/gofs/wait"
 	"github.com/no-src/log"
 	"time"
 )
 
 type defaultRetry struct {
-	retryCount int
-	retryWait  time.Duration
-	retryAsync bool
+	count int
+	wait  time.Duration
+	async bool
 }
 
-// NewRetry get a default retry instance
-// retryCount retry execute count
-// retryWait execute once per retryWait interval
-// retryAsync async or sync to execute retry
-func NewRetry(retryCount int, retryWait time.Duration, retryAsync bool) Retry {
+// New get a default retry instance
+// count the retry execute count
+// wait execute once per wait interval
+// async is async or sync to execute retry
+func New(count int, wait time.Duration, async bool) Retry {
 	r := &defaultRetry{
-		retryCount: retryCount,
-		retryWait:  retryWait,
-		retryAsync: retryAsync,
+		count: count,
+		wait:  wait,
+		async: async,
 	}
 	return r
 }
 
-func (r *defaultRetry) Do(f func() error, desc string) Wait {
+func (r *defaultRetry) Do(f func() error, desc string) wait.Wait {
 	return r.DoWithContext(context.Background(), f, desc)
 }
 
-func (r *defaultRetry) DoWithContext(ctx context.Context, f func() error, desc string) Wait {
+func (r *defaultRetry) DoWithContext(ctx context.Context, f func() error, desc string) wait.Wait {
 	defer func() {
 		e := recover()
 		if e != nil {
 			log.Warn("retry do recover from => [%s] error => %v", desc, e)
 		}
 	}()
-	wait := NewWaitDone()
-	if f == nil || f() == nil || r.retryCount <= 0 {
-		wait.Done()
-		return wait
+	wd := wait.NewWaitDone()
+	if f == nil || f() == nil || r.count <= 0 {
+		wd.Done()
+		return wd
 	}
-	log.Warn("execute failed, wait to retry [%s] %d times, execute once per %s", desc, r.retryCount, r.retryWait)
-	if r.retryAsync {
-		go r.retry(ctx, wait, f, desc)
+	log.Warn("execute failed, wait to retry [%s] %d times, execute once per %s", desc, r.count, r.wait)
+	if r.async {
+		go r.retry(ctx, wd, f, desc)
 	} else {
-		r.retry(ctx, wait, f, desc)
+		r.retry(ctx, wd, f, desc)
 	}
-	return wait
+	return wd
 }
 
-func (r *defaultRetry) retry(ctx context.Context, wait WaitDone, f func() error, desc string) {
+func (r *defaultRetry) retry(ctx context.Context, wd wait.WaitDone, f func() error, desc string) {
 	defer func() {
-		wait.Done()
+		wd.Done()
 	}()
-	for i := 0; i < r.retryCount; i++ {
+	for i := 0; i < r.count; i++ {
 		select {
 		case <-ctx.Done():
 			log.Debug("retry [%d] [%s] done => %s", i+1, desc, ctx.Err())
@@ -69,20 +70,20 @@ func (r *defaultRetry) retry(ctx context.Context, wait WaitDone, f func() error,
 			}
 			break
 		} else {
-			log.Debug("retry [%d] after %s [%s]", i+1, r.retryWait.String(), desc)
-			if i == r.retryCount-1 {
-				log.Error(err, "retry [%d] times, and aborted [%s]", r.retryCount, desc)
+			log.Debug("retry [%d] after %s [%s]", i+1, r.wait.String(), desc)
+			if i == r.count-1 {
+				log.Error(err, "retry [%d] times, and aborted [%s]", r.count, desc)
 			} else {
-				time.Sleep(r.retryWait)
+				time.Sleep(r.wait)
 			}
 		}
 	}
 }
 
-func (r *defaultRetry) RetryCount() int {
-	return r.retryCount
+func (r *defaultRetry) Count() int {
+	return r.count
 }
 
-func (r *defaultRetry) RetryWait() time.Duration {
-	return r.retryWait
+func (r *defaultRetry) WaitTime() time.Duration {
+	return r.wait
 }

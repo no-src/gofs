@@ -12,6 +12,7 @@ import (
 	"github.com/no-src/gofs/server/httpfs"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/version"
+	"github.com/no-src/gofs/wait"
 	"github.com/no-src/log"
 )
 
@@ -104,7 +105,7 @@ func main() {
 
 	// start a file server
 	if config.EnableFileServer {
-		waitInit := retry.NewWaitDone()
+		waitInit := wait.NewWaitDone()
 		go func() {
 			err := httpfs.StartFileServer(server.NewServerOption(config.Source, config.Dest, config.FileServerAddr, waitInit, config.EnableTLS, config.TLSCertFile, config.TLSKeyFile, userList, config.EnableFileServerCompress, webLogger, config.EnablePProf, config.PProfPrivate))
 			if err != nil {
@@ -122,7 +123,7 @@ func main() {
 	}
 
 	// create retry
-	r := retry.NewRetry(config.RetryCount, config.RetryWait, config.RetryAsync)
+	r := retry.New(config.RetryCount, config.RetryWait, config.RetryAsync)
 
 	// init event log
 	var eventLogger = log.NewEmptyLogger()
