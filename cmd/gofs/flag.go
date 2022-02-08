@@ -35,7 +35,9 @@ func parseFlags() {
 	flag.BoolVar(&config.SyncOnce, "sync_once", false, "sync source directory to dest directory once")
 	flag.StringVar(&config.SyncCron, "sync_cron", "", "sync source directory to dest directory with cron")
 	flag.BoolVar(&config.EnableLogicallyDelete, "logically_delete", false, "delete dest file logically")
-	flag.BoolVar(&config.ClearDeletedFile, "clear_deleted", false, "remove all of the deleted files in the dest path")
+	flag.BoolVar(&config.ClearDeletedPath, "clear_deleted", false, "remove all of the deleted files in the dest path")
+	flag.StringVar(&config.IgnoreConf, "ignore_conf", "", "a config file of the ignore component")
+	flag.BoolVar(&config.IgnoreDeletedPath, "ignore_deleted", true, "ignore to sync the deleted file")
 
 	// retry
 	flag.IntVar(&config.RetryCount, "retry_count", 15, "if execute failed, then retry to work -retry_count times")

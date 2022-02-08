@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/fs"
+	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
 	iofs "io/fs"
@@ -278,8 +279,7 @@ func (s *diskSync) SyncOnce(path string) error {
 		if err != nil {
 			return err
 		}
-		if fs.IsDeleted(currentPath) {
-			log.Debug("[disk sync] sync once ignore deleted file => [%s]", currentPath)
+		if ignore.MatchPath(currentPath, "disk sync", "sync once") {
 			return nil
 		}
 		if d.IsDir() {

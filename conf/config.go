@@ -16,7 +16,9 @@ type Config struct {
 	SyncOnce              bool
 	SyncCron              string
 	EnableLogicallyDelete bool
-	ClearDeletedFile      bool
+	ClearDeletedPath      bool
+	IgnoreConf            string
+	IgnoreDeletedPath     bool
 
 	// retry
 	RetryCount int

@@ -8,6 +8,7 @@ import (
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/fs"
+	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
@@ -312,8 +313,7 @@ func (rs *remoteClientSync) sync(serverAddr, path string) error {
 		return err
 	}
 	for _, file := range files {
-		if fs.IsDeleted(file.Path) {
-			log.Debug("[remote client sync] sync once ignore deleted file => [%s]", file.Path)
+		if ignore.MatchPath(file.Path, "remote client sync", "sync once") {
 			continue
 		}
 		currentPath := path + "/" + file.Path

@@ -5,7 +5,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/eventlog"
-	"github.com/no-src/gofs/fs"
+	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/internal/clist"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/sync"
@@ -139,9 +139,8 @@ func (m *fsNotifyMonitor) processEvents() error {
 		}
 
 		event := element.Value.(fsnotify.Event)
-		if fs.IsDeleted(event.Name) {
-			// ignore
-			log.Debug("[monitor] ignore deleted file [%s] => [%s]", event.Op.String(), event.Name)
+		if ignore.MatchPath(event.Name, "monitor", event.Op.String()) {
+			// ignore match
 		} else if event.Op&fsnotify.Write == fsnotify.Write {
 			// ignore is not exist error
 			if err := m.syncer.Create(event.Name); err != nil && !os.IsNotExist(err) {

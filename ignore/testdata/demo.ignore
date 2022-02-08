@@ -1,0 +1,8 @@
+# ignore temp swap file
+\.[\s\S]*\.swp$
+
+# ignore /bin directory
+^/*bin/?$
+^/*bin/+[\s\S]*$
+^[\s\S]+/bin/?$
+^[\s\S]+/bin/+[\s\S]*$

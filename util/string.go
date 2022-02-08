@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 type ToString interface {
@@ -39,4 +40,10 @@ func String(v interface{}) string {
 // Int64 parse the string to int64
 func Int64(v string) (int64, error) {
 	return strconv.ParseInt(v, 10, 64)
+}
+
+// IsEmpty is empty or whitespace string
+func IsEmpty(s string) bool {
+	s = strings.TrimSpace(s)
+	return len(s) == 0
 }

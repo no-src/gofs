@@ -5,6 +5,7 @@ import (
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/daemon"
 	"github.com/no-src/gofs/fs"
+	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/internal/signal"
 	"github.com/no-src/gofs/monitor"
 	"github.com/no-src/gofs/retry"
@@ -57,10 +58,16 @@ func main() {
 	}
 
 	// clear the deleted files
-	if config.ClearDeletedFile {
+	if config.ClearDeletedPath {
 		if err := fs.ClearDeletedFile(config.Dest.Path()); err != nil {
 			log.Error(err, "clear the deleted files error")
 		}
+		return
+	}
+
+	// init ignore config
+	if err := ignore.Init(config.IgnoreConf, config.IgnoreDeletedPath); err != nil {
+		log.Error(err, "init ignore config error")
 		return
 	}
 
