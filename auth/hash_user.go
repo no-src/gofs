@@ -23,6 +23,8 @@ type HashUser struct {
 	UserNameHash string
 	// PasswordHash a 16 bytes hash of password
 	PasswordHash string
+	// Perm the user permission
+	Perm Perm
 	// Expires 14 bytes auth request info expires of utc, format like "20060102150405"
 	Expires string
 	// Version 2 bytes of auth api version
@@ -48,10 +50,11 @@ func (h *HashUser) RefreshExpires() string {
 }
 
 // NewHashUser create a HashUser instance
-func NewHashUser(userNameHash, passwordHash string) *HashUser {
+func NewHashUser(userNameHash, passwordHash string, perm Perm) *HashUser {
 	h := &HashUser{
 		UserNameHash: userNameHash,
 		PasswordHash: passwordHash,
+		Perm:         perm,
 		Version:      authVersion,
 	}
 	h.RefreshExpires()

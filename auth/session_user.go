@@ -7,6 +7,7 @@ type SessionUser struct {
 	UserId   int
 	UserName string
 	Password string
+	Perm     Perm
 }
 
 // MapperToSessionUser convert User to SessionUser
@@ -18,6 +19,7 @@ func MapperToSessionUser(user *User) *SessionUser {
 		UserId:   user.UserId(),
 		UserName: user.UserName(),
 		Password: user.Password(),
+		Perm:     user.Perm(),
 	}
 }
 

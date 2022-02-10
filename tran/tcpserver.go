@@ -153,7 +153,7 @@ func (srv *tcpServer) Send(data []byte) error {
 			return true
 		}
 		c := value.(*Conn)
-		if c == nil || !c.authorized.Get() {
+		if c == nil || !c.CheckPerm(auth.ReadPerm) {
 			return true
 		}
 		writer := bufio.NewWriter(c)
@@ -185,22 +185,33 @@ func (srv *tcpServer) Close() error {
 	return srv.listener.Close()
 }
 
-func (srv *tcpServer) Auth(user *auth.HashUser) bool {
+func (srv *tcpServer) Auth(user *auth.HashUser) (bool, auth.Perm) {
+	var perm auth.Perm
 	if len(srv.users) == 0 {
-		return true
+		return true, auth.FullPerm
 	}
 	if user == nil || len(user.UserNameHash) == 0 || len(user.PasswordHash) == 0 {
-		return false
+		return false, perm
 	}
 	if user.IsExpired() {
 		log.Warn("user auth request info is expired, user => %s", util.String(user))
-		return false
+		return false, perm
 	}
 	var loginUser *auth.HashUser
-	for _, user := range srv.users {
-		if user.UserNameHash == user.UserNameHash && user.PasswordHash == user.PasswordHash {
-			loginUser = user
+	for _, u := range srv.users {
+		if u.UserNameHash == user.UserNameHash && u.PasswordHash == user.PasswordHash {
+			loginUser = u
 		}
 	}
-	return loginUser != nil
+
+	if loginUser != nil {
+		if !loginUser.Perm.IsValid() {
+			log.Warn("the user has no permission, user => %s", util.String(user))
+			loginUser = nil
+		} else {
+			perm = loginUser.Perm
+		}
+	}
+
+	return loginUser != nil, perm
 }

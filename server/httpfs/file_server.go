@@ -10,6 +10,7 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/no-src/gofs"
+	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/handler"
@@ -75,7 +76,7 @@ func StartFileServer(opt server.Option) error {
 	rootGroup := engine.Group("/")
 
 	if len(opt.Users) > 0 {
-		rootGroup.Use(middleware.NewAuthHandler(logger).Handle)
+		rootGroup.Use(middleware.NewAuthHandler(logger, auth.ReadPerm).Handle)
 	} else {
 		server.PrintAnonymousAccessWarning()
 	}

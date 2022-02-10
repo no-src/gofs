@@ -1,6 +1,7 @@
 package tran
 
 import (
+	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/internal/cbool"
 	"github.com/no-src/log"
 	"net"
@@ -10,8 +11,7 @@ import (
 type Conn struct {
 	net.Conn
 	authorized     *cbool.CBool
-	userName       string
-	password       string
+	user           *auth.HashUser
 	connTime       *time.Time
 	authTime       *time.Time
 	startAuthCheck *cbool.CBool
@@ -30,17 +30,26 @@ func NewConn(conn net.Conn) *Conn {
 	return c
 }
 
-func (conn *Conn) MarkAuthorized(userName, password string) {
+func (conn *Conn) MarkAuthorized(user *auth.HashUser) {
+	if user == nil {
+		return
+	}
 	conn.authorized.Set(true)
-	conn.userName = userName
-	conn.password = password
+	conn.user = user
 	now := time.Now()
 	conn.authTime = &now
-	log.Info("the conn authorized [local=%s][remote=%s] => [username=%s password=%s]", conn.LocalAddr().String(), conn.RemoteAddr().String(), userName, password)
+	log.Info("the conn authorized [local=%s][remote=%s] => [username=%s password=%s perm=%s]", conn.LocalAddr().String(), conn.RemoteAddr().String(), user.UserNameHash, user.PasswordHash, user.Perm.String())
 }
 
 func (conn *Conn) Authorized() bool {
 	return conn.authorized.Get()
+}
+
+func (conn *Conn) CheckPerm(perm auth.Perm) bool {
+	if !conn.Authorized() || conn.user == nil {
+		return false
+	}
+	return perm.CheckTo(conn.user.Perm)
 }
 
 // StartAuthCheck auto check auth state per second, close the connection if unauthorized after one minute
@@ -62,7 +71,7 @@ func (conn *Conn) authCheck() {
 			if !conn.startAuthCheck.Get() {
 				break
 			}
-			authorized := conn.authorized.Get()
+			authorized := conn.Authorized()
 			if authorized {
 				conn.startAuthCheck.Set(false)
 				break

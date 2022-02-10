@@ -230,12 +230,18 @@ func (rs *remoteServerSync) infoCommand(client *tran.Conn) (cmd contract.Command
 	cmd = contract.InfoCommand
 	var info contract.FileServerInfo
 	if client.Authorized() {
-		info = contract.FileServerInfo{
-			Status:     contract.SuccessStatus(contract.InfoApi),
-			ServerAddr: rs.serverAddr,
-			SourcePath: server.SourceRoutePrefix,
-			DestPath:   server.DestRoutePrefix,
-			QueryAddr:  server.QueryRoute,
+		if client.CheckPerm(auth.ReadPerm) {
+			info = contract.FileServerInfo{
+				Status:     contract.SuccessStatus(contract.InfoApi),
+				ServerAddr: rs.serverAddr,
+				SourcePath: server.SourceRoutePrefix,
+				DestPath:   server.DestRoutePrefix,
+				QueryAddr:  server.QueryRoute,
+			}
+		} else {
+			info = contract.FileServerInfo{
+				Status: contract.NoPermissionStatus(contract.InfoApi),
+			}
 		}
 	} else {
 		info = contract.FileServerInfo{
@@ -251,9 +257,15 @@ func (rs *remoteServerSync) authCommand(client *tran.Conn, data []byte) (cmd con
 	authData := contract.FailStatus(contract.AuthApi)
 	hashUser, err := auth.ParseAuthCommandData(data)
 	if err == nil && client != nil {
-		if rs.server.Auth(hashUser) {
-			client.MarkAuthorized(hashUser.UserNameHash, hashUser.PasswordHash)
-			authData = contract.SuccessStatus(contract.AuthApi)
+		authed, perm := rs.server.Auth(hashUser)
+		if authed {
+			hashUser.Perm = perm
+			client.MarkAuthorized(hashUser)
+			if auth.ToPerm(auth.ReadPerm).CheckTo(hashUser.Perm) {
+				authData = contract.SuccessStatus(contract.AuthApi)
+			} else {
+				authData = contract.NewStatus(contract.Success, "warning: you are authorized but have no permission to read", contract.AuthApi)
+			}
 		}
 	} else if err != nil {
 		log.Error(err, "parse auth command data error")

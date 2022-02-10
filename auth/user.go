@@ -7,20 +7,12 @@ import (
 	"strings"
 )
 
-const defaultPerm = readPerm
-const readPerm = "r"
-const writePerm = "w"
-const ExecutePerm = "x"
-
 // User a login user info
 type User struct {
 	userId   int
 	userName string
 	password string
-	perm     string
-	r        bool
-	w        bool
-	x        bool
+	perm     Perm
 }
 
 // String return format user info
@@ -43,16 +35,9 @@ func (user *User) Password() string {
 	return user.password
 }
 
-func (user *User) ReadPerm() bool {
-	return user.r
-}
-
-func (user *User) WritePerm() bool {
-	return user.w
-}
-
-func (user *User) ExecPerm() bool {
-	return user.x
+// Perm return user permission
+func (user *User) Perm() Perm {
+	return user.perm
 }
 
 // ToHashUser convert User to HashUser
@@ -65,7 +50,7 @@ func (user *User) ToHashUser() (hashUser *HashUser, err error) {
 	if err != nil {
 		return nil, err
 	}
-	hashUser = NewHashUser(userNameHash[:userNameHashLength], passwordHash[:PasswordHashLength])
+	hashUser = NewHashUser(userNameHash[:userNameHashLength], passwordHash[:PasswordHashLength], user.Perm())
 	return hashUser, err
 }
 
@@ -74,18 +59,15 @@ func NewUser(userId int, userName string, password string, perm string) (*User, 
 	if userId <= 0 {
 		return nil, errors.New("userId must greater than zero")
 	}
-	success, perm := formatPerm(perm)
-	if !success {
+	p := ToPermWithDefault(perm, DefaultPerm)
+	if !p.IsValid() {
 		return nil, errors.New("user perm must be the composition of 'r' 'w' 'x' or empty")
 	}
 	user := &User{
 		userId:   userId,
 		userName: userName,
 		password: password,
-		perm:     perm,
-		r:        strings.Contains(perm, readPerm),
-		w:        strings.Contains(perm, writePerm),
-		x:        strings.Contains(perm, ExecutePerm),
+		perm:     p,
 	}
 	err := isValidUser(*user)
 	if err != nil {
@@ -108,47 +90,10 @@ func isValidUser(user User) error {
 	if strings.ContainsAny(user.Password(), ",|") {
 		return errors.New("password can't contain ',' or '|' ")
 	}
-	if len(user.perm) == 0 || (user.r || user.w || user.x) == false {
+	if !user.perm.IsValid() {
 		return errors.New("user is no permission")
 	}
 	return nil
-}
-
-func formatPerm(perm string) (success bool, formatPerm string) {
-	permLen := len(perm)
-	if permLen == 0 {
-		return true, defaultPerm
-	} else if permLen > 3 {
-		return false, formatPerm
-	}
-	perm = strings.ToLower(perm)
-	r, w, x := false, false, false
-	for i := 0; i < permLen; i++ {
-		c := perm[i : i+1]
-		switch c {
-		case readPerm:
-			r = true
-			break
-		case writePerm:
-			w = true
-			break
-		case ExecutePerm:
-			x = true
-			break
-		default:
-			return false, formatPerm
-		}
-	}
-	if r {
-		formatPerm += readPerm
-	}
-	if w {
-		formatPerm += writePerm
-	}
-	if x {
-		formatPerm += ExecutePerm
-	}
-	return true, formatPerm
 }
 
 // ParseUsers parse users string to User List
@@ -165,9 +110,9 @@ func ParseUsers(userStr string) (users []*User, err error) {
 		if fieldLen >= 2 && fieldLen <= 3 {
 			userName := strings.TrimSpace(userInfo[0])
 			password := strings.TrimSpace(userInfo[1])
-			perm := defaultPerm
 			if len(userName) > 0 && len(password) > 0 {
 				userCount++
+				perm := ""
 				if fieldLen > 2 {
 					perm = strings.TrimSpace(userInfo[2])
 				}

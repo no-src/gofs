@@ -14,6 +14,8 @@ const (
 	Unauthorized Code = -2
 	// NotFound the resource not found status code
 	NotFound Code = -3
+	// NoPermission the no permission status code, the user is authorized but has no permission
+	NoPermission = -4
 )
 
 const (
@@ -25,4 +27,6 @@ const (
 	UnauthorizedDesc = "unauthorized"
 	// NotFoundDesc the description of NotFound code
 	NotFoundDesc = "not found"
+	// NoPermissionDesc the description of NoPermission code
+	NoPermissionDesc = "no permission"
 )

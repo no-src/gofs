@@ -19,5 +19,5 @@ type Server interface {
 	// Close close the server
 	Close() error
 	// Auth client sign in
-	Auth(user *auth.HashUser) bool
+	Auth(user *auth.HashUser) (bool, auth.Perm)
 }

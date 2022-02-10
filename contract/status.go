@@ -25,6 +25,11 @@ func UnauthorizedStatus(apiType ApiType) Status {
 	return NewStatus(Unauthorized, UnauthorizedDesc, apiType)
 }
 
+// NoPermissionStatus create an instance of no permission status with specified api type
+func NoPermissionStatus(apiType ApiType) Status {
+	return NewStatus(NoPermission, NoPermissionDesc, apiType)
+}
+
 // NewStatus create an instance of Status
 func NewStatus(code Code, message string, apiType ApiType) Status {
 	return Status{
