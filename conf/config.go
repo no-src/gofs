@@ -58,4 +58,5 @@ type Config struct {
 	RandomUserCount   int
 	RandomUserNameLen int
 	RandomPasswordLen int
+	RandomDefaultPerm string
 }

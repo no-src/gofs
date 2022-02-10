@@ -126,7 +126,7 @@ The `source` flag detail see [Remote Server Source Protocol](#remote-server-sour
 # Start a remote disk server
 # Replace the `tls_cert_file` and `tls_key_file` flags with your real cert files in the production environment
 # Replace the `users` flag with complex username and password for security
-$ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1" -dest=./dest -users="gofs|password" -tls_cert_file=cert.pem -tls_key_file=key.pem
+$ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1" -dest=./dest -users="gofs|password|rwx" -tls_cert_file=cert.pem -tls_key_file=key.pem
 ```
 
 ### Remote Disk Client
@@ -142,7 +142,7 @@ The `source` flag detail see [Remote Server Source Protocol](#remote-server-sour
 ```bash
 # Start a remote disk client
 # Replace the `users` flag with your real username and password
-$ gofs -source="rs://127.0.0.1:8105" -dest=./dest -users="gofs|password"
+$ gofs -source="rs://127.0.0.1:8105" -dest=./dest -users="gofs|password|rwx"
 ```
 
 ### Remote Server Source Protocol

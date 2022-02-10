@@ -126,7 +126,7 @@ $ gofs -source=./source -dest=./dest -server -tls_cert_file=cert.pem -tls_key_fi
 # 启动一个远程磁盘服务端
 # 在生产环境中请将`tls_cert_file`和`tls_key_file`命令行参数替换为正式的证书和密钥文件
 # 为了安全起见，请使用复杂的账户密码来设置`users`命令行参数
-$ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1" -dest=./dest -users="gofs|password" -tls_cert_file=cert.pem -tls_key_file=key.pem
+$ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1" -dest=./dest -users="gofs|password|rwx" -tls_cert_file=cert.pem -tls_key_file=key.pem
 ```
 
 ### 远程磁盘客户端
@@ -142,7 +142,7 @@ $ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./
 ```bash
 # 启动一个远程磁盘客户端
 # 请将`users`命令行参数替换为上面设置的实际账户名密码
-$ gofs -source="rs://127.0.0.1:8105" -dest=./dest -users="gofs|password"
+$ gofs -source="rs://127.0.0.1:8105" -dest=./dest -users="gofs|password|rwx"
 ```
 
 ### 远程磁盘服务端数据源协议

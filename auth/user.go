@@ -7,16 +7,25 @@ import (
 	"strings"
 )
 
+const defaultPerm = readPerm
+const readPerm = "r"
+const writePerm = "w"
+const ExecutePerm = "x"
+
 // User a login user info
 type User struct {
 	userId   int
 	userName string
 	password string
+	perm     string
+	r        bool
+	w        bool
+	x        bool
 }
 
 // String return format user info
 func (user *User) String() string {
-	return fmt.Sprintf("%s|%s", user.userName, user.password)
+	return fmt.Sprintf("%s|%s|%s", user.userName, user.password, user.perm)
 }
 
 // UserId return user id
@@ -34,6 +43,18 @@ func (user *User) Password() string {
 	return user.password
 }
 
+func (user *User) ReadPerm() bool {
+	return user.r
+}
+
+func (user *User) WritePerm() bool {
+	return user.w
+}
+
+func (user *User) ExecPerm() bool {
+	return user.x
+}
+
 // ToHashUser convert User to HashUser
 func (user *User) ToHashUser() (hashUser *HashUser, err error) {
 	userNameHash, err := util.MD5(user.userName)
@@ -49,14 +70,22 @@ func (user *User) ToHashUser() (hashUser *HashUser, err error) {
 }
 
 // NewUser create a new user
-func NewUser(userId int, userName string, password string) (*User, error) {
+func NewUser(userId int, userName string, password string, perm string) (*User, error) {
 	if userId <= 0 {
 		return nil, errors.New("userId must greater than zero")
+	}
+	success, perm := formatPerm(perm)
+	if !success {
+		return nil, errors.New("user perm must be the composition of 'r' 'w' 'x' or empty")
 	}
 	user := &User{
 		userId:   userId,
 		userName: userName,
 		password: password,
+		perm:     perm,
+		r:        strings.Contains(perm, readPerm),
+		w:        strings.Contains(perm, writePerm),
+		x:        strings.Contains(perm, ExecutePerm),
 	}
 	err := isValidUser(*user)
 	if err != nil {
@@ -79,11 +108,51 @@ func isValidUser(user User) error {
 	if strings.ContainsAny(user.Password(), ",|") {
 		return errors.New("password can't contain ',' or '|' ")
 	}
+	if len(user.perm) == 0 || (user.r || user.w || user.x) == false {
+		return errors.New("user is no permission")
+	}
 	return nil
 }
 
+func formatPerm(perm string) (success bool, formatPerm string) {
+	permLen := len(perm)
+	if permLen == 0 {
+		return true, defaultPerm
+	} else if permLen > 3 {
+		return false, formatPerm
+	}
+	perm = strings.ToLower(perm)
+	r, w, x := false, false, false
+	for i := 0; i < permLen; i++ {
+		c := perm[i : i+1]
+		switch c {
+		case readPerm:
+			r = true
+			break
+		case writePerm:
+			w = true
+			break
+		case ExecutePerm:
+			x = true
+			break
+		default:
+			return false, formatPerm
+		}
+	}
+	if r {
+		formatPerm += readPerm
+	}
+	if w {
+		formatPerm += writePerm
+	}
+	if x {
+		formatPerm += ExecutePerm
+	}
+	return true, formatPerm
+}
+
 // ParseUsers parse users string to User List
-// For example: user1|password1,user2|password2
+// For example: user1|password1|rwx,user2|password2|rwx
 func ParseUsers(userStr string) (users []*User, err error) {
 	if len(userStr) == 0 {
 		return users, nil
@@ -92,12 +161,17 @@ func ParseUsers(userStr string) (users []*User, err error) {
 	userCount := 0
 	for _, userStr := range all {
 		userInfo := strings.Split(userStr, "|")
-		if len(userInfo) == 2 {
+		fieldLen := len(userInfo)
+		if fieldLen >= 2 && fieldLen <= 3 {
 			userName := strings.TrimSpace(userInfo[0])
 			password := strings.TrimSpace(userInfo[1])
+			perm := defaultPerm
 			if len(userName) > 0 && len(password) > 0 {
 				userCount++
-				user, err := NewUser(userCount, userName, password)
+				if fieldLen > 2 {
+					perm = strings.TrimSpace(userInfo[2])
+				}
+				user, err := NewUser(userCount, userName, password, perm)
 				if err != nil {
 					return nil, err
 				}
@@ -114,17 +188,18 @@ func ParseUsers(userStr string) (users []*User, err error) {
 // count is user count you want
 // userLen is the length of random username, max length is 20
 // pwdLen is the length of random password, max length is 20
-func RandomUser(count, userLen, pwdLen int) []*User {
+// perm is the default permission of every random user, like 'rwx'
+func RandomUser(count, userLen, pwdLen int, perm string) ([]*User, error) {
 	var users []*User
 	for i := 1; i <= count; i++ {
-		user, err := NewUser(i, util.RandomString(userLen), util.RandomString(pwdLen))
+		user, err := NewUser(i, util.RandomString(userLen), util.RandomString(pwdLen), perm)
 		if err != nil {
-			i--
+			return nil, fmt.Errorf("generate random user error => %s", err.Error())
 		} else {
 			users = append(users, user)
 		}
 	}
-	return users
+	return users, nil
 }
 
 // ParseStringUsers parse user list to user string

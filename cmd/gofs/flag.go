@@ -73,10 +73,11 @@ func parseFlags() {
 	flag.StringVar(&config.TLSKeyFile, "tls_key_file", "gofs.key", "key file for tls connections")
 
 	// login user
-	flag.StringVar(&config.Users, "users", "", "the server accounts, the server allows anonymous access if there is no effective account, format like this, user1|password1,user2|password2")
+	flag.StringVar(&config.Users, "users", "", "the server accounts, the server allows anonymous access if there is no effective account, format like this, user1|password1|rwx,user2|password2|rwx")
 	flag.IntVar(&config.RandomUserCount, "rand_user_count", 0, "the number of random server accounts, if it is greater than zero, random generate some accounts for -users")
 	flag.IntVar(&config.RandomUserNameLen, "rand_user_len", 6, "the length of the random user's username")
 	flag.IntVar(&config.RandomPasswordLen, "rand_pwd_len", 10, "the length of the random user's password")
+	flag.StringVar(&config.RandomDefaultPerm, "rand_perm", "r", "the default permission of every random user, like 'rwx'")
 
 	flag.Parse()
 }
@@ -93,7 +94,10 @@ func initFlags() error {
 	}
 
 	if config.RandomUserCount > 0 && config.EnableFileServer {
-		userList := auth.RandomUser(config.RandomUserCount, config.RandomUserNameLen, config.RandomPasswordLen)
+		userList, err := auth.RandomUser(config.RandomUserCount, config.RandomUserNameLen, config.RandomPasswordLen, config.RandomDefaultPerm)
+		if err != nil {
+			return err
+		}
 		randUserStr, err := auth.ParseStringUsers(userList)
 		if err != nil {
 			return err
