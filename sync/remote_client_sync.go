@@ -10,6 +10,7 @@ import (
 	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/server"
+	"github.com/no-src/gofs/server/client"
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
 	"io/ioutil"
@@ -385,22 +386,15 @@ func (rs *remoteClientSync) httpGetWithAuth(rawURL string) (resp *http.Response,
 		if err != nil {
 			return nil, err
 		}
-		loginUrl := fmt.Sprintf("%s://%s%s", parseUrl.Scheme, parseUrl.Host, server.LoginSignInFullRoute)
-		form := url.Values{}
 		user := rs.currentUser
-		form.Set(server.ParamUserName, user.UserName())
-		form.Set(server.ParamPassword, user.Password())
-		log.Debug("try to auto login file server %s=%s %s=%s", server.ParamUserName, user.UserName(), server.ParamPassword, user.Password())
-		loginResp, err := util.HttpPostWithoutRedirect(loginUrl, form)
+		cookies, err := client.SignIn(parseUrl.Scheme, parseUrl.Host, user.UserName(), user.Password())
 		if err != nil {
 			return nil, err
 		}
-		if loginResp.StatusCode == http.StatusFound {
-			rs.cookies = loginResp.Cookies()
-			if len(rs.cookies) > 0 {
-				log.Debug("try to auto login file server success maybe, retry to get resource => %s", rawURL)
-				return util.HttpGetWithCookie(rawURL, rs.cookies...)
-			}
+		if len(cookies) > 0 {
+			rs.cookies = cookies
+			log.Debug("try to auto login file server success maybe, retry to get resource => %s", rawURL)
+			return util.HttpGetWithCookie(rawURL, rs.cookies...)
 		}
 		return nil, errors.New("file server is unauthorized")
 	}
