@@ -25,3 +25,12 @@ func CreateFile(name string) (*os.File, error) {
 func OpenRWFile(name string) (*os.File, error) {
 	return os.OpenFile(name, os.O_RDWR, 0666)
 }
+
+// IsDir the path is directory or not
+func IsDir(path string) (bool, error) {
+	f, err := os.Stat(path)
+	if err != nil {
+		return false, err
+	}
+	return f.IsDir(), nil
+}
