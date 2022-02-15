@@ -30,7 +30,7 @@ func (h *fileApiHandler) Handle(c *gin.Context) {
 	defer func() {
 		e := recover()
 		if e != nil {
-			c.JSON(http.StatusOK, server.NewErrorApiResult(-507, "server internal error"))
+			c.JSON(http.StatusOK, server.NewServerErrorResult())
 		}
 	}()
 

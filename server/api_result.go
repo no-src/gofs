@@ -20,3 +20,7 @@ func NewApiResult(code contract.Code, message string, data interface{}) ApiResul
 func NewErrorApiResult(code contract.Code, message string) ApiResult {
 	return NewApiResult(code, message, nil)
 }
+
+func NewServerErrorResult() ApiResult {
+	return NewErrorApiResult(contract.ServerError, contract.ServerErrorDesc)
+}
