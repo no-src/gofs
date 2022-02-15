@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"github.com/no-src/gofs/action"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/core"
@@ -58,7 +59,7 @@ func (rs *remoteServerSync) Create(path string) error {
 			return err
 		}
 	}
-	return rs.send(CreateAction, path)
+	return rs.send(action.CreateAction, path)
 }
 
 func (rs *remoteServerSync) Write(path string) error {
@@ -67,7 +68,7 @@ func (rs *remoteServerSync) Write(path string) error {
 			return err
 		}
 	}
-	return rs.send(WriteAction, path)
+	return rs.send(action.WriteAction, path)
 }
 
 func (rs *remoteServerSync) Remove(path string) error {
@@ -76,7 +77,7 @@ func (rs *remoteServerSync) Remove(path string) error {
 			return err
 		}
 	}
-	return rs.send(RemoveAction, path)
+	return rs.send(action.RemoveAction, path)
 }
 
 func (rs *remoteServerSync) Rename(path string) error {
@@ -85,7 +86,7 @@ func (rs *remoteServerSync) Rename(path string) error {
 			return err
 		}
 	}
-	return rs.send(RenameAction, path)
+	return rs.send(action.RenameAction, path)
 }
 
 func (rs *remoteServerSync) Chmod(path string) error {
@@ -94,12 +95,12 @@ func (rs *remoteServerSync) Chmod(path string) error {
 			return err
 		}
 	}
-	return rs.send(ChmodAction, path)
+	return rs.send(action.ChmodAction, path)
 }
 
-func (rs *remoteServerSync) send(action Action, path string) (err error) {
+func (rs *remoteServerSync) send(act action.Action, path string) (err error) {
 	isDir := false
-	if action != RemoveAction && action != RenameAction {
+	if act != action.RemoveAction && act != action.RenameAction {
 		isDir, err = rs.IsDir(path)
 		if err != nil {
 			return err
@@ -111,7 +112,7 @@ func (rs *remoteServerSync) send(action Action, path string) (err error) {
 	cTime := time.Now()
 	aTime := time.Now()
 	mTime := time.Now()
-	if !isDir && action == WriteAction {
+	if !isDir && act == action.WriteAction {
 		file, err := os.Open(path)
 		if err != nil {
 			return err
@@ -130,7 +131,7 @@ func (rs *remoteServerSync) send(action Action, path string) (err error) {
 		}
 	}
 
-	if action == WriteAction || action == CreateAction {
+	if act == action.WriteAction || act == action.CreateAction {
 		var timeErr error
 		cTime, aTime, mTime, timeErr = fs.GetFileTime(path)
 		if timeErr != nil {
@@ -149,7 +150,7 @@ func (rs *remoteServerSync) send(action Action, path string) (err error) {
 	path = filepath.ToSlash(path)
 	req := Message{
 		Status:  contract.SuccessStatus(contract.SyncMessageApi),
-		Action:  action,
+		Action:  act,
 		BaseUrl: rs.serverAddr + server.SourceRoutePrefix,
 		FileInfo: contract.FileInfo{
 			Path:  path,

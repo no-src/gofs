@@ -262,11 +262,7 @@ func (s *diskSync) buildDestAbsFile(sourceFileAbs string) (string, error) {
 }
 
 func (s *diskSync) IsDir(path string) (bool, error) {
-	f, err := os.Stat(path)
-	if err != nil {
-		return false, err
-	}
-	return f.IsDir(), nil
+	return fs.IsDir(path)
 }
 
 // SyncOnce auto sync source directory to dest directory once.

@@ -3,6 +3,7 @@ package monitor
 import (
 	"errors"
 	"fmt"
+	"github.com/no-src/gofs/action"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/eventlog"
@@ -271,10 +272,10 @@ func (m *remoteClientMonitor) processingMessage() {
 			path := msg.BaseUrl + strings.ReplaceAll(msg.Path, "?", "%3F") + fmt.Sprintf("?%s", values.Encode())
 
 			switch msg.Action {
-			case sync.CreateAction:
+			case action.CreateAction:
 				err = m.syncer.Create(path)
 				break
-			case sync.WriteAction:
+			case action.WriteAction:
 				err = m.syncer.Create(path)
 				// ignore is not exist error
 				if err != nil && os.IsNotExist(err) {
@@ -282,14 +283,14 @@ func (m *remoteClientMonitor) processingMessage() {
 				}
 				m.addWrite(path)
 				break
-			case sync.RemoveAction:
+			case action.RemoveAction:
 				m.removeWrite(path)
 				err = m.syncer.Remove(path)
 				break
-			case sync.RenameAction:
+			case action.RenameAction:
 				err = m.syncer.Rename(path)
 				break
-			case sync.ChmodAction:
+			case action.ChmodAction:
 				err = m.syncer.Chmod(path)
 				break
 			}

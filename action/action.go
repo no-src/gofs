@@ -1,4 +1,6 @@
-package sync
+package action
+
+import "strconv"
 
 type Action int
 
@@ -15,6 +17,8 @@ const (
 	RenameAction
 	// ChmodAction the action of change the file mode
 	ChmodAction
+	// maxAction the max boundary value of Action, it is an invalid value
+	maxAction
 )
 
 // String return the action description name
@@ -36,9 +40,36 @@ func (action Action) String() string {
 	case ChmodAction:
 		desc = "Chmod"
 		break
-	default:
+	case UnknownAction:
 		desc = "Unknown"
+		break
+	default:
+		desc = "Invalid"
 		break
 	}
 	return desc
+}
+
+func (action Action) Int() int {
+	return int(action)
+}
+
+func (action Action) Valid() Action {
+	if action >= maxAction || action <= UnknownAction {
+		return UnknownAction
+	}
+	return action
+}
+
+func ParseActionFromString(action string) Action {
+	i, err := strconv.Atoi(action)
+	if err != nil {
+		return UnknownAction
+	}
+	return ParseAction(i)
+}
+
+func ParseAction(action int) Action {
+	a := Action(action)
+	return a.Valid()
 }
