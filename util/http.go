@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -54,7 +55,7 @@ func HttpPostWithCookie(url string, data url.Values, cookies ...*http.Cookie) (r
 
 // HttpPostFileWithCookie send a post request with form data, file and cookies
 func HttpPostFileWithCookie(url string, fieldName, fileName string, data url.Values, cookies ...*http.Cookie) (resp *http.Response, err error) {
-	f, err := os.Open(fieldName)
+	f, err := os.Open(fileName)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +68,7 @@ func HttpPostFileWithCookie(url string, fieldName, fileName string, data url.Val
 		}
 	}
 
-	fw, err := w.CreateFormFile(fieldName, fileName)
+	fw, err := w.CreateFormFile(fieldName, filepath.Base(fileName))
 	if err != nil {
 		return nil, err
 	}
