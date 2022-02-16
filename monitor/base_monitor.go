@@ -125,6 +125,9 @@ func (m *baseMonitor) startSyncWrite() {
 				if os.IsNotExist(err) {
 					return nil
 				}
+				if err != nil {
+					log.Error(err, "write file error => [%s]", name)
+				}
 				return err
 			}, fmt.Sprintf("write file => %s", name))
 		} else {

@@ -6,6 +6,7 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/no-src/gofs/auth"
+	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/handler"
 	"github.com/no-src/log"
@@ -46,6 +47,6 @@ func (h *authHandler) Handle(c *gin.Context) {
 		c.Data(http.StatusUnauthorized, "text/html; charset=utf-8", []byte(fmt.Sprintf("<html><head><script>window.location.href='%s';</script></head></html>", server.LoginIndexFullRoute)))
 	} else if !h.perm.CheckTo(user.Perm) {
 		c.Abort()
-		c.String(http.StatusUnauthorized, "you have no permission")
+		c.JSON(http.StatusUnauthorized, server.NewApiResult(contract.NoPermission, contract.NoPermissionDesc, nil))
 	}
 }
