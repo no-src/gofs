@@ -31,11 +31,7 @@ type remoteClientMonitor struct {
 	currentUser *auth.HashUser
 	authorized  bool
 	authChan    chan contract.Status
-	infoChan    chan message
-}
-
-type message struct {
-	data []byte
+	infoChan    chan contract.Message
 }
 
 const timeout = time.Minute * 3
@@ -51,7 +47,7 @@ func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, 
 		messages:    clist.New(),
 		baseMonitor: newBaseMonitor(syncer, retry, syncOnce, eventWriter),
 		authChan:    make(chan contract.Status, 100),
-		infoChan:    make(chan message, 100),
+		infoChan:    make(chan contract.Message, 100),
 		closed:      cbool.New(false),
 	}
 	if len(users) > 0 {
@@ -134,13 +130,13 @@ func (m *remoteClientMonitor) sync() (err error) {
 		}
 	}()
 	var info contract.FileServerInfo
-	var infoMsg message
+	var infoMsg contract.Message
 	select {
 	case infoMsg = <-m.infoChan:
 	case <-time.After(timeout):
 		return fmt.Errorf("sync timeout for %s", timeout.String())
 	}
-	err = util.Unmarshal(infoMsg.data, &info)
+	err = util.Unmarshal(infoMsg.Data, &info)
 	if err != nil {
 		return err
 	}
@@ -220,14 +216,10 @@ func (m *remoteClientMonitor) receive() wait.Wait {
 					m.authChan <- status
 					break
 				case contract.InfoApi:
-					m.infoChan <- message{
-						data: data,
-					}
+					m.infoChan <- contract.NewMessage(data)
 					break
 				case contract.SyncMessageApi:
-					m.messages.PushBack(message{
-						data: data,
-					})
+					m.messages.PushBack(contract.NewMessage(data))
 					break
 				default:
 					log.Warn("remote client monitor received a unknown data => %s", string(data))
@@ -249,10 +241,10 @@ func (m *remoteClientMonitor) processingMessage() {
 			<-time.After(time.Second)
 			continue
 		}
-		message := element.Value.(message)
-		log.Info("client read request => %s", string(message.data))
+		message := element.Value.(contract.Message)
+		log.Info("client read request => %s", message.String())
 		var msg sync.Message
-		err := util.Unmarshal(message.data, &msg)
+		err := util.Unmarshal(message.Data, &msg)
 		if err != nil {
 			log.Error(err, "client unmarshal data error")
 		} else if msg.Code != contract.Success {
