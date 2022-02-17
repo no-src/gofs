@@ -238,6 +238,7 @@ func (rs *remoteServerSync) infoCommand(client *tran.Conn) (cmd contract.Command
 				SourcePath: server.SourceRoutePrefix,
 				DestPath:   server.DestRoutePrefix,
 				QueryAddr:  server.QueryRoute,
+				PushAddr:   server.PushFullRoute,
 			}
 		} else {
 			info = contract.FileServerInfo{

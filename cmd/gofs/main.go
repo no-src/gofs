@@ -114,7 +114,7 @@ func main() {
 	if config.EnableFileServer {
 		waitInit := wait.NewWaitDone()
 		go func() {
-			err := httpfs.StartFileServer(server.NewServerOption(config.Source, config.Dest, config.FileServerAddr, waitInit, config.EnableTLS, config.TLSCertFile, config.TLSKeyFile, userList, config.EnableFileServerCompress, webLogger, config.EnablePProf, config.PProfPrivate))
+			err := httpfs.StartFileServer(server.NewServerOption(config, waitInit, userList, webLogger))
 			if err != nil {
 				log.Error(err, "start the file server [%s] error", config.FileServerAddr)
 			}

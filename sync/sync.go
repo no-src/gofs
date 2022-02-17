@@ -34,6 +34,8 @@ func NewSync(source core.VFS, dest core.VFS, enableTLS bool, certFile string, ke
 		return NewDiskSync(source, dest, enableLogicallyDelete)
 	} else if source.Is(core.RemoteDisk) {
 		return NewRemoteSync(source, dest, enableTLS, certFile, keyFile, users, enableLogicallyDelete)
+	} else if dest.Is(core.RemoteDisk) {
+		return NewPushClientSync(source, dest, enableTLS, users, enableLogicallyDelete)
 	}
 	return nil, fmt.Errorf("file system unsupported ! source=>%s dest=>%s", source.Type().String(), dest.Type().String())
 }

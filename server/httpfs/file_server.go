@@ -74,9 +74,11 @@ func StartFileServer(opt server.Option) error {
 	loginGroup.POST(server.LoginSignInRoute, handler.NewLoginHandler(opt.Users, logger).Handle)
 
 	rootGroup := engine.Group("/")
+	wGroup := engine.Group(server.WriteGroupRoute)
 
 	if len(opt.Users) > 0 {
 		rootGroup.Use(middleware.NewAuthHandler(logger, auth.ReadPerm).Handle)
+		wGroup.Use(middleware.NewAuthHandler(logger, auth.WritePerm).Handle)
 	} else {
 		server.PrintAnonymousAccessWarning()
 	}
@@ -94,6 +96,10 @@ func StartFileServer(opt server.Option) error {
 	if source.IsDisk() || source.Is(core.RemoteDisk) {
 		rootGroup.StaticFS(server.SourceRoutePrefix, http.Dir(source.Path()))
 		enableFileApi = true
+
+		if opt.EnablePushServer {
+			wGroup.POST(server.PushRoute, handler.NewPushHandler(logger, source, opt.EnableLogicallyDelete).Handle)
+		}
 	}
 
 	if dest.IsDisk() {

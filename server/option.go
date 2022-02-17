@@ -2,40 +2,45 @@ package server
 
 import (
 	"github.com/no-src/gofs/auth"
+	"github.com/no-src/gofs/conf"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/wait"
 	"github.com/no-src/log"
 )
 
 type Option struct {
-	Source core.VFS
-	Dest   core.VFS
-	Addr      string
-	Init      wait.WaitDone
-	EnableTLS bool
-	CertFile       string
-	KeyFile        string
-	Users          []*auth.User
-	EnableCompress bool
-	Logger         log.Logger
-	EnablePprof    bool
-	PprofPrivate   bool
+	Source                core.VFS
+	Dest                  core.VFS
+	Addr                  string
+	Init                  wait.WaitDone
+	EnableTLS             bool
+	CertFile              string
+	KeyFile               string
+	Users                 []*auth.User
+	EnableCompress        bool
+	Logger                log.Logger
+	EnablePprof           bool
+	PprofPrivate          bool
+	EnableLogicallyDelete bool
+	EnablePushServer      bool
 }
 
-func NewServerOption(source core.VFS, dest core.VFS, addr string, init wait.WaitDone, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableCompress bool, logger log.Logger, enablePprof bool, pprofPrivate bool) Option {
+func NewServerOption(config conf.Config, init wait.WaitDone, users []*auth.User, logger log.Logger) Option {
 	opt := Option{
-		Source:         source,
-		Dest:           dest,
-		Addr:           addr,
-		Init:           init,
-		EnableTLS:      enableTLS,
-		CertFile:       certFile,
-		KeyFile:        keyFile,
-		Users:          users,
-		EnableCompress: enableCompress,
-		Logger:         logger,
-		EnablePprof:    enablePprof,
-		PprofPrivate:   pprofPrivate,
+		Source:                config.Source,
+		Dest:                  config.Dest,
+		Addr:                  config.FileServerAddr,
+		Init:                  init,
+		EnableTLS:             config.EnableTLS,
+		CertFile:              config.TLSCertFile,
+		KeyFile:               config.TLSKeyFile,
+		Users:                 users,
+		EnableCompress:        config.EnableFileServerCompress,
+		Logger:                logger,
+		EnablePprof:           config.EnablePProf,
+		PprofPrivate:          config.PProfPrivate,
+		EnableLogicallyDelete: config.EnableLogicallyDelete,
+		EnablePushServer:      config.EnablePushServer,
 	}
 	return opt
 }

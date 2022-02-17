@@ -47,6 +47,7 @@ type Config struct {
 	EnableFileServerCompress bool
 	EnablePProf              bool
 	PProfPrivate             bool
+	EnablePushServer         bool
 
 	// tls transfer
 	EnableTLS   bool

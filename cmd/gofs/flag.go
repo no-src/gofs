@@ -66,6 +66,7 @@ func parseFlags() {
 	flag.BoolVar(&config.EnableFileServerCompress, "server_compress", false, "enable response compression for the file server")
 	flag.BoolVar(&config.EnablePProf, "pprof", false, "enable the pprof route")
 	flag.BoolVar(&config.PProfPrivate, "pprof_private", true, "allow to access pprof route by private address and loopback address only")
+	flag.BoolVar(&config.EnablePushServer, "push_server", false, "whether to enable the push server")
 
 	// tls transfer
 	flag.BoolVar(&config.EnableTLS, "tls", true, fmt.Sprintf("enable the tls connections, if disable it, server_addr is \"%s\" default", server.DefaultAddrHttp))

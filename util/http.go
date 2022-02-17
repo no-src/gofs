@@ -59,6 +59,7 @@ func HttpPostFileWithCookie(url string, fieldName, fileName string, data url.Val
 	if err != nil {
 		return nil, err
 	}
+	defer f.Close()
 	body := new(bytes.Buffer)
 	w := multipart.NewWriter(body)
 

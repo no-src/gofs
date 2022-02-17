@@ -2,9 +2,11 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/no-src/gofs/contract"
+	"github.com/no-src/gofs/server"
 	"net/http"
 )
 
 func NoRoute(context *gin.Context) {
-	context.String(http.StatusNotFound, "404 page not found")
+	context.JSON(http.StatusNotFound, server.NewApiResult(contract.NotFound, contract.NotFoundDesc, nil))
 }

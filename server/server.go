@@ -19,6 +19,9 @@ const (
 	LoginIndexFullRoute  = LoginRoute + LoginIndexRoute
 	LoginSignInRoute     = "/signin"
 	LoginSignInFullRoute = LoginRoute + LoginSignInRoute
+	WriteGroupRoute      = "/w"
+	PushRoute            = "/push"
+	PushFullRoute        = WriteGroupRoute + PushRoute
 )
 
 const (
