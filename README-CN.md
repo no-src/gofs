@@ -122,11 +122,13 @@ $ gofs -source=./source -dest=./dest -server -tls_cert_file=cert.pem -tls_key_fi
 
 `source`命令行参数详见[远程磁盘服务端数据源协议](#远程磁盘服务端数据源协议)
 
+注意远程磁盘服务端的用户至少要拥有读权限，例如：`-users="gofs|password|r"`
+
 ```bash
 # 启动一个远程磁盘服务端
 # 在生产环境中请将`tls_cert_file`和`tls_key_file`命令行参数替换为正式的证书和密钥文件
 # 为了安全起见，请使用复杂的账户密码来设置`users`命令行参数
-$ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1" -dest=./dest -users="gofs|password|rwx" -tls_cert_file=cert.pem -tls_key_file=key.pem
+$ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1" -dest=./dest -users="gofs|password|r" -tls_cert_file=cert.pem -tls_key_file=key.pem
 ```
 
 ### 远程磁盘客户端
@@ -142,7 +144,32 @@ $ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./
 ```bash
 # 启动一个远程磁盘客户端
 # 请将`users`命令行参数替换为上面设置的实际账户名密码
-$ gofs -source="rs://127.0.0.1:8105" -dest=./dest -users="gofs|password|rwx"
+$ gofs -source="rs://127.0.0.1:8105" -dest=./dest -users="gofs|password"
+```
+
+### 远程推送服务端
+
+启动一个[远程磁盘服务端](#远程磁盘服务端)作为一个远程文件数据源，并使用`push_server`命令行参数启用远程推送服务端
+
+注意远程推送服务端的用户至少要拥有读写权限，例如：`-users="gofs|password|rw"`
+
+```bash
+# 启动一个远程磁盘服务端并启用远程推送服务端
+# 在生产环境中请将`tls_cert_file`和`tls_key_file`命令行参数替换为正式的证书和密钥文件
+# 为了安全起见，请使用复杂的账户密码来设置`users`命令行参数
+$ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1" -dest=./dest -users="gofs|password|rw" -tls_cert_file=cert.pem -tls_key_file=key.pem -push_server
+```
+
+### 远程推送客户端
+
+启动一个远程推送客户端将本地文件变更同步到[远程推送服务端](#远程推送服务端)
+
+更多命令行参数用法请参见[远程磁盘客户端](#远程磁盘客户端)
+
+```bash
+# 启动一个远程推送客户端并且启用本地磁盘同步，将source目录下的文件变更同步到本地dest目录和远程推送服务器上
+# 请将`users`命令行参数替换为上面设置的实际账户名密码
+$ gofs -source="./source" -dest="rs://127.0.0.1:8105?local_sync_disabled=false&path=./dest" -users="gofs|password"
 ```
 
 ### 远程磁盘服务端数据源协议
