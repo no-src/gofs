@@ -26,4 +26,9 @@ jobs:
       run: go build -v ./...
 
     - name: Test
-      run: go test -v ./...
+      run: go test -v ./... -coverprofile=coverage.txt
+    - name: Codecov
+      uses: codecov/codecov-action@v2
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: coverage.txt
