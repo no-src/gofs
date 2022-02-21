@@ -15,9 +15,11 @@ const (
 	// NotFound the resource not found status code
 	NotFound Code = -3
 	// NoPermission the no permission status code, the user is authorized but has no permission
-	NoPermission = -4
+	NoPermission Code = -4
 	// ServerError the server error status code
-	ServerError = -5
+	ServerError Code = -5
+	// AccessDeny deny current access
+	AccessDeny Code = -6
 )
 
 const (
@@ -33,4 +35,6 @@ const (
 	NoPermissionDesc = "no permission"
 	// ServerErrorDesc the description of ServerError code
 	ServerErrorDesc = "server internal error"
+	// AccessDenyDesc the description of AccessDeny code
+	AccessDenyDesc = "access deny"
 )

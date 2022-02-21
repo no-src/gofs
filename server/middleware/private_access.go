@@ -2,6 +2,8 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/no-src/gofs/contract"
+	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/handler"
 	"github.com/no-src/log"
 	"net"
@@ -23,6 +25,6 @@ func (h *privateAccessHandler) Handle(c *gin.Context) {
 	if !ip.IsPrivate() && !ip.IsLoopback() {
 		h.logger.Warn("access deny, client ip is [%s], path is [%s]", c.ClientIP(), c.FullPath())
 		c.Abort()
-		c.String(http.StatusUnauthorized, "access deny")
+		c.JSON(http.StatusUnauthorized, server.NewApiResult(contract.AccessDeny, contract.AccessDenyDesc, nil))
 	}
 }
