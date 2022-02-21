@@ -55,7 +55,7 @@ func (m *fsNotifyMonitor) monitor(dir string) (err error) {
 		if d.IsDir() {
 			// first remove the old watch, because the volume is the same as the one before renamed,
 			// then add path to watch.
-			err = m.watcher.Remove(path)
+			m.watcher.Remove(path)
 			err = m.watcher.Add(path)
 			if err != nil {
 				log.Error(err, "watch dir error [%s]", path)

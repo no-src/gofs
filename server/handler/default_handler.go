@@ -19,8 +19,8 @@ func NewDefaultHandler(logger log.Logger) GinHandler {
 
 func (h *defaultHandler) Handle(c *gin.Context) {
 	c.HTML(http.StatusOK, "index.html", struct {
-		Source  string
-		Dest string
+		Source string
+		Dest   string
 	}{
 		server.SourceRoutePrefix,
 		server.DestRoutePrefix,

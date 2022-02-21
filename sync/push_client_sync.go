@@ -312,11 +312,9 @@ func (pcs *pushClientSync) send(act action.Action, path string) (err error) {
 		}
 	}
 
-	isDirValue := contract.FsUnknown
+	isDirValue := contract.FsNotDir
 	if isDir {
 		isDirValue = contract.FsIsDir
-	} else {
-		isDirValue = contract.FsNotDir
 	}
 
 	relPath, err := filepath.Rel(pcs.sourceAbsPath, path)
