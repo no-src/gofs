@@ -59,3 +59,28 @@ func testIsDeleted(t *testing.T, expect bool, path string) {
 		t.Fail()
 	}
 }
+
+func TestClearDeletedFile(t *testing.T) {
+	path := "./"
+	err := ClearDeletedFile(path)
+	if err != nil {
+		t.Errorf("clear deleted file error %s => %v", path, err)
+		return
+	}
+
+	path = "./delete_test.notfoud"
+	err = ClearDeletedFile(path)
+	if err != nil {
+		t.Errorf("clear deleted file error %s => %v", path, err)
+		return
+	}
+}
+
+func TestToDeletedPath(t *testing.T) {
+	path := "./delete_test.go"
+	deletedPath := toDeletedPath(path)
+	if len(deletedPath) == 0 {
+		t.Errorf("convert to deleted path error %s => %s", path, deletedPath)
+		return
+	}
+}
