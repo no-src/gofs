@@ -36,15 +36,6 @@ func TestToHashUserList(t *testing.T) {
 	}
 }
 
-func newUserNoError(t *testing.T, userId int, userName string, password string, perm string) *User {
-	u, err := NewUser(userId, userName, password, perm)
-	if err != nil {
-		t.Errorf("create user error => %v", err)
-		return nil
-	}
-	return u
-}
-
 func TestIsExpired(t *testing.T) {
 	hashUser := NewHashUser("698d51a19d8a121c", "bcbe3365e6ac95ea", DefaultPerm)
 	if hashUser.IsExpired() {
