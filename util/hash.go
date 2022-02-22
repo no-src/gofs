@@ -42,13 +42,10 @@ func MD5FromFileName(path string) (hash string, err error) {
 }
 
 // MD5 calculate the hash value of the string
-func MD5(s string) (hash string, err error) {
+func MD5(s string) (hash string) {
 	md5Provider := md5.New()
-	_, err = md5Provider.Write([]byte(s))
-	if err != nil {
-		return hash, err
-	}
+	md5Provider.Write([]byte(s))
 	sum := md5Provider.Sum(nil)
 	hash = hex.EncodeToString(sum)
-	return hash, nil
+	return hash
 }

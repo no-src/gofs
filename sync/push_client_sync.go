@@ -63,10 +63,7 @@ func NewPushClientSync(source, dest core.VFS, enableTLS bool, users []*auth.User
 
 	if len(users) > 0 {
 		user := users[0]
-		hashUser, err := user.ToHashUser()
-		if err != nil {
-			return nil, err
-		}
+		hashUser := user.ToHashUser()
 		s.currentUser = user
 		s.currentHashUser = hashUser
 	}

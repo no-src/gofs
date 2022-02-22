@@ -41,17 +41,11 @@ func (user *User) Perm() Perm {
 }
 
 // ToHashUser convert User to HashUser
-func (user *User) ToHashUser() (hashUser *HashUser, err error) {
-	userNameHash, err := util.MD5(user.userName)
-	if err != nil {
-		return nil, err
-	}
-	passwordHash, err := util.MD5(user.password)
-	if err != nil {
-		return nil, err
-	}
+func (user *User) ToHashUser() (hashUser *HashUser) {
+	userNameHash := util.MD5(user.userName)
+	passwordHash := util.MD5(user.password)
 	hashUser = NewHashUser(userNameHash[:userNameHashLength], passwordHash[:PasswordHashLength], user.Perm())
-	return hashUser, err
+	return hashUser
 }
 
 // NewUser create a new user

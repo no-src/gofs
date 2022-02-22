@@ -52,10 +52,7 @@ func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, 
 	}
 	if len(users) > 0 {
 		user := users[0]
-		hashUser, err := user.ToHashUser()
-		if err != nil {
-			return nil, err
-		}
+		hashUser := user.ToHashUser()
 		m.currentUser = hashUser
 	}
 	return m, nil

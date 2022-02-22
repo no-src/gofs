@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"time"
 )
 
@@ -67,10 +68,10 @@ func ToHashUserList(users []*User) (hashUsers []*HashUser, err error) {
 		return hashUsers, nil
 	}
 	for _, user := range users {
-		hashUser, err := user.ToHashUser()
-		if err != nil {
-			return nil, err
+		if user == nil {
+			return nil, errors.New("get a nil user")
 		}
+		hashUser := user.ToHashUser()
 		hashUsers = append(hashUsers, hashUser)
 	}
 	return hashUsers, nil
