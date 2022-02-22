@@ -34,3 +34,23 @@ func testCheckTo(t *testing.T, expect bool, current, target string) {
 		t.Fail()
 	}
 }
+
+func TestToPermWithDefault(t *testing.T) {
+	testToPermWithDefault(t, "r", "r")
+	testToPermWithDefault(t, "w", "w")
+	testToPermWithDefault(t, "x", "x")
+	testToPermWithDefault(t, "r", "")
+	testToPermWithDefault(t, "", "a")
+	testToPermWithDefault(t, "", "abc")
+	testToPermWithDefault(t, "", "abcd")
+	testToPermWithDefault(t, "", "rrrr")
+}
+
+func testToPermWithDefault(t *testing.T, expect string, perm string) {
+	cPerm := ToPermWithDefault(perm, ReadPerm)
+	actual := cPerm.String()
+	if actual != expect {
+		t.Logf("[%s] => expect: %v, but actual: %v \n", perm, expect, actual)
+		t.Fail()
+	}
+}
