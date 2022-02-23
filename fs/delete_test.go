@@ -84,3 +84,19 @@ func TestToDeletedPath(t *testing.T) {
 		return
 	}
 }
+
+func TestLogicallyDelete(t *testing.T) {
+	path := "./delete_test_notfound.go"
+	err := LogicallyDelete(path)
+	if err != nil {
+		t.Errorf("logical delete error %s => %v", path, err)
+		return
+	}
+
+	path = "./delete_test_notfound.go.1643351810.deleted"
+	err = LogicallyDelete(path)
+	if err != nil {
+		t.Errorf("logical delete error %s => %v", path, err)
+		return
+	}
+}
