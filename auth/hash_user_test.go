@@ -18,7 +18,7 @@ func TestToHashUserList(t *testing.T) {
 	}
 
 	// contain nil user
-	hashUsers, err = ToHashUserList(append(users, nil))
+	_, err = ToHashUserList(append(users, nil))
 	if err == nil {
 		t.Errorf("convert to hash user list should be return error => %v", err)
 		return

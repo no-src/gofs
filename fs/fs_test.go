@@ -55,7 +55,7 @@ func TestFileExist(t *testing.T) {
 
 	if util.IsWindows() {
 		file = "|/"
-		exist, err = FileExist(file)
+		_, err = FileExist(file)
 		if err == nil {
 			t.Errorf("check an invalid file should be return error %s => %v", file, err)
 			return
