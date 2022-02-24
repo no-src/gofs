@@ -8,6 +8,7 @@ import (
 	"github.com/no-src/log"
 )
 
+// Option the web server option
 type Option struct {
 	Source                core.VFS
 	Dest                  core.VFS
@@ -25,6 +26,7 @@ type Option struct {
 	EnablePushServer      bool
 }
 
+// NewServerOption create an instance of the Option, store all the web server options
 func NewServerOption(config conf.Config, init wait.WaitDone, users []*auth.User, logger log.Logger) Option {
 	opt := Option{
 		Source:                config.Source,

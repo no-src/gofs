@@ -24,8 +24,11 @@ const (
 )
 
 const (
-	ParamValueTrue      = "1"
-	ParamValueFalse     = "0"
+	// ParamValueTrue the parameter value means true
+	ParamValueTrue = "1"
+	// ParamValueFalse the parameter value means false
+	ParamValueFalse = "0"
+	// FsNeedHashValueTrue the optional value of the FsNeedHash parameter, that means let file server return file hash value
 	FsNeedHashValueTrue = ParamValueTrue
 )
 

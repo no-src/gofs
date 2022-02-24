@@ -14,6 +14,7 @@ type privateAccessHandler struct {
 	logger log.Logger
 }
 
+// NewPrivateAccessHandler create an instance of the privateAccessHandler middleware
 func NewPrivateAccessHandler(logger log.Logger) handler.GinHandler {
 	return &privateAccessHandler{
 		logger: logger,

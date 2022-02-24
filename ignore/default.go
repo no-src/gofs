@@ -24,6 +24,7 @@ func Init(ignoreConf string, ignoreDeletedPath bool) error {
 	return nil
 }
 
+// Match the current string matches the rule or not
 func Match(s string) bool {
 	if defaultIgnore != nil {
 		return defaultIgnore.Match(s)
@@ -31,8 +32,9 @@ func Match(s string) bool {
 	return false
 }
 
+// MatchPath the current string matches the rule or not, if enable the matchIgnoreDeletedPath, check the deleted file rule is matched or not first
 func MatchPath(path, caller, desc string) bool {
-	matched := false
+	var matched bool
 	if matchIgnoreDeletedPath {
 		matched = fs.IsDeleted(path)
 		if matched {

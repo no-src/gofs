@@ -26,8 +26,8 @@ const (
 	paramLocalSyncDisabled   = "local_sync_disabled"
 	valueModeServer          = "server"
 	valueLocalSyncIsDisabled = "true"
-	RemoteServerScheme       = "rs://"
-	RemoteServerDefaultPort  = 8105
+	remoteServerScheme       = "rs://"
+	remoteServerDefaultPort  = 8105
 )
 
 // Path file path
@@ -107,7 +107,7 @@ func NewVFS(path string) VFS {
 	vfs := NewDiskVFS(path)
 	lowerPath := strings.ToLower(path)
 	var err error
-	if strings.HasPrefix(lowerPath, RemoteServerScheme) {
+	if strings.HasPrefix(lowerPath, remoteServerScheme) {
 		// example of rs protocol to see README.md
 		vfs.fsType = RemoteDisk
 		_, vfs.host, vfs.port, vfs.path, vfs.server, vfs.fsServer, vfs.localSyncDisabled, err = parse(path)
@@ -127,7 +127,7 @@ func parse(path string) (scheme string, host string, port int, localPath string,
 	host = parseUrl.Hostname()
 	port, err = strconv.Atoi(parseUrl.Port())
 	if err != nil {
-		port = RemoteServerDefaultPort
+		port = remoteServerDefaultPort
 		err = nil
 		log.Info("no remote server source port is specified, use default port => %d", port)
 	}

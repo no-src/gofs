@@ -7,7 +7,7 @@ import (
 
 const (
 	userNameHashLength     = 16
-	PasswordHashLength     = 16
+	passwordHashLength     = 16
 	versionLength          = 2
 	expiresLength          = 14
 	expiresFormat          = "20060102150405"

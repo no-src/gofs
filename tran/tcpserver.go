@@ -100,9 +100,8 @@ func (srv *tcpServer) Accept(process func(client *Conn, data []byte)) (err error
 					log.Error(err, "client[%s]conn closed, current client connect count:%d", clientConn.RemoteAddr().String(), srv.ClientCount())
 					clientConn = nil
 					return
-				} else {
-					process(clientConn, line)
 				}
+				process(clientConn, line)
 			}
 
 		}()

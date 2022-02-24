@@ -102,14 +102,13 @@ func initFlags() error {
 		randUserStr, err := auth.ParseStringUsers(userList)
 		if err != nil {
 			return err
-		} else {
-			if len(config.Users) > 0 {
-				config.Users = fmt.Sprintf("%s,%s", config.Users, randUserStr)
-			} else {
-				config.Users = randUserStr
-			}
-			log.Info("generate random users success => [%s]", config.Users)
 		}
+		if len(config.Users) > 0 {
+			config.Users = fmt.Sprintf("%s,%s", config.Users, randUserStr)
+		} else {
+			config.Users = randUserStr
+		}
+		log.Info("generate random users success => [%s]", config.Users)
 	}
 
 	if config.EnableTLS && (config.Source.Server() || config.EnableFileServer) {

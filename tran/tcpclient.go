@@ -25,7 +25,7 @@ type tcpClient struct {
 }
 
 var (
-	clientNotConnected = errors.New("client is not connected")
+	errClientNotConnected = errors.New("client is not connected")
 )
 
 // NewClient create an instance of tcpClient
@@ -65,7 +65,7 @@ func (client *tcpClient) Connect() (err error) {
 
 func (client *tcpClient) Write(data []byte) (err error) {
 	if client.IsClosed() {
-		return clientNotConnected
+		return errClientNotConnected
 	}
 	writer := bufio.NewWriter(client.innerConn)
 	data = append(data, EndIdentity...)
@@ -97,9 +97,8 @@ func (client *tcpClient) isClosedError(err error) bool {
 		syscall := syscallErr.Syscall
 		if syscall == "wsarecv" || syscall == "connectex" || syscall == "read" || syscall == "connect" {
 			return true
-		} else {
-			log.Error(err, "get a unknown error")
 		}
+		log.Error(err, "get a unknown error")
 	}
 	return false
 }
@@ -114,7 +113,7 @@ func (client *tcpClient) checkAndTagState(err error) bool {
 
 func (client *tcpClient) ReadAll() (result []byte, err error) {
 	if client.IsClosed() {
-		return nil, clientNotConnected
+		return nil, errClientNotConnected
 	}
 	reader := bufio.NewReader(client.innerConn)
 	for {
@@ -140,7 +139,7 @@ func (client *tcpClient) ReadAll() (result []byte, err error) {
 
 		if isEnd {
 			if hasError {
-				err = ServerExecuteError
+				err = ErrServerExecute
 				log.Error(err, string(result))
 			}
 			return result, err

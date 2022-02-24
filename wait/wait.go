@@ -1,6 +1,6 @@
 package wait
 
-// WaitDone support execute the work synchronously
+// WaitDone support execute the work synchronously and mark the work done
 type WaitDone interface {
 	Wait
 	// Done mark the work execute finished
@@ -9,6 +9,7 @@ type WaitDone interface {
 	DoneWithError(err error)
 }
 
+// Wait the interface that implements execute work synchronously
 type Wait interface {
 	// Wait wait to the work execute finished
 	Wait() error

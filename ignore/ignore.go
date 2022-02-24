@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// Ignore support to check the string matches the ignore rule or not
 type Ignore interface {
 	Match(s string) bool
 }

@@ -11,37 +11,58 @@ var serverAddr *net.TCPAddr
 var enableTLS bool
 
 const (
-	SourceRoutePrefix    = "/source/"
-	DestRoutePrefix      = "/dest/"
-	QueryRoute           = "/query"
-	LoginRoute           = "/login"
-	LoginIndexRoute      = "/index"
-	LoginIndexFullRoute  = LoginRoute + LoginIndexRoute
-	LoginSignInRoute     = "/signin"
-	LoginSignInFullRoute = LoginRoute + LoginSignInRoute
-	WriteGroupRoute      = "/w"
-	PushRoute            = "/push"
-	PushFullRoute        = WriteGroupRoute + PushRoute
+	// SourceRoutePrefix the route prefix of source
+	SourceRoutePrefix = "/source/"
+	// DestRoutePrefix the route prefix of dest
+	DestRoutePrefix = "/dest/"
+	// QueryRoute the route of query api
+	QueryRoute = "/query"
+	// LoginGroupRoute the group route of login
+	LoginGroupRoute = "/login"
+	// LoginIndexRoute the route of login index page
+	LoginIndexRoute = "/index"
+	// LoginIndexFullRoute the full route of login index page
+	LoginIndexFullRoute = LoginGroupRoute + LoginIndexRoute
+	// LoginSignInRoute the route of sign in api
+	LoginSignInRoute = "/signin"
+	// LoginSignInFullRoute the full route of sign in api
+	LoginSignInFullRoute = LoginGroupRoute + LoginSignInRoute
+	// WriteGroupRoute the group route of write api
+	WriteGroupRoute = "/w"
+	// PushRoute the route of push api
+	PushRoute = "/push"
+	// PushFullRoute the full route of push api
+	PushFullRoute = WriteGroupRoute + PushRoute
 )
 
 const (
+	// DefaultAddrHttps the default https address
 	DefaultAddrHttps = ":443"
-	DefaultAddrHttp  = ":80"
-	SchemeHttp       = "http"
-	SchemeHttps      = "https"
-	DefaultPortHttp  = 80
+	// DefaultAddrHttp the default http address
+	DefaultAddrHttp = ":80"
+	// SchemeHttp the http scheme name
+	SchemeHttp = "http"
+	// SchemeHttps the https scheme name
+	SchemeHttps = "https"
+	// DefaultPortHttp the default port of http server
+	DefaultPortHttp = 80
+	// DefaultPortHttps the default port of https server
 	DefaultPortHttps = 443
 )
 
 const (
+	// SessionName the name of the session
 	SessionName = "session_id"
+	// SessionUser the key of the session user
 	SessionUser = "user"
 )
 
 const (
+	// ResourceTemplatePath the web server template resource path
 	ResourceTemplatePath = "server/template/*"
 )
 
+// InitServerInfo int the file web server
 func InitServerInfo(addr string, tls bool) {
 	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err == nil {
@@ -84,6 +105,7 @@ func GenerateAddr(scheme, host string, port int) string {
 	return addr
 }
 
+// PrintAnonymousAccessWarning print the warning log of anonymous access
 func PrintAnonymousAccessWarning() {
 	log.Warn("the file server allows anonymous access, you should set some server users by the -users or -rand_user_count flag for security reasons")
 }

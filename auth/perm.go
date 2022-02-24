@@ -4,14 +4,20 @@ import (
 	"strings"
 )
 
+// Perm the basic permission info
 type Perm string
 
 const (
-	ReadPerm    = "r"
-	WritePerm   = "w"
+	// ReadPerm the permission of read
+	ReadPerm = "r"
+	// WritePerm the permission of write
+	WritePerm = "w"
+	// ExecutePerm the permission of execute
 	ExecutePerm = "x"
+	// DefaultPerm the default permission
 	DefaultPerm = ReadPerm
-	FullPerm    = "rwx"
+	// FullPerm the permission of read, write and execute
+	FullPerm = "rwx"
 )
 
 // String return perm string

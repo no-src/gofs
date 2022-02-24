@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Config store all the flag info
 type Config struct {
 	// other
 	PrintVersion bool

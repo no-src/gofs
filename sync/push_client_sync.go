@@ -40,6 +40,7 @@ type pushClientSync struct {
 
 const timeout = time.Minute * 3
 
+// NewPushClientSync create an instance of the pushClientSync
 func NewPushClientSync(source, dest core.VFS, enableTLS bool, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
 	ds, err := newDiskSync(source, dest, enableLogicallyDelete)
 	if err != nil {
@@ -202,9 +203,8 @@ func (pcs *pushClientSync) Write(path string) error {
 	}
 	if isDir {
 		return pcs.SyncOnce(path)
-	} else {
-		return pcs.send(action.WriteAction, path)
 	}
+	return pcs.send(action.WriteAction, path)
 }
 
 func (pcs *pushClientSync) Remove(path string) error {
@@ -388,9 +388,8 @@ func (pcs *pushClientSync) httpPostWithAuth(rawURL string, act action.Action, fi
 			log.Debug("try to auto login file server success maybe, retry to get resource => %s", rawURL)
 			if sendFile {
 				return util.HttpPostFileWithCookie(rawURL, fieldName, fileName, data, pcs.cookies...)
-			} else {
-				return util.HttpPostWithCookie(rawURL, data, pcs.cookies...)
 			}
+			return util.HttpPostWithCookie(rawURL, data, pcs.cookies...)
 		}
 		return nil, errors.New("file server is unauthorized")
 	} else if resp.StatusCode == http.StatusNotFound {

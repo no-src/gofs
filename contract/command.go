@@ -1,5 +1,6 @@
 package contract
 
+// Command the server command
 type Command []byte
 
 var (

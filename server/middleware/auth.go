@@ -18,6 +18,7 @@ type authHandler struct {
 	perm   auth.Perm
 }
 
+// NewAuthHandler create an instance of the authHandler middleware
 func NewAuthHandler(logger log.Logger, perm string) handler.GinHandler {
 	p := auth.ToPermWithDefault(perm, auth.DefaultPerm)
 	if !p.IsValid() {

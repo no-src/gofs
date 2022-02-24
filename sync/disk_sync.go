@@ -114,88 +114,87 @@ func (s *diskSync) Write(path string) error {
 		return err
 	}
 
+	// process directory
 	if isDir {
 		return s.SyncOnce(path)
-	} else {
-		sourceFile, err := os.Open(path)
-		if err != nil {
-			return err
+	}
+	// process file
+	sourceFile, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err = sourceFile.Close(); err != nil {
+			log.Error(err, "Write:close the source file error")
 		}
-		defer func() {
-			if err = sourceFile.Close(); err != nil {
-				log.Error(err, "Write:close the source file error")
-			}
-		}()
-		sourceStat, err := sourceFile.Stat()
-		if err != nil {
-			return err
-		}
+	}()
+	sourceStat, err := sourceFile.Stat()
+	if err != nil {
+		return err
+	}
 
-		destFile, err := fs.OpenRWFile(dest)
-		if err != nil {
-			return err
+	destFile, err := fs.OpenRWFile(dest)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err = destFile.Close(); err != nil {
+			log.Error(err, "Write:close the dest file error")
 		}
-		defer func() {
-			if err = destFile.Close(); err != nil {
-				log.Error(err, "Write:close the dest file error")
-			}
-		}()
-		destStat, err := destFile.Stat()
-		if err != nil {
-			return err
-		}
+	}()
+	destStat, err := destFile.Stat()
+	if err != nil {
+		return err
+	}
 
-		if sourceStat.Size() == 0 {
-			log.Info("write to the dest file success [size=%d] [%s] -> [%s]", sourceStat.Size(), path, dest)
+	if sourceStat.Size() == 0 {
+		log.Info("write to the dest file success [size=%d] [%s] -> [%s]", sourceStat.Size(), path, dest)
+		return nil
+	}
+
+	reader := bufio.NewReader(sourceFile)
+	writer := bufio.NewWriter(destFile)
+
+	// if source and dest is the same file, ignore the following steps and return directly
+	if sourceStat.Size() > 0 && sourceStat.Size() == destStat.Size() {
+		isSame, err := s.same(sourceFile, destFile)
+		if err == nil && isSame {
+			log.Debug("Write:ignored, the file is unmodified => %s", path)
 			return nil
 		}
 
-		reader := bufio.NewReader(sourceFile)
-		writer := bufio.NewWriter(destFile)
-
-		// if source and dest is the same file, ignore the following steps and return directly
-		if sourceStat.Size() > 0 && sourceStat.Size() == destStat.Size() {
-			isSame, err := s.same(sourceFile, destFile)
-			if err == nil && isSame {
-				log.Debug("Write:ignored, the file is unmodified => %s", path)
-				return nil
-			}
-
-			// reset the offset
-			if _, err = destFile.Seek(0, 0); err != nil {
-				return err
-			}
-		}
-
-		// truncate first before write to file
-		err = destFile.Truncate(0)
-		if err != nil {
-			return err
-		}
-
-		n, err := reader.WriteTo(writer)
-		if err != nil {
-			return err
-		}
-
-		err = writer.Flush()
-
-		if err == nil {
-			log.Info("write to the dest file success, size[%d => %d] [%s] => [%s]", sourceStat.Size(), n, path, dest)
-
-			// change file times
-			if _, aTime, mTime, err := fs.GetFileTime(path); err == nil {
-				if err = os.Chtimes(dest, aTime, mTime); err != nil {
-					log.Warn("Write:change file times error => %s =>[%s]", err.Error(), dest)
-				}
-			} else {
-				log.Warn("Write:get file times error => %s =>[%s]", err.Error(), path)
-			}
-		} else {
+		// reset the offset
+		if _, err = destFile.Seek(0, 0); err != nil {
 			return err
 		}
 	}
-	return nil
+
+	// truncate first before write to file
+	err = destFile.Truncate(0)
+	if err != nil {
+		return err
+	}
+
+	n, err := reader.WriteTo(writer)
+	if err != nil {
+		return err
+	}
+
+	err = writer.Flush()
+
+	if err == nil {
+		log.Info("write to the dest file success, size[%d => %d] [%s] => [%s]", sourceStat.Size(), n, path, dest)
+
+		// change file times
+		if _, aTime, mTime, err := fs.GetFileTime(path); err == nil {
+			if err = os.Chtimes(dest, aTime, mTime); err != nil {
+				log.Warn("Write:change file times error => %s =>[%s]", err.Error(), dest)
+			}
+		} else {
+			log.Warn("Write:get file times error => %s =>[%s]", err.Error(), path)
+		}
+	}
+	return err
 }
 
 func (s *diskSync) same(sourceFile *os.File, destFile *os.File) (bool, error) {

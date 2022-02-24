@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// ToString support to convert the current instance to string value
 type ToString interface {
 	// String return current format info
 	String() string

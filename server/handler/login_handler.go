@@ -17,6 +17,7 @@ type loginHandler struct {
 	logger log.Logger
 }
 
+// NewLoginHandler create an instance of the loginHandler
 func NewLoginHandler(users []*auth.User, logger log.Logger) GinHandler {
 	return &loginHandler{
 		users:  users,

@@ -2,11 +2,13 @@ package cbool
 
 import "sync"
 
+// CBool a concurrent safe bool
 type CBool struct {
 	v  bool
 	mu sync.RWMutex
 }
 
+// New create an instance of CBool
 func New(v bool) *CBool {
 	return &CBool{
 		mu: sync.RWMutex{},
@@ -14,18 +16,21 @@ func New(v bool) *CBool {
 	}
 }
 
+// Get return the bool value
 func (cb *CBool) Get() bool {
 	cb.mu.RLock()
 	defer cb.mu.RUnlock()
 	return cb.v
 }
 
+// Set to set the bool value
 func (cb *CBool) Set(v bool) {
 	cb.mu.Lock()
 	defer cb.mu.Unlock()
 	cb.v = v
 }
 
+// SetC to set the bool value and return a channel
 func (cb *CBool) SetC(v bool) <-chan bool {
 	cb.mu.Lock()
 	defer cb.mu.Unlock()

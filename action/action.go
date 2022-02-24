@@ -2,6 +2,7 @@ package action
 
 import "strconv"
 
+// Action the action of file change
 type Action int
 
 const (
@@ -50,10 +51,12 @@ func (action Action) String() string {
 	return desc
 }
 
+// Int return the int value of Action
 func (action Action) Int() int {
 	return int(action)
 }
 
+// Valid if the current Action is an invalid int value, return the UnknownAction
 func (action Action) Valid() Action {
 	if action >= maxAction || action <= UnknownAction {
 		return UnknownAction
@@ -61,6 +64,7 @@ func (action Action) Valid() Action {
 	return action
 }
 
+// ParseActionFromString parse the string value to Action
 func ParseActionFromString(action string) Action {
 	i, err := strconv.Atoi(action)
 	if err != nil {
@@ -69,7 +73,7 @@ func ParseActionFromString(action string) Action {
 	return ParseAction(i)
 }
 
+// ParseAction parse the int value to Action
 func ParseAction(action int) Action {
-	a := Action(action)
-	return a.Valid()
+	return Action(action).Valid()
 }

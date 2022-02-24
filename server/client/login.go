@@ -10,8 +10,10 @@ import (
 	"net/url"
 )
 
-var LoginFailed = errors.New("file server login failed")
+// ErrSignIn the current user sign in failed
+var ErrSignIn = errors.New("file server sign in failed")
 
+// SignIn sign in the file server
 func SignIn(scheme, host, userName, password string) ([]*http.Cookie, error) {
 	loginUrl := fmt.Sprintf("%s://%s%s", scheme, host, server.LoginSignInFullRoute)
 	form := url.Values{}
@@ -28,5 +30,5 @@ func SignIn(scheme, host, userName, password string) ([]*http.Cookie, error) {
 			return cookies, nil
 		}
 	}
-	return nil, LoginFailed
+	return nil, ErrSignIn
 }

@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// Conn the component of network connection
 type Conn struct {
 	net.Conn
 	authorized     *cbool.CBool
@@ -30,6 +31,7 @@ func NewConn(conn net.Conn) *Conn {
 	return c
 }
 
+// MarkAuthorized mark the current connection is authorized with the user info
 func (conn *Conn) MarkAuthorized(user *auth.HashUser) {
 	if user == nil {
 		return
@@ -41,10 +43,12 @@ func (conn *Conn) MarkAuthorized(user *auth.HashUser) {
 	log.Info("the conn authorized [local=%s][remote=%s] => [username=%s password=%s perm=%s]", conn.LocalAddr().String(), conn.RemoteAddr().String(), user.UserNameHash, user.PasswordHash, user.Perm.String())
 }
 
+// Authorized check the current connection is authorized or not
 func (conn *Conn) Authorized() bool {
 	return conn.authorized.Get()
 }
 
+// CheckPerm check the current connection's permission whether accord with the specified permission
 func (conn *Conn) CheckPerm(perm auth.Perm) bool {
 	if !conn.Authorized() || conn.user == nil {
 		return false

@@ -65,7 +65,7 @@ func StartFileServer(opt server.Option) error {
 	}
 	engine.Use(sessions.Sessions(server.SessionName, store))
 
-	loginGroup := engine.Group(server.LoginRoute)
+	loginGroup := engine.Group(server.LoginGroupRoute)
 
 	loginGroup.GET(server.LoginIndexRoute, func(context *gin.Context) {
 		context.HTML(http.StatusOK, "login.html", nil)
@@ -117,10 +117,9 @@ func StartFileServer(opt server.Option) error {
 
 	if opt.EnableTLS {
 		return engine.RunTLS(opt.Addr, opt.CertFile, opt.KeyFile)
-	} else {
-		log.Warn("file server is not a security connection, you need the https replaced maybe!")
-		return engine.Run(opt.Addr)
 	}
+	log.Warn("file server is not a security connection, you need the https replaced maybe!")
+	return engine.Run(opt.Addr)
 }
 
 var defaultLogFormatter = func(param gin.LogFormatterParams) string {

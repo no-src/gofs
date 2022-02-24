@@ -24,6 +24,7 @@ type pushHandler struct {
 	enableLogicallyDelete bool
 }
 
+// NewPushHandler create an instance of the pushHandler
 func NewPushHandler(logger log.Logger, source core.VFS, enableLogicallyDelete bool) GinHandler {
 	return &pushHandler{
 		logger:                logger,

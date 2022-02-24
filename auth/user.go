@@ -44,7 +44,7 @@ func (user *User) Perm() Perm {
 func (user *User) ToHashUser() (hashUser *HashUser) {
 	userNameHash := util.MD5(user.userName)
 	passwordHash := util.MD5(user.password)
-	hashUser = NewHashUser(userNameHash[:userNameHashLength], passwordHash[:PasswordHashLength], user.Perm())
+	hashUser = NewHashUser(userNameHash[:userNameHashLength], passwordHash[:passwordHashLength], user.Perm())
 	return hashUser
 }
 
@@ -134,9 +134,8 @@ func RandomUser(count, userLen, pwdLen int, perm string) ([]*User, error) {
 		user, err := NewUser(i, util.RandomString(userLen), util.RandomString(pwdLen), perm)
 		if err != nil {
 			return nil, fmt.Errorf("generate random user error => %s", err.Error())
-		} else {
-			users = append(users, user)
 		}
+		users = append(users, user)
 	}
 	return users, nil
 }

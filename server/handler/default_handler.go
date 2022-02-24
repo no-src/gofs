@@ -11,6 +11,7 @@ type defaultHandler struct {
 	logger log.Logger
 }
 
+// NewDefaultHandler create an instance of the defaultHandler
 func NewDefaultHandler(logger log.Logger) GinHandler {
 	return &defaultHandler{
 		logger: logger,

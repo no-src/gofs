@@ -19,6 +19,7 @@ type fileApiHandler struct {
 	logger log.Logger
 }
 
+// NewFileApiHandler create an instance of the fileApiHandler
 func NewFileApiHandler(root http.FileSystem, logger log.Logger) GinHandler {
 	return &fileApiHandler{
 		root:   root,

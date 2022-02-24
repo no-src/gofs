@@ -7,6 +7,7 @@ import (
 	"syscall"
 )
 
+// Notify receive signal and try to shut down
 func Notify(shutdown func() error) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGABRT, syscall.SIGKILL, syscall.SIGTERM)
