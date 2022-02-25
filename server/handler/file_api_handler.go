@@ -71,40 +71,50 @@ func (h *fileApiHandler) Handle(c *gin.Context) {
 		c.JSON(http.StatusOK, server.NewErrorApiResult(-504, "get file stat error"))
 		return
 	}
+
 	if stat.IsDir() {
-		files, err := f.Readdir(-1)
+		dirFileList, err := h.readDir(f, needHash, path)
 		if err != nil {
-			h.logger.Error(err, "file server read dir error")
 			c.JSON(http.StatusOK, server.NewErrorApiResult(-505, "read dir error"))
 			return
 		}
-		for _, file := range files {
-			cTime, aTime, mTime, fsTimeErr := fs.GetFileTimeBySys(file.Sys())
-			if fsTimeErr != nil {
-				h.logger.Error(fsTimeErr, "get file times error => %s", file.Name())
-				cTime = time.Now()
-				aTime = cTime
-				mTime = cTime
-			}
-
-			hash := ""
-			if needHash == contract.FsNeedHashValueTrue && !file.IsDir() {
-				if cf, err := h.root.Open(filepath.ToSlash(filepath.Join(path, file.Name()))); err == nil {
-					hash, _ = util.MD5FromFile(cf)
-				}
-			}
-
-			fileList = append(fileList, contract.FileInfo{
-				Path:  file.Name(),
-				IsDir: contract.ParseFsDirValue(file.IsDir()),
-				Size:  file.Size(),
-				Hash:  hash,
-				ATime: aTime.Unix(),
-				CTime: cTime.Unix(),
-				MTime: mTime.Unix(),
-			})
-		}
+		fileList = append(fileList, dirFileList...)
 	}
 
 	c.JSON(http.StatusOK, server.NewApiResult(contract.Success, contract.SuccessDesc, fileList))
+}
+
+func (h *fileApiHandler) readDir(f http.File, needHash string, path string) (fileList []contract.FileInfo, err error) {
+	files, err := f.Readdir(-1)
+	if err != nil {
+		h.logger.Error(err, "file server read dir error")
+		return fileList, err
+	}
+	for _, file := range files {
+		cTime, aTime, mTime, fsTimeErr := fs.GetFileTimeBySys(file.Sys())
+		if fsTimeErr != nil {
+			h.logger.Error(fsTimeErr, "get file times error => %s", file.Name())
+			cTime = time.Now()
+			aTime = cTime
+			mTime = cTime
+		}
+
+		hash := ""
+		if needHash == contract.FsNeedHashValueTrue && !file.IsDir() {
+			if cf, err := h.root.Open(filepath.ToSlash(filepath.Join(path, file.Name()))); err == nil {
+				hash, _ = util.MD5FromFile(cf)
+			}
+		}
+
+		fileList = append(fileList, contract.FileInfo{
+			Path:  file.Name(),
+			IsDir: contract.ParseFsDirValue(file.IsDir()),
+			Size:  file.Size(),
+			Hash:  hash,
+			ATime: aTime.Unix(),
+			CTime: cTime.Unix(),
+			MTime: mTime.Unix(),
+		})
+	}
+	return fileList, nil
 }

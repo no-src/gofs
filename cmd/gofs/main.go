@@ -26,42 +26,14 @@ func main() {
 		config.IsDaemon = false
 	}
 
-	// init logger
-	var loggers []log.Logger
-	loggers = append(loggers, log.NewConsoleLogger(log.Level(config.LogLevel)))
-	if config.EnableFileLogger {
-		filePrefix := "gofs_"
-		if config.IsDaemon {
-			filePrefix += "daemon_"
-		}
-		flogger, err := log.NewFileLoggerWithAutoFlush(log.Level(config.LogLevel), config.LogDir, filePrefix, config.LogFlush, config.LogFlushInterval)
-		if err != nil {
-			log.Error(err, "init file logger error")
-			return
-		}
-		loggers = append(loggers, flogger)
+	// init the default logger
+	if initDefaultLogger() != nil {
+		return
 	}
-
-	log.InitDefaultLogger(log.NewMultiLogger(loggers...))
 	defer log.Close()
 
-	// print version info
-	if config.PrintVersion {
-		version.PrintVersion()
-		return
-	}
-
-	// print about info
-	if config.PrintAbout {
-		about.PrintAbout()
-		return
-	}
-
-	// clear the deleted files
-	if config.ClearDeletedPath {
-		if err := fs.ClearDeletedFile(config.Dest.Path()); err != nil {
-			log.Error(err, "clear the deleted files error")
-		}
+	// execute and exit
+	if executeOnce() {
 		return
 	}
 
@@ -98,62 +70,26 @@ func main() {
 		return
 	}
 
-	// init web server logger
-	var webLogger = log.NewConsoleLogger(log.Level(config.LogLevel))
+	// init the web server logger
+	webLogger, err := initWebServerLogger()
+	if err != nil {
+		return
+	}
 	defer webLogger.Close()
-	if config.EnableFileLogger && config.EnableFileServer {
-		webFileLogger, err := log.NewFileLoggerWithAutoFlush(log.Level(config.LogLevel), config.LogDir, "web_", config.LogFlush, config.LogFlushInterval)
-		if err != nil {
-			log.Error(err, "init the web server file logger error")
-			return
-		}
-		webLogger = log.NewMultiLogger(webFileLogger, webLogger)
-	}
 
-	// start a file server
-	if config.EnableFileServer {
-		waitInit := wait.NewWaitDone()
-		go func() {
-			err := httpfs.StartFileServer(server.NewServerOption(config, waitInit, userList, webLogger))
-			if err != nil {
-				log.Error(err, "start the file server [%s] error", config.FileServerAddr)
-			}
-		}()
-		waitInit.Wait()
-	}
+	// start a file web server
+	startWebServer(webLogger, userList)
 
-	// create syncer
-	syncer, err := sync.NewSync(config.Source, config.Dest, config.EnableTLS, config.TLSCertFile, config.TLSKeyFile, userList, config.EnableLogicallyDelete)
+	// init the event log
+	eventLogger, err := initEventLogger()
 	if err != nil {
-		log.Error(err, "create the instance of Sync error")
 		return
 	}
-
-	// create retry
-	r := retry.New(config.RetryCount, config.RetryWait, config.RetryAsync)
-
-	// init event log
-	var eventLogger = log.NewEmptyLogger()
 	defer eventLogger.Close()
-	if config.EnableEventLog {
-		eventFileLogger, err := log.NewFileLoggerWithAutoFlush(log.Level(config.LogLevel), config.LogDir, "event_", config.LogFlush, config.LogFlushInterval)
-		if err != nil {
-			log.Error(err, "init the event file logger error")
-			return
-		}
-		eventLogger = eventFileLogger
-	}
 
-	// create monitor
-	m, err := monitor.NewMonitor(syncer, r, config.SyncOnce, config.EnableTLS, userList, eventLogger)
+	// init the monitor
+	m, err := initMonitor(userList, eventLogger)
 	if err != nil {
-		log.Error(err, "create the instance of Monitor error")
-		return
-	}
-
-	err = m.SyncCron(config.SyncCron)
-	if err != nil {
-		log.Error(err, "register sync cron task error")
 		return
 	}
 
@@ -166,4 +102,119 @@ func main() {
 	if err != nil {
 		log.Error(err, "start to monitor failed")
 	}
+}
+
+// executeOnce execute the work and get ready to exit
+func executeOnce() (exit bool) {
+	// print version info
+	if config.PrintVersion {
+		version.PrintVersion()
+		return true
+	}
+
+	// print about info
+	if config.PrintAbout {
+		about.PrintAbout()
+		return true
+	}
+
+	// clear the deleted files
+	if config.ClearDeletedPath {
+		if err := fs.ClearDeletedFile(config.Dest.Path()); err != nil {
+			log.Error(err, "clear the deleted files error")
+		}
+		return true
+	}
+
+	return false
+}
+
+// initDefaultLogger init the default logger
+func initDefaultLogger() error {
+	var loggers []log.Logger
+	loggers = append(loggers, log.NewConsoleLogger(log.Level(config.LogLevel)))
+	if config.EnableFileLogger {
+		filePrefix := "gofs_"
+		if config.IsDaemon {
+			filePrefix += "daemon_"
+		}
+		flogger, err := log.NewFileLoggerWithAutoFlush(log.Level(config.LogLevel), config.LogDir, filePrefix, config.LogFlush, config.LogFlushInterval)
+		if err != nil {
+			log.Error(err, "init file logger error")
+			return err
+		}
+		loggers = append(loggers, flogger)
+	}
+
+	log.InitDefaultLogger(log.NewMultiLogger(loggers...))
+	return nil
+}
+
+// initWebServerLogger init the web server logger
+func initWebServerLogger() (log.Logger, error) {
+	var webLogger = log.NewConsoleLogger(log.Level(config.LogLevel))
+	if config.EnableFileLogger && config.EnableFileServer {
+		webFileLogger, err := log.NewFileLoggerWithAutoFlush(log.Level(config.LogLevel), config.LogDir, "web_", config.LogFlush, config.LogFlushInterval)
+		if err != nil {
+			log.Error(err, "init the web server file logger error")
+			return nil, err
+		}
+		webLogger = log.NewMultiLogger(webFileLogger, webLogger)
+	}
+	return webLogger, nil
+}
+
+// startWebServer start a file web server
+func startWebServer(webLogger log.Logger, userList []*auth.User) {
+	if config.EnableFileServer {
+		waitInit := wait.NewWaitDone()
+		go func() {
+			err := httpfs.StartFileServer(server.NewServerOption(config, waitInit, userList, webLogger))
+			if err != nil {
+				log.Error(err, "start the file server [%s] error", config.FileServerAddr)
+			}
+		}()
+		waitInit.Wait()
+	}
+}
+
+// initEventLogger init the event logger
+func initEventLogger() (log.Logger, error) {
+	var eventLogger = log.NewEmptyLogger()
+	if config.EnableEventLog {
+		eventFileLogger, err := log.NewFileLoggerWithAutoFlush(log.Level(config.LogLevel), config.LogDir, "event_", config.LogFlush, config.LogFlushInterval)
+		if err != nil {
+			log.Error(err, "init the event file logger error")
+			return nil, err
+		}
+		eventLogger = eventFileLogger
+	}
+	return eventLogger, nil
+}
+
+// initMonitor init the monitor
+func initMonitor(userList []*auth.User, eventLogger log.Logger) (monitor.Monitor, error) {
+	// create syncer
+	syncer, err := sync.NewSync(config.Source, config.Dest, config.EnableTLS, config.TLSCertFile, config.TLSKeyFile, userList, config.EnableLogicallyDelete)
+	if err != nil {
+		log.Error(err, "create the instance of Sync error")
+		return nil, err
+	}
+
+	// create retry
+	r := retry.New(config.RetryCount, config.RetryWait, config.RetryAsync)
+
+	// create monitor
+	m, err := monitor.NewMonitor(syncer, r, config.SyncOnce, config.EnableTLS, userList, eventLogger)
+	if err != nil {
+		log.Error(err, "create the instance of Monitor error")
+		return nil, err
+	}
+
+	err = m.SyncCron(config.SyncCron)
+	if err != nil {
+		log.Error(err, "register sync cron task error")
+		return nil, err
+	}
+	return m, nil
 }

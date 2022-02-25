@@ -85,6 +85,22 @@ func parseFlags() {
 
 // initFlags init flags default value
 func initFlags() error {
+
+	initFileServerFlags()
+
+	if err := generateRandomUser(); err != nil {
+		return err
+	}
+
+	if err := checkTLS(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// initFileServerFlags init flags about the file server
+func initFileServerFlags() {
 	if !config.EnableTLS && config.FileServerAddr == server.DefaultAddrHttps {
 		config.FileServerAddr = server.DefaultAddrHttp
 	}
@@ -93,7 +109,10 @@ func initFlags() error {
 	if config.Source.Server() {
 		config.EnableFileServer = true
 	}
+}
 
+// generateRandomUser check and generate some random user
+func generateRandomUser() error {
 	if config.RandomUserCount > 0 && config.EnableFileServer {
 		userList, err := auth.RandomUser(config.RandomUserCount, config.RandomUserNameLen, config.RandomPasswordLen, config.RandomDefaultPerm)
 		if err != nil {
@@ -110,7 +129,11 @@ func initFlags() error {
 		}
 		log.Info("generate random users success => [%s]", config.Users)
 	}
+	return nil
+}
 
+// checkTLS check cert and key file of the TLS
+func checkTLS() error {
 	if config.EnableTLS && (config.Source.Server() || config.EnableFileServer) {
 		exist, err := fs.FileExist(config.TLSCertFile)
 		if err != nil {
@@ -127,6 +150,5 @@ func initFlags() error {
 			return fmt.Errorf("key file is not found for tls => [%s], for more information, see -tls and -tls_key_file flags", config.TLSKeyFile)
 		}
 	}
-
 	return nil
 }
