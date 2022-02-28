@@ -137,54 +137,72 @@ func (m *fsNotifyMonitor) processEvents() error {
 			<-time.After(time.Second)
 			continue
 		}
-
 		event := element.Value.(fsnotify.Event)
 		if ignore.MatchPath(event.Name, "monitor", event.Op.String()) {
 			// ignore match
 		} else if event.Op&fsnotify.Write == fsnotify.Write {
-			// ignore is not exist error
-			if err := m.syncer.Create(event.Name); err != nil && !os.IsNotExist(err) {
-				log.Error(err, "Write event execute create error => [%s]", event.Name)
-			}
-			m.addWrite(event.Name)
+			m.write(event)
 		} else if event.Op&fsnotify.Create == fsnotify.Create {
-			err := m.syncer.Create(event.Name)
-			if err == nil {
-				// if create a new dir, then monitor it
-				isDir, err := m.syncer.IsDir(event.Name)
-				if err == nil && isDir {
-					if err = m.monitor(event.Name); err != nil {
-						log.Error(err, "Create event execute monitor error => [%s]", event.Name)
-					}
-				}
-				if err == nil && (!isDir || (isDir && !util.IsWindows())) {
-					// rename a file, will not trigger the Write event
-					// rename a dir, will not trigger the Write event on Linux, but it will trigger the Write event for parent dir on Windows
-					// send a Write event manually
-					log.Debug("prepare to send a Write event after Create event [%s]", event.Name)
-					m.events.PushBack(fsnotify.Event{
-						Name: event.Name,
-						Op:   fsnotify.Write,
-					})
-
-				}
-			}
+			m.create(event)
 		} else if event.Op&fsnotify.Remove == fsnotify.Remove {
-			m.removeWrite(event.Name)
-			if err := m.syncer.Remove(event.Name); err != nil {
-				log.Error(err, "Remove event execute error => [%s]", event.Name)
-			}
+			m.remove(event)
 		} else if event.Op&fsnotify.Rename == fsnotify.Rename {
-			if err := m.syncer.Rename(event.Name); err != nil {
-				log.Error(err, "Rename event execute error => [%s]", event.Name)
-			}
+			m.rename(event)
 		} else if event.Op&fsnotify.Chmod == fsnotify.Chmod {
-			if err := m.syncer.Chmod(event.Name); err != nil {
-				log.Error(err, "Chmod event execute error => [%s]", event.Name)
-			}
+			m.chmod(event)
 		}
 		m.events.Remove(element)
 		m.el.Write(eventlog.NewEvent(event.Name, event.Op.String()))
+	}
+}
+
+func (m *fsNotifyMonitor) write(event fsnotify.Event) {
+	// ignore is not exist error
+	if err := m.syncer.Create(event.Name); err != nil && !os.IsNotExist(err) {
+		log.Error(err, "Write event execute create error => [%s]", event.Name)
+	}
+	m.addWrite(event.Name)
+}
+
+func (m *fsNotifyMonitor) create(event fsnotify.Event) {
+	err := m.syncer.Create(event.Name)
+	if err == nil {
+		// if create a new dir, then monitor it
+		isDir, err := m.syncer.IsDir(event.Name)
+		if err == nil && isDir {
+			if err = m.monitor(event.Name); err != nil {
+				log.Error(err, "Create event execute monitor error => [%s]", event.Name)
+			}
+		}
+		if err == nil && (!isDir || (isDir && !util.IsWindows())) {
+			// rename a file, will not trigger the Write event
+			// rename a dir, will not trigger the Write event on Linux, but it will trigger the Write event for parent dir on Windows
+			// send a Write event manually
+			log.Debug("prepare to send a Write event after Create event [%s]", event.Name)
+			m.events.PushBack(fsnotify.Event{
+				Name: event.Name,
+				Op:   fsnotify.Write,
+			})
+		}
+	}
+}
+
+func (m *fsNotifyMonitor) remove(event fsnotify.Event) {
+	m.removeWrite(event.Name)
+	if err := m.syncer.Remove(event.Name); err != nil {
+		log.Error(err, "Remove event execute error => [%s]", event.Name)
+	}
+}
+
+func (m *fsNotifyMonitor) rename(event fsnotify.Event) {
+	if err := m.syncer.Rename(event.Name); err != nil {
+		log.Error(err, "Rename event execute error => [%s]", event.Name)
+	}
+}
+
+func (m *fsNotifyMonitor) chmod(event fsnotify.Event) {
+	if err := m.syncer.Chmod(event.Name); err != nil {
+		log.Error(err, "Chmod event execute error => [%s]", event.Name)
 	}
 }
 

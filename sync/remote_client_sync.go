@@ -118,6 +118,11 @@ func (rs *remoteClientSync) Write(path string) error {
 	}
 
 	// process file
+	return rs.write(path, dest)
+}
+
+// write try to write a file to the destination
+func (rs *remoteClientSync) write(path, dest string) error {
 	resp, err := rs.httpGetWithAuth(path)
 	if err != nil {
 		return err
@@ -156,16 +161,12 @@ func (rs *remoteClientSync) Write(path string) error {
 	}
 
 	// if source and dest is the same file, ignore the following steps and return directly
-	if size > 0 && size == destStat.Size() {
-		isSame, err := rs.same(hash, destFile)
-		if err == nil && isSame {
-			log.Debug("Write:ignored, the file is unmodified => %s", path)
-			return nil
-		}
-		// reset the offset
-		if _, err = destFile.Seek(0, 0); err != nil {
-			return err
-		}
+	isSame, err := rs.compare(size, destStat.Size(), hash, destFile)
+	if err == nil && isSame {
+		log.Debug("Write:ignored, the file is unmodified => %s", path)
+		return nil
+	} else if err != nil {
+		return err
 	}
 
 	// truncate first before write to file
@@ -183,13 +184,30 @@ func (rs *remoteClientSync) Write(path string) error {
 
 	if err == nil {
 		log.Info("write to the dest file success, size[%d => %d] [%s] => [%s]", size, n, path, dest)
-
-		// change file times
-		if err := os.Chtimes(dest, aTime, mTime); err != nil {
-			log.Warn("Write:change file times error => %s =>[%s]", err.Error(), dest)
-		}
+		rs.chtimes(dest, aTime, mTime)
 	}
 	return err
+}
+
+func (rs *remoteClientSync) compare(sourceSize, destSize int64, sourceHash string, destFile *os.File) (isSame bool, err error) {
+	if sourceSize > 0 && sourceSize == destSize {
+		isSame, err = rs.same(sourceHash, destFile)
+		if err == nil && isSame {
+			return isSame, nil
+		}
+		// reset the offset
+		if _, err = destFile.Seek(0, 0); err != nil {
+			return isSame, err
+		}
+	}
+	return isSame, err
+}
+
+// chtimes change file times
+func (rs *remoteClientSync) chtimes(dest string, aTime, mTime time.Time) {
+	if err := os.Chtimes(dest, aTime, mTime); err != nil {
+		log.Warn("Write:change file times error => %s =>[%s]", err.Error(), dest)
+	}
 }
 
 func (rs *remoteClientSync) Remove(path string) error {
@@ -313,6 +331,12 @@ func (rs *remoteClientSync) sync(serverAddr, path string) error {
 	if err != nil {
 		return err
 	}
+	rs.syncFiles(files, serverAddr, path)
+	return nil
+}
+
+func (rs *remoteClientSync) syncFiles(files []contract.FileInfo, serverAddr, path string) {
+	var err error
 	for _, file := range files {
 		if ignore.MatchPath(file.Path, "remote client sync", "sync once") {
 			continue
@@ -344,7 +368,6 @@ func (rs *remoteClientSync) sync(serverAddr, path string) error {
 			}
 		}
 	}
-	return nil
 }
 
 func (rs *remoteClientSync) buildDestAbsFile(sourceFileAbs string) (string, error) {

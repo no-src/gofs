@@ -105,7 +105,7 @@ func (m *remoteClientMonitor) Start() error {
 
 	// execute -sync_once flag
 	if m.syncOnce {
-		return m.syncAndWaitShutdown(w)
+		return m.syncAndShutdown(w)
 	}
 
 	// execute -sync_cron flag
@@ -120,6 +120,7 @@ func (m *remoteClientMonitor) Start() error {
 	return w.Wait()
 }
 
+// sync try to sync all the files once
 func (m *remoteClientMonitor) sync() (err error) {
 	go func() {
 		if err := m.client.Write(contract.InfoCommand); err != nil {
@@ -145,7 +146,8 @@ func (m *remoteClientMonitor) sync() (err error) {
 	return m.syncer.SyncOnce(info.ServerAddr + info.SourcePath)
 }
 
-func (m *remoteClientMonitor) syncAndWaitShutdown(w wait.Wait) (err error) {
+// syncAndShutdown execute sync and then try to shut down
+func (m *remoteClientMonitor) syncAndShutdown(w wait.Wait) (err error) {
 	if err = m.sync(); err != nil {
 		return err
 	}
@@ -155,79 +157,95 @@ func (m *remoteClientMonitor) syncAndWaitShutdown(w wait.Wait) (err error) {
 	return w.Wait()
 }
 
+// receive start receiving messages and parse the message, send to consumers according to the api type.
+// if receive a shutdown notify, then stop reading the message.
 func (m *remoteClientMonitor) receive() wait.Wait {
 	wd := wait.NewWaitDone()
 	shutdown := cbool.New(false)
-	go func() {
-		select {
-		case <-shutdown.SetC(<-m.shutdown):
-			{
-				if shutdown.Get() {
-					if err := m.Close(); err != nil {
-						log.Error(err, "close remote client monitor error")
-					}
-					wd.Done()
-				}
-			}
-		}
-	}()
-	go func() {
-		for {
-			if m.closed.Get() {
-				wd.DoneWithError(errors.New("remote monitor is closed"))
-				break
-			}
-			data, err := m.client.ReadAll()
-			if err != nil {
-				if shutdown.Get() {
-					break
-				}
-				log.Error(err, "remote client monitor read data error")
-				if m.client.IsClosed() {
-					m.authorized = false
-					log.Debug("try reconnect to server %s:%d", m.client.Host(), m.client.Port())
-					m.retry.Do(func() error {
-						if m.client.IsClosed() {
-							innerErr := m.client.Connect()
-							if innerErr != nil {
-								return innerErr
-							}
-						}
-						return nil
-					}, fmt.Sprintf("client reconnect to %s:%d", m.client.Host(), m.client.Port()))
-
-					if !m.authorized {
-						go m.auth()
-					}
-				}
-			} else {
-				var status contract.Status
-				err = util.Unmarshal(data, &status)
-				if err != nil {
-					log.Error(err, "remote client monitor unmarshal data error")
-					continue
-				}
-
-				switch status.ApiType {
-				case contract.AuthApi:
-					m.authChan <- status
-					break
-				case contract.InfoApi:
-					m.infoChan <- contract.NewMessage(data)
-					break
-				case contract.SyncMessageApi:
-					m.messages.PushBack(contract.NewMessage(data))
-					break
-				default:
-					log.Warn("remote client monitor received a unknown data => %s", string(data))
-					break
-				}
-			}
-		}
-	}()
+	go m.waitShutdown(shutdown, wd)
+	go m.readMessage(shutdown, wd)
 	return wd
 }
 
+// waitShutdown wait for the shutdown notify then mark the work done
+func (m *remoteClientMonitor) waitShutdown(st *cbool.CBool, wd wait.WaitDone) {
+	select {
+	case <-st.SetC(<-m.shutdown):
+		{
+			if st.Get() {
+				if err := m.Close(); err != nil {
+					log.Error(err, "close remote client monitor error")
+				}
+				wd.Done()
+			}
+		}
+	}
+}
+
+// readMessage loop read the messages, if receive a message, parse the message then send to consumers according to the api type.
+// if receive a shutdown notify, then stop reading the message.
+func (m *remoteClientMonitor) readMessage(st *cbool.CBool, wd wait.WaitDone) {
+	for {
+		if m.closed.Get() {
+			wd.DoneWithError(errors.New("remote monitor is closed"))
+			break
+		}
+		data, err := m.client.ReadAll()
+		if err != nil {
+			if st.Get() {
+				break
+			}
+			log.Error(err, "remote client monitor read data error")
+			if m.client.IsClosed() {
+				m.authorized = false
+				log.Debug("try reconnect to server %s:%d", m.client.Host(), m.client.Port())
+				m.retry.Do(func() error {
+					if m.client.IsClosed() {
+						innerErr := m.client.Connect()
+						if innerErr != nil {
+							return innerErr
+						}
+					}
+					return nil
+				}, fmt.Sprintf("client reconnect to %s:%d", m.client.Host(), m.client.Port()))
+
+				if !m.authorized {
+					go m.auth()
+				}
+			}
+		} else {
+			m.parseMessage(data)
+		}
+	}
+}
+
+// parseMessage arse the message then send to consumers according to the api type
+func (m *remoteClientMonitor) parseMessage(data []byte) error {
+	var status contract.Status
+	err := util.Unmarshal(data, &status)
+	if err != nil {
+		log.Error(err, "remote client monitor unmarshal data error")
+		return err
+	}
+
+	switch status.ApiType {
+	case contract.AuthApi:
+		m.authChan <- status
+		break
+	case contract.InfoApi:
+		m.infoChan <- contract.NewMessage(data)
+		break
+	case contract.SyncMessageApi:
+		m.messages.PushBack(contract.NewMessage(data))
+		break
+	default:
+		log.Warn("remote client monitor received a unknown data => %s", string(data))
+		break
+	}
+	return nil
+}
+
+// processingMessage processing the file change messages
 func (m *remoteClientMonitor) processingMessage() {
 	for {
 		element := m.messages.Front()
@@ -249,51 +267,58 @@ func (m *remoteClientMonitor) processingMessage() {
 		} else if ignore.MatchPath(msg.Path, "remote client monitor", msg.Action.String()) {
 			// ignore match
 		} else {
-			values := url.Values{}
-			values.Add(contract.FsDir, msg.IsDir.String())
-			values.Add(contract.FsSize, util.String(msg.Size))
-			values.Add(contract.FsHash, msg.Hash)
-			values.Add(contract.FsCtime, util.String(msg.CTime))
-			values.Add(contract.FsAtime, util.String(msg.ATime))
-			values.Add(contract.FsMtime, util.String(msg.MTime))
-
-			// replace question marks with "%3F" to avoid parse the path is breaking when it contains some question marks
-			path := msg.BaseUrl + strings.ReplaceAll(msg.Path, "?", "%3F") + fmt.Sprintf("?%s", values.Encode())
-
-			switch msg.Action {
-			case action.CreateAction:
-				err = m.syncer.Create(path)
-				break
-			case action.WriteAction:
-				err = m.syncer.Create(path)
-				// ignore is not exist error
-				if err != nil && os.IsNotExist(err) {
-					err = nil
-				}
-				m.addWrite(path)
-				break
-			case action.RemoveAction:
-				m.removeWrite(path)
-				err = m.syncer.Remove(path)
-				break
-			case action.RenameAction:
-				err = m.syncer.Rename(path)
-				break
-			case action.ChmodAction:
-				err = m.syncer.Chmod(path)
-				break
-			}
-
-			m.el.Write(eventlog.NewEvent(path, msg.Action.String()))
-
-			if err != nil {
-				log.Error(err, "%s action execute error => [%s]", msg.Action.String(), path)
-			}
+			m.execSync(msg)
 		}
 		m.messages.Remove(element)
 	}
 }
 
+// execSync execute the file change message to sync
+func (m *remoteClientMonitor) execSync(msg sync.Message) (err error) {
+	values := url.Values{}
+	values.Add(contract.FsDir, msg.IsDir.String())
+	values.Add(contract.FsSize, util.String(msg.Size))
+	values.Add(contract.FsHash, msg.Hash)
+	values.Add(contract.FsCtime, util.String(msg.CTime))
+	values.Add(contract.FsAtime, util.String(msg.ATime))
+	values.Add(contract.FsMtime, util.String(msg.MTime))
+
+	// replace question marks with "%3F" to avoid parse the path is breaking when it contains some question marks
+	path := msg.BaseUrl + strings.ReplaceAll(msg.Path, "?", "%3F") + fmt.Sprintf("?%s", values.Encode())
+
+	switch msg.Action {
+	case action.CreateAction:
+		err = m.syncer.Create(path)
+		break
+	case action.WriteAction:
+		err = m.syncer.Create(path)
+		// ignore is not exist error
+		if err != nil && os.IsNotExist(err) {
+			err = nil
+		}
+		m.addWrite(path)
+		break
+	case action.RemoveAction:
+		m.removeWrite(path)
+		err = m.syncer.Remove(path)
+		break
+	case action.RenameAction:
+		err = m.syncer.Rename(path)
+		break
+	case action.ChmodAction:
+		err = m.syncer.Chmod(path)
+		break
+	}
+
+	m.el.Write(eventlog.NewEvent(path, msg.Action.String()))
+
+	if err != nil {
+		log.Error(err, "%s action execute error => [%s]", msg.Action.String(), path)
+	}
+	return err
+}
+
+// Close mark the monitor is closed, then close the connection
 func (m *remoteClientMonitor) Close() error {
 	m.closed.Set(true)
 	if m.client != nil {

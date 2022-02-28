@@ -19,7 +19,6 @@ import (
 	iofs "io/fs"
 	"net/http"
 	"net/url"
-	"os"
 	"path/filepath"
 	"time"
 )
@@ -281,21 +280,9 @@ func (pcs *pushClientSync) send(act action.Action, path string) (err error) {
 	aTime := time.Now()
 	mTime := time.Now()
 	if !isDir && act == action.WriteAction {
-		file, err := os.Open(path)
+		size, hash, err = pcs.getFileSizeAndHash(path)
 		if err != nil {
 			return err
-		}
-		defer file.Close()
-		fileInfo, err := file.Stat()
-		if err != nil {
-			return err
-		}
-		size = fileInfo.Size()
-		if size > 0 {
-			hash, err = util.MD5FromFile(file)
-			if err != nil {
-				return err
-			}
 		}
 	} else if isDir && act == action.WriteAction {
 		return nil
@@ -319,7 +306,7 @@ func (pcs *pushClientSync) send(act action.Action, path string) (err error) {
 		return err
 	}
 	relPath = filepath.ToSlash(relPath)
-	req := push.PushData{
+	pd := push.PushData{
 		Action: act,
 		FileInfo: contract.FileInfo{
 			Path:  relPath,
@@ -331,8 +318,11 @@ func (pcs *pushClientSync) send(act action.Action, path string) (err error) {
 			MTime: mTime.Unix(),
 		},
 	}
+	return pcs.sendPushData(pd, act, path)
+}
 
-	data, err := util.Marshal(req)
+func (pcs *pushClientSync) sendPushData(pd push.PushData, act action.Action, path string) error {
+	data, err := util.Marshal(pd)
 	if err != nil {
 		return err
 	}
@@ -343,11 +333,15 @@ func (pcs *pushClientSync) send(act action.Action, path string) (err error) {
 		return err
 	}
 	defer resp.Body.Close()
+	return pcs.checkApiResult(resp)
+}
+
+func (pcs *pushClientSync) checkApiResult(resp *http.Response) error {
+	var apiResult server.ApiResult
 	respData, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
-	var apiResult server.ApiResult
 	err = util.Unmarshal(respData, &apiResult)
 	if err != nil {
 		return err

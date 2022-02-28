@@ -118,7 +118,13 @@ func (s *diskSync) Write(path string) error {
 	if isDir {
 		return s.SyncOnce(path)
 	}
+
 	// process file
+	return s.write(path, dest)
+}
+
+// write try to write a file to the destination
+func (s *diskSync) write(path, dest string) error {
 	sourceFile, err := os.Open(path)
 	if err != nil {
 		return err
@@ -147,8 +153,10 @@ func (s *diskSync) Write(path string) error {
 		return err
 	}
 
-	if sourceStat.Size() == 0 {
-		log.Info("write to the dest file success [size=%d] [%s] -> [%s]", sourceStat.Size(), path, dest)
+	sourceSize := sourceStat.Size()
+
+	if sourceSize == 0 {
+		log.Info("write to the dest file success [size=%d] [%s] -> [%s]", sourceSize, path, dest)
 		return nil
 	}
 
@@ -156,17 +164,12 @@ func (s *diskSync) Write(path string) error {
 	writer := bufio.NewWriter(destFile)
 
 	// if source and dest is the same file, ignore the following steps and return directly
-	if sourceStat.Size() > 0 && sourceStat.Size() == destStat.Size() {
-		isSame, err := s.same(sourceFile, destFile)
-		if err == nil && isSame {
-			log.Debug("Write:ignored, the file is unmodified => %s", path)
-			return nil
-		}
-
-		// reset the offset
-		if _, err = destFile.Seek(0, 0); err != nil {
-			return err
-		}
+	isSame, err := s.compare(sourceSize, destStat.Size(), sourceFile, destFile)
+	if err == nil && isSame {
+		log.Debug("Write:ignored, the file is unmodified => %s", path)
+		return nil
+	} else if err != nil {
+		return err
 	}
 
 	// truncate first before write to file
@@ -183,18 +186,36 @@ func (s *diskSync) Write(path string) error {
 	err = writer.Flush()
 
 	if err == nil {
-		log.Info("write to the dest file success, size[%d => %d] [%s] => [%s]", sourceStat.Size(), n, path, dest)
-
-		// change file times
-		if _, aTime, mTime, err := fs.GetFileTime(path); err == nil {
-			if err = os.Chtimes(dest, aTime, mTime); err != nil {
-				log.Warn("Write:change file times error => %s =>[%s]", err.Error(), dest)
-			}
-		} else {
-			log.Warn("Write:get file times error => %s =>[%s]", err.Error(), path)
-		}
+		log.Info("write to the dest file success, size[%d => %d] [%s] => [%s]", sourceSize, n, path, dest)
+		s.chtimes(path, dest)
 	}
 	return err
+}
+
+func (s *diskSync) compare(sourceSize, destSize int64, sourceFile *os.File, destFile *os.File) (isSame bool, err error) {
+	if sourceSize > 0 && sourceSize == destSize {
+		isSame, err = s.same(sourceFile, destFile)
+		if err == nil && isSame {
+			return isSame, nil
+		}
+
+		// reset the offset
+		if _, err = destFile.Seek(0, 0); err != nil {
+			return isSame, err
+		}
+	}
+	return isSame, err
+}
+
+// chtimes change file times
+func (s *diskSync) chtimes(source, dest string) {
+	if _, aTime, mTime, err := fs.GetFileTime(source); err == nil {
+		if err = os.Chtimes(dest, aTime, mTime); err != nil {
+			log.Warn("Write:change file times error => %s =>[%s]", err.Error(), dest)
+		}
+	} else {
+		log.Warn("Write:get file times error => %s =>[%s]", err.Error(), source)
+	}
 }
 
 func (s *diskSync) same(sourceFile *os.File, destFile *os.File) (bool, error) {
@@ -287,4 +308,22 @@ func (s *diskSync) SyncOnce(path string) error {
 		}
 		return err
 	})
+}
+
+func (s *diskSync) getFileSizeAndHash(path string) (size int64, hash string, err error) {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return size, hash, err
+	}
+	if fileInfo.IsDir() {
+		return size, hash, nil
+	}
+	size = fileInfo.Size()
+	if size > 0 {
+		hash, err = util.MD5FromFileName(path)
+		if err != nil {
+			return size, hash, err
+		}
+	}
+	return size, hash, nil
 }

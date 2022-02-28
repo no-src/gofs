@@ -13,7 +13,6 @@ import (
 	"github.com/no-src/gofs/tran"
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -113,21 +112,9 @@ func (rs *remoteServerSync) send(act action.Action, path string) (err error) {
 	aTime := time.Now()
 	mTime := time.Now()
 	if !isDir && act == action.WriteAction {
-		file, err := os.Open(path)
+		size, hash, err = rs.getFileSizeAndHash(path)
 		if err != nil {
 			return err
-		}
-		defer file.Close()
-		fileInfo, err := file.Stat()
-		if err != nil {
-			return err
-		}
-		size = fileInfo.Size()
-		if size > 0 {
-			hash, err = util.MD5FromFile(file)
-			if err != nil {
-				return err
-			}
 		}
 	}
 

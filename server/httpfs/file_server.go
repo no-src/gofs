@@ -17,6 +17,7 @@ import (
 	"github.com/no-src/gofs/server/middleware"
 	"github.com/no-src/log"
 	"html/template"
+	"io"
 	"net/http"
 	"os"
 	"time"
@@ -24,65 +25,95 @@ import (
 
 // StartFileServer start a file server by gin
 func StartFileServer(opt server.Option) error {
-	enableFileApi := false
-	source := opt.Source
-	dest := opt.Dest
 	logger := opt.Logger
+	initEnvGinMode()
+	gin.DefaultWriter = logger
 
-	// change default mode is release
+	engine := gin.New()
+	engine.NoRoute(middleware.NoRoute)
+
+	initCompress(engine, opt.EnableCompress)
+	initDefaultMiddleware(engine, logger)
+	if err := initHTMLTemplate(engine); err != nil {
+		return err
+	}
+	if err := initSession(engine); err != nil {
+		return err
+	}
+	initRoute(engine, opt, logger)
+
+	log.Info("file server [%s] starting...", opt.Addr)
+	server.InitServerInfo(opt.Addr, opt.EnableTLS)
+	opt.Init.Done()
+
+	if opt.EnableTLS {
+		return engine.RunTLS(opt.Addr, opt.CertFile, opt.KeyFile)
+	}
+	log.Warn("file server is not a security connection, you need the https replaced maybe!")
+	return engine.Run(opt.Addr)
+}
+
+// initEnvGinMode change default mode is release
+func initEnvGinMode() {
 	mode := os.Getenv(gin.EnvGinMode)
 	if mode == "" {
 		mode = gin.ReleaseMode
 	}
 	gin.SetMode(mode)
-	gin.DefaultWriter = logger
+}
 
-	engine := gin.New()
-
-	engine.NoRoute(middleware.NoRoute)
-
-	if opt.EnableCompress {
-		// enable gzip compression
-		engine.Use(gzip.Gzip(gzip.DefaultCompression))
+func initSession(engine *gin.Engine) error {
+	store, err := server.DefaultSessionStore()
+	if err != nil {
+		return err
 	}
+	engine.Use(sessions.Sessions(server.SessionName, store))
+	return nil
+}
 
+func initDefaultMiddleware(engine *gin.Engine, logger io.Writer) {
 	engine.Use(gin.LoggerWithConfig(gin.LoggerConfig{
 		Formatter: defaultLogFormatter,
 		Output:    logger,
 	}), gin.Recovery())
+}
 
+func initHTMLTemplate(engine *gin.Engine) error {
 	tmpl, err := template.ParseFS(gofs.Templates, server.ResourceTemplatePath)
 	if err != nil {
 		log.Error(err, "parse template fs error")
 		return err
 	}
 	engine.SetHTMLTemplate(tmpl)
+	return nil
+}
 
-	// init session
-	store, err := server.DefaultSessionStore()
-	if err != nil {
-		return err
+func initCompress(engine *gin.Engine, enableCompress bool) {
+	if enableCompress {
+		// enable gzip compression
+		engine.Use(gzip.Gzip(gzip.DefaultCompression))
 	}
-	engine.Use(sessions.Sessions(server.SessionName, store))
+}
+
+func initRoute(engine *gin.Engine, opt server.Option, logger log.Logger) {
+	enableFileApi := false
+	source := opt.Source
+	dest := opt.Dest
 
 	loginGroup := engine.Group(server.LoginGroupRoute)
-
 	loginGroup.GET(server.LoginIndexRoute, func(context *gin.Context) {
 		context.HTML(http.StatusOK, "login.html", nil)
 	})
-
 	loginGroup.POST(server.LoginSignInRoute, handler.NewLoginHandler(opt.Users, logger).Handle)
 
 	rootGroup := engine.Group("/")
 	wGroup := engine.Group(server.WriteGroupRoute)
-
 	if len(opt.Users) > 0 {
 		rootGroup.Use(middleware.NewAuthHandler(logger, auth.ReadPerm).Handle)
 		wGroup.Use(middleware.NewAuthHandler(logger, auth.WritePerm).Handle)
 	} else {
 		server.PrintAnonymousAccessWarning()
 	}
-
 	rootGroup.GET("/", handler.NewDefaultHandler(logger).Handle)
 
 	if opt.EnablePprof {
@@ -110,16 +141,6 @@ func StartFileServer(opt server.Option) error {
 	if enableFileApi {
 		rootGroup.GET(server.QueryRoute, handler.NewFileApiHandler(http.Dir(source.Path()), logger).Handle)
 	}
-
-	log.Info("file server [%s] starting...", opt.Addr)
-	server.InitServerInfo(opt.Addr, opt.EnableTLS)
-	opt.Init.Done()
-
-	if opt.EnableTLS {
-		return engine.RunTLS(opt.Addr, opt.CertFile, opt.KeyFile)
-	}
-	log.Warn("file server is not a security connection, you need the https replaced maybe!")
-	return engine.Run(opt.Addr)
 }
 
 var defaultLogFormatter = func(param gin.LogFormatterParams) string {
