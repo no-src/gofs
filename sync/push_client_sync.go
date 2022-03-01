@@ -358,7 +358,9 @@ func (pcs *pushClientSync) sendFileChunk(path string, act action.Action, form ur
 	var offset int64
 	buf := make([]byte, pcs.chunkSize)
 	isEnd := false
+	loopCount := 0
 	for {
+		loopCount++
 		n, err := f.ReadAt(buf, offset)
 		if err != nil && err != io.EOF {
 			return err
@@ -366,7 +368,8 @@ func (pcs *pushClientSync) sendFileChunk(path string, act action.Action, form ur
 		if err == io.EOF {
 			isEnd = true
 		}
-		if n > 0 {
+		// if loopCount == 1 means read an empty file, send it
+		if n > 0 || loopCount == 1 {
 			resp, err = pcs.httpPostWithAuth(pcs.pushAddr, act, push.UpFile, path, form, buf[:n], offset)
 			if err != nil {
 				return err
