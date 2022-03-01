@@ -338,14 +338,13 @@ func (pcs *pushClientSync) sendPushData(pd push.PushData, act action.Action, pat
 	form.Set(push.FileInfo, string(data))
 	if act == action.WriteAction {
 		return pcs.sendFileChunk(path, act, form)
-	} else {
-		resp, err = pcs.httpPostWithAuth(pcs.pushAddr, act, push.UpFile, path, form, nil, 0)
-		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
-		return pcs.checkApiResult(resp)
 	}
+	resp, err = pcs.httpPostWithAuth(pcs.pushAddr, act, push.UpFile, path, form, nil, 0)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	return pcs.checkApiResult(resp)
 }
 
 func (pcs *pushClientSync) sendFileChunk(path string, act action.Action, form url.Values) error {
