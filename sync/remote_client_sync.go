@@ -155,11 +155,6 @@ func (rs *remoteClientSync) write(path, dest string) error {
 		return err
 	}
 
-	if size == 0 {
-		log.Info("write to the dest file success [size=%d] [%s] -> [%s]", size, path, dest)
-		return nil
-	}
-
 	// if source and dest is the same file, ignore the following steps and return directly
 	isSame, err := rs.compare(size, destStat.Size(), hash, destFile)
 	if err == nil && isSame {
