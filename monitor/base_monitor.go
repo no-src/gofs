@@ -92,8 +92,8 @@ func (m *baseMonitor) processWrite() {
 			if wm != nil && !wm.cancel {
 				if (wm.count <= 2 && now-wm.last <= time.Second.Nanoseconds()) || (wm.count > 2 && now-wm.last <= 3*time.Second.Nanoseconds()) {
 					m.mu.Unlock()
+					<-time.After(time.Second)
 					go func() {
-						<-time.After(time.Second)
 						m.writeNotify <- true
 					}()
 					continue
