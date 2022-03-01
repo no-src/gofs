@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"crypto/tls"
+	"github.com/no-src/gofs/contract/push"
 	"io"
 	"mime/multipart"
 	"net"
@@ -10,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -80,6 +82,50 @@ func HttpPostFileWithCookie(url string, fieldName, fileName string, data url.Val
 	}
 	err = w.Close()
 	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, url, body)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(cookies) > 0 {
+		for _, cookie := range cookies {
+			req.AddCookie(cookie)
+		}
+	}
+	req.Header.Set("Content-Type", w.FormDataContentType())
+	return defaultClient.Do(req)
+}
+
+// HttpPostFileChunkWithCookie send a post request with form data, a file chunk and cookies
+func HttpPostFileChunkWithCookie(url string, fieldName string, fileName string, data url.Values, chunk []byte, offset int64, cookies ...*http.Cookie) (resp *http.Response, err error) {
+	body := new(bytes.Buffer)
+	w := multipart.NewWriter(body)
+
+	for k, v := range data {
+		for _, item := range v {
+			w.WriteField(k, item)
+		}
+	}
+
+	if offset > 0 {
+		w.WriteField(push.Offset, strconv.FormatInt(offset, 10))
+	}
+
+	fw, err := w.CreateFormFile(fieldName, filepath.Base(fileName))
+	if err != nil {
+		return nil, err
+	}
+
+	if len(chunk) > 0 {
+		if _, err = fw.Write(chunk); err != nil {
+			return nil, err
+		}
+	}
+
+	if err = w.Close(); err != nil {
 		return nil, err
 	}
 

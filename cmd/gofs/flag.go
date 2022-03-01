@@ -38,6 +38,7 @@ func parseFlags() {
 	flag.BoolVar(&config.ClearDeletedPath, "clear_deleted", false, "remove all of the deleted files in the dest path")
 	flag.StringVar(&config.IgnoreConf, "ignore_conf", "", "a config file of the ignore component")
 	flag.BoolVar(&config.IgnoreDeletedPath, "ignore_deleted", true, "ignore to sync the deleted file")
+	flag.Int64Var(&config.ChunkSize, "chunk_size", 1024*1024, "the chunk size of the big file to upload")
 
 	// retry
 	flag.IntVar(&config.RetryCount, "retry_count", 15, "if execute failed, then retry to work -retry_count times")

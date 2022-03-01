@@ -20,6 +20,7 @@ type Config struct {
 	ClearDeletedPath      bool
 	IgnoreConf            string
 	IgnoreDeletedPath     bool
+	ChunkSize             int64
 
 	// retry
 	RetryCount int

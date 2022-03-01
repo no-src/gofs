@@ -12,9 +12,12 @@ import (
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/log"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 )
 
@@ -42,6 +45,7 @@ func (h *pushHandler) Handle(c *gin.Context) {
 	}()
 
 	fileInfo := c.PostForm(push.FileInfo)
+	offset, _ := strconv.ParseInt(c.PostForm(push.Offset), 10, 64)
 	var pushData push.PushData
 	err := util.Unmarshal([]byte(fileInfo), &pushData)
 	if err != nil {
@@ -72,7 +76,7 @@ func (h *pushHandler) Handle(c *gin.Context) {
 		err = h.chmod(fi)
 		break
 	case action.WriteAction:
-		r, _ := h.write(fi, c)
+		r, _ := h.write(fi, offset, c)
 		c.JSON(http.StatusOK, r)
 		return
 	default:
@@ -157,7 +161,7 @@ func (h *pushHandler) chmod(fi contract.FileInfo) (err error) {
 	return nil
 }
 
-func (h *pushHandler) write(fi contract.FileInfo, c *gin.Context) (server.ApiResult, error) {
+func (h *pushHandler) write(fi contract.FileInfo, offset int64, c *gin.Context) (server.ApiResult, error) {
 	if fi.IsDir.Bool() {
 		err := errors.New("can't write a directory")
 		h.logger.Error(err, "write upload file error")
@@ -171,7 +175,7 @@ func (h *pushHandler) write(fi contract.FileInfo, c *gin.Context) (server.ApiRes
 		return server.NewErrorApiResult(-505, msg), err
 	}
 
-	if err = c.SaveUploadedFile(fh, path); err != nil {
+	if err = h.Save(fh, path, offset); err != nil {
 		h.logger.Error(err, fmt.Sprintf("save upload file error => [%s]", path))
 		return server.NewErrorApiResult(-506, fmt.Sprintf("save upload file error => [%s]", fi.Path)), err
 	}
@@ -187,4 +191,34 @@ func (h *pushHandler) write(fi contract.FileInfo, c *gin.Context) (server.ApiRes
 
 func (h *pushHandler) chtimes(absPath string, fi contract.FileInfo) error {
 	return os.Chtimes(absPath, time.Unix(fi.ATime, 0), time.Unix(fi.MTime, 0))
+}
+
+func (h *pushHandler) Save(file *multipart.FileHeader, dst string, offset int64) error {
+	src, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	var out *os.File
+	if offset > 0 {
+		out, err = os.OpenFile(dst, os.O_APPEND|os.O_CREATE, 0666)
+	} else {
+		out, err = os.Create(dst)
+	}
+
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	if offset > 0 {
+		_, err = out.Seek(offset, 0)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = io.Copy(out, src)
+	return err
 }

@@ -195,7 +195,7 @@ func initEventLogger() (log.Logger, error) {
 // initMonitor init the monitor
 func initMonitor(userList []*auth.User, eventLogger log.Logger) (monitor.Monitor, error) {
 	// create syncer
-	syncer, err := sync.NewSync(config.Source, config.Dest, config.EnableTLS, config.TLSCertFile, config.TLSKeyFile, userList, config.EnableLogicallyDelete)
+	syncer, err := sync.NewSync(config.Source, config.Dest, config.EnableTLS, config.TLSCertFile, config.TLSKeyFile, userList, config.EnableLogicallyDelete, config.ChunkSize)
 	if err != nil {
 		log.Error(err, "create the instance of Sync error")
 		return nil, err

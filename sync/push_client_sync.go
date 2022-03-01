@@ -19,6 +19,7 @@ import (
 	iofs "io/fs"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"time"
 )
@@ -35,12 +36,13 @@ type pushClientSync struct {
 	client          tran.Client
 	authChan        chan contract.Status
 	infoChan        chan contract.Message
+	chunkSize       int64
 }
 
 const timeout = time.Minute * 3
 
 // NewPushClientSync create an instance of the pushClientSync
-func NewPushClientSync(source, dest core.VFS, enableTLS bool, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
+func NewPushClientSync(source, dest core.VFS, enableTLS bool, users []*auth.User, enableLogicallyDelete bool, chunkSize int64) (Sync, error) {
 	ds, err := newDiskSync(source, dest, enableLogicallyDelete)
 	if err != nil {
 		return nil, err
@@ -51,6 +53,10 @@ func NewPushClientSync(source, dest core.VFS, enableTLS bool, users []*auth.User
 		return nil, err
 	}
 
+	if chunkSize <= 0 {
+		return nil, errors.New("chunk size must greater than zero")
+	}
+
 	s := &pushClientSync{
 		source:        source,
 		dest:          dest,
@@ -59,6 +65,7 @@ func NewPushClientSync(source, dest core.VFS, enableTLS bool, users []*auth.User
 		client:        tran.NewClient(dest.Host(), dest.Port(), enableTLS),
 		authChan:      make(chan contract.Status, 100),
 		infoChan:      make(chan contract.Message, 100),
+		chunkSize:     chunkSize,
 	}
 
 	if len(users) > 0 {
@@ -326,14 +333,55 @@ func (pcs *pushClientSync) sendPushData(pd push.PushData, act action.Action, pat
 	if err != nil {
 		return err
 	}
+	var resp *http.Response
 	form := url.Values{}
 	form.Set(push.FileInfo, string(data))
-	resp, err := pcs.httpPostWithAuth(pcs.pushAddr, act, push.UpFile, path, form)
+	if act == action.WriteAction {
+		return pcs.sendFileChunk(path, act, form)
+	} else {
+		resp, err = pcs.httpPostWithAuth(pcs.pushAddr, act, push.UpFile, path, form, nil, 0)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		return pcs.checkApiResult(resp)
+	}
+}
+
+func (pcs *pushClientSync) sendFileChunk(path string, act action.Action, form url.Values) error {
+	var resp *http.Response
+	f, err := os.Open(path)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-	return pcs.checkApiResult(resp)
+	defer f.Close()
+	var offset int64
+	buf := make([]byte, pcs.chunkSize)
+	isEnd := false
+	for {
+		n, err := f.ReadAt(buf, offset)
+		if err != nil && err != io.EOF {
+			return err
+		}
+		if err == io.EOF {
+			isEnd = true
+		}
+		if n > 0 {
+			resp, err = pcs.httpPostWithAuth(pcs.pushAddr, act, push.UpFile, path, form, buf[:n], offset)
+			if err != nil {
+				return err
+			}
+			if err = pcs.checkApiResult(resp); err != nil {
+				resp.Body.Close()
+				return err
+			}
+			resp.Body.Close()
+			offset += pcs.chunkSize
+		}
+		if isEnd {
+			return nil
+		}
+	}
 }
 
 func (pcs *pushClientSync) checkApiResult(resp *http.Response) error {
@@ -352,13 +400,13 @@ func (pcs *pushClientSync) checkApiResult(resp *http.Response) error {
 	return err
 }
 
-func (pcs *pushClientSync) httpPostWithAuth(rawURL string, act action.Action, fieldName, fileName string, data url.Values) (resp *http.Response, err error) {
+func (pcs *pushClientSync) httpPostWithAuth(rawURL string, act action.Action, fieldName string, fileName string, data url.Values, chunk []byte, offset int64) (resp *http.Response, err error) {
 	sendFile := false
 	if act == action.WriteAction {
 		sendFile = true
 	}
 	if sendFile {
-		resp, err = util.HttpPostFileWithCookie(rawURL, fieldName, fileName, data, pcs.cookies...)
+		resp, err = util.HttpPostFileChunkWithCookie(rawURL, fieldName, fileName, data, chunk, offset, pcs.cookies...)
 	} else {
 		resp, err = util.HttpPostWithCookie(rawURL, data, pcs.cookies...)
 	}
@@ -381,7 +429,7 @@ func (pcs *pushClientSync) httpPostWithAuth(rawURL string, act action.Action, fi
 			pcs.cookies = cookies
 			log.Debug("try to auto login file server success maybe, retry to get resource => %s", rawURL)
 			if sendFile {
-				return util.HttpPostFileWithCookie(rawURL, fieldName, fileName, data, pcs.cookies...)
+				return util.HttpPostFileChunkWithCookie(rawURL, fieldName, fileName, data, chunk, offset, pcs.cookies...)
 			}
 			return util.HttpPostWithCookie(rawURL, data, pcs.cookies...)
 		}
