@@ -155,11 +155,6 @@ func (s *diskSync) write(path, dest string) error {
 
 	sourceSize := sourceStat.Size()
 
-	if sourceSize == 0 {
-		log.Info("write to the dest file success [size=%d] [%s] -> [%s]", sourceSize, path, dest)
-		return nil
-	}
-
 	reader := bufio.NewReader(sourceFile)
 	writer := bufio.NewWriter(destFile)
 
@@ -200,6 +195,9 @@ func (s *diskSync) compare(sourceSize, destSize int64, sourceFile *os.File, dest
 		}
 
 		// reset the offset
+		if _, err = sourceFile.Seek(0, 0); err != nil {
+			return isSame, err
+		}
 		if _, err = destFile.Seek(0, 0); err != nil {
 			return isSame, err
 		}
