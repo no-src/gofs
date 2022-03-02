@@ -166,6 +166,8 @@ $ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./
 
 Start a remote push client to sync change files to the [Remote Push Server](#remote-push-server).
 
+Use the `chunk_size` flag to set the chunk size of the big file to upload. The default value of `chunk_size` is `1048576`, which means `1MB`.
+
 More flag usage see [Remote Disk Client](#remote-disk-client).
 
 ```bash
