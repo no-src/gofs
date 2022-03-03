@@ -19,6 +19,14 @@ A file synchronization tool out of the box based on golang.
 go install github.com/no-src/gofs/...@latest
 ```
 
+### Run In Docker
+
+If you want to run in a docker, you should install or build with the `-tags netgo` flag or set the environment `CGO_ENABLED=0`, otherwise you may get an error that the `gofs` not found, when the docker container is running.
+
+```bash
+go install -tags netgo github.com/no-src/gofs/...@latest
+```
+
 ### Run In the Background
 
 You can install a program run in the background using the following command on Windows.

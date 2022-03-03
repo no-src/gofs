@@ -19,6 +19,14 @@
 go install github.com/no-src/gofs/...@latest
 ```
 
+### 在Docker中运行
+
+如果你想要在docker中运行，请在安装或者编译的时候使用`-tags netgo`命令行参数或者设置环境变量`CGO_ENABLED=0`,否则当你运行docker容器时可能会报找不到`gofs`的错误
+
+```bash
+go install -tags netgo github.com/no-src/gofs/...@latest
+```
+
 ### 后台运行
 
 在windows系统中，你可以使用下面的命令构建一个在后台运行的不带命令行界面的程序
