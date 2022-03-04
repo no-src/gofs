@@ -109,7 +109,8 @@ Request field description:
     - `c_time` file create time
     - `a_time` file last access time
     - `m_time` file last modify time
-- `offset` the offset relative to the origin of the file
+- `offset` the offset relative to the origin of the file, `-1` means to compare file size and hash value only, `0` means
+  the first chunk or only one chunk
 - `up_file` the field name of upload file
 
 ##### Example
@@ -120,21 +121,25 @@ Upload a file to the remote push server.
 POST https://127.0.0.1/w/push HTTP/1.1
 Host: 127.0.0.1
 User-Agent: Go-http-client/1.1
-Content-Length: 530
-Content-Type: multipart/form-data; boundary=25cd7340d1fa9f33cbb84de292c474caddadf36c2905df1b91872ab15c90
-Cookie: session_id=MTY0NjI4OTI1MHxOd3dBTkZGWVZqUlpUMGhNTkVkS1NESlVVVFkzVUZCSVRrcGFXbFEzTTBwYVdGbE9ORE5MVEV0S1ZVdFpNbFZaVEVFelZrSkxUVUU9fMEvQt7d7kQuZBqNFx5PNDVCPjM07I2__MfcVp8wllvx
+Content-Length: 646
+Content-Type: multipart/form-data; boundary=af3294e968a2357d7cd21f809d3508ef96e1db1621bdc7bd1b321160676b
+Cookie: session_id=MTY0NjM3MDU2OXxOd3dBTkVGUldrUlhSa3RCUmsxVFVFcEtOMHhHUjFKRVExRmFWMWhTVjFkSlNVWk1XVGRZU0RWS05VVlFRbGswVDB0U1UwRkJTRUU9fFrO-f0mlkXZFQvCJGv_ufJTqgmmrEQPoTLKFhcWG5_D
 Accept-Encoding: gzip
 
---25cd7340d1fa9f33cbb84de292c474caddadf36c2905df1b91872ab15c90
+--af3294e968a2357d7cd21f809d3508ef96e1db1621bdc7bd1b321160676b
 Content-Disposition: form-data; name="file_info"
 
-{"path":"hello_gofs.txt","is_dir":0,"size":5,"hash":"5d41402abc4b2a76b9719d911017c592","c_time":1646289272,"a_time":1646289276,"m_time":1646287764,"action":2}
---25cd7340d1fa9f33cbb84de292c474caddadf36c2905df1b91872ab15c90
+{"path":"hello_gofs.txt","is_dir":0,"size":5,"hash":"5d41402abc4b2a76b9719d911017c592","c_time":1646370569,"a_time":1646370572,"m_time":1646287764,"action":2}
+--af3294e968a2357d7cd21f809d3508ef96e1db1621bdc7bd1b321160676b
+Content-Disposition: form-data; name="offset"
+
+0
+--af3294e968a2357d7cd21f809d3508ef96e1db1621bdc7bd1b321160676b
 Content-Disposition: form-data; name="up_file"; filename="hello_gofs.txt"
 Content-Type: application/octet-stream
 
 hello
---25cd7340d1fa9f33cbb84de292c474caddadf36c2905df1b91872ab15c90--
+--af3294e968a2357d7cd21f809d3508ef96e1db1621bdc7bd1b321160676b--
 ```
 
 #### Response

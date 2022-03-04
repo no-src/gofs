@@ -110,9 +110,7 @@ func HttpPostFileChunkWithCookie(url string, fieldName string, fileName string, 
 		}
 	}
 
-	if offset > 0 {
-		w.WriteField(push.Offset, strconv.FormatInt(offset, 10))
-	}
+	w.WriteField(push.Offset, strconv.FormatInt(offset, 10))
 
 	fw, err := w.CreateFormFile(fieldName, filepath.Base(fileName))
 	if err != nil {

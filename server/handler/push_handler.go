@@ -175,9 +175,13 @@ func (h *pushHandler) write(fi contract.FileInfo, offset int64, c *gin.Context) 
 		return server.NewErrorApiResult(-505, msg), err
 	}
 
-	if err = h.Save(fh, path, offset); err != nil {
+	abort, err := h.Save(fh, path, offset, fi.Hash, fi.Size)
+	if err != nil {
 		h.logger.Error(err, fmt.Sprintf("save upload file error => [%s]", path))
 		return server.NewErrorApiResult(-506, fmt.Sprintf("save upload file error => [%s]", fi.Path)), err
+	} else if abort {
+		h.logger.Debug("upload a file that is not modified, ignore and abort the next request => %s", fi.Path)
+		return server.NewApiResult(contract.Abort, contract.AbortDesc, nil), nil
 	}
 
 	// change file times
@@ -193,10 +197,17 @@ func (h *pushHandler) chtimes(absPath string, fi contract.FileInfo) error {
 	return os.Chtimes(absPath, time.Unix(fi.ATime, 0), time.Unix(fi.MTime, 0))
 }
 
-func (h *pushHandler) Save(file *multipart.FileHeader, dst string, offset int64) error {
+func (h *pushHandler) Save(file *multipart.FileHeader, dst string, offset int64, hash string, size int64) (abort bool, err error) {
+	// the offset less than zero means to compare file size and hash value only
+	if offset < 0 {
+		if h.compare(dst, hash, size) {
+			return true, nil
+		}
+		return abort, nil
+	}
 	src, err := file.Open()
 	if err != nil {
-		return err
+		return abort, err
 	}
 	defer src.Close()
 
@@ -208,17 +219,31 @@ func (h *pushHandler) Save(file *multipart.FileHeader, dst string, offset int64)
 	}
 
 	if err != nil {
-		return err
+		return abort, err
 	}
 	defer out.Close()
 
 	if offset > 0 {
 		_, err = out.Seek(offset, 0)
 		if err != nil {
-			return err
+			return abort, err
 		}
 	}
 
 	_, err = io.Copy(out, src)
-	return err
+	return abort, err
+}
+
+// compare compare file size and hash value
+func (h *pushHandler) compare(dstPath string, sourceHash string, sourceSize int64) (equal bool) {
+	if sourceSize > 0 && len(sourceHash) > 0 {
+		destStat, err := os.Stat(dstPath)
+		if err == nil && destStat.Size() == sourceSize {
+			destHash, err := util.MD5FromFileName(dstPath)
+			if err == nil && destHash == sourceHash {
+				return true
+			}
+		}
+	}
+	return false
 }

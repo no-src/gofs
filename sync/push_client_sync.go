@@ -344,7 +344,8 @@ func (pcs *pushClientSync) sendPushData(pd push.PushData, act action.Action, pat
 		return err
 	}
 	defer resp.Body.Close()
-	return pcs.checkApiResult(resp)
+	_, err = pcs.checkApiResult(resp)
+	return err
 }
 
 func (pcs *pushClientSync) sendFileChunk(path string, act action.Action, form url.Values) error {
@@ -357,7 +358,10 @@ func (pcs *pushClientSync) sendFileChunk(path string, act action.Action, form ur
 	var offset int64
 	buf := make([]byte, pcs.chunkSize)
 	isEnd := false
-	loopCount := 0
+
+	// if loopCount == 0 means is a request that check file size and hash value only, send it
+	// if loopCount == 1 means read an empty file maybe, send it
+	loopCount := -1
 	for {
 		loopCount++
 		n, err := f.ReadAt(buf, offset)
@@ -367,18 +371,37 @@ func (pcs *pushClientSync) sendFileChunk(path string, act action.Action, form ur
 		if err == io.EOF {
 			isEnd = true
 		}
-		// if loopCount == 1 means read an empty file, send it
-		if n > 0 || loopCount == 1 {
+
+		if loopCount == 0 && n > 0 {
+			// if file size is greater than zero, reset the isEnd and n, and set the offset=-1
+			isEnd = false
+			n = 0
+			offset = -1
+		} else if loopCount == 0 && n <= 0 {
+			// if read data nothing, send the empty file and cancel file compare request
+			loopCount++
+		}
+
+		if n > 0 || loopCount <= 1 {
 			resp, err = pcs.httpPostWithAuth(pcs.pushAddr, act, push.UpFile, path, form, buf[:n], offset)
 			if err != nil {
 				return err
 			}
-			if err = pcs.checkApiResult(resp); err != nil {
+			abort, err := pcs.checkApiResult(resp)
+			if err != nil {
 				resp.Body.Close()
 				return err
+			} else if abort {
+				resp.Body.Close()
+				log.Debug("upload a file that not modified, ignore and abort next request => %s", path)
+				return nil
 			}
 			resp.Body.Close()
-			offset += pcs.chunkSize
+			if offset < 0 {
+				offset = 0
+			} else {
+				offset += pcs.chunkSize
+			}
 		}
 		if isEnd {
 			return nil
@@ -386,20 +409,22 @@ func (pcs *pushClientSync) sendFileChunk(path string, act action.Action, form ur
 	}
 }
 
-func (pcs *pushClientSync) checkApiResult(resp *http.Response) error {
+func (pcs *pushClientSync) checkApiResult(resp *http.Response) (abort bool, err error) {
 	var apiResult server.ApiResult
 	respData, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return false, err
 	}
 	err = util.Unmarshal(respData, &apiResult)
 	if err != nil {
-		return err
+		return false, err
 	}
-	if apiResult.Code != contract.Success {
+	if apiResult.Code == contract.Abort {
+		return true, nil
+	} else if apiResult.Code != contract.Success {
 		err = fmt.Errorf("send a request to the push server error => %s", apiResult.Message)
 	}
-	return err
+	return false, err
 }
 
 func (pcs *pushClientSync) httpPostWithAuth(rawURL string, act action.Action, fieldName string, fileName string, data url.Values, chunk []byte, offset int64) (resp *http.Response, err error) {

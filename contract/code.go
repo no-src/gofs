@@ -20,6 +20,8 @@ const (
 	ServerError Code = -5
 	// AccessDeny deny current access
 	AccessDeny Code = -6
+	// Abort the abort code means to ignore and abort the next request
+	Abort Code = -7
 )
 
 const (
@@ -37,4 +39,6 @@ const (
 	ServerErrorDesc = "server internal error"
 	// AccessDenyDesc the description of AccessDeny code
 	AccessDenyDesc = "access deny"
+	// AbortDesc the description of Abort code
+	AbortDesc = "abort"
 )
