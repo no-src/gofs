@@ -113,9 +113,9 @@ func (m *remoteClientMonitor) Start() error {
 		return err
 	}
 
-	go m.processWrite()
+	go m.startReceiveWriteNotify()
 	go m.startSyncWrite()
-	go m.processingMessage()
+	go m.startProcessMessage()
 
 	return w.Wait()
 }
@@ -245,8 +245,8 @@ func (m *remoteClientMonitor) parseMessage(data []byte) error {
 	return nil
 }
 
-// processingMessage processing the file change messages
-func (m *remoteClientMonitor) processingMessage() {
+// startProcessMessage start loop to process the file change messages
+func (m *remoteClientMonitor) startProcessMessage() {
 	for {
 		element := m.messages.Front()
 		if element == nil || element.Value == nil {

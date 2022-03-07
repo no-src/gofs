@@ -78,8 +78,8 @@ func (m *baseMonitor) removeWrite(name string) {
 	m.writeNotify <- true
 }
 
-// processWrite process write list
-func (m *baseMonitor) processWrite() {
+// startReceiveWriteNotify start loop to receive write notification, and delay process
+func (m *baseMonitor) startReceiveWriteNotify() {
 	for {
 		select {
 		case <-m.writeNotify:
@@ -110,7 +110,7 @@ func (m *baseMonitor) processWrite() {
 	}
 }
 
-// startSyncWrite write file to sync
+// startSyncWrite start loop to receive a write message and process it right now
 func (m *baseMonitor) startSyncWrite() {
 	for {
 		wm := <-m.writeChan

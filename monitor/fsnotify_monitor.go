@@ -86,20 +86,21 @@ func (m *fsNotifyMonitor) Start() error {
 	}
 
 	if !source.IsDisk() && !source.Is(core.RemoteDisk) {
-		return errors.New("not local file system")
+		return errors.New("the source must be a disk or remote disk")
 	}
 	if err := m.monitor(source.Path()); err != nil {
 		return err
 	}
 
-	go m.processWrite()
+	go m.startReceiveWriteNotify()
 	go m.startSyncWrite()
-	go m.processEvents()
+	go m.startProcessEvents()
 
-	return m.listenEvents()
+	return m.startReceiveEvents()
 }
 
-func (m *fsNotifyMonitor) listenEvents() error {
+// startReceiveEvents start loop to receive file change event from the fsnotify
+func (m *fsNotifyMonitor) startReceiveEvents() error {
 	for {
 		select {
 		case event, ok := <-m.watcher.Events:
@@ -127,7 +128,8 @@ func (m *fsNotifyMonitor) listenEvents() error {
 	}
 }
 
-func (m *fsNotifyMonitor) processEvents() error {
+// startProcessEvents start loop to process all file change events
+func (m *fsNotifyMonitor) startProcessEvents() error {
 	for {
 		element := m.events.Front()
 		if element == nil || element.Value == nil {
