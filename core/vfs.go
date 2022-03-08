@@ -10,6 +10,7 @@ import (
 
 // VFS virtual file system
 type VFS struct {
+	original          string
 	path              string
 	fsType            VFSType
 	host              string
@@ -88,8 +89,9 @@ func (vfs *VFS) LocalSyncDisabled() bool {
 // NewDiskVFS create an instance of VFS for the local disk file system
 func NewDiskVFS(path string) VFS {
 	vfs := VFS{
-		fsType: Disk,
-		path:   filepath.Clean(path),
+		fsType:   Disk,
+		path:     filepath.Clean(path),
+		original: path,
 	}
 	return vfs
 }

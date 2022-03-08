@@ -19,7 +19,6 @@ var (
 )
 
 func parseFlags() {
-
 	// print help info if no arguments
 	if len(os.Args) <= 1 {
 		os.Args = append(os.Args, "-h")
@@ -28,6 +27,7 @@ func parseFlags() {
 	// other
 	flag.BoolVar(&config.PrintVersion, "v", false, "print the version info")
 	flag.BoolVar(&config.PrintAbout, "about", false, "print the about info")
+	flag.StringVar(&config.Conf, "conf", "", "the path of config file")
 
 	// file sync
 	core.VFSVar(&config.Source, "source", core.NewEmptyVFS(), "the source path by monitor")
@@ -152,4 +152,8 @@ func checkTLS() error {
 		}
 	}
 	return nil
+}
+
+func init() {
+	conf.GlobalConfig = &config
 }

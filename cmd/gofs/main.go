@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/no-src/gofs/about"
 	"github.com/no-src/gofs/auth"
+	"github.com/no-src/gofs/conf"
 	"github.com/no-src/gofs/daemon"
 	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/ignore"
@@ -19,6 +20,10 @@ import (
 
 func main() {
 	parseFlags()
+
+	if parseConfig() != nil {
+		return
+	}
 
 	// if current is subprocess, then reset the "-kill_ppid" and "-daemon"
 	if config.IsSubprocess {
@@ -102,6 +107,16 @@ func main() {
 	if err != nil {
 		log.Error(err, "start to monitor failed")
 	}
+}
+
+func parseConfig() error {
+	if len(config.Conf) > 0 {
+		if err := conf.Parse(config.Conf, &config); err != nil {
+			log.Error(err, "parse config file error => [%s]", config.Conf)
+			return err
+		}
+	}
+	return nil
 }
 
 // executeOnce execute the work and get ready to exit
