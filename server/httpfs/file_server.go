@@ -106,22 +106,24 @@ func initRoute(engine *gin.Engine, opt server.Option, logger log.Logger) {
 	})
 	loginGroup.POST(server.LoginSignInRoute, handler.NewLoginHandler(opt.Users, logger).Handle)
 
-	rootGroup := engine.Group("/")
+	rootGroup := engine.Group(server.RootGroupRoute)
 	wGroup := engine.Group(server.WriteGroupRoute)
+	manageGroup := engine.Group(server.ManageGroupRoute)
 	if len(opt.Users) > 0 {
 		rootGroup.Use(middleware.NewAuthHandler(logger, auth.ReadPerm).Handle)
 		wGroup.Use(middleware.NewAuthHandler(logger, auth.WritePerm).Handle)
+		manageGroup.Use(middleware.NewAuthHandler(logger, auth.ExecutePerm).Handle)
 	} else {
 		server.PrintAnonymousAccessWarning()
 	}
-	rootGroup.GET("/", handler.NewDefaultHandler(logger).Handle)
+	rootGroup.GET(server.DefaultRoute, handler.NewDefaultHandler(logger).Handle)
 
-	if opt.EnablePprof {
-		debugGroup := rootGroup.Group("/debug")
-		if opt.PprofPrivate {
-			debugGroup.Use(middleware.NewPrivateAccessHandler(logger).Handle)
+	if opt.EnableManage {
+		if opt.ManagePrivate {
+			manageGroup.Use(middleware.NewPrivateAccessHandler(logger).Handle)
 		}
-		pprof.RouteRegister(debugGroup, "pprof")
+		pprof.RouteRegister(manageGroup, server.PProfRoutePrefix)
+		manageGroup.GET(server.ManageConfigRoute, handler.NewManageHandler(logger).Handle)
 	}
 
 	if source.IsDisk() || source.Is(core.RemoteDisk) {

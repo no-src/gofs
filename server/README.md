@@ -10,8 +10,9 @@
 | Source File Server                    | /source/       |    GET    |              |
 | DestPath File Server                  | /dest/         |    GET    |              |
 | [File Query API](#file-query-api)     | /query         |    GET    |              |
-| PProf API                             | /debug/pprof   |    GET    |              |
 | [File Push API](#file-push-api)       | /w/push        |    POST   |              |
+| PProf API                             | /manage/pprof  |    GET    |              |
+| Config API                            | /manage/config |    GET    |              |
 
 ### File Query API
 

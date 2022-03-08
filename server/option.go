@@ -20,8 +20,8 @@ type Option struct {
 	Users                 []*auth.User
 	EnableCompress        bool
 	Logger                log.Logger
-	EnablePprof           bool
-	PprofPrivate          bool
+	EnableManage          bool
+	ManagePrivate         bool
 	EnableLogicallyDelete bool
 	EnablePushServer      bool
 }
@@ -39,8 +39,8 @@ func NewServerOption(config conf.Config, init wait.WaitDone, users []*auth.User,
 		Users:                 users,
 		EnableCompress:        config.EnableFileServerCompress,
 		Logger:                logger,
-		EnablePprof:           config.EnablePProf,
-		PprofPrivate:          config.PProfPrivate,
+		EnableManage:          config.EnableManage,
+		ManagePrivate:         config.ManagePrivate,
 		EnableLogicallyDelete: config.EnableLogicallyDelete,
 		EnablePushServer:      config.EnablePushServer,
 	}

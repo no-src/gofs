@@ -11,6 +11,10 @@ var serverAddr *net.TCPAddr
 var enableTLS bool
 
 const (
+	// RootGroupRoute the group route of root
+	RootGroupRoute = "/"
+	// DefaultRoute the route of default
+	DefaultRoute = "/"
 	// SourceRoutePrefix the route prefix of source
 	SourceRoutePrefix = "/source/"
 	// DestRoutePrefix the route prefix of dest
@@ -33,6 +37,12 @@ const (
 	PushRoute = "/push"
 	// PushFullRoute the full route of push api
 	PushFullRoute = WriteGroupRoute + PushRoute
+	// ManageGroupRoute the group route of manage api
+	ManageGroupRoute = "/manage"
+	// ManageConfigRoute the route of manage config api
+	ManageConfigRoute = "/config"
+	// PProfRoutePrefix the route prefix of pprof
+	PProfRoutePrefix = "pprof"
 )
 
 const (

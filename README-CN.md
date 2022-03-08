@@ -221,23 +221,38 @@ $ gofs -source="./source" -dest="rs://127.0.0.1:8105?local_sync_disabled=false&p
   |       |       |                                      |
  方案   主机名   端口号                                    参数
 ```
+### 管理接口
 
-### 性能分析
+基于[Web文件服务器](#web文件服务器)的应用管理接口
 
-基于[Web文件服务器](#web文件服务器)启用性能分析工具pprof
+默认情况下，仅允许私有地址和回环地址访问管理接口的相关路由
 
-默认情况下，仅允许私有地址和回环地址访问pprof相关路由
-
-你可以通过将`pprof_private`设置为`false`来禁用默认行为，允许公网IP访问pprof路由
+你可以通过将`manage_private`命令行参数设置为`false`来禁用默认行为，允许公网IP访问管理接口的路由
 
 ```bash
-$ gofs -source=./source -dest=./dest -server -tls_cert_file=cert.pem -tls_key_file=key.pem -rand_user_count=3 -pprof
+$ gofs -source=./source -dest=./dest -server -tls_cert_file=cert.pem -tls_key_file=key.pem -rand_user_count=3 -manage
 ```
+
+#### 性能分析
 
 pprof访问地址如下：
 
 ```text
-https://127.0.0.1/debug/pprof/
+https://127.0.0.1/manage/pprof/
+```
+
+#### 配置接口
+
+读取应用程序配置，默认返回`json`格式，当前支持`json`和`yaml`格式
+
+```text
+https://127.0.0.1/manage/config
+```
+
+或者使用`format`参数来指定返回的配置格式
+
+```text
+https://127.0.0.1/manage/config?format=yaml
 ```
 
 ### 日志

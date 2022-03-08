@@ -21,7 +21,9 @@ go install github.com/no-src/gofs/...@latest
 
 ### Run In Docker
 
-If you want to run in a docker, you should install or build with the `-tags netgo` flag or set the environment `CGO_ENABLED=0`, otherwise you may get an error that the `gofs` not found, when the docker container is running.
+If you want to run in a docker, you should install or build with the `-tags netgo` flag or set the
+environment `CGO_ENABLED=0`, otherwise you may get an error that the `gofs` not found, when the docker container is
+running.
 
 ```bash
 go install -tags netgo github.com/no-src/gofs/...@latest
@@ -109,17 +111,21 @@ $  gofs -source=./source -dest=./dest -daemon -daemon_pid
 
 Start a file server for source directory and dest directory.
 
-The file server is use HTTPS default, set the `tls_cert_file` and `tls_key_file` flags to customize the cert file and key file.
+The file server is use HTTPS default, set the `tls_cert_file` and `tls_key_file` flags to customize the cert file and
+key file.
 
 You can disable the HTTPS by set the `tls` flag to `false` if you don't need it.
 
-If you set the `tls` to `true`, the file server default port is `443`, otherwise it is `80`, and you can customize the default port with the `server_addr` flag, like `-server_addr=":443"`.
+If you set the `tls` to `true`, the file server default port is `443`, otherwise it is `80`, and you can customize the
+default port with the `server_addr` flag, like `-server_addr=":443"`.
 
-You should set the `rand_user_count` flag to auto generate some random users or set the `users` flag to customize server users for security reasons.
+You should set the `rand_user_count` flag to auto generate some random users or set the `users` flag to customize server
+users for security reasons.
 
 The server users will output to log if you set the `rand_user_count` flag greater than zero.
 
-If you need to compress the files, add the `server_compress` flag to enable gzip compression for response, but it is not fast now.
+If you need to compress the files, add the `server_compress` flag to enable gzip compression for response, but it is not
+fast now.
 
 ```bash
 # Start a file server and create three random users
@@ -133,7 +139,8 @@ Start a remote disk server as a remote file source.
 
 The `source` flag detail see [Remote Server Source Protocol](#remote-server-source-protocol).
 
-Pay attention to that remote disk server users must have read permission at least, for example, `-users="gofs|password|r"`.
+Pay attention to that remote disk server users must have read permission at least, for
+example, `-users="gofs|password|r"`.
 
 ```bash
 # Start a remote disk server
@@ -146,9 +153,11 @@ $ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./
 
 Start a remote disk client to sync change files from remote disk server.
 
-Use the `sync_once` flag to sync the whole path immediately from remote disk server to local dest directory, like [Sync Once](#sync-once).
+Use the `sync_once` flag to sync the whole path immediately from remote disk server to local dest directory,
+like [Sync Once](#sync-once).
 
-Use the `sync_cron` flag to sync the whole path from remote disk server to local dest directory with cron, like [Sync Cron](#sync-cron).
+Use the `sync_cron` flag to sync the whole path from remote disk server to local dest directory with cron,
+like [Sync Cron](#sync-cron).
 
 The `source` flag detail see [Remote Server Source Protocol](#remote-server-source-protocol).
 
@@ -160,9 +169,11 @@ $ gofs -source="rs://127.0.0.1:8105" -dest=./dest -users="gofs|password"
 
 ### Remote Push Server
 
-Start a [Remote Disk Server](#remote-disk-server) as a remote file source, then enable the remote push server with the `push_server` flag.
+Start a [Remote Disk Server](#remote-disk-server) as a remote file source, then enable the remote push server with
+the `push_server` flag.
 
-Pay attention to that remote push server users must have read and write permission at least, for example, `-users="gofs|password|rw"`.
+Pay attention to that remote push server users must have read and write permission at least, for
+example, `-users="gofs|password|rw"`.
 
 ```bash
 # Start a remote disk server and enable the remote push server
@@ -175,7 +186,8 @@ $ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./
 
 Start a remote push client to sync change files to the [Remote Push Server](#remote-push-server).
 
-Use the `chunk_size` flag to set the chunk size of the big file to upload. The default value of `chunk_size` is `1048576`, which means `1MB`.
+Use the `chunk_size` flag to set the chunk size of the big file to upload. The default value of `chunk_size`
+is `1048576`, which means `1MB`.
 
 More flag usage see [Remote Disk Client](#remote-disk-client).
 
@@ -195,8 +207,8 @@ The scheme name is `rs`.
 
 #### Host
 
-The remote server source uses `0.0.0.0` or other local ip address as host in [Remote Disk Server](#remote-disk-server) mode, and 
-use ip address or domain name as host in [Remote Disk Client](#remote-disk-client) mode.
+The remote server source uses `0.0.0.0` or other local ip address as host in [Remote Disk Server](#remote-disk-server)
+mode, and use ip address or domain name as host in [Remote Disk Client](#remote-disk-client) mode.
 
 #### Port
 
@@ -207,9 +219,11 @@ The remote server source port, default is `8105`.
 Use the following parameters in [Remote Disk Server](#remote-disk-server) mode only.
 
 - `path` the [Remote Disk Server](#remote-disk-server) actual local source directory
-- `mode` running mode, in [Remote Disk Server](#remote-disk-server) mode is `server`, default is running in [Remote Disk Client](#remote-disk-client) mode
+- `mode` running mode, in [Remote Disk Server](#remote-disk-server) mode is `server`, default is running
+  in [Remote Disk Client](#remote-disk-client) mode
 - `fs_server` [File Server](#file-server) address, like `https://127.0.0.1`
-- `local_sync_disabled` disabled [Remote Disk Server](#remote-disk-server) sync changes to its local dest path, `true` or `false`, default is `false`
+- `local_sync_disabled` disabled [Remote Disk Server](#remote-disk-server) sync changes to its local dest path, `true`
+  or `false`, default is `false`
 
 #### Example
 
@@ -222,27 +236,45 @@ For example, in [Remote Disk Server](#remote-disk-server) mode.
 scheme   host    port                                parameter
 ```
 
-### Profiling
+### Manage API
 
-Enable pprof base [File Server](#file-server).
+Enable manage api base on [File Server](#file-server) by using the `manage` flag.
 
-By default, allow to access pprof route by private address and loopback address only.
+By default, allow to access manage api by private address and loopback address only.
 
-You can disable it by setting the `pprof_private` to `false`.
+You can disable it by setting the `manage_private` flag to `false`.
 
 ```bash
-$ gofs -source=./source -dest=./dest -server -tls_cert_file=cert.pem -tls_key_file=key.pem -rand_user_count=3 -pprof
+$ gofs -source=./source -dest=./dest -server -tls_cert_file=cert.pem -tls_key_file=key.pem -rand_user_count=3 -manage
 ```
+
+#### Profiling
 
 The pprof url address like this
 
 ```text
-https://127.0.0.1/debug/pprof/
+https://127.0.0.1/manage/pprof/
+```
+
+#### Config
+
+Reading the program config, default return the config with `json` format, and support `json` and `yaml` format
+currently.
+
+```text
+https://127.0.0.1/manage/config
+```
+
+Or use the `format` parameter to specific the config format.
+
+```text
+https://127.0.0.1/manage/config?format=yaml
 ```
 
 ### Logger
 
-Enable the file logger and console logger by default, and you can disable the file logger by setting the `log_file` flag to `false`.
+Enable the file logger and console logger by default, and you can disable the file logger by setting the `log_file` flag
+to `false`.
 
 Use the `log_level` flag to set the log level, default is `INFO`, (`DEBUG=0` `INFO=1` `WARN=2` `ERROR=3`).
 

@@ -48,8 +48,8 @@ type Config struct {
 	EnableFileServer         bool   `json:"server" yaml:"server"`
 	FileServerAddr           string `json:"server_addr" yaml:"server_addr"`
 	EnableFileServerCompress bool   `json:"server_compress" yaml:"server_compress"`
-	EnablePProf              bool   `json:"pprof" yaml:"pprof"`
-	PProfPrivate             bool   `json:"pprof_private" yaml:"pprof_private"`
+	EnableManage             bool   `json:"manage" yaml:"manage"`
+	ManagePrivate            bool   `json:"manage_private" yaml:"manage_private"`
 	EnablePushServer         bool   `json:"push_server" yaml:"push_server"`
 
 	// tls transfer
