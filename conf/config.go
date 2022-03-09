@@ -2,7 +2,6 @@ package conf
 
 import (
 	"github.com/no-src/gofs/core"
-	"time"
 )
 
 // Config store all the flag info
@@ -18,14 +17,14 @@ type Config struct {
 	SyncOnce              bool     `json:"sync_once" yaml:"sync_once"`
 	SyncCron              string   `json:"sync_cron" yaml:"sync_cron"`
 	EnableLogicallyDelete bool     `json:"logically_delete" yaml:"logically_delete"`
-	ClearDeletedPath      bool     `json:"-" yaml:"-"`
+	ClearDeletedPath      bool     `json:"clear_deleted" yaml:"clear_deleted"`
 	IgnoreConf            string   `json:"ignore_conf" yaml:"ignore_conf"`
 	IgnoreDeletedPath     bool     `json:"ignore_deleted" yaml:"ignore_deleted"`
 	ChunkSize             int64    `json:"chunk_size" yaml:"chunk_size"`
 
 	// retry
 	RetryCount int           `json:"retry_count" yaml:"retry_count"`
-	RetryWait  time.Duration `json:"retry_wait" yaml:"retry_wait"`
+	RetryWait  core.Duration `json:"retry_wait" yaml:"retry_wait"`
 	RetryAsync bool          `json:"retry_async" yaml:"retry_async"`
 
 	// log
@@ -33,16 +32,16 @@ type Config struct {
 	EnableFileLogger bool          `json:"log_file" yaml:"log_file"`
 	LogDir           string        `json:"log_dir" yaml:"log_dir"`
 	LogFlush         bool          `json:"log_flush" yaml:"log_flush"`
-	LogFlushInterval time.Duration `json:"log_flush_interval" yaml:"log_flush_interval"`
+	LogFlushInterval core.Duration `json:"log_flush_interval" yaml:"log_flush_interval"`
 	EnableEventLog   bool          `json:"log_event" yaml:"log_event"`
 
 	// daemon
 	IsDaemon           bool          `json:"daemon" yaml:"daemon"`
 	DaemonPid          bool          `json:"daemon_pid" yaml:"daemon_pid"`
-	DaemonDelay        time.Duration `json:"daemon_delay" yaml:"daemon_delay"`
-	DaemonMonitorDelay time.Duration `json:"daemon_monitor_delay" yaml:"daemon_monitor_delay"`
+	DaemonDelay        core.Duration `json:"daemon_delay" yaml:"daemon_delay"`
+	DaemonMonitorDelay core.Duration `json:"daemon_monitor_delay" yaml:"daemon_monitor_delay"`
 	KillPPid           bool          `json:"kill_ppid" yaml:"kill_ppid"`
-	IsSubprocess       bool          `json:"-" yaml:"-"`
+	IsSubprocess       bool          `json:"sub" yaml:"sub"`
 
 	// file server
 	EnableFileServer         bool   `json:"server" yaml:"server"`

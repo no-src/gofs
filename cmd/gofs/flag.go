@@ -42,7 +42,7 @@ func parseFlags() {
 
 	// retry
 	flag.IntVar(&config.RetryCount, "retry_count", 15, "if execute failed, then retry to work -retry_count times")
-	flag.DurationVar(&config.RetryWait, "retry_wait", time.Second*5, "if retry to work, wait -retry_wait time then do")
+	core.DurationVar(&config.RetryWait, "retry_wait", time.Second*5, "if retry to work, wait -retry_wait time then do")
 	flag.BoolVar(&config.RetryAsync, "retry_async", false, "execute retry asynchronously")
 
 	// log
@@ -50,14 +50,14 @@ func parseFlags() {
 	flag.BoolVar(&config.EnableFileLogger, "log_file", true, "enable the file logger")
 	flag.StringVar(&config.LogDir, "log_dir", "./logs/", "set the directory of the log file")
 	flag.BoolVar(&config.LogFlush, "log_flush", true, "enable auto flush log with interval")
-	flag.DurationVar(&config.LogFlushInterval, "log_flush_interval", time.Second*3, "set the log flush interval duration, you need to enable -log_flush first")
+	core.DurationVar(&config.LogFlushInterval, "log_flush_interval", time.Second*3, "set the log flush interval duration, you need to enable -log_flush first")
 	flag.BoolVar(&config.EnableEventLog, "log_event", false, "enable the event log")
 
 	// daemon
 	flag.BoolVar(&config.IsDaemon, "daemon", false, "enable daemon to create and monitor a subprocess to work, you can use [go build -ldflags=\"-H windowsgui\"] to build on Windows")
 	flag.BoolVar(&config.DaemonPid, "daemon_pid", false, "record parent process pid, daemon process pid and worker process pid to pid file")
-	flag.DurationVar(&config.DaemonDelay, "daemon_delay", time.Second, "daemon work interval, wait to create subprocess")
-	flag.DurationVar(&config.DaemonMonitorDelay, "daemon_monitor_delay", time.Second*3, "daemon monitor work interval, wait to check subprocess state")
+	core.DurationVar(&config.DaemonDelay, "daemon_delay", time.Second, "daemon work interval, wait to create subprocess")
+	core.DurationVar(&config.DaemonMonitorDelay, "daemon_monitor_delay", time.Second*3, "daemon monitor work interval, wait to check subprocess state")
 	flag.BoolVar(&config.KillPPid, "kill_ppid", false, "try to kill the parent process when it's running")
 	flag.BoolVar(&config.IsSubprocess, daemon.SubprocessTag, false, "tag current process is subprocess")
 

@@ -62,7 +62,7 @@ func main() {
 	// start the daemon
 	if config.IsDaemon {
 		go signal.Notify(daemon.Shutdown)
-		daemon.Daemon(config.DaemonPid, config.DaemonDelay, config.DaemonMonitorDelay)
+		daemon.Daemon(config.DaemonPid, config.DaemonDelay.Duration(), config.DaemonMonitorDelay.Duration())
 		log.Info("daemon exited")
 		return
 	}
@@ -153,7 +153,7 @@ func initDefaultLogger() error {
 		if config.IsDaemon {
 			filePrefix += "daemon_"
 		}
-		flogger, err := log.NewFileLoggerWithAutoFlush(log.Level(config.LogLevel), config.LogDir, filePrefix, config.LogFlush, config.LogFlushInterval)
+		flogger, err := log.NewFileLoggerWithAutoFlush(log.Level(config.LogLevel), config.LogDir, filePrefix, config.LogFlush, config.LogFlushInterval.Duration())
 		if err != nil {
 			log.Error(err, "init file logger error")
 			return err
@@ -169,7 +169,7 @@ func initDefaultLogger() error {
 func initWebServerLogger() (log.Logger, error) {
 	var webLogger = log.NewConsoleLogger(log.Level(config.LogLevel))
 	if config.EnableFileLogger && config.EnableFileServer {
-		webFileLogger, err := log.NewFileLoggerWithAutoFlush(log.Level(config.LogLevel), config.LogDir, "web_", config.LogFlush, config.LogFlushInterval)
+		webFileLogger, err := log.NewFileLoggerWithAutoFlush(log.Level(config.LogLevel), config.LogDir, "web_", config.LogFlush, config.LogFlushInterval.Duration())
 		if err != nil {
 			log.Error(err, "init the web server file logger error")
 			return nil, err
@@ -197,7 +197,7 @@ func startWebServer(webLogger log.Logger, userList []*auth.User) {
 func initEventLogger() (log.Logger, error) {
 	var eventLogger = log.NewEmptyLogger()
 	if config.EnableEventLog {
-		eventFileLogger, err := log.NewFileLoggerWithAutoFlush(log.Level(config.LogLevel), config.LogDir, "event_", config.LogFlush, config.LogFlushInterval)
+		eventFileLogger, err := log.NewFileLoggerWithAutoFlush(log.Level(config.LogLevel), config.LogDir, "event_", config.LogFlush, config.LogFlushInterval.Duration())
 		if err != nil {
 			log.Error(err, "init the event file logger error")
 			return nil, err
@@ -217,7 +217,7 @@ func initMonitor(userList []*auth.User, eventLogger log.Logger) (monitor.Monitor
 	}
 
 	// create retry
-	r := retry.New(config.RetryCount, config.RetryWait, config.RetryAsync)
+	r := retry.New(config.RetryCount, config.RetryWait.Duration(), config.RetryAsync)
 
 	// create monitor
 	m, err := monitor.NewMonitor(syncer, r, config.SyncOnce, config.EnableTLS, userList, eventLogger)
