@@ -221,6 +221,7 @@ $ gofs -source="./source" -dest="rs://127.0.0.1:8105?local_sync_disabled=false&p
   |       |       |                                      |
  方案   主机名   端口号                                    参数
 ```
+
 ### 管理接口
 
 基于[Web文件服务器](#web文件服务器)的应用管理接口
@@ -233,7 +234,7 @@ $ gofs -source="./source" -dest="rs://127.0.0.1:8105?local_sync_disabled=false&p
 $ gofs -source=./source -dest=./dest -server -tls_cert_file=cert.pem -tls_key_file=key.pem -rand_user_count=3 -manage
 ```
 
-#### 性能分析
+#### 性能分析接口
 
 pprof访问地址如下：
 
@@ -272,6 +273,16 @@ https://127.0.0.1/manage/config?format=yaml
 ```bash
 # 在"本地磁盘"模式下设置日志信息
 $ gofs -source=./source -dest=./dest -log_file -log_level=0 -log_dir="./logs/" -log_flush -log_flush_interval=3s -log_event
+```
+
+### 使用配置文件
+
+如果需要的话，你可以使用配置文件来代替所有的命令行参数，当前支持`json`和`yaml`格式
+
+所有的配置字段名称跟命令行参数一样，你可以参考[配置示例](/conf/example)或者[配置接口](#配置接口)的响应结果
+
+```bash
+$ gofs -conf=./gofs.yaml
 ```
 
 ## 更多信息

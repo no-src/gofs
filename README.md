@@ -248,7 +248,7 @@ You can disable it by setting the `manage_private` flag to `false`.
 $ gofs -source=./source -dest=./dest -server -tls_cert_file=cert.pem -tls_key_file=key.pem -rand_user_count=3 -manage
 ```
 
-#### Profiling
+#### Profiling API
 
 The pprof url address like this
 
@@ -256,7 +256,7 @@ The pprof url address like this
 https://127.0.0.1/manage/pprof/
 ```
 
-#### Config
+#### Config API
 
 Reading the program config, default return the config with `json` format, and support `json` and `yaml` format
 currently.
@@ -289,6 +289,17 @@ Use the `log_event` flag to enable the event log, write to file, default is `fal
 ```bash
 # set the logger config in "Local Disk" mode
 $ gofs -source=./source -dest=./dest -log_file -log_level=0 -log_dir="./logs/" -log_flush -log_flush_interval=3s -log_event
+```
+
+### Use Configuration File
+
+If you want, you can use a configuration file to replace all the flags.It supports `json` and `yaml` format currently.
+
+All the configuration fields are the same as the flags, you can refer to the [Configuration Example](/conf/example)
+or the response of [Config API](#config-api).
+
+```bash
+$ gofs -conf=./gofs.yaml
 ```
 
 ## For More Information
