@@ -1,5 +1,7 @@
 package wait
 
+import "sync"
+
 // WaitDone support execute the work synchronously and mark the work done
 type WaitDone interface {
 	Wait
@@ -24,7 +26,9 @@ func NewWaitDone() WaitDone {
 }
 
 type wait struct {
-	c chan error
+	c    chan error
+	done bool
+	mu   sync.Mutex
 }
 
 func (w *wait) Wait() error {
@@ -32,9 +36,19 @@ func (w *wait) Wait() error {
 }
 
 func (w *wait) Done() {
-	w.c <- nil
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	if !w.done {
+		w.c <- nil
+		w.done = true
+	}
 }
 
 func (w *wait) DoneWithError(err error) {
-	w.c <- err
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	if !w.done {
+		w.c <- err
+		w.done = true
+	}
 }
