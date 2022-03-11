@@ -24,6 +24,9 @@ func New(w io.Writer) EventLog {
 }
 
 func (el *eventLog) Write(event event) error {
+	if el.w == nil {
+		return nil
+	}
 	_, err := el.w.Write([]byte(fmt.Sprintf("[%s]%s\n", time.Now().Format("2006-01-02 15:04:05.999"), event.String())))
 	return err
 }
