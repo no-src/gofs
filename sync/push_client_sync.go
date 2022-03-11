@@ -274,7 +274,7 @@ func (pcs *pushClientSync) Dest() core.VFS {
 
 func (pcs *pushClientSync) send(act action.Action, path string) (err error) {
 	isDir := false
-	if act != action.RemoveAction && act != action.RenameAction {
+	if pcs.needCheckDir(act) {
 		isDir, err = pcs.IsDir(path)
 		if err != nil {
 			return err
@@ -286,16 +286,16 @@ func (pcs *pushClientSync) send(act action.Action, path string) (err error) {
 	cTime := time.Now()
 	aTime := time.Now()
 	mTime := time.Now()
-	if !isDir && act == action.WriteAction {
+	if pcs.needGetFileSizeAndHash(isDir, act) {
 		size, hash, err = pcs.getFileSizeAndHash(path)
 		if err != nil {
 			return err
 		}
-	} else if isDir && act == action.WriteAction {
+	} else if pcs.needIgnoreDirWrite(isDir, act) {
 		return nil
 	}
 
-	if act == action.WriteAction || act == action.CreateAction {
+	if pcs.needGetFileTime(act) {
 		var timeErr error
 		cTime, aTime, mTime, timeErr = fs.GetFileTime(path)
 		if timeErr != nil {
@@ -326,6 +326,22 @@ func (pcs *pushClientSync) send(act action.Action, path string) (err error) {
 		},
 	}
 	return pcs.sendPushData(pd, act, path)
+}
+
+func (pcs *pushClientSync) needCheckDir(act action.Action) bool {
+	return act != action.RemoveAction && act != action.RenameAction
+}
+
+func (pcs *pushClientSync) needGetFileSizeAndHash(isDir bool, act action.Action) bool {
+	return !isDir && act == action.WriteAction
+}
+
+func (pcs *pushClientSync) needIgnoreDirWrite(isDir bool, act action.Action) bool {
+	return isDir && act == action.WriteAction
+}
+
+func (pcs *pushClientSync) needGetFileTime(act action.Action) bool {
+	return act == action.WriteAction || act == action.CreateAction
 }
 
 func (pcs *pushClientSync) sendPushData(pd push.PushData, act action.Action, path string) error {
@@ -365,24 +381,24 @@ func (pcs *pushClientSync) sendFileChunk(path string, act action.Action, form ur
 	for {
 		loopCount++
 		n, err := f.ReadAt(buf, offset)
-		if err != nil && err != io.EOF {
+		if fs.IsNonEOF(err) {
 			return err
 		}
-		if err == io.EOF {
+		if fs.IsEOF(err) {
 			isEnd = true
 		}
 
-		if loopCount == 0 && n > 0 {
+		if pcs.needCheckHash(loopCount, n) {
 			// if file size is greater than zero, reset the isEnd and n, and set the offset=-1
 			isEnd = false
 			n = 0
 			offset = -1
-		} else if loopCount == 0 && n <= 0 {
+		} else if pcs.isReadEmptyFile(loopCount, n) {
 			// if read data nothing, send the empty file and cancel file compare request
 			loopCount++
 		}
 
-		if n > 0 || loopCount <= 1 {
+		if pcs.needSendRequest(loopCount, n) {
 			resp, err = pcs.httpPostWithAuth(pcs.pushAddr, act, push.UpFile, path, form, buf[:n], offset)
 			if err != nil {
 				return err
@@ -407,6 +423,18 @@ func (pcs *pushClientSync) sendFileChunk(path string, act action.Action, form ur
 			return nil
 		}
 	}
+}
+
+func (pcs *pushClientSync) needCheckHash(loopCount, dataLen int) bool {
+	return loopCount == 0 && dataLen > 0
+}
+
+func (pcs *pushClientSync) isReadEmptyFile(loopCount, dataLen int) bool {
+	return loopCount == 0 && dataLen <= 0
+}
+
+func (pcs *pushClientSync) needSendRequest(loopCount, dataLen int) bool {
+	return dataLen > 0 || loopCount <= 1
 }
 
 func (pcs *pushClientSync) checkApiResult(resp *http.Response) (abort bool, err error) {
