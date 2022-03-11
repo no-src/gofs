@@ -2,18 +2,24 @@ package fs
 
 import (
 	"github.com/no-src/gofs/util"
+	"os"
 	"testing"
 )
 
+const (
+	testNotFoundFilePath = "./fs_test_not_found.go"
+	testExistFilePath    = "./fs_test.go"
+)
+
 func TestGetFileTime(t *testing.T) {
-	file := "./fs_test.go"
+	file := testExistFilePath
 	_, _, _, err := GetFileTime(file)
 	if err != nil {
 		t.Errorf("get file time error %s => %v", file, err)
 		return
 	}
 
-	file = "./fs_test_not_found.go"
+	file = testNotFoundFilePath
 	_, _, _, err = GetFileTime(file)
 	if err == nil {
 		t.Errorf("get file time from a not exist file should be return error %s => %v", file, err)
@@ -30,7 +36,7 @@ func TestGetFileTimeBySys(t *testing.T) {
 }
 
 func TestFileExist(t *testing.T) {
-	file := "./fs_test.go"
+	file := testExistFilePath
 	exist, err := FileExist(file)
 	if err != nil {
 		t.Errorf("check file exist error %s => %v", file, err)
@@ -41,7 +47,7 @@ func TestFileExist(t *testing.T) {
 		return
 	}
 
-	file = "./fs_test_not_found.go"
+	file = testNotFoundFilePath
 	exist, err = FileExist(file)
 	if err != nil {
 		t.Errorf("check file exist error %s => %v", file, err)
@@ -64,7 +70,7 @@ func TestFileExist(t *testing.T) {
 }
 
 func TestCreateFile(t *testing.T) {
-	file := "./fs_test.go"
+	file := testExistFilePath
 	_, err := CreateFile(file)
 	if err != nil {
 		t.Errorf("create file error %s => %v", file, err)
@@ -73,7 +79,7 @@ func TestCreateFile(t *testing.T) {
 }
 
 func TestOpenRWFile(t *testing.T) {
-	file := "./fs_test.go"
+	file := testExistFilePath
 	_, err := OpenRWFile(file)
 	if err != nil {
 		t.Errorf("create file error %s => %v", file, err)
@@ -82,17 +88,45 @@ func TestOpenRWFile(t *testing.T) {
 }
 
 func TestIsDir(t *testing.T) {
-	file := "./fs_test.go"
+	file := testExistFilePath
 	_, err := IsDir(file)
 	if err != nil {
 		t.Errorf("check path is dir error %s => %v", file, err)
 		return
 	}
 
-	file = "./fs_test_not_found.go"
+	file = testNotFoundFilePath
 	_, err = IsDir(file)
 	if err == nil {
 		t.Errorf("check path is dir from a not exist file should be return error %s => %v", file, err)
 		return
+	}
+}
+
+func TestIsEOF(t *testing.T) {
+	file := testExistFilePath
+	f, err := os.Open(file)
+	if err != nil {
+		t.Errorf("test IsEOF error, open file error [%s] => %s", file, err)
+		return
+	}
+	// move to end
+	_, err = f.Seek(1, 2)
+	if err != nil {
+		t.Errorf("test IsEOF error, seek file error [%s] => %s", file, err)
+		return
+	}
+	data := make([]byte, 1024)
+	_, err = f.Read(data)
+	if !IsEOF(err) {
+		t.Errorf("test IsEOF error, read file error [%s] => %s", file, err)
+	}
+}
+
+func TestIsNonEOF(t *testing.T) {
+	file := testNotFoundFilePath
+	_, err := os.Stat(file)
+	if !IsNonEOF(err) {
+		t.Errorf("test IsNonEOF error, get actual err:%s", err)
 	}
 }

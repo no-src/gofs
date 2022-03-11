@@ -1,6 +1,8 @@
 package fs
 
 import (
+	"errors"
+	"io"
 	"os"
 )
 
@@ -33,4 +35,14 @@ func IsDir(path string) (bool, error) {
 		return false, err
 	}
 	return f.IsDir(), nil
+}
+
+// IsEOF whether the error is io.EOF
+func IsEOF(err error) bool {
+	return err != nil && errors.Is(err, io.EOF)
+}
+
+// IsNonEOF whether the error is not io.EOF and is not nil
+func IsNonEOF(err error) bool {
+	return err != nil && !errors.Is(err, io.EOF)
 }
