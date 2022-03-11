@@ -30,14 +30,17 @@ func (r *defaultRetry) Do(f func() error, desc string) wait.Wait {
 	return r.DoWithContext(context.Background(), f, desc)
 }
 
-func (r *defaultRetry) DoWithContext(ctx context.Context, f func() error, desc string) wait.Wait {
+func (r *defaultRetry) DoWithContext(ctx context.Context, f func() error, desc string) (w wait.Wait) {
+	wd := wait.NewWaitDone()
 	defer func() {
 		e := recover()
 		if e != nil {
 			log.Warn("retry do recover from => [%s] error => %v", desc, e)
+			wd.Done()
+			w = wd
 		}
 	}()
-	wd := wait.NewWaitDone()
+
 	if f == nil || f() == nil || r.count <= 0 {
 		wd.Done()
 		return wd
