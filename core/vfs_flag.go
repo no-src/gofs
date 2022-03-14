@@ -34,9 +34,6 @@ func (d *vfsValue) Set(s string) error {
 	return nil
 }
 
-// Get implement the Get function for the flag.Value interface
-func (d *vfsValue) Get() interface{} { return VFS(*d) }
-
 // String implement the String function for the flag.Value interface
 func (d *vfsValue) String() string {
 	vfs := (*VFS)(d)
