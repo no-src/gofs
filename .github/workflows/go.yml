@@ -11,23 +11,23 @@ jobs:
   build:
     strategy:
       matrix:
-        go: [ '1.17' ]
+        go: [ '1.17','1.18' ]
         os: [ 'ubuntu-latest', 'windows-latest' ]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Set up Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: ${{ matrix.go }}
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
 
-    - name: Build
-      run: go build -v ./...
+      - name: Build
+        run: go build -v ./...
 
-    - name: Test
-      run: go test -v -race ./... -coverprofile=coverage.txt -covermode=atomic -timeout=10m
+      - name: Test
+        run: go test -v -race ./... -coverprofile=coverage.txt -covermode=atomic -timeout=10m
 
-    - name: Codecov
-      uses: codecov/codecov-action@v2
-      if: matrix.os == 'ubuntu-latest'
+      - name: Codecov
+        uses: codecov/codecov-action@v2
+        if: matrix.os == 'ubuntu-latest'
