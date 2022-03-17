@@ -2,7 +2,7 @@ package ignore
 
 import (
 	"github.com/no-src/gofs/fs"
-	"github.com/no-src/gofs/util"
+	"github.com/no-src/gofs/util/stringutil"
 	"github.com/no-src/log"
 )
 
@@ -13,7 +13,7 @@ var matchIgnoreDeletedPath bool
 // ignoreConf the config file path of the ignore component
 // ignoreDeletedPath whether ignore the deleted path
 func Init(ignoreConf string, ignoreDeletedPath bool) error {
-	if !util.IsEmpty(ignoreConf) {
+	if !stringutil.IsEmpty(ignoreConf) {
 		ig, err := New(ignoreConf)
 		if err != nil {
 			return err

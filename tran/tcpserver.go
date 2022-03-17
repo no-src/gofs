@@ -6,7 +6,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"github.com/no-src/gofs/auth"
-	"github.com/no-src/gofs/util"
+	"github.com/no-src/gofs/util/stringutil"
 	"github.com/no-src/log"
 	"net"
 	"strings"
@@ -193,7 +193,7 @@ func (srv *tcpServer) Auth(user *auth.HashUser) (bool, auth.Perm) {
 		return false, perm
 	}
 	if user.IsExpired() {
-		log.Warn("user auth request info is expired, user => %s", util.String(user))
+		log.Warn("user auth request info is expired, user => %s", stringutil.String(user))
 		return false, perm
 	}
 	var loginUser *auth.HashUser
@@ -205,7 +205,7 @@ func (srv *tcpServer) Auth(user *auth.HashUser) (bool, auth.Perm) {
 
 	if loginUser != nil {
 		if !loginUser.Perm.IsValid() {
-			log.Warn("the user has no permission, user => %s", util.String(user))
+			log.Warn("the user has no permission, user => %s", stringutil.String(user))
 			loginUser = nil
 		} else {
 			perm = loginUser.Perm

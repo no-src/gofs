@@ -13,6 +13,7 @@ import (
 	"github.com/no-src/gofs/server/client"
 	"github.com/no-src/gofs/util"
 	"github.com/no-src/gofs/util/jsonutil"
+	"github.com/no-src/gofs/util/stringutil"
 	"github.com/no-src/log"
 	"io/ioutil"
 	"net/http"
@@ -253,7 +254,7 @@ func (rs *remoteClientSync) fileInfo(path string) (size int64, hash string, cTim
 	if isDir {
 		return
 	}
-	size, err = util.Int64(remoteUrl.Query().Get(contract.FsSize))
+	size, err = stringutil.Int64(remoteUrl.Query().Get(contract.FsSize))
 	if err != nil {
 		return
 	}
@@ -265,15 +266,15 @@ func (rs *remoteClientSync) fileInfo(path string) (size int64, hash string, cTim
 	cTimeStr := remoteUrl.Query().Get(contract.FsCtime)
 	aTimeStr := remoteUrl.Query().Get(contract.FsAtime)
 	mTimeStr := remoteUrl.Query().Get(contract.FsMtime)
-	cTimeL, timeErr := util.Int64(cTimeStr)
+	cTimeL, timeErr := stringutil.Int64(cTimeStr)
 	if timeErr == nil {
 		cTime = time.Unix(cTimeL, 0)
 	}
-	aTimeL, timeErr := util.Int64(aTimeStr)
+	aTimeL, timeErr := stringutil.Int64(aTimeStr)
 	if timeErr == nil {
 		aTime = time.Unix(aTimeL, 0)
 	}
-	mTimeL, timeErr := util.Int64(mTimeStr)
+	mTimeL, timeErr := stringutil.Int64(mTimeStr)
 	if timeErr == nil {
 		mTime = time.Unix(mTimeL, 0)
 	}
@@ -340,11 +341,11 @@ func (rs *remoteClientSync) syncFiles(files []contract.FileInfo, serverAddr, pat
 		currentPath := path + "/" + file.Path
 		values := url.Values{}
 		values.Add(contract.FsDir, file.IsDir.String())
-		values.Add(contract.FsSize, util.String(file.Size))
+		values.Add(contract.FsSize, stringutil.String(file.Size))
 		values.Add(contract.FsHash, file.Hash)
-		values.Add(contract.FsCtime, util.String(file.CTime))
-		values.Add(contract.FsAtime, util.String(file.ATime))
-		values.Add(contract.FsMtime, util.String(file.MTime))
+		values.Add(contract.FsCtime, stringutil.String(file.CTime))
+		values.Add(contract.FsAtime, stringutil.String(file.ATime))
+		values.Add(contract.FsMtime, stringutil.String(file.MTime))
 		syncPath := fmt.Sprintf("%s/%s?%s", serverAddr, currentPath, values.Encode())
 
 		// create directory or file

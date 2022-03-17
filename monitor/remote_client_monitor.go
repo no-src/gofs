@@ -13,8 +13,8 @@ import (
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/tran"
-	"github.com/no-src/gofs/util"
 	"github.com/no-src/gofs/util/jsonutil"
+	"github.com/no-src/gofs/util/stringutil"
 	"github.com/no-src/gofs/wait"
 	"github.com/no-src/log"
 	"io"
@@ -278,11 +278,11 @@ func (m *remoteClientMonitor) startProcessMessage() {
 func (m *remoteClientMonitor) execSync(msg sync.Message) (err error) {
 	values := url.Values{}
 	values.Add(contract.FsDir, msg.IsDir.String())
-	values.Add(contract.FsSize, util.String(msg.Size))
+	values.Add(contract.FsSize, stringutil.String(msg.Size))
 	values.Add(contract.FsHash, msg.Hash)
-	values.Add(contract.FsCtime, util.String(msg.CTime))
-	values.Add(contract.FsAtime, util.String(msg.ATime))
-	values.Add(contract.FsMtime, util.String(msg.MTime))
+	values.Add(contract.FsCtime, stringutil.String(msg.CTime))
+	values.Add(contract.FsAtime, stringutil.String(msg.ATime))
+	values.Add(contract.FsMtime, stringutil.String(msg.MTime))
 
 	// replace question marks with "%3F" to avoid parse the path is breaking when it contains some question marks
 	path := msg.BaseUrl + strings.ReplaceAll(msg.Path, "?", "%3F") + fmt.Sprintf("?%s", values.Encode())
