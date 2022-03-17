@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/no-src/gofs/server"
-	"github.com/no-src/gofs/util"
+	"github.com/no-src/gofs/util/httputil"
 	"github.com/no-src/log"
 	"net/http"
 	"net/url"
@@ -20,7 +20,7 @@ func SignIn(scheme, host, userName, password string) ([]*http.Cookie, error) {
 	form.Set(server.ParamUserName, userName)
 	form.Set(server.ParamPassword, password)
 	log.Debug("try to auto login file server %s=%s %s=%s", server.ParamUserName, userName, server.ParamPassword, password)
-	loginResp, err := util.HttpPostWithoutRedirect(loginUrl, form)
+	loginResp, err := httputil.HttpPostWithoutRedirect(loginUrl, form)
 	if err != nil {
 		return nil, err
 	}

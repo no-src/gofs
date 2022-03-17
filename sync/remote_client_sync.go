@@ -12,6 +12,7 @@ import (
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/client"
 	"github.com/no-src/gofs/util"
+	"github.com/no-src/gofs/util/httputil"
 	"github.com/no-src/gofs/util/jsonutil"
 	"github.com/no-src/gofs/util/stringutil"
 	"github.com/no-src/log"
@@ -393,7 +394,7 @@ func (rs *remoteClientSync) same(sourceHash string, destFile *os.File) (bool, er
 }
 
 func (rs *remoteClientSync) httpGetWithAuth(rawURL string) (resp *http.Response, err error) {
-	resp, err = util.HttpGetWithCookie(rawURL, rs.cookies...)
+	resp, err = httputil.HttpGetWithCookie(rawURL, rs.cookies...)
 	if err != nil {
 		return nil, err
 	}
@@ -414,7 +415,7 @@ func (rs *remoteClientSync) httpGetWithAuth(rawURL string) (resp *http.Response,
 		if len(cookies) > 0 {
 			rs.cookies = cookies
 			log.Debug("try to auto login file server success maybe, retry to get resource => %s", rawURL)
-			return util.HttpGetWithCookie(rawURL, rs.cookies...)
+			return httputil.HttpGetWithCookie(rawURL, rs.cookies...)
 		}
 		return nil, errors.New("file server is unauthorized")
 	}

@@ -13,7 +13,7 @@ import (
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/client"
 	"github.com/no-src/gofs/tran"
-	"github.com/no-src/gofs/util"
+	"github.com/no-src/gofs/util/httputil"
 	"github.com/no-src/gofs/util/jsonutil"
 	"github.com/no-src/log"
 	"io"
@@ -462,9 +462,9 @@ func (pcs *pushClientSync) httpPostWithAuth(rawURL string, act action.Action, fi
 		sendFile = true
 	}
 	if sendFile {
-		resp, err = util.HttpPostFileChunkWithCookie(rawURL, fieldName, fileName, data, chunk, offset, pcs.cookies...)
+		resp, err = httputil.HttpPostFileChunkWithCookie(rawURL, fieldName, fileName, data, chunk, offset, pcs.cookies...)
 	} else {
-		resp, err = util.HttpPostWithCookie(rawURL, data, pcs.cookies...)
+		resp, err = httputil.HttpPostWithCookie(rawURL, data, pcs.cookies...)
 	}
 
 	if err != nil {
@@ -485,9 +485,9 @@ func (pcs *pushClientSync) httpPostWithAuth(rawURL string, act action.Action, fi
 			pcs.cookies = cookies
 			log.Debug("try to auto login file server success maybe, retry to get resource => %s", rawURL)
 			if sendFile {
-				return util.HttpPostFileChunkWithCookie(rawURL, fieldName, fileName, data, chunk, offset, pcs.cookies...)
+				return httputil.HttpPostFileChunkWithCookie(rawURL, fieldName, fileName, data, chunk, offset, pcs.cookies...)
 			}
-			return util.HttpPostWithCookie(rawURL, data, pcs.cookies...)
+			return httputil.HttpPostWithCookie(rawURL, data, pcs.cookies...)
 		}
 		return nil, errors.New("file server is unauthorized")
 	} else if resp.StatusCode == http.StatusNotFound {
