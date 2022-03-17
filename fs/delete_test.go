@@ -1,6 +1,8 @@
 package fs
 
 import (
+	"errors"
+	"os"
 	"testing"
 )
 
@@ -76,6 +78,36 @@ func TestClearDeletedFile(t *testing.T) {
 	}
 }
 
+func TestClearDeletedFileError(t *testing.T) {
+	removeAll = removeAllErrorMock
+	isDeleted = isDeleteMock
+	defer func() {
+		removeAll = os.RemoveAll
+		isDeleted = isDeletedCore
+	}()
+	path := "./"
+	err := ClearDeletedFile(path)
+	if err == nil {
+		t.Errorf("clear deleted file should get an error => %s", path)
+		return
+	}
+}
+
+func TestClearDeletedFileSuccess(t *testing.T) {
+	removeAll = removeAllSuccessMock
+	isDeleted = isDeleteMock
+	defer func() {
+		removeAll = os.RemoveAll
+		isDeleted = isDeletedCore
+	}()
+	path := "./"
+	err := ClearDeletedFile(path)
+	if err != nil {
+		t.Errorf("clear deleted file error %s => %v", path, err)
+		return
+	}
+}
+
 func TestToDeletedPath(t *testing.T) {
 	path := "./delete_test.go"
 	deletedPath := toDeletedPath(path)
@@ -99,4 +131,33 @@ func TestLogicallyDelete(t *testing.T) {
 		t.Errorf("logical delete error %s => %v", path, err)
 		return
 	}
+}
+
+func TestLogicallyDeleteSuccess(t *testing.T) {
+	rename = renameMock
+	defer func() {
+		rename = os.Rename
+	}()
+	path := "./delete_test.go"
+	err := LogicallyDelete(path)
+	if err != nil {
+		t.Errorf("logical delete error %s => %v", path, err)
+		return
+	}
+}
+
+func renameMock(oldpath, newpath string) error {
+	return nil
+}
+
+func removeAllSuccessMock(path string) error {
+	return nil
+}
+
+func removeAllErrorMock(path string) error {
+	return errors.New("remove all error test")
+}
+
+func isDeleteMock(path string) bool {
+	return true
 }

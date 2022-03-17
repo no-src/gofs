@@ -18,7 +18,7 @@ func LogicallyDelete(path string) error {
 		return nil
 	}
 	deletedFile := toDeletedPath(path)
-	err := os.Rename(path, deletedFile)
+	err := rename(path, deletedFile)
 	if os.IsNotExist(err) {
 		return nil
 	}
@@ -27,10 +27,14 @@ func LogicallyDelete(path string) error {
 
 // IsDeleted is deleted path
 func IsDeleted(path string) bool {
+	return isDeleted(path)
+}
+
+func isDeletedCore(path string) bool {
 	return deletedPathRegexp.MatchString(path)
 }
 
-// ClearDeletedFile remove all of the deleted files in the path
+// ClearDeletedFile remove all the deleted files in the path
 func ClearDeletedFile(clearPath string) error {
 	return filepath.WalkDir(clearPath, func(path string, d fs.DirEntry, err error) error {
 		if err != nil && os.IsNotExist(err) {
@@ -40,7 +44,7 @@ func ClearDeletedFile(clearPath string) error {
 			return err
 		}
 		if IsDeleted(path) {
-			err = os.RemoveAll(path)
+			err = removeAll(path)
 			if err != nil {
 				log.Error(err, "remove the deleted files error => [%s]", path)
 			} else {
@@ -55,6 +59,12 @@ func ClearDeletedFile(clearPath string) error {
 func toDeletedPath(path string) string {
 	return fmt.Sprintf("%s.%d.deleted", path, time.Now().Unix())
 }
+
+var (
+	removeAll = os.RemoveAll
+	rename    = os.Rename
+	isDeleted = isDeletedCore
+)
 
 func init() {
 	deletedPathRegexp = regexp.MustCompile(`^[\s\S]+\.[0-9]{10,}\.(?i)deleted$`)
