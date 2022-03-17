@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/no-src/gofs/util"
+	"github.com/no-src/gofs/util/randutil"
 	"strings"
 )
 
@@ -131,7 +132,7 @@ func ParseUsers(userStr string) (users []*User, err error) {
 func RandomUser(count, userLen, pwdLen int, perm string) ([]*User, error) {
 	var users []*User
 	for i := 1; i <= count; i++ {
-		user, err := NewUser(i, util.RandomString(userLen), util.RandomString(pwdLen), perm)
+		user, err := NewUser(i, randutil.RandomString(userLen), randutil.RandomString(pwdLen), perm)
 		if err != nil {
 			return nil, fmt.Errorf("generate random user error => %s", err.Error())
 		}

@@ -1,4 +1,4 @@
-package util
+package randutil
 
 import (
 	"crypto/rand"
@@ -12,7 +12,7 @@ func RandomString(length int) (s string) {
 		length = max
 	}
 	bytes := make([]byte, 32)
-	_, err := rand.Read(bytes)
+	_, err := read(bytes)
 	if err != nil {
 		for i := 0; i < 32; i++ {
 			bytes[i] = byte(mathRand.Intn(256))
@@ -38,3 +38,5 @@ func hashToString(h [32]byte) string {
 	}
 	return string(dst[:])
 }
+
+var read = rand.Read
