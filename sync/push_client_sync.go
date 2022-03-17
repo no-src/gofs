@@ -14,6 +14,7 @@ import (
 	"github.com/no-src/gofs/server/client"
 	"github.com/no-src/gofs/tran"
 	"github.com/no-src/gofs/util"
+	"github.com/no-src/gofs/util/jsonutil"
 	"github.com/no-src/log"
 	"io"
 	iofs "io/fs"
@@ -140,7 +141,7 @@ func (pcs *pushClientSync) info() error {
 	case <-time.After(timeout):
 		return fmt.Errorf("info timeout for %s", timeout.String())
 	}
-	err := util.Unmarshal(infoMsg.Data, &info)
+	err := jsonutil.Unmarshal(infoMsg.Data, &info)
 	if err != nil {
 		return err
 	}
@@ -167,7 +168,7 @@ func (pcs *pushClientSync) receive() {
 				}
 			} else {
 				var status contract.Status
-				err = util.Unmarshal(data, &status)
+				err = jsonutil.Unmarshal(data, &status)
 				if err != nil {
 					log.Error(err, "[push client sync] unmarshal data error")
 					continue
@@ -345,7 +346,7 @@ func (pcs *pushClientSync) needGetFileTime(act action.Action) bool {
 }
 
 func (pcs *pushClientSync) sendPushData(pd push.PushData, act action.Action, path string) error {
-	data, err := util.Marshal(pd)
+	data, err := jsonutil.Marshal(pd)
 	if err != nil {
 		return err
 	}
@@ -443,7 +444,7 @@ func (pcs *pushClientSync) checkApiResult(resp *http.Response) (abort bool, err 
 	if err != nil {
 		return false, err
 	}
-	err = util.Unmarshal(respData, &apiResult)
+	err = jsonutil.Unmarshal(respData, &apiResult)
 	if err != nil {
 		return false, err
 	}

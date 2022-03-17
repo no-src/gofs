@@ -2,7 +2,7 @@ package conf
 
 import (
 	"errors"
-	"github.com/no-src/gofs/util"
+	"github.com/no-src/gofs/util/jsonutil"
 	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
@@ -25,7 +25,7 @@ func Parse(path string, config *Config) error {
 
 	ext := filepath.Ext(path)
 	if JsonFormat.MatchExt(ext) {
-		err = util.Unmarshal(confBytes, &config)
+		err = jsonutil.Unmarshal(confBytes, &config)
 	} else if YamlFormat.MatchExt(ext) {
 		err = yaml.Unmarshal(confBytes, &config)
 	} else {

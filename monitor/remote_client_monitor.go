@@ -14,6 +14,7 @@ import (
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/tran"
 	"github.com/no-src/gofs/util"
+	"github.com/no-src/gofs/util/jsonutil"
 	"github.com/no-src/gofs/wait"
 	"github.com/no-src/log"
 	"io"
@@ -134,7 +135,7 @@ func (m *remoteClientMonitor) sync() (err error) {
 	case <-time.After(timeout):
 		return fmt.Errorf("sync timeout for %s", timeout.String())
 	}
-	err = util.Unmarshal(infoMsg.Data, &info)
+	err = jsonutil.Unmarshal(infoMsg.Data, &info)
 	if err != nil {
 		return err
 	}
@@ -222,7 +223,7 @@ func (m *remoteClientMonitor) readMessage(st *cbool.CBool, wd wait.WaitDone) {
 // parseMessage arse the message then send to consumers according to the api type
 func (m *remoteClientMonitor) parseMessage(data []byte) error {
 	var status contract.Status
-	err := util.Unmarshal(data, &status)
+	err := jsonutil.Unmarshal(data, &status)
 	if err != nil {
 		log.Error(err, "remote client monitor unmarshal data error")
 		return err
@@ -259,7 +260,7 @@ func (m *remoteClientMonitor) startProcessMessage() {
 		message := element.Value.(contract.Message)
 		log.Info("client read request => %s", message.String())
 		var msg sync.Message
-		err := util.Unmarshal(message.Data, &msg)
+		err := jsonutil.Unmarshal(message.Data, &msg)
 		if err != nil {
 			log.Error(err, "client unmarshal data error")
 		} else if msg.Code != contract.Success {

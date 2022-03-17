@@ -2,14 +2,14 @@ package core
 
 import (
 	"flag"
-	"github.com/no-src/gofs/util"
+	"github.com/no-src/gofs/util/jsonutil"
 	"testing"
 	"time"
 )
 
 func TestDurationMarshalText(t *testing.T) {
 	d := Duration(time.Second)
-	data, err := util.Marshal(d)
+	data, err := jsonutil.Marshal(d)
 	if err != nil {
 		t.Errorf("test duration marshal error =>%s", err)
 		return
@@ -24,7 +24,7 @@ func TestDurationMarshalText(t *testing.T) {
 func TestDurationUnmarshalText(t *testing.T) {
 	var actual Duration
 	data := []byte(`"1s"`)
-	err := util.Unmarshal(data, &actual)
+	err := jsonutil.Unmarshal(data, &actual)
 	if err != nil {
 		t.Errorf("test duration unmarshal error =>%s", err)
 		return
@@ -38,7 +38,7 @@ func TestDurationUnmarshalText(t *testing.T) {
 func TestDurationUnmarshalTextError(t *testing.T) {
 	var actual Duration
 	data := []byte(`"1x"`)
-	err := util.Unmarshal(data, &actual)
+	err := jsonutil.Unmarshal(data, &actual)
 	if err == nil {
 		t.Errorf("test duration unmarshal should be error")
 		return

@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"github.com/no-src/gofs/util/jsonutil"
 	"strconv"
 	"strings"
 )
@@ -30,7 +31,7 @@ func String(v interface{}) string {
 	case error:
 		return v.(error).Error()
 	default:
-		data, err := Marshal(v)
+		data, err := jsonutil.Marshal(v)
 		if err != nil {
 			return fmt.Sprintf("%v", v)
 		}

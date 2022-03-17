@@ -11,6 +11,7 @@ import (
 	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/util"
+	"github.com/no-src/gofs/util/jsonutil"
 	"github.com/no-src/log"
 	"io"
 	"mime/multipart"
@@ -47,7 +48,7 @@ func (h *pushHandler) Handle(c *gin.Context) {
 	fileInfo := c.PostForm(push.FileInfo)
 	offset, _ := strconv.ParseInt(c.PostForm(push.Offset), 10, 64)
 	var pushData push.PushData
-	err := util.Unmarshal([]byte(fileInfo), &pushData)
+	err := jsonutil.Unmarshal([]byte(fileInfo), &pushData)
 	if err != nil {
 		msg := "unmarshal file info error"
 		c.JSON(http.StatusOK, server.NewErrorApiResult(-501, msg))

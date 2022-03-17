@@ -11,7 +11,7 @@ import (
 	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/tran"
-	"github.com/no-src/gofs/util"
+	"github.com/no-src/gofs/util/jsonutil"
 	"github.com/no-src/log"
 	"path/filepath"
 	"strings"
@@ -148,7 +148,7 @@ func (rs *remoteServerSync) send(act action.Action, path string) (err error) {
 		},
 	}
 
-	data, err := util.Marshal(req)
+	data, err := jsonutil.Marshal(req)
 	if err != nil {
 		return err
 	}
@@ -235,7 +235,7 @@ func (rs *remoteServerSync) infoCommand(client *tran.Conn) (cmd contract.Command
 			Status: contract.UnauthorizedStatus(contract.InfoApi),
 		}
 	}
-	result, err = util.Marshal(info)
+	result, err = jsonutil.Marshal(info)
 	return
 }
 
@@ -257,7 +257,7 @@ func (rs *remoteServerSync) authCommand(client *tran.Conn, data []byte) (cmd con
 	} else if err != nil {
 		log.Error(err, "parse auth command data error")
 	}
-	result, err = util.Marshal(authData)
+	result, err = jsonutil.Marshal(authData)
 	return
 }
 
@@ -265,6 +265,6 @@ func (rs *remoteServerSync) unknownCommand() (cmd contract.Command, result []byt
 	cmd = contract.UnknownCommand
 	respData := contract.FailStatus(contract.UnknownApi)
 	respData.Message = "unknown command"
-	result, err = util.Marshal(respData)
+	result, err = jsonutil.Marshal(respData)
 	return
 }

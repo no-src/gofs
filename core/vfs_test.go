@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/no-src/gofs/util"
+	"github.com/no-src/gofs/util/jsonutil"
 	"testing"
 )
 
@@ -17,7 +17,7 @@ const (
 func TestVFSMarshalText(t *testing.T) {
 	path := testVFSServerPath
 	vfs := NewVFS(path)
-	data, err := util.Marshal(vfs)
+	data, err := jsonutil.Marshal(vfs)
 	if err != nil {
 		t.Errorf("test duration marshal error =>%s", err)
 		return
@@ -35,7 +35,7 @@ func TestVFSUnmarshalText(t *testing.T) {
 	path := testVFSServerPath
 	var actual VFS
 	data := []byte(fmt.Sprintf("\"%s\"", path))
-	err := util.Unmarshal(data, &actual)
+	err := jsonutil.Unmarshal(data, &actual)
 	if err != nil {
 		t.Errorf("test vfs unmarshal error =>%s", err)
 		return

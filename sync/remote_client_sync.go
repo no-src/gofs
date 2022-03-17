@@ -12,6 +12,7 @@ import (
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/client"
 	"github.com/no-src/gofs/util"
+	"github.com/no-src/gofs/util/jsonutil"
 	"github.com/no-src/log"
 	"io/ioutil"
 	"net/http"
@@ -304,7 +305,7 @@ func (rs *remoteClientSync) sync(serverAddr, path string) error {
 		return err
 	}
 	var apiResult server.ApiResult
-	err = util.Unmarshal(data, &apiResult)
+	err = jsonutil.Unmarshal(data, &apiResult)
 	if err != nil {
 		return err
 	}
@@ -317,12 +318,12 @@ func (rs *remoteClientSync) sync(serverAddr, path string) error {
 	if apiResult.Data == nil {
 		return nil
 	}
-	dataBytes, err := util.Marshal(apiResult.Data)
+	dataBytes, err := jsonutil.Marshal(apiResult.Data)
 	if err != nil {
 		return err
 	}
 	var files []contract.FileInfo
-	err = util.Unmarshal(dataBytes, &files)
+	err = jsonutil.Unmarshal(dataBytes, &files)
 	if err != nil {
 		return err
 	}
