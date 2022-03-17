@@ -3,7 +3,7 @@ package daemon
 import (
 	"bufio"
 	"fmt"
-	"github.com/no-src/gofs/util"
+	"github.com/no-src/gofs/util/osutil"
 	"github.com/no-src/log"
 	"os"
 	"time"
@@ -45,7 +45,7 @@ func startSubprocess() (*os.Process, error) {
 	attr := &os.ProcAttr{Files: []*os.File{os.Stdin, os.Stdout, os.Stderr}}
 	// try to check stdin
 	// if compile with [-ldflags="-H windowsgui"] on Windows system, stdin will get error
-	if util.IsWindows() {
+	if osutil.IsWindows() {
 		_, stdInErr := os.Stdin.Stat()
 		if stdInErr != nil {
 			attr = &os.ProcAttr{Files: []*os.File{nil, nil, nil}}

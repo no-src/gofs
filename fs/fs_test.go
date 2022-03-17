@@ -1,7 +1,7 @@
 package fs
 
 import (
-	"github.com/no-src/gofs/util"
+	"github.com/no-src/gofs/util/osutil"
 	"os"
 	"testing"
 )
@@ -59,7 +59,7 @@ func TestFileExist(t *testing.T) {
 		return
 	}
 
-	if util.IsWindows() {
+	if osutil.IsWindows() {
 		file = "|/"
 		_, err = FileExist(file)
 		if err == nil {

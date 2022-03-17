@@ -1,4 +1,4 @@
-package util
+package osutil
 
 import "runtime"
 
