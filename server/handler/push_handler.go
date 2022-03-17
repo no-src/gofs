@@ -10,7 +10,7 @@ import (
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/server"
-	"github.com/no-src/gofs/util"
+	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/gofs/util/jsonutil"
 	"github.com/no-src/log"
 	"io"
@@ -240,7 +240,7 @@ func (h *pushHandler) compare(dstPath string, sourceHash string, sourceSize int6
 	if sourceSize > 0 && len(sourceHash) > 0 {
 		destStat, err := os.Stat(dstPath)
 		if err == nil && destStat.Size() == sourceSize {
-			destHash, err := util.MD5FromFileName(dstPath)
+			destHash, err := hashutil.MD5FromFileName(dstPath)
 			if err == nil && destHash == sourceHash {
 				return true
 			}

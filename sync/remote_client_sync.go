@@ -11,7 +11,7 @@ import (
 	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/client"
-	"github.com/no-src/gofs/util"
+	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/gofs/util/httputil"
 	"github.com/no-src/gofs/util/jsonutil"
 	"github.com/no-src/gofs/util/stringutil"
@@ -381,7 +381,7 @@ func (rs *remoteClientSync) same(sourceHash string, destFile *os.File) (bool, er
 	if len(sourceHash) == 0 {
 		return false, nil
 	}
-	destHash, err := util.MD5FromFile(destFile)
+	destHash, err := hashutil.MD5FromFile(destFile)
 	if err != nil {
 		log.Error(err, "calculate md5 hash of the dest file error [%s]", destFile.Name())
 		return false, err

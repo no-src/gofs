@@ -5,7 +5,7 @@ import (
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/server"
-	"github.com/no-src/gofs/util"
+	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/log"
 	"net/http"
 	"os"
@@ -102,7 +102,7 @@ func (h *fileApiHandler) readDir(f http.File, needHash string, path string) (fil
 		hash := ""
 		if needHash == contract.FsNeedHashValueTrue && !file.IsDir() {
 			if cf, err := h.root.Open(filepath.ToSlash(filepath.Join(path, file.Name()))); err == nil {
-				hash, _ = util.MD5FromFile(cf)
+				hash, _ = hashutil.MD5FromFile(cf)
 			}
 		}
 

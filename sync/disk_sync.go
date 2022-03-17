@@ -6,7 +6,7 @@ import (
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/ignore"
-	"github.com/no-src/gofs/util"
+	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/log"
 	iofs "io/fs"
 	"os"
@@ -217,13 +217,13 @@ func (s *diskSync) chtimes(source, dest string) {
 }
 
 func (s *diskSync) same(sourceFile *os.File, destFile *os.File) (bool, error) {
-	sourceHash, err := util.MD5FromFile(sourceFile)
+	sourceHash, err := hashutil.MD5FromFile(sourceFile)
 	if err != nil {
 		log.Error(err, "calculate md5 hash of the source file error [%s]", sourceFile.Name())
 		return false, err
 	}
 
-	destHash, err := util.MD5FromFile(destFile)
+	destHash, err := hashutil.MD5FromFile(destFile)
 	if err != nil {
 		log.Error(err, "calculate md5 hash of the dest file error [%s]", destFile.Name())
 		return false, err
@@ -318,7 +318,7 @@ func (s *diskSync) getFileSizeAndHash(path string) (size int64, hash string, err
 	}
 	size = fileInfo.Size()
 	if size > 0 {
-		hash, err = util.MD5FromFileName(path)
+		hash, err = hashutil.MD5FromFileName(path)
 		if err != nil {
 			return size, hash, err
 		}

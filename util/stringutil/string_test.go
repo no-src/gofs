@@ -69,7 +69,7 @@ func TestInt64Error(t *testing.T) {
 	s := "100001x"
 	_, err := Int64(s)
 	if err == nil {
-		t.Errorf("test Int64 error, shoud be get an error => %s", s)
+		t.Errorf("test Int64 error, should get an error => %s", s)
 		return
 	}
 }
