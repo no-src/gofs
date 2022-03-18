@@ -9,7 +9,7 @@ import (
 // FileExist is file Exist
 func FileExist(path string) (exist bool, err error) {
 	_, err = os.Stat(path)
-	if err != nil && os.IsNotExist(err) {
+	if err != nil && isNotExist(err) {
 		return false, nil
 	}
 	if err != nil {
@@ -46,3 +46,5 @@ func IsEOF(err error) bool {
 func IsNonEOF(err error) bool {
 	return err != nil && !errors.Is(err, io.EOF)
 }
+
+var isNotExist = os.IsNotExist

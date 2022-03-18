@@ -59,13 +59,17 @@ func TestFileExist(t *testing.T) {
 		return
 	}
 
-	if osutil.IsWindows() {
-		file = "|/"
-		_, err = FileExist(file)
-		if err == nil {
-			t.Errorf("check an invalid file should be return error %s => %v", file, err)
-			return
-		}
+	if !osutil.IsWindows() {
+		isNotExist = isNotExistAlwaysFalseMock
+		defer func() {
+			isNotExist = os.IsNotExist
+		}()
+	}
+	file = "|/"
+	_, err = FileExist(file)
+	if err == nil {
+		t.Errorf("check an invalid file should be return error %s => %v", file, err)
+		return
 	}
 }
 
@@ -129,4 +133,8 @@ func TestIsNonEOF(t *testing.T) {
 	if !IsNonEOF(err) {
 		t.Errorf("test IsNonEOF error, get actual err:%s", err)
 	}
+}
+
+func isNotExistAlwaysFalseMock(err error) bool {
+	return false
 }

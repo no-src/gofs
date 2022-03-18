@@ -37,7 +37,7 @@ func isDeletedCore(path string) bool {
 // ClearDeletedFile remove all the deleted files in the path
 func ClearDeletedFile(clearPath string) error {
 	return filepath.WalkDir(clearPath, func(path string, d fs.DirEntry, err error) error {
-		if err != nil && os.IsNotExist(err) {
+		if err != nil && isNotExist(err) {
 			return nil
 		}
 		if err != nil {

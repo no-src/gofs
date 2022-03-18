@@ -2,6 +2,7 @@ package fs
 
 import (
 	"errors"
+	"github.com/no-src/gofs/util/osutil"
 	"os"
 	"testing"
 )
@@ -78,7 +79,7 @@ func TestClearDeletedFile(t *testing.T) {
 	}
 }
 
-func TestClearDeletedFileError(t *testing.T) {
+func TestClearDeletedFileRemoveAllError(t *testing.T) {
 	removeAll = removeAllErrorMock
 	isDeleted = isDeleteMock
 	defer func() {
@@ -86,6 +87,21 @@ func TestClearDeletedFileError(t *testing.T) {
 		isDeleted = isDeletedCore
 	}()
 	path := "./"
+	err := ClearDeletedFile(path)
+	if err == nil {
+		t.Errorf("clear deleted file should get an error => %s", path)
+		return
+	}
+}
+
+func TestClearDeletedFilePathError(t *testing.T) {
+	if !osutil.IsWindows() {
+		isNotExist = isNotExistAlwaysFalseMock
+		defer func() {
+			isNotExist = os.IsNotExist
+		}()
+	}
+	path := "|/"
 	err := ClearDeletedFile(path)
 	if err == nil {
 		t.Errorf("clear deleted file should get an error => %s", path)
