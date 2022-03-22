@@ -7,11 +7,11 @@ import (
 )
 
 func TestParseAuthCommandData(t *testing.T) {
-	expect := hashutil.MD5("111")
+	expect := hashutil.MD5FromString("111")
 	authData := append(append([]byte("auth"), authVersion...), []byte("698d51a19d8a121cbcbe3365e6ac95ea20220222072118")...)
 	testParseAuthCommandData(t, expect[:userNameHashLength], authData)
 
-	expect = hashutil.MD5("root")
+	expect = hashutil.MD5FromString("root")
 	authData = append(append([]byte("auth"), authVersion...), []byte("63a9f0ea7bb980507b24afc8bc80e54820220222072947")...)
 	testParseAuthCommandData(t, expect[:userNameHashLength], authData)
 

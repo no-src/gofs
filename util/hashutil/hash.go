@@ -41,11 +41,38 @@ func MD5FromFileName(path string) (hash string, err error) {
 	return MD5FromFile(f)
 }
 
-// MD5 calculate the hash value of the string
-func MD5(s string) (hash string) {
+// MD5FromFileChunk calculate the hash value of the file chunk
+func MD5FromFileChunk(path string, offset int64, chunkSize int64) (hash string, err error) {
+	if len(path) == 0 {
+		err = errors.New("file path can't be empty")
+		return hash, err
+	}
+	f, err := os.Open(path)
+	if err != nil {
+		return hash, err
+	}
+	defer f.Close()
+	block := make([]byte, chunkSize)
+	n, err := f.ReadAt(block, offset)
+	if err == io.EOF {
+		err = nil
+	}
+	if err != nil {
+		return hash, err
+	}
+	return MD5(block[:n]), nil
+}
+
+// MD5 calculate the hash value of the bytes
+func MD5(bytes []byte) (hash string) {
 	md5Provider := md5.New()
-	md5Provider.Write([]byte(s))
+	md5Provider.Write(bytes)
 	sum := md5Provider.Sum(nil)
 	hash = hex.EncodeToString(sum)
 	return hash
+}
+
+// MD5FromString calculate the hash value of the string
+func MD5FromString(s string) (hash string) {
+	return MD5([]byte(s))
 }
