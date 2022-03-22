@@ -28,25 +28,18 @@ func (action Action) String() string {
 	switch action {
 	case CreateAction:
 		desc = "Create"
-		break
 	case WriteAction:
 		desc = "Write"
-		break
 	case RemoveAction:
 		desc = "Remove"
-		break
 	case RenameAction:
 		desc = "Rename"
-		break
 	case ChmodAction:
 		desc = "Chmod"
-		break
 	case UnknownAction:
 		desc = "Unknown"
-		break
 	default:
 		desc = "Invalid"
-		break
 	}
 	return desc
 }
