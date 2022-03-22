@@ -13,6 +13,7 @@ import (
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/client"
 	"github.com/no-src/gofs/tran"
+	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/gofs/util/httputil"
 	"github.com/no-src/gofs/util/jsonutil"
 	"github.com/no-src/log"
@@ -346,17 +347,10 @@ func (pcs *pushClientSync) needGetFileTime(act action.Action) bool {
 }
 
 func (pcs *pushClientSync) sendPushData(pd push.PushData, act action.Action, path string) error {
-	data, err := jsonutil.Marshal(pd)
-	if err != nil {
-		return err
-	}
-	var resp *http.Response
-	form := url.Values{}
-	form.Set(push.FileInfo, string(data))
 	if act == action.WriteAction {
-		return pcs.sendFileChunk(path, act, form)
+		return pcs.sendFileChunk(path, pd)
 	}
-	resp, err = pcs.httpPostWithAuth(pcs.pushAddr, act, push.UpFile, path, form, nil, 0)
+	resp, err := pcs.httpPostWithAuth(pcs.pushAddr, act, push.ParamUpFile, path, pd, nil)
 	if err != nil {
 		return err
 	}
@@ -365,65 +359,107 @@ func (pcs *pushClientSync) sendPushData(pd push.PushData, act action.Action, pat
 	return err
 }
 
-func (pcs *pushClientSync) sendFileChunk(path string, act action.Action, form url.Values) error {
-	var resp *http.Response
+func (pcs *pushClientSync) sendFileChunk(path string, pd push.PushData) error {
 	f, err := os.Open(path)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 	var offset int64
-	buf := make([]byte, pcs.chunkSize)
+	chunk := make([]byte, pcs.chunkSize)
 	isEnd := false
 
 	// if loopCount == 0 means is a request that check file size and hash value only, send it
 	// if loopCount == 1 means read an empty file maybe, send it
 	loopCount := -1
+	checkChunkHash := false
 	for {
 		loopCount++
-		n, err := f.ReadAt(buf, offset)
+		n, err := f.ReadAt(chunk, offset)
 		if fs.IsNonEOF(err) {
 			return err
 		}
 		if fs.IsEOF(err) {
 			isEnd = true
 		}
-
-		if pcs.needCheckHash(loopCount, n) {
-			// if file size is greater than zero, reset the isEnd and n, and set the offset=-1
+		chunkSize := n
+		pd.PushAction = push.PushActionWrite
+		if pcs.needCheckHash(loopCount, chunkSize) {
+			// if file size is greater than zero in first loop, try to compare file and chunk hash
 			isEnd = false
 			n = 0
-			offset = -1
-		} else if pcs.isReadEmptyFile(loopCount, n) {
+			pd.PushAction = push.PushActionCompareFileAndChunk
+			checkChunkHash = true
+		} else if pcs.isReadEmptyFile(loopCount, chunkSize) {
 			// if read data nothing, send the empty file and cancel file compare request
 			loopCount++
+		} else if checkChunkHash {
+			pd.PushAction = push.PushActionCompareChunk
+			n = 0
 		}
 
-		if pcs.needSendRequest(loopCount, n) {
-			resp, err = pcs.httpPostWithAuth(pcs.pushAddr, act, push.UpFile, path, form, buf[:n], offset)
-			if err != nil {
+		if pcs.needSendChunkRequest(loopCount, chunkSize) {
+			broken, err := pcs.sendChunkRequest(path, &pd, &offset, chunkSize, &checkChunkHash, chunk, n, &isEnd)
+			if broken {
 				return err
-			}
-			abort, err := pcs.checkApiResult(resp)
-			if err != nil {
-				resp.Body.Close()
-				return err
-			} else if abort {
-				resp.Body.Close()
-				log.Debug("upload a file that not modified, ignore and abort next request => %s", path)
-				return nil
-			}
-			resp.Body.Close()
-			if offset < 0 {
-				offset = 0
-			} else {
-				offset += pcs.chunkSize
 			}
 		}
 		if isEnd {
-			return nil
+			// read to end, send a truncate request finally
+			return pcs.sendTruncate(path, pd, offset)
 		}
 	}
+}
+
+func (pcs *pushClientSync) sendChunkRequest(path string, pd *push.PushData, offset *int64, chunkSize int, checkChunkHash *bool, chunk []byte, n int, isEnd *bool) (broken bool, err error) {
+	pd.Chunk.Offset = *offset
+	pd.Chunk.Size = int64(chunkSize)
+	if *checkChunkHash {
+		pd.Chunk.Hash = hashutil.MD5(chunk[:chunkSize])
+	}
+
+	resp, err := pcs.httpPostWithAuth(pcs.pushAddr, action.WriteAction, push.ParamUpFile, path, *pd, chunk[:n])
+	if err != nil {
+		return true, err
+	}
+	code, err := pcs.checkApiResult(resp)
+	resp.Body.Close()
+	if err != nil {
+		return true, err
+	} else if code == contract.NotModified {
+		log.Debug("upload a file that not modified, ignore and abort next request => %s", path)
+		return true, nil
+	} else if code == contract.ChunkNotModified {
+		// current chunk is not modified, continue to compare next chunk in the next loop
+		log.Debug("upload a file chunk that not modified, continue to compare next chunk [%d]=> %s", *offset, path)
+		*checkChunkHash = true
+		*offset += int64(chunkSize)
+	} else if code == contract.Modified {
+		// file is modified and the first chunk is modified too, upload the file in the next loop
+		*offset = 0
+		*checkChunkHash = false
+		*isEnd = false
+	} else if code == contract.ChunkModified {
+		// write current chunk in the next loop
+		*checkChunkHash = false
+		*isEnd = false
+	} else {
+		// get success code, continue to write next chunk in the next loop or send a truncate request in the end
+		*offset += int64(chunkSize)
+	}
+	return false, nil
+}
+
+func (pcs *pushClientSync) sendTruncate(path string, pd push.PushData, offset int64) error {
+	pd.PushAction = push.PushActionTruncate
+	pd.Chunk.Offset = offset
+	resp, err := pcs.httpPostWithAuth(pcs.pushAddr, action.WriteAction, push.ParamUpFile, path, pd, nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	_, err = pcs.checkApiResult(resp)
+	return err
 }
 
 func (pcs *pushClientSync) needCheckHash(loopCount, dataLen int) bool {
@@ -434,35 +470,47 @@ func (pcs *pushClientSync) isReadEmptyFile(loopCount, dataLen int) bool {
 	return loopCount == 0 && dataLen <= 0
 }
 
-func (pcs *pushClientSync) needSendRequest(loopCount, dataLen int) bool {
+func (pcs *pushClientSync) needSendChunkRequest(loopCount, dataLen int) bool {
 	return dataLen > 0 || loopCount <= 1
 }
 
-func (pcs *pushClientSync) checkApiResult(resp *http.Response) (abort bool, err error) {
+func (pcs *pushClientSync) checkApiResult(resp *http.Response) (code contract.Code, err error) {
 	var apiResult server.ApiResult
 	respData, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return false, err
+		return code, err
 	}
 	err = jsonutil.Unmarshal(respData, &apiResult)
 	if err != nil {
-		return false, err
+		return code, err
 	}
-	if apiResult.Code == contract.Abort {
-		return true, nil
-	} else if apiResult.Code != contract.Success {
+
+	code = apiResult.Code
+	switch code {
+	case contract.NotModified, contract.ChunkNotModified, contract.Modified, contract.ChunkModified:
+		return code, nil
+	}
+
+	if code != contract.Success {
 		err = fmt.Errorf("send a request to the push server error => %s", apiResult.Message)
 	}
-	return false, err
+	return code, err
 }
 
-func (pcs *pushClientSync) httpPostWithAuth(rawURL string, act action.Action, fieldName string, fileName string, data url.Values, chunk []byte, offset int64) (resp *http.Response, err error) {
+func (pcs *pushClientSync) httpPostWithAuth(rawURL string, act action.Action, fieldName string, fileName string, pd push.PushData, chunk []byte) (resp *http.Response, err error) {
+	pdData, err := jsonutil.Marshal(pd)
+	if err != nil {
+		return nil, err
+	}
+	data := url.Values{}
+	data.Set(push.ParamPushData, string(pdData))
+
 	sendFile := false
 	if act == action.WriteAction {
 		sendFile = true
 	}
 	if sendFile {
-		resp, err = httputil.HttpPostFileChunkWithCookie(rawURL, fieldName, fileName, data, chunk, offset, pcs.cookies...)
+		resp, err = httputil.HttpPostFileChunkWithCookie(rawURL, fieldName, fileName, data, chunk, pcs.cookies...)
 	} else {
 		resp, err = httputil.HttpPostWithCookie(rawURL, data, pcs.cookies...)
 	}
@@ -485,7 +533,7 @@ func (pcs *pushClientSync) httpPostWithAuth(rawURL string, act action.Action, fi
 			pcs.cookies = cookies
 			log.Debug("try to auto login file server success maybe, retry to get resource => %s", rawURL)
 			if sendFile {
-				return httputil.HttpPostFileChunkWithCookie(rawURL, fieldName, fileName, data, chunk, offset, pcs.cookies...)
+				return httputil.HttpPostFileChunkWithCookie(rawURL, fieldName, fileName, data, chunk, pcs.cookies...)
 			}
 			return httputil.HttpPostWithCookie(rawURL, data, pcs.cookies...)
 		}

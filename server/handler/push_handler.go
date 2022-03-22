@@ -18,7 +18,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"time"
 )
 
@@ -45,18 +44,17 @@ func (h *pushHandler) Handle(c *gin.Context) {
 		}
 	}()
 
-	fileInfo := c.PostForm(push.FileInfo)
-	offset, _ := strconv.ParseInt(c.PostForm(push.Offset), 10, 64)
+	pushDataStr := c.PostForm(push.ParamPushData)
 	var pushData push.PushData
-	err := jsonutil.Unmarshal([]byte(fileInfo), &pushData)
+	err := jsonutil.Unmarshal([]byte(pushDataStr), &pushData)
 	if err != nil {
-		msg := "unmarshal file info error"
+		msg := "unmarshal push data error"
 		c.JSON(http.StatusOK, server.NewErrorApiResult(-501, msg))
-		h.logger.Error(err, "%s => %s", msg, fileInfo)
+		h.logger.Error(err, "%s => %s", msg, pushDataStr)
 		return
 	}
 
-	h.logger.Debug("receive action %s => %s", pushData.Action.String(), fileInfo)
+	h.logger.Debug("receive action %s => %s", pushData.Action.String(), pushDataStr)
 
 	if pushData.Action.Valid() == action.UnknownAction {
 		c.JSON(http.StatusOK, server.NewErrorApiResult(-502, fmt.Sprintf("unknown action => %d", pushData.Action.Int())))
@@ -77,7 +75,7 @@ func (h *pushHandler) Handle(c *gin.Context) {
 		err = h.chmod(fi)
 		break
 	case action.WriteAction:
-		r, _ := h.write(fi, offset, c)
+		r, _ := h.write(pushData, c)
 		c.JSON(http.StatusOK, r)
 		return
 	default:
@@ -162,27 +160,28 @@ func (h *pushHandler) chmod(fi contract.FileInfo) (err error) {
 	return nil
 }
 
-func (h *pushHandler) write(fi contract.FileInfo, offset int64, c *gin.Context) (server.ApiResult, error) {
+func (h *pushHandler) write(pushData push.PushData, c *gin.Context) (server.ApiResult, error) {
+	fi := pushData.FileInfo
 	if fi.IsDir.Bool() {
 		err := errors.New("can't write a directory")
 		h.logger.Error(err, "write upload file error")
 		return server.NewErrorApiResult(-504, err.Error()), err
 	}
 	path := h.buildAbsPath(fi.Path)
-	fh, err := c.FormFile(push.UpFile)
+	fh, err := c.FormFile(push.ParamUpFile)
 	if err != nil {
 		msg := "get upload file error"
 		h.logger.Error(err, msg)
 		return server.NewErrorApiResult(-505, msg), err
 	}
 
-	abort, err := h.Save(fh, path, offset, fi.Hash, fi.Size)
+	code, err := h.Save(fh, path, pushData)
 	if err != nil {
 		h.logger.Error(err, fmt.Sprintf("save upload file error => [%s]", path))
 		return server.NewErrorApiResult(-506, fmt.Sprintf("save upload file error => [%s]", fi.Path)), err
-	} else if abort {
-		h.logger.Debug("upload a file that is not modified, ignore and abort the next request => %s", fi.Path)
-		return server.NewApiResult(contract.Abort, contract.AbortDesc, nil), nil
+	} else if code != contract.Unknown {
+		h.logger.Debug("upload a file that is %s => %s", code.String(), fi.Path)
+		return server.NewApiResult(code, code.String(), nil), nil
 	}
 
 	// change file times
@@ -198,50 +197,92 @@ func (h *pushHandler) chtimes(absPath string, fi contract.FileInfo) error {
 	return os.Chtimes(absPath, time.Unix(fi.ATime, 0), time.Unix(fi.MTime, 0))
 }
 
-func (h *pushHandler) Save(file *multipart.FileHeader, dst string, offset int64, hash string, size int64) (abort bool, err error) {
-	// the offset less than zero means to compare file size and hash value only
-	if offset < 0 {
-		if h.compare(dst, hash, size) {
-			return true, nil
-		}
-		return abort, nil
+func (h *pushHandler) Save(file *multipart.FileHeader, dst string, pushData push.PushData) (code contract.Code, err error) {
+	offset := pushData.Chunk.Offset
+	if pushData.PushAction < push.PushActionWrite {
+		code = h.compare(pushData.PushAction, dst, offset, pushData.FileInfo.Hash, pushData.FileInfo.Size, pushData.Chunk.Hash, pushData.Chunk.Size)
+		return code, nil
 	}
 	src, err := file.Open()
 	if err != nil {
-		return abort, err
+		return code, err
 	}
 	defer src.Close()
 
 	var out *os.File
 	if offset > 0 {
-		out, err = os.OpenFile(dst, os.O_APPEND|os.O_CREATE, 0666)
+		out, err = fs.CreateFile(dst)
 	} else {
 		out, err = os.Create(dst)
 	}
 
 	if err != nil {
-		return abort, err
+		return code, err
 	}
 	defer out.Close()
 
 	if offset > 0 {
-		_, err = out.Seek(offset, 0)
+		if pushData.PushAction == push.PushActionTruncate {
+			err = out.Truncate(offset)
+		} else {
+			_, err = out.Seek(offset, 0)
+		}
 		if err != nil {
-			return abort, err
+			return code, err
 		}
 	}
-
-	_, err = io.Copy(out, src)
-	return abort, err
+	if pushData.PushAction == push.PushActionWrite {
+		_, err = io.Copy(out, src)
+	}
+	return code, err
 }
 
-// compare compare file size and hash value
-func (h *pushHandler) compare(dstPath string, sourceHash string, sourceSize int64) (equal bool) {
+func (h *pushHandler) compare(pushAction push.PushAction, dst string, offset int64, fileHash string, fileSize int64, chunkHash string, chunkSize int64) (code contract.Code) {
+	switch pushAction {
+	case push.PushActionCompareFile:
+		if h.compareFile(dst, fileHash, fileSize) {
+			return contract.NotModified
+		}
+	case push.PushActionCompareChunk:
+		if h.compareChunk(dst, offset, chunkHash, chunkSize) {
+			return contract.ChunkNotModified
+		}
+	case push.PushActionCompareFileAndChunk:
+		if h.compareFile(dst, fileHash, fileSize) {
+			return contract.NotModified
+		}
+		if h.compareChunk(dst, offset, chunkHash, chunkSize) {
+			return contract.ChunkNotModified
+		}
+	}
+	if pushAction == push.PushActionCompareChunk {
+		return contract.ChunkModified
+	} else {
+		return contract.Modified
+	}
+}
+
+// compareFile compare file size and hash value
+func (h *pushHandler) compareFile(dstPath string, sourceHash string, sourceSize int64) (equal bool) {
 	if sourceSize > 0 && len(sourceHash) > 0 {
 		destStat, err := os.Stat(dstPath)
 		if err == nil && destStat.Size() == sourceSize {
 			destHash, err := hashutil.MD5FromFileName(dstPath)
 			if err == nil && destHash == sourceHash {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// compareChunk compare chunk size and hash value
+func (h *pushHandler) compareChunk(dstPath string, offset int64, chunkHash string, chunkSize int64) (equal bool) {
+	if chunkSize > 0 && len(chunkHash) > 0 {
+		destStat, err := os.Stat(dstPath)
+		if err == nil && destStat.Size() >= offset+chunkSize {
+			destHash, err := hashutil.MD5FromFileChunk(dstPath, offset, chunkSize)
+			if err == nil && destHash == chunkHash {
 				return true
 			}
 		}

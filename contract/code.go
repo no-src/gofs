@@ -20,11 +20,19 @@ const (
 	ServerError Code = -5
 	// AccessDeny deny current access
 	AccessDeny Code = -6
-	// Abort the abort code means to ignore and abort the next request
-	Abort Code = -7
+	// NotModified  the resource is not modified
+	NotModified Code = -7
+	// ChunkNotModified the chunk is not modified
+	ChunkNotModified Code = -8
+	// Modified  the resource is modified
+	Modified Code = -9
+	// ChunkModified the chunk is modified
+	ChunkModified Code = -10
 )
 
 const (
+	// UnknownDesc the description of Unknown code
+	UnknownDesc = "unknown"
 	// SuccessDesc the description of Success code
 	SuccessDesc = "success"
 	// FailDesc the description of Fail code
@@ -39,6 +47,46 @@ const (
 	ServerErrorDesc = "server internal error"
 	// AccessDenyDesc the description of AccessDeny code
 	AccessDenyDesc = "access deny"
-	// AbortDesc the description of Abort code
-	AbortDesc = "abort"
+	// NotModifiedDesc the description of NotModified code
+	NotModifiedDesc = "not modified"
+	// ChunkNotModifiedDesc the description of ChunkNotModified code
+	ChunkNotModifiedDesc = "chunk not modified"
+	// ModifiedDesc the description of Modified code
+	ModifiedDesc = "modified"
+	// ChunkModifiedDesc the description of ChunkModified code
+	ChunkModifiedDesc = "chunk modified"
 )
+
+// String return the code description name
+func (code Code) String() string {
+	desc := ""
+	switch code {
+	case Unknown:
+		desc = UnknownDesc
+	case Success:
+		desc = SuccessDesc
+	case Fail:
+		desc = FailDesc
+	case Unauthorized:
+		desc = UnauthorizedDesc
+	case NotFound:
+		desc = NotFoundDesc
+	case NoPermission:
+		desc = NoPermissionDesc
+	case ServerError:
+		desc = ServerErrorDesc
+	case AccessDeny:
+		desc = AccessDenyDesc
+	case NotModified:
+		desc = NotModifiedDesc
+	case ChunkNotModified:
+		desc = ChunkNotModifiedDesc
+	case Modified:
+		desc = ModifiedDesc
+	case ChunkModified:
+		desc = ChunkModifiedDesc
+	default:
+		desc = UnknownDesc
+	}
+	return desc
+}

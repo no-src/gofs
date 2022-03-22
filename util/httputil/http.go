@@ -3,7 +3,6 @@ package httputil
 import (
 	"bytes"
 	"crypto/tls"
-	"github.com/no-src/gofs/contract/push"
 	"io"
 	"mime/multipart"
 	"net"
@@ -11,7 +10,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -100,7 +98,7 @@ func HttpPostFileWithCookie(url string, fieldName, fileName string, data url.Val
 }
 
 // HttpPostFileChunkWithCookie send a post request with form data, a file chunk and cookies
-func HttpPostFileChunkWithCookie(url string, fieldName string, fileName string, data url.Values, chunk []byte, offset int64, cookies ...*http.Cookie) (resp *http.Response, err error) {
+func HttpPostFileChunkWithCookie(url string, fieldName string, fileName string, data url.Values, chunk []byte, cookies ...*http.Cookie) (resp *http.Response, err error) {
 	body := new(bytes.Buffer)
 	w := multipart.NewWriter(body)
 
@@ -109,8 +107,6 @@ func HttpPostFileChunkWithCookie(url string, fieldName string, fileName string, 
 			w.WriteField(k, item)
 		}
 	}
-
-	w.WriteField(push.Offset, strconv.FormatInt(offset, 10))
 
 	fw, err := w.CreateFormFile(fieldName, filepath.Base(fileName))
 	if err != nil {
