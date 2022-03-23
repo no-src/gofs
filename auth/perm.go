@@ -81,13 +81,10 @@ func ToPerm(perm string) (p Perm) {
 		switch c {
 		case ReadPerm:
 			r = true
-			break
 		case WritePerm:
 			w = true
-			break
 		case ExecutePerm:
 			x = true
-			break
 		default:
 			return p
 		}

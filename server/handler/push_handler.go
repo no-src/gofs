@@ -64,16 +64,12 @@ func (h *pushHandler) Handle(c *gin.Context) {
 	switch pushData.Action {
 	case action.CreateAction:
 		err = h.create(fi)
-		break
 	case action.RemoveAction:
 		err = h.remove(fi)
-		break
 	case action.RenameAction:
 		err = h.rename(fi)
-		break
 	case action.ChmodAction:
 		err = h.chmod(fi)
-		break
 	case action.WriteAction:
 		r, _ := h.write(pushData, c)
 		c.JSON(http.StatusOK, r)

@@ -177,13 +177,10 @@ func (pcs *pushClientSync) receive() {
 				switch status.ApiType {
 				case contract.AuthApi:
 					pcs.authChan <- status
-					break
 				case contract.InfoApi:
 					pcs.infoChan <- contract.NewMessage(data)
-					break
 				default:
 					log.Warn("[push client sync] receive and discard data => %s", string(data))
-					break
 				}
 			}
 		}

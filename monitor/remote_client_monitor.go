@@ -232,16 +232,12 @@ func (m *remoteClientMonitor) parseMessage(data []byte) error {
 	switch status.ApiType {
 	case contract.AuthApi:
 		m.authChan <- status
-		break
 	case contract.InfoApi:
 		m.infoChan <- contract.NewMessage(data)
-		break
 	case contract.SyncMessageApi:
 		m.messages.PushBack(contract.NewMessage(data))
-		break
 	default:
 		log.Warn("remote client monitor received a unknown data => %s", string(data))
-		break
 	}
 	return nil
 }
@@ -290,7 +286,6 @@ func (m *remoteClientMonitor) execSync(msg sync.Message) (err error) {
 	switch msg.Action {
 	case action.CreateAction:
 		err = m.syncer.Create(path)
-		break
 	case action.WriteAction:
 		err = m.syncer.Create(path)
 		// ignore is not exist error
@@ -298,17 +293,13 @@ func (m *remoteClientMonitor) execSync(msg sync.Message) (err error) {
 			err = nil
 		}
 		m.addWrite(path)
-		break
 	case action.RemoveAction:
 		m.removeWrite(path)
 		err = m.syncer.Remove(path)
-		break
 	case action.RenameAction:
 		err = m.syncer.Rename(path)
-		break
 	case action.ChmodAction:
 		err = m.syncer.Chmod(path)
-		break
 	}
 
 	m.el.Write(eventlog.NewEvent(path, msg.Action.String()))

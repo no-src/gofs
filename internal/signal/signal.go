@@ -19,7 +19,6 @@ func Notify(shutdown func() error) {
 			err := shutdown()
 			if err != nil {
 				log.Error(err, "shutdown error")
-				break
 			} else {
 				signal.Stop(c)
 				close(c)
@@ -27,7 +26,6 @@ func Notify(shutdown func() error) {
 			}
 		default:
 			log.Debug("received a signal [%s], ignore it", s.String())
-			break
 		}
 	}
 }
