@@ -2,6 +2,7 @@ package toplist
 
 import (
 	"errors"
+	"github.com/no-src/gofs/util/jsonutil"
 	"sync"
 )
 
@@ -120,6 +121,11 @@ func (tl *TopList) Top(n int) (list []interface{}) {
 		list = append(list, tl.get(i))
 	}
 	return list
+}
+
+// MarshalJSON implement interface json.Marshaler
+func (tl *TopList) MarshalJSON() (text []byte, err error) {
+	return jsonutil.Marshal(tl.Top(tl.Cap()))
 }
 
 func (tl *TopList) getNextPos(pos int) int {

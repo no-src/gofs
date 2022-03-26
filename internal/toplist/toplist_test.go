@@ -1,6 +1,10 @@
 package toplist
 
-import "testing"
+import (
+	"bytes"
+	"github.com/no-src/gofs/util/jsonutil"
+	"testing"
+)
 
 func TestTopListWithCapZero(t *testing.T) {
 	// desc
@@ -23,7 +27,7 @@ func TestTopListWithCapOne(t *testing.T) {
 	capacity := 1
 	tl, err := New(capacity)
 	if err != nil {
-		t.Errorf("[desc] test toplist with one capacity error, get an error =>%v", err)
+		t.Errorf("[desc] test toplist with one capacity error, get an error => %v", err)
 		return
 	}
 
@@ -49,7 +53,7 @@ func TestTopListWithCapOne(t *testing.T) {
 	capacity = 1
 	tl, err = NewOrderByAsc(capacity)
 	if err != nil {
-		t.Errorf("[asc] test toplist with one capacity error, get an error =>%v", err)
+		t.Errorf("[asc] test toplist with one capacity error, get an error => %v", err)
 		return
 	}
 
@@ -77,7 +81,7 @@ func TestTopListWithCapTwo(t *testing.T) {
 	capacity := 2
 	tl, err := New(capacity)
 	if err != nil {
-		t.Errorf("[desc] test toplist with one capacity error, get an error =>%v", err)
+		t.Errorf("[desc] test toplist with one capacity error, get an error => %v", err)
 		return
 	}
 
@@ -116,7 +120,7 @@ func TestTopListWithCapTwo(t *testing.T) {
 	capacity = 2
 	tl, err = NewOrderByAsc(capacity)
 	if err != nil {
-		t.Errorf("[asc] test toplist with one capacity error, get an error =>%v", err)
+		t.Errorf("[asc] test toplist with one capacity error, get an error => %v", err)
 		return
 	}
 
@@ -150,6 +154,26 @@ func TestTopListWithCapTwo(t *testing.T) {
 	topListTop(t, tl, 0)
 	topListTop(t, tl, 1, s2)
 	topListTop(t, tl, 2, s2, s3)
+}
+
+func TestTopListMarshalJSON(t *testing.T) {
+	capacity := 2
+	tl, err := New(capacity)
+	if err != nil {
+		t.Errorf("create new toplist error, get an error => %v", err)
+		return
+	}
+	tl.Add("hello")
+	tl.Add("world")
+	jsonBytes, err := jsonutil.Marshal(tl)
+	if err != nil {
+		t.Errorf("test marshal toplist error => %v", err)
+		return
+	}
+	expectJsonBytes := []byte(`["world","hello"]`)
+	if !bytes.Equal(expectJsonBytes, jsonBytes) {
+		t.Errorf("test marshal toplist error, expect:%s, actual:%s", string(expectJsonBytes), string(jsonBytes))
+	}
 }
 
 func topListGet(t *testing.T, tl *TopList, index int, expect interface{}) {
