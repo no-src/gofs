@@ -3,13 +3,12 @@ package eventlog
 import (
 	"fmt"
 	"io"
-	"time"
 )
 
 // EventLog the event log recorder
 type EventLog interface {
 	// Write write event info to output writer
-	Write(event event) error
+	Write(event Event) error
 }
 
 type eventLog struct {
@@ -23,10 +22,10 @@ func New(w io.Writer) EventLog {
 	}
 }
 
-func (el *eventLog) Write(event event) error {
+func (el *eventLog) Write(event Event) error {
 	if el.w == nil {
 		return nil
 	}
-	_, err := el.w.Write([]byte(fmt.Sprintf("[%s]%s\n", time.Now().Format("2006-01-02 15:04:05.999"), event.String())))
+	_, err := el.w.Write([]byte(fmt.Sprintf("%s\n", event.String())))
 	return err
 }

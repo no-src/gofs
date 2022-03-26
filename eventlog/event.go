@@ -1,21 +1,28 @@
 package eventlog
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/no-src/gofs/util/timeutil"
+	"time"
+)
 
-type event struct {
-	name string
-	op   string
+// Event the description of file change event
+type Event struct {
+	Name string
+	Op   string
+	Time timeutil.Time
 }
 
 // NewEvent create an event instance
-func NewEvent(name, op string) event {
-	return event{
-		name: name,
-		op:   op,
+func NewEvent(name, op string) Event {
+	return Event{
+		Name: name,
+		Op:   op,
+		Time: timeutil.NewTime(time.Now()),
 	}
 }
 
 // String return the format event info
-func (e *event) String() string {
-	return fmt.Sprintf("[%s][%s]", e.op, e.name)
+func (e *Event) String() string {
+	return fmt.Sprintf("[%s][%s][%s]", e.Time.String(), e.Op, e.Name)
 }
