@@ -14,9 +14,19 @@ func NewTime(t time.Time) Time {
 	return Time(t.Unix())
 }
 
+// Now returns the current local time
+func Now() Time {
+	return NewTime(time.Now())
+}
+
 // Unix returns the unix time, the number of seconds elapsed since January 1, 1970 UTC
 func (t Time) Unix() int64 {
 	return int64(t)
+}
+
+// Time convert to time.Time
+func (t Time) Time() time.Time {
+	return time.Unix(t.Unix(), 0)
 }
 
 // String returns the default formatted time string

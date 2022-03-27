@@ -28,3 +28,12 @@ func TestTime(t *testing.T) {
 		t.Errorf("test time MarshalText error, expect:%v, actual:%v", []byte(timeStr), timeBytes)
 	}
 }
+
+func TestNow(t *testing.T) {
+	now := Now()
+	actual := now.String()
+	expect := now.Time().Format(defaultTimeFormat)
+	if actual != expect {
+		t.Errorf("test Now error, expect:%s, actual:%s", expect, actual)
+	}
+}
