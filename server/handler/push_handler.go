@@ -253,9 +253,8 @@ func (h *pushHandler) compare(pushAction push.PushAction, dst string, offset int
 	}
 	if pushAction == push.PushActionCompareChunk {
 		return contract.ChunkModified
-	} else {
-		return contract.Modified
 	}
+	return contract.Modified
 }
 
 // compareFile compare file size and hash value
