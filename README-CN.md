@@ -260,7 +260,7 @@ https://127.0.0.1/manage/config?format=yaml
 
 使用`report`命令行参数来启用报告接口的路由并且开始收集报告数据，需要先启用`manage`命令行参数
 
-报告接口详情参见[Report API](/server/README.md#report-api).
+报告接口详情参见[Report API](/server/README.md#report-api)
 
 ```text
 https://127.0.0.1/manage/report

@@ -205,7 +205,7 @@ Response field description:
         - `connect_time` the connected time of client
         - `auth_time` the authorized time of client
         - `disconnect_time` the disconnected time of client
-        - `life_time` the lifetime of a client, it is 0s always that if the client is online
+        - `life_time` the lifetime of a client, it is `0s` always that if the client is online
     - `offline` returns the client connection info that is offline, full fields see `online`
     - `events` returns some latest file change events
         - `name` the path of file change
