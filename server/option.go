@@ -24,6 +24,7 @@ type Option struct {
 	ManagePrivate         bool
 	EnableLogicallyDelete bool
 	EnablePushServer      bool
+	EnableReport          bool
 }
 
 // NewServerOption create an instance of the Option, store all the web server options
@@ -43,6 +44,7 @@ func NewServerOption(config conf.Config, init wait.WaitDone, users []*auth.User,
 		ManagePrivate:         config.ManagePrivate,
 		EnableLogicallyDelete: config.EnableLogicallyDelete,
 		EnablePushServer:      config.EnablePushServer,
+		EnableReport:          config.EnableReport,
 	}
 	return opt
 }

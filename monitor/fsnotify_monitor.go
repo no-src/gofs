@@ -7,6 +7,7 @@ import (
 	"github.com/no-src/gofs/eventlog"
 	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/internal/clist"
+	"github.com/no-src/gofs/report"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/util/osutil"
@@ -154,7 +155,9 @@ func (m *fsNotifyMonitor) startProcessEvents() error {
 			m.chmod(event)
 		}
 		m.events.Remove(element)
-		m.el.Write(eventlog.NewEvent(event.Name, event.Op.String()))
+		e := eventlog.NewEvent(event.Name, event.Op.String())
+		m.el.Write(e)
+		report.GlobalReporter.PutEvent(e)
 	}
 }
 

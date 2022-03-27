@@ -3,6 +3,7 @@ package tran
 import (
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/internal/cbool"
+	"github.com/no-src/gofs/report"
 	"github.com/no-src/log"
 	"net"
 	"time"
@@ -40,7 +41,9 @@ func (conn *Conn) MarkAuthorized(user *auth.HashUser) {
 	conn.user = user
 	now := time.Now()
 	conn.authTime = &now
-	log.Info("the conn authorized [local=%s][remote=%s] => [username=%s password=%s perm=%s]", conn.LocalAddr().String(), conn.RemoteAddr().String(), user.UserNameHash, user.PasswordHash, user.Perm.String())
+	addr := conn.RemoteAddr().String()
+	log.Info("the conn authorized [local=%s][remote=%s] => [username=%s password=%s perm=%s]", conn.LocalAddr().String(), addr, user.UserNameHash, user.PasswordHash, user.Perm.String())
+	report.GlobalReporter.PutAuth(addr, user)
 }
 
 // Authorized check the current connection is authorized or not

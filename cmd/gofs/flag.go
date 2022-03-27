@@ -68,6 +68,7 @@ func parseFlags() {
 	flag.BoolVar(&config.EnableManage, "manage", false, "enable the manage api route")
 	flag.BoolVar(&config.ManagePrivate, "manage_private", true, "allow to access manage api route by private address and loopback address only")
 	flag.BoolVar(&config.EnablePushServer, "push_server", false, "whether to enable the push server")
+	flag.BoolVar(&config.EnableReport, "report", false, "enable the report api route and start to collect the report data, need to enable -manage flag first")
 
 	// tls transfer
 	flag.BoolVar(&config.EnableTLS, "tls", true, fmt.Sprintf("enable the tls connections, if disable it, server_addr is \"%s\" default", server.DefaultAddrHttp))

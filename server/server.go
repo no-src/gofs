@@ -41,6 +41,8 @@ const (
 	ManageGroupRoute = "/manage"
 	// ManageConfigRoute the route of manage config api
 	ManageConfigRoute = "/config"
+	// ManageReportRoute the route of report api
+	ManageReportRoute = "/report"
 	// PProfRoutePrefix the route prefix of pprof
 	PProfRoutePrefix = "pprof"
 )

@@ -2,17 +2,18 @@
 
 ## API List
 
-| Name                                  | Route          | Method    | Remark       |
-|---------------------------------------|----------------|-----------|--------------|
-| Navigation Page                       | /              | GET       |              |
-| Login Page                            | /login/index   | GET       |              |
-| User Sign In API                      | /signin        | POST      |              |
-| Source File Server                    | /source/       | GET       |              |
-| DestPath File Server                  | /dest/         | GET       |              |
-| [File Query API](#file-query-api)     | /query         | GET       |              |
-| [File Push API](#file-push-api)       | /w/push        | POST      |              |
-| PProf API                             | /manage/pprof  | GET       |              |
-| Config API                            | /manage/config | GET       |              |
+| Name                              | Route          | Method    | Remark       |
+|-----------------------------------|----------------|-----------|--------------|
+| Navigation Page                   | /              | GET       |              |
+| Login Page                        | /login/index   | GET       |              |
+| User Sign In API                  | /signin        | POST      |              |
+| Source File Server                | /source/       | GET       |              |
+| DestPath File Server              | /dest/         | GET       |              |
+| [File Query API](#file-query-api) | /query         | GET       |              |
+| [File Push API](#file-push-api)   | /w/push        | POST      |              |
+| PProf API                         | /manage/pprof  | GET       |              |
+| Config API                        | /manage/config | GET       |              |
+| [Report API](#report-api)         | /manage/report | GET       |              |
 
 ### File Query API
 
@@ -162,6 +163,116 @@ Here is an example response:
   "code": 1,
   "message": "success",
   "data": null
+}
+```
+
+### Report API
+
+Query the report data if you enable the `manage` and `report` flags.
+
+#### Request
+
+##### Method
+
+`GET`
+
+##### Example
+
+```text
+https://127.0.0.1/manage/report
+```
+
+#### Response
+
+##### Parameter
+
+Response field description:
+
+- `code` status code,`1` means success, all status codes see [Status Code](#status-code)
+- `message` response status description
+- `data` response data
+    - `pid` returns the process id of the caller
+    - `ppid` returns the process id of the caller's parent
+    - `go_os` is the running program's operating system target
+    - `go_arch` is the running program's architecture target
+    - `go_version` returns the Go tree's version string
+    - `version` returns the version info of the gofs
+    - `online` returns the client connection info that is online
+        - `addr` the client connection address
+        - `is_auth` whether the client is authorized
+        - `username` the username of client
+        - `perm` the permission of client
+        - `connect_time` the connected time of client
+        - `auth_time` the authorized time of client
+        - `disconnect_time` the disconnected time of client
+        - `life_time` the lifetime of a client, it is 0s always that if the client is online
+    - `offline` returns the client connection info that is offline, full fields see `online`
+    - `events` returns some latest file change events
+        - `name` the path of file change
+        - `op` the operation of file change
+        - `time` the time of file change
+    - `event_stat` returns the statistical data of file change events
+    - `api_stat` returns the statistical data of api access info
+        - `access_count` all the api access count
+        - `visitor_stat` the statistical data of visitors
+
+##### Example
+
+Here is an example response:
+
+```json
+{
+  "code": 1,
+  "message": "success",
+  "data": {
+    "pid": 94032,
+    "ppid": 9268,
+    "go_os": "windows",
+    "go_arch": "amd64",
+    "go_version": "go1.18",
+    "version": "v0.4.0",
+    "online": {
+      "127.0.0.1:11993": {
+        "addr": "127.0.0.1:11993",
+        "is_auth": true,
+        "username": "698d51a19d8a121c",
+        "perm": "rwx",
+        "connect_time": "2022-03-28 01:10:11",
+        "auth_time": "2022-03-28 01:10:11",
+        "disconnect_time": "1970-01-01 08:00:00",
+        "life_time": "0s"
+      }
+    },
+    "offline": [
+      {
+        "addr": "127.0.0.1:11887",
+        "is_auth": true,
+        "username": "698d51a19d8a121c",
+        "perm": "rwx",
+        "connect_time": "2022-03-28 01:08:46",
+        "auth_time": "2022-03-28 01:08:46",
+        "disconnect_time": "2022-03-28 01:10:06",
+        "life_time": "1m20s"
+      }
+    ],
+    "events": [
+      {
+        "name": "C:\\workspace\\hello_gofs.txt",
+        "op": "WRITE",
+        "time": "2022-03-28 01:10:01"
+      }
+    ],
+    "event_stat": {
+      "WRITE": 1
+    },
+    "api_stat": {
+      "access_count": 14,
+      "visitor_stat": {
+        "127.0.0.1": 11,
+        "192.168.0.106": 3
+      }
+    }
+  }
 }
 ```
 

@@ -271,6 +271,17 @@ Or use the `format` parameter to specific the config format.
 https://127.0.0.1/manage/config?format=yaml
 ```
 
+#### Report API
+
+Use the `report` flag to enable report api route, and start to collect the report data, need to enable the `manage` flag
+first.
+
+The details of the report api see [Report API](/server/README.md#report-api).
+
+```text
+https://127.0.0.1/manage/report
+```
+
 ### Logger
 
 Enable the file logger and console logger by default, and you can disable the file logger by setting the `log_file` flag

@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"github.com/no-src/gofs/auth"
+	"github.com/no-src/gofs/report"
 	"github.com/no-src/gofs/util/stringutil"
 	"github.com/no-src/log"
 	"net"
@@ -121,6 +122,7 @@ func (srv *tcpServer) addClient(conn *Conn) (clientCount int, err error) {
 	}
 	clientCount = srv.ClientCount()
 	log.Info("client[%s]conn succeed, current client connect count:%d", conn.RemoteAddr().String(), clientCount)
+	report.GlobalReporter.PutConnection(addr)
 	return clientCount, err
 }
 
@@ -134,6 +136,7 @@ func (srv *tcpServer) removeClient(conn *Conn) (clientCount int, err error) {
 	srv.conns.Delete(addr)
 	clientCount = srv.ClientCount()
 	log.Info("client[%s]conn removed, current client connect count:%d", conn.RemoteAddr().String(), clientCount)
+	report.GlobalReporter.DeleteConnection(addr)
 	return clientCount, err
 }
 

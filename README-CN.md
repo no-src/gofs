@@ -256,6 +256,16 @@ https://127.0.0.1/manage/config
 https://127.0.0.1/manage/config?format=yaml
 ```
 
+#### 报告接口
+
+使用`report`命令行参数来启用报告接口的路由并且开始收集报告数据，需要先启用`manage`命令行参数
+
+报告接口详情参见[Report API](/server/README.md#report-api).
+
+```text
+https://127.0.0.1/manage/report
+```
+
 ### 日志
 
 默认情况下会启用文件日志与控制台日志，你可以将`log_file`命令行参数设置为`false`来禁用文件日志

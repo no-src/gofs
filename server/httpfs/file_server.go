@@ -11,6 +11,7 @@ import (
 	"github.com/no-src/gofs"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/core"
+	"github.com/no-src/gofs/report"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/handler"
 	"github.com/no-src/gofs/server/middleware"
@@ -74,7 +75,7 @@ func initDefaultMiddleware(engine *gin.Engine, logger io.Writer) {
 	engine.Use(gin.LoggerWithConfig(gin.LoggerConfig{
 		Formatter: defaultLogFormatter,
 		Output:    logger,
-	}), gin.Recovery())
+	}), gin.Recovery(), middleware.ApiStat())
 }
 
 func initHTMLTemplate(engine *gin.Engine) error {
@@ -123,6 +124,10 @@ func initRoute(engine *gin.Engine, opt server.Option, logger log.Logger) {
 		}
 		pprof.RouteRegister(manageGroup, server.PProfRoutePrefix)
 		manageGroup.GET(server.ManageConfigRoute, handler.NewManageHandler(logger).Handle)
+		if opt.EnableReport {
+			manageGroup.GET(server.ManageReportRoute, handler.NewReportHandler(logger).Handle)
+			report.GlobalReporter.Enable(true)
+		}
 	}
 
 	if source.IsDisk() || source.Is(core.RemoteDisk) {
