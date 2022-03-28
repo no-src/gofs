@@ -139,6 +139,10 @@ func (r *Reporter) Enable(enabled bool) {
 }
 
 func init() {
+	initGlobalReporter()
+}
+
+func initGlobalReporter() {
 	report := Report{
 		Pid:       os.Getpid(),
 		PPid:      os.Getppid(),
