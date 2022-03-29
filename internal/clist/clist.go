@@ -20,7 +20,7 @@ func New() *CList {
 }
 
 // PushBack inserts a new element e with value v at the back of list l and returns e.
-func (cl *CList) PushBack(v interface{}) *list.Element {
+func (cl *CList) PushBack(v any) *list.Element {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	return cl.v.PushBack(v)
@@ -36,7 +36,7 @@ func (cl *CList) Front() *list.Element {
 // Remove removes e from l if e is an element of list l.
 // It returns the element value e.Value.
 // The element must not be nil.
-func (cl *CList) Remove(e *list.Element) interface{} {
+func (cl *CList) Remove(e *list.Element) any {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	return cl.v.Remove(e)

@@ -176,7 +176,7 @@ func TestTopListMarshalJSON(t *testing.T) {
 	}
 }
 
-func topListGet(t *testing.T, tl *TopList, index int, expect interface{}) {
+func topListGet(t *testing.T, tl *TopList, index int, expect any) {
 	order := "desc"
 	if tl.asc {
 		order = "asc"
@@ -187,7 +187,7 @@ func topListGet(t *testing.T, tl *TopList, index int, expect interface{}) {
 	}
 }
 
-func topListLast(t *testing.T, tl *TopList, expect interface{}) {
+func topListLast(t *testing.T, tl *TopList, expect any) {
 	order := "desc"
 	if tl.asc {
 		order = "asc"
@@ -220,7 +220,7 @@ func topListCap(t *testing.T, tl *TopList, expect int) {
 	}
 }
 
-func topListTop(t *testing.T, tl *TopList, top int, expect ...interface{}) {
+func topListTop(t *testing.T, tl *TopList, top int, expect ...any) {
 	order := "desc"
 	if tl.asc {
 		order = "asc"

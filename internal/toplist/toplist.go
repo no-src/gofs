@@ -12,7 +12,7 @@ type TopList struct {
 	length   int
 	begin    int
 	end      int
-	data     []interface{}
+	data     []any
 	mu       sync.RWMutex
 	asc      bool
 }
@@ -37,14 +37,14 @@ func newTopList(capacity int, asc bool) (*TopList, error) {
 		capacity: capacity,
 		begin:    0,
 		end:      -1,
-		data:     make([]interface{}, capacity),
+		data:     make([]any, capacity),
 		asc:      asc,
 	}
 	return tl, nil
 }
 
 // Add add an element to the list
-func (tl *TopList) Add(element interface{}) {
+func (tl *TopList) Add(element any) {
 	tl.mu.Lock()
 	defer tl.mu.Unlock()
 	nextEnd := tl.getNextEnd()
@@ -72,13 +72,13 @@ func (tl *TopList) Cap() int {
 }
 
 // Get get an element by a specified index in the list, if the index is greater than TopList.Len or less than 0, return a nil element always
-func (tl *TopList) Get(index int) interface{} {
+func (tl *TopList) Get(index int) any {
 	tl.mu.RLock()
 	defer tl.mu.RUnlock()
 	return tl.get(index)
 }
 
-func (tl *TopList) get(index int) interface{} {
+func (tl *TopList) get(index int) any {
 	if index >= tl.length || index < 0 {
 		return nil
 	}
@@ -94,7 +94,7 @@ func (tl *TopList) get(index int) interface{} {
 }
 
 // Last returns the last element of the list
-func (tl *TopList) Last() interface{} {
+func (tl *TopList) Last() any {
 	tl.mu.RLock()
 	defer tl.mu.RUnlock()
 	if tl.length <= 0 {
@@ -107,7 +107,7 @@ func (tl *TopList) Last() interface{} {
 }
 
 // Top returns the latest elements by top n
-func (tl *TopList) Top(n int) (list []interface{}) {
+func (tl *TopList) Top(n int) (list []any) {
 	tl.mu.RLock()
 	defer tl.mu.RUnlock()
 	if n <= 0 || tl.length == 0 {

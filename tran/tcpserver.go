@@ -142,7 +142,7 @@ func (srv *tcpServer) removeClient(conn *Conn) (clientCount int, err error) {
 
 func (srv *tcpServer) ClientCount() int {
 	count := 0
-	srv.conns.Range(func(key, value interface{}) bool {
+	srv.conns.Range(func(key, value any) bool {
 		count++
 		return true
 	})
@@ -150,7 +150,7 @@ func (srv *tcpServer) ClientCount() int {
 }
 
 func (srv *tcpServer) Send(data []byte) error {
-	srv.conns.Range(func(key, value interface{}) bool {
+	srv.conns.Range(func(key, value any) bool {
 		if value == nil {
 			return true
 		}

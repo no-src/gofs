@@ -14,7 +14,7 @@ func TestString(t *testing.T) {
 	}, "golang")
 
 	// custom with error
-	jsonutil.Marshal = func(v interface{}) ([]byte, error) {
+	jsonutil.Marshal = func(v any) ([]byte, error) {
 		return nil, errors.New("marshal error test")
 	}
 	testString(t, []string{"hello"}, `[hello]`)
@@ -45,7 +45,7 @@ func TestString(t *testing.T) {
 	testString(t, []string{"hello", "world"}, `["hello","world"]`)
 }
 
-func testString(t *testing.T, v interface{}, expect string) {
+func testString(t *testing.T, v any, expect string) {
 	actual := String(v)
 	if actual != expect {
 		t.Errorf("test String error, expect:%s, actual:%s", expect, actual)

@@ -14,7 +14,7 @@ type ToString interface {
 }
 
 // String parse the v to string
-func String(v interface{}) string {
+func String(v any) string {
 	switch v.(type) {
 	case ToString:
 		return v.(ToString).String()
