@@ -11,7 +11,7 @@
 
 English | [简体中文](README-CN.md)
 
-A file synchronization tool out of the box based on golang.
+A cross-platform file synchronization tool out of the box based on golang.
 
 ## Installation
 
@@ -128,7 +128,7 @@ users for security reasons.
 The server users will output to log if you set the `rand_user_count` flag greater than zero.
 
 If you need to compress the files, add the `server_compress` flag to enable gzip compression for response, but it is not
-fast now.
+fast now, and may reduce transmission efficiency in the LAN.
 
 ```bash
 # Start a file server and create three random users

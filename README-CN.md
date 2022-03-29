@@ -11,7 +11,7 @@
 
 [English](README.md) | 简体中文
 
-基于golang开发的一款开箱即用的文件同步工具
+基于golang开发的一款开箱即用的跨平台文件同步工具
 
 ## 安装
 
@@ -121,7 +121,7 @@ Web文件服务器默认使用HTTPS协议，使用`tls_cert_file`和`tls_key_fil
 
 如果`rand_user_count`命令行参数设置大于0，则随机生成的账户密码将会打印到日志信息中，请注意查看
 
-如果你需要启用gzip压缩响应结果，则添加`server_compress`命令行参数，但是目前gzip压缩不是很快，会影响传输效率
+如果你需要启用gzip压缩响应结果，则添加`server_compress`命令行参数，但是目前gzip压缩不是很快，在局域网中可能会影响传输效率
 
 ```bash
 # 启动一个Web文件服务器并随机创建3个用户
