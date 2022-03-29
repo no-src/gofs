@@ -15,6 +15,9 @@ A file synchronization tool out of the box based on golang.
 
 ## Installation
 
+The first need [Go](https://go.dev/doc/install) installed (**version 1.18+ is required**), then you can use the below
+command to install `gofs`.
+
 ```bash
 go install github.com/no-src/gofs/...@latest
 ```
