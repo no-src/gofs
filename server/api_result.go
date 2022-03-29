@@ -6,11 +6,11 @@ import "github.com/no-src/gofs/contract"
 type ApiResult struct {
 	Code    contract.Code `json:"code"`
 	Message string        `json:"message"`
-	Data    interface{}   `json:"data"`
+	Data    any           `json:"data"`
 }
 
 // NewApiResult create an instance of the ApiResult
-func NewApiResult(code contract.Code, message string, data interface{}) ApiResult {
+func NewApiResult(code contract.Code, message string, data any) ApiResult {
 	r := ApiResult{
 		Code:    code,
 		Message: message,

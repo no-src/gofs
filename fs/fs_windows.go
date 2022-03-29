@@ -17,7 +17,7 @@ func GetFileTime(path string) (cTime time.Time, aTime time.Time, mTime time.Time
 }
 
 // GetFileTimeBySys get the create time, last access time, last modify time of the FileInfo.Sys()
-func GetFileTimeBySys(sys interface{}) (cTime time.Time, aTime time.Time, mTime time.Time, err error) {
+func GetFileTimeBySys(sys any) (cTime time.Time, aTime time.Time, mTime time.Time, err error) {
 	if sys != nil {
 		attr := sys.(*syscall.Win32FileAttributeData)
 		if attr != nil {

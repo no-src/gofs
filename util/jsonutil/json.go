@@ -10,10 +10,10 @@ var Marshal = marshal
 // Unmarshal returns an InvalidUnmarshalError.
 var Unmarshal = unmarshal
 
-func marshal(v interface{}) ([]byte, error) {
+func marshal(v any) ([]byte, error) {
 	return json.Marshal(v)
 }
 
-func unmarshal(data []byte, v interface{}) error {
+func unmarshal(data []byte, v any) error {
 	return json.Unmarshal(data, v)
 }
