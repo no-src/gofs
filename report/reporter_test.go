@@ -76,7 +76,7 @@ func testGetReporterWithDisable(t *testing.T, addrOnline string) {
 		t.Errorf("[disabled] test PutApiStat error, expect get %d visitor, actual:%d", expectVisitorStat, actualVisitorStat)
 	}
 
-	var expectAccessCount uint64 = 0
+	var expectAccessCount uint64
 	actualAccessCount := r.ApiStat.AccessCount
 	if expectAccessCount != actualAccessCount {
 		t.Errorf("[disabled] test PutApiStat error, expect get %d access count, actual:%d", expectAccessCount, actualAccessCount)
