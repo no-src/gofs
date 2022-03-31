@@ -8,6 +8,7 @@ import (
 )
 
 const testFilePath = "./hash_test.go"
+const notExistFilePath = "./not_exist.txt"
 
 func TestMD5FromFileError(t *testing.T) {
 	_, err := MD5FromFile(nil)
@@ -34,7 +35,7 @@ func TestMD5FromFileName(t *testing.T) {
 }
 
 func TestMD5FromFileNameError(t *testing.T) {
-	_, err := MD5FromFileName("./not_exist.txt")
+	_, err := MD5FromFileName(notExistFilePath)
 	if err == nil {
 		t.Errorf("test MD5FromFileName with not exist file error, should get an error")
 	}
@@ -71,7 +72,7 @@ func TestMD5FromFileChunk(t *testing.T) {
 }
 
 func TestMD5FromFileChunkError(t *testing.T) {
-	_, err := MD5FromFileChunk("./not_exist.txt", 10, 100)
+	_, err := MD5FromFileChunk(notExistFilePath, 10, 100)
 	if err == nil {
 		t.Errorf("test MD5FromFileChunk with not exist file error, should get an error")
 	}
@@ -84,6 +85,61 @@ func TestMD5FromFileChunkError(t *testing.T) {
 	_, err = MD5FromFileChunk(testFilePath, -1, 100)
 	if err == nil {
 		t.Errorf("test MD5FromFileChunk with invalid offset error, should get an error")
+	}
+}
+
+func TestCheckpointsMD5FromFileName(t *testing.T) {
+	var chunkSize int64 = 20
+	checkpointCount := 10
+
+	hvs, err := CheckpointsMD5FromFileName("", chunkSize, checkpointCount)
+	if err == nil {
+		t.Errorf("test TestCheckpointsMD5FromFileName with empty path error, expect get an error")
+	}
+
+	hvs, err = CheckpointsMD5FromFileName(notExistFilePath, chunkSize, checkpointCount)
+	if err == nil {
+		t.Errorf("test TestCheckpointsMD5FromFileName with not exist file path error, expect get an error")
+	}
+
+	hvs, err = checkpointsMD5FromFile(nil, chunkSize, checkpointCount)
+	if err == nil {
+		t.Errorf("test checkpointsMD5FromFile with nil *os.File error, expect get an error")
+	}
+
+	hvs, err = checkpointsMD5FromFileWithFileSize(nil, 0, chunkSize, checkpointCount)
+	if err == nil {
+		t.Errorf("test checkpointsMD5FromFileWithFileSize with nil *os.File error, expect get an error")
+	}
+
+	path := testFilePath
+	hash, err := MD5FromFileName(path)
+	if err != nil {
+		t.Errorf("test MD5FromFileName error => %s", err)
+		return
+	}
+
+	hvs, err = CheckpointsMD5FromFileName(path, chunkSize, checkpointCount)
+	if err != nil {
+		t.Errorf("test TestCheckpointsMD5FromFileName error chunkSize=%d checkpointCount=%d => %s", chunkSize, checkpointCount, err)
+	}
+
+	if len(hvs) == 0 {
+		t.Errorf("test TestCheckpointsMD5FromFileName error chunkSize=%d checkpointCount=%d expect:%s, actual:nothing", chunkSize, checkpointCount, hash)
+	} else if hvs[len(hvs)-1].Hash != hash {
+		t.Errorf("test TestCheckpointsMD5FromFileName error chunkSize=%d checkpointCount=%d expect:%s, actual:%s", chunkSize, checkpointCount, hash, hvs[len(hvs)-1].Hash)
+	}
+
+	chunkSize = 1024
+	hvs, err = CheckpointsMD5FromFileName(path, chunkSize, checkpointCount)
+	if err != nil {
+		t.Errorf("test TestCheckpointsMD5FromFileName error chunkSize=%d checkpointCount=%d => %s", chunkSize, checkpointCount, err)
+	}
+
+	if len(hvs) == 0 {
+		t.Errorf("test TestCheckpointsMD5FromFileName error chunkSize=%d checkpointCount=%d expect:%s, actual:nothing", chunkSize, checkpointCount, hash)
+	} else if hvs[len(hvs)-1].Hash != hash {
+		t.Errorf("test TestCheckpointsMD5FromFileName error chunkSize=%d checkpointCount=%d expect:%s, actual:%s", chunkSize, checkpointCount, hash, hvs[len(hvs)-1].Hash)
 	}
 }
 
