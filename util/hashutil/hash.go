@@ -83,11 +83,11 @@ func MD5FromString(s string) (hash string) {
 	return MD5([]byte(s))
 }
 
-// CheckpointsMD5FromFileName calculate the hash value of the full file and first chunk and some checkpoints
-// first chunk hash is optional
-// checkpoint hash is optional
-// full file hash is required
-func CheckpointsMD5FromFileName(path string, chunkSize int64, checkpointCount int) (hvs []*HashValue, err error) {
+// CheckpointsMD5FromFileName calculate the hash value of the entire file and first chunk and some checkpoints
+// the first chunk hash is optional
+// the checkpoint hash is optional
+// the entire file hash is required
+func CheckpointsMD5FromFileName(path string, chunkSize int64, checkpointCount int) (hvs HashValues, err error) {
 	if len(path) == 0 {
 		return nil, errEmptyPath
 	}
@@ -99,7 +99,7 @@ func CheckpointsMD5FromFileName(path string, chunkSize int64, checkpointCount in
 	return checkpointsMD5FromFile(f, chunkSize, checkpointCount)
 }
 
-func checkpointsMD5FromFile(f *os.File, chunkSize int64, checkpointCount int) (hvs []*HashValue, err error) {
+func checkpointsMD5FromFile(f *os.File, chunkSize int64, checkpointCount int) (hvs HashValues, err error) {
 	stat, err := f.Stat()
 	if err != nil {
 		return nil, err
@@ -107,7 +107,7 @@ func checkpointsMD5FromFile(f *os.File, chunkSize int64, checkpointCount int) (h
 	return checkpointsMD5FromFileWithFileSize(f, stat.Size(), chunkSize, checkpointCount)
 }
 
-func checkpointsMD5FromFileWithFileSize(f *os.File, fileSize int64, chunkSize int64, checkpointCount int) (hvs []*HashValue, err error) {
+func checkpointsMD5FromFileWithFileSize(f *os.File, fileSize int64, chunkSize int64, checkpointCount int) (hvs HashValues, err error) {
 	// add first chunk hash
 	if chunkSize > 0 && fileSize > chunkSize {
 		hvs = append(hvs, &HashValue{
@@ -123,8 +123,8 @@ func checkpointsMD5FromFileWithFileSize(f *os.File, fileSize int64, chunkSize in
 	// add checkpoint hash
 	hvs = append(hvs, buildCheckpointHashValues(fileSize, chunkSize, checkpointCount)...)
 
-	// add full file hash
-	if (len(hvs) > 0 && hvs[len(hvs)-1].Offset < fileSize) || len(hvs) == 0 {
+	// add entire file hash
+	if (len(hvs) > 0 && hvs.Last().Offset < fileSize) || len(hvs) == 0 {
 		hvs = append(hvs, &HashValue{
 			Offset: fileSize,
 		})
@@ -166,7 +166,7 @@ func checkpointsMD5FromFileWithFileSize(f *os.File, fileSize int64, chunkSize in
 	return hvs, nil
 }
 
-func buildCheckpointHashValues(fileSize int64, chunkSize int64, checkpointCount int) (hvs []*HashValue) {
+func buildCheckpointHashValues(fileSize int64, chunkSize int64, checkpointCount int) (hvs HashValues) {
 	if checkpointCount > 0 {
 		checkpointSize := fileSize / int64(checkpointCount)
 

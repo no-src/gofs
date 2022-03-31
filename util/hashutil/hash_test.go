@@ -141,8 +141,28 @@ func testCheckpointsMD5FromFileName(t *testing.T, path string, chunkSize int64, 
 
 	if len(hvs) == 0 {
 		t.Errorf("test TestCheckpointsMD5FromFileName error chunkSize=%d checkpointCount=%d expect:%s, actual:nothing", chunkSize, checkpointCount, expect)
-	} else if hvs[len(hvs)-1].Hash != expect {
-		t.Errorf("test TestCheckpointsMD5FromFileName error chunkSize=%d checkpointCount=%d expect:%s, actual:%s", chunkSize, checkpointCount, expect, hvs[len(hvs)-1].Hash)
+	} else if hvs.Last().Hash != expect {
+		t.Errorf("test TestCheckpointsMD5FromFileName error chunkSize=%d checkpointCount=%d expect:%s, actual:%s", chunkSize, checkpointCount, expect, hvs.Last().Hash)
+	}
+}
+
+func TestHashValues(t *testing.T) {
+	var hvs HashValues
+	expect := "461d19e03559ff8a1284951bab8327e1"
+	if hvs.Last() != nil {
+		t.Errorf("test TestHashValues.Last error, expect get a nil")
+	}
+	hvs = append(hvs, &HashValue{Offset: 1, Hash: "21cc28409729565fc1a4d2dd92db269f"})
+	hvs = append(hvs, &HashValue{Offset: 2, Hash: expect})
+
+	if hvs.Last() == nil {
+		t.Errorf("test TestHashValues.Last error, expect:%s, actual get a nil", expect)
+		return
+	}
+
+	actual := hvs.Last().Hash
+	if actual != expect {
+		t.Errorf("test TestHashValues.Last error, expect:%s, actual:%s", expect, actual)
 	}
 }
 
