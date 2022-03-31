@@ -1,0 +1,23 @@
+package hashutil
+
+import "testing"
+
+func TestHashValues(t *testing.T) {
+	var hvs HashValues
+	expect := "461d19e03559ff8a1284951bab8327e1"
+	if hvs.Last() != nil {
+		t.Errorf("test TestHashValues.Last error, expect get a nil")
+	}
+	hvs = append(hvs, &HashValue{Offset: 1, Hash: "21cc28409729565fc1a4d2dd92db269f"})
+	hvs = append(hvs, &HashValue{Offset: 2, Hash: expect})
+
+	if hvs.Last() == nil {
+		t.Errorf("test TestHashValues.Last error, expect:%s, actual get a nil", expect)
+		return
+	}
+
+	actual := hvs.Last().Hash
+	if actual != expect {
+		t.Errorf("test TestHashValues.Last error, expect:%s, actual:%s", expect, actual)
+	}
+}
