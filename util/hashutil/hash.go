@@ -14,6 +14,10 @@ var (
 	errEmptyPath = errors.New("file path can't be empty")
 )
 
+const (
+	defaultChunkSize = 4096
+)
+
 // MD5FromFile calculate the hash value of the file
 // If you reuse the file reader, please set its offset to start position first, like os.File.Seek
 func MD5FromFile(file io.Reader) (hash string, err error) {
@@ -54,15 +58,15 @@ func MD5FromFileChunk(path string, offset int64, chunkSize int64) (hash string, 
 		return hash, err
 	}
 	defer f.Close()
-	block := make([]byte, chunkSize)
-	n, err := f.ReadAt(block, offset)
+	chunk := make([]byte, chunkSize)
+	n, err := f.ReadAt(chunk, offset)
 	if err == io.EOF {
 		err = nil
 	}
 	if err != nil {
 		return hash, err
 	}
-	return MD5(block[:n]), nil
+	return MD5(chunk[:n]), nil
 }
 
 // MD5 calculate the hash value of the bytes
@@ -105,29 +109,19 @@ func checkpointsMD5FromFile(f *os.File, chunkSize int64, checkpointCount int) (h
 
 func checkpointsMD5FromFileWithFileSize(f *os.File, fileSize int64, chunkSize int64, checkpointCount int) (hvs []*HashValue, err error) {
 	// add first chunk hash
-	if fileSize > chunkSize {
+	if chunkSize > 0 && fileSize > chunkSize {
 		hvs = append(hvs, &HashValue{
 			Offset: chunkSize,
 		})
 	}
 
-	checkpointSize := fileSize / int64(checkpointCount)
-	// checkpoint size equals one times or more the chunk size
-	if checkpointSize/chunkSize == 0 {
-		checkpointSize = chunkSize
-	} else {
-		checkpointSize = checkpointSize / chunkSize * chunkSize
+	// init default chunk size
+	if chunkSize == 0 {
+		chunkSize = defaultChunkSize
 	}
-
-	// reset the checkpoint count
-	checkpointCount = int(fileSize / checkpointSize)
 
 	// add checkpoint hash
-	for i := 1; i <= checkpointCount; i++ {
-		hvs = append(hvs, &HashValue{
-			Offset: checkpointSize * int64(i),
-		})
-	}
+	hvs = append(hvs, buildCheckpointHashValues(fileSize, chunkSize, checkpointCount)...)
 
 	// add full file hash
 	if (len(hvs) > 0 && hvs[len(hvs)-1].Offset < fileSize) || len(hvs) == 0 {
@@ -136,7 +130,7 @@ func checkpointsMD5FromFileWithFileSize(f *os.File, fileSize int64, chunkSize in
 		})
 	}
 
-	block := make([]byte, chunkSize)
+	chunk := make([]byte, chunkSize)
 	h := md5.New()
 
 	var writeLen int64
@@ -145,7 +139,7 @@ func checkpointsMD5FromFileWithFileSize(f *os.File, fileSize int64, chunkSize in
 	isEOF := false
 	// calculate hash
 	for {
-		n, err := f.Read(block)
+		n, err := f.Read(chunk)
 		if err == io.EOF {
 			isEOF = true
 			err = nil
@@ -155,7 +149,7 @@ func checkpointsMD5FromFileWithFileSize(f *os.File, fileSize int64, chunkSize in
 		}
 
 		writeLen += int64(n)
-		h.Write(block[:n])
+		h.Write(chunk[:n])
 		if writeLen >= hv.Offset {
 			hv.Offset = writeLen
 			hv.Hash = hex.EncodeToString(h.Sum(nil))
@@ -170,4 +164,30 @@ func checkpointsMD5FromFileWithFileSize(f *os.File, fileSize int64, chunkSize in
 		}
 	}
 	return hvs, nil
+}
+
+func buildCheckpointHashValues(fileSize int64, chunkSize int64, checkpointCount int) (hvs []*HashValue) {
+	if checkpointCount > 0 {
+		checkpointSize := fileSize / int64(checkpointCount)
+
+		// use chunk size to reset checkpoint size and count
+		if chunkSize > 0 {
+			// checkpoint size equals one times or more the chunk size
+			if checkpointSize/chunkSize == 0 {
+				checkpointSize = chunkSize
+			} else {
+				checkpointSize = checkpointSize / chunkSize * chunkSize
+			}
+			// reset the checkpoint count
+			checkpointCount = int(fileSize / checkpointSize)
+		}
+
+		// add checkpoint hash
+		for i := 1; i <= checkpointCount; i++ {
+			hvs = append(hvs, &HashValue{
+				Offset: checkpointSize * int64(i),
+			})
+		}
+	}
+	return hvs
 }
