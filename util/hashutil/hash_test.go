@@ -146,6 +146,90 @@ func testCheckpointsMD5FromFileName(t *testing.T, path string, chunkSize int64, 
 	}
 }
 
+func TestCalcHashValuesWithFile(t *testing.T) {
+	var hvs HashValues
+	err := calcHashValuesWithFile(nil, 0, hvs)
+	if err == nil {
+		t.Errorf("test calcHashValuesWithFile with zero chunk size error, expect get an error")
+	}
+
+	err = calcHashValuesWithFile(nil, defaultChunkSize, hvs)
+	if err != nil {
+		t.Errorf("test calcHashValuesWithFile with empty HashValues error, expect get an nil, actual:%v", err)
+	}
+}
+
+func TestCompareHashValuesWithFileNameError(t *testing.T) {
+	var hvs HashValues
+	_, err := CompareHashValuesWithFileName("", defaultChunkSize, hvs)
+	if err == nil {
+		t.Errorf("test CompareHashValuesWithFileName with empty path error, expect get an error")
+	}
+
+	_, err = CompareHashValuesWithFileName(notExistFilePath, defaultChunkSize, hvs)
+	if err == nil {
+		t.Errorf("test CompareHashValuesWithFileName with not exist file path error, expect get an error")
+	}
+
+	_, err = CompareHashValuesWithFileName(testFilePath, 0, hvs)
+	if err == nil {
+		t.Errorf("test CompareHashValuesWithFileName with zero chunk size error, expect get an error")
+	}
+
+	hvs = append(hvs, NewHashValue(2, "e529a9cea4a728eb9c5828b13b22844c"))
+	_, err = compareHashValuesWithFile(nil, defaultChunkSize, hvs)
+	if err == nil {
+		t.Errorf("test CompareHashValuesWithFileName with nil *os.File error, expect get an error")
+	}
+}
+
+func TestCompareHashValuesWithFileName(t *testing.T) {
+	path := testFilePath
+	var chunkSize int64 = 1
+	var hvs HashValues
+	invalidHash := "815417267f76f6f460a4a61f9db75fdb"
+
+	testCompareHashValuesWithFileName(t, path, chunkSize, hvs, nil)
+
+	hvs = append(hvs, NewHashValue(1, invalidHash))
+	testCompareHashValuesWithFileName(t, path, chunkSize, hvs, nil)
+
+	hvs = make(HashValues, 0)
+	hvs = append(hvs, NewHashValue(2, "e529a9cea4a728eb9c5828b13b22844c"))
+	testCompareHashValuesWithFileName(t, path, chunkSize, hvs, NewHashValue(2, "e529a9cea4a728eb9c5828b13b22844c"))
+
+	hvs = append(hvs, NewHashValue(7, "efe90a8e604a7c840e88d03a67f6b7d8"))
+	testCompareHashValuesWithFileName(t, path, chunkSize, hvs, NewHashValue(7, "efe90a8e604a7c840e88d03a67f6b7d8"))
+
+	hvs = make(HashValues, 0)
+	hvs = append(hvs, NewHashValue(1024*1024, invalidHash))
+	testCompareHashValuesWithFileName(t, path, chunkSize, hvs, nil)
+}
+
+func testCompareHashValuesWithFileName(t *testing.T, path string, chunkSize int64, hvs HashValues, expect *HashValue) {
+	hv, err := CompareHashValuesWithFileName(path, chunkSize, hvs)
+	if err != nil {
+		t.Errorf("test CompareHashValuesWithFileName error %v", err)
+		return
+	}
+
+	if expect == nil {
+		if hv != nil {
+			t.Errorf("test CompareHashValuesWithFileName error, expect get an nil HashValue")
+		}
+		return
+	}
+
+	if hv == nil {
+		t.Errorf("test CompareHashValuesWithFileName error, get an nil HashValue, expact:[%d => %s]", expect.Offset, expect.Hash)
+		return
+	}
+
+	if hv.Offset != expect.Offset || hv.Hash != expect.Hash {
+		t.Errorf("test CompareHashValuesWithFileName expect:[%d => %s] actual:[%d => %s]", expect.Offset, expect.Hash, hv.Offset, hv.Hash)
+	}
+}
+
 type readwrite struct {
 	*os.File
 }

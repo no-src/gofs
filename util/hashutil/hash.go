@@ -10,8 +10,9 @@ import (
 )
 
 var (
-	errNilFile   = errors.New("file is nil")
-	errEmptyPath = errors.New("file path can't be empty")
+	errNilFile          = errors.New("file is nil")
+	errEmptyPath        = errors.New("file path can't be empty")
+	errChunkSizeInvalid = errors.New("chunk size must be greater than zero")
 )
 
 const (
@@ -110,9 +111,7 @@ func checkpointsMD5FromFile(f *os.File, chunkSize int64, checkpointCount int) (h
 func checkpointsMD5FromFileWithFileSize(f *os.File, fileSize int64, chunkSize int64, checkpointCount int) (hvs HashValues, err error) {
 	// add first chunk hash
 	if chunkSize > 0 && fileSize > chunkSize {
-		hvs = append(hvs, &HashValue{
-			Offset: chunkSize,
-		})
+		hvs = append(hvs, NewHashValue(chunkSize, ""))
 	}
 
 	// init default chunk size
@@ -125,45 +124,11 @@ func checkpointsMD5FromFileWithFileSize(f *os.File, fileSize int64, chunkSize in
 
 	// add entire file hash
 	if (len(hvs) > 0 && hvs.Last().Offset < fileSize) || len(hvs) == 0 {
-		hvs = append(hvs, &HashValue{
-			Offset: fileSize,
-		})
+		hvs = append(hvs, NewHashValue(fileSize, ""))
 	}
 
-	chunk := make([]byte, chunkSize)
-	h := md5.New()
-
-	var writeLen int64
-	hvi := 0
-	hv := hvs[0]
-	isEOF := false
-	// calculate hash
-	for {
-		n, err := f.Read(chunk)
-		if err == io.EOF {
-			isEOF = true
-			err = nil
-		}
-		if err != nil {
-			return nil, err
-		}
-
-		writeLen += int64(n)
-		h.Write(chunk[:n])
-		if writeLen >= hv.Offset {
-			hv.Offset = writeLen
-			hv.Hash = hex.EncodeToString(h.Sum(nil))
-			hvi++
-			if hvi < len(hvs) {
-				hv = hvs[hvi]
-			}
-		}
-		// read to end or all tasks finished
-		if isEOF || hvi >= len(hvs) {
-			break
-		}
-	}
-	return hvs, nil
+	err = calcHashValuesWithFile(f, chunkSize, hvs)
+	return hvs, err
 }
 
 func buildCheckpointHashValues(fileSize int64, chunkSize int64, checkpointCount int) (hvs HashValues) {
@@ -184,10 +149,108 @@ func buildCheckpointHashValues(fileSize int64, chunkSize int64, checkpointCount 
 
 		// add checkpoint hash
 		for i := 1; i <= checkpointCount; i++ {
-			hvs = append(hvs, &HashValue{
-				Offset: checkpointSize * int64(i),
-			})
+			hvs = append(hvs, NewHashValue(checkpointSize*int64(i), ""))
 		}
 	}
 	return hvs
+}
+
+func calcHashValuesWithFile(f *os.File, chunkSize int64, hvs HashValues) error {
+	if chunkSize <= 0 {
+		return errChunkSizeInvalid
+	}
+	if len(hvs) == 0 {
+		return nil
+	}
+	h := md5.New()
+	var writeLen int64
+	hvi := 0
+	hv := hvs[0]
+	isEOF := false
+	chunk := make([]byte, chunkSize)
+	// calculate hash
+	for {
+		n, err := f.Read(chunk)
+		if err == io.EOF {
+			isEOF = true
+			err = nil
+		}
+		if err != nil {
+			return err
+		}
+
+		writeLen += int64(n)
+		h.Write(chunk[:n])
+		if writeLen >= hv.Offset {
+			hv.Offset = writeLen
+			hv.Hash = hex.EncodeToString(h.Sum(nil))
+			hvi++
+			if hvi < len(hvs) {
+				hv = hvs[hvi]
+			}
+		}
+		// read to end or all tasks finished
+		if isEOF || hvi >= len(hvs) {
+			break
+		}
+	}
+	return nil
+}
+
+// CompareHashValuesWithFileName calculate the file hashes and return the last continuous hit HashValue.
+// The offset in the HashValues must equal chunkSize * N, and N greater than zero
+func CompareHashValuesWithFileName(path string, chunkSize int64, hvs HashValues) (*HashValue, error) {
+	if len(path) == 0 {
+		return nil, errEmptyPath
+	}
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	return compareHashValuesWithFile(f, chunkSize, hvs)
+}
+
+func compareHashValuesWithFile(f *os.File, chunkSize int64, hvs HashValues) (eq *HashValue, err error) {
+	if chunkSize <= 0 {
+		return nil, errChunkSizeInvalid
+	}
+	if len(hvs) == 0 {
+		return nil, nil
+	}
+	h := md5.New()
+	var writeLen int64
+	hvi := 0
+	hv := hvs[0]
+	isEOF := false
+	chunk := make([]byte, chunkSize)
+	// calculate hash
+	for {
+		n, err := f.Read(chunk)
+		if err == io.EOF {
+			isEOF = true
+			err = nil
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		writeLen += int64(n)
+		h.Write(chunk[:n])
+		if writeLen >= hv.Offset {
+			if writeLen != hv.Offset || hv.Hash != hex.EncodeToString(h.Sum(nil)) {
+				return eq, nil
+			}
+			eq = hv
+			hvi++
+			if hvi < len(hvs) {
+				hv = hvs[hvi]
+			}
+		}
+		// read to end or all tasks finished
+		if isEOF || hvi >= len(hvs) {
+			break
+		}
+	}
+	return eq, nil
 }

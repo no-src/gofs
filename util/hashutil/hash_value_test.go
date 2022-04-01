@@ -8,8 +8,8 @@ func TestHashValues(t *testing.T) {
 	if hvs.Last() != nil {
 		t.Errorf("test TestHashValues.Last error, expect get a nil")
 	}
-	hvs = append(hvs, &HashValue{Offset: 1, Hash: "21cc28409729565fc1a4d2dd92db269f"})
-	hvs = append(hvs, &HashValue{Offset: 2, Hash: expect})
+	hvs = append(hvs, NewHashValue(1, "21cc28409729565fc1a4d2dd92db269f"))
+	hvs = append(hvs, NewHashValue(2, expect))
 
 	if hvs.Last() == nil {
 		t.Errorf("test TestHashValues.Last error, expect:%s, actual get a nil", expect)

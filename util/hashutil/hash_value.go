@@ -8,6 +8,14 @@ type HashValue struct {
 	Hash string
 }
 
+// NewHashValue returns an instance of HashValue
+func NewHashValue(offset int64, hash string) *HashValue {
+	return &HashValue{
+		Offset: offset,
+		Hash:   hash,
+	}
+}
+
 // HashValues the list of *HashValue
 type HashValues []*HashValue
 
