@@ -39,12 +39,13 @@ type pushClientSync struct {
 	authChan        chan contract.Status
 	infoChan        chan contract.Message
 	chunkSize       int64
+	checkpointCount int
 }
 
 const timeout = time.Minute * 3
 
 // NewPushClientSync create an instance of the pushClientSync
-func NewPushClientSync(source, dest core.VFS, enableTLS bool, users []*auth.User, enableLogicallyDelete bool, chunkSize int64) (Sync, error) {
+func NewPushClientSync(source, dest core.VFS, enableTLS bool, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, checkpointCount int) (Sync, error) {
 	ds, err := newDiskSync(source, dest, enableLogicallyDelete)
 	if err != nil {
 		return nil, err
@@ -60,14 +61,15 @@ func NewPushClientSync(source, dest core.VFS, enableTLS bool, users []*auth.User
 	}
 
 	s := &pushClientSync{
-		source:        source,
-		dest:          dest,
-		sourceAbsPath: sourceAbsPath,
-		diskSync:      *ds,
-		client:        tran.NewClient(dest.Host(), dest.Port(), enableTLS),
-		authChan:      make(chan contract.Status, 100),
-		infoChan:      make(chan contract.Message, 100),
-		chunkSize:     chunkSize,
+		source:          source,
+		dest:            dest,
+		sourceAbsPath:   sourceAbsPath,
+		diskSync:        *ds,
+		client:          tran.NewClient(dest.Host(), dest.Port(), enableTLS),
+		authChan:        make(chan contract.Status, 100),
+		infoChan:        make(chan contract.Message, 100),
+		chunkSize:       chunkSize,
+		checkpointCount: checkpointCount,
 	}
 
 	if len(users) > 0 {
@@ -282,11 +284,12 @@ func (pcs *pushClientSync) send(act action.Action, path string) (err error) {
 
 	var size int64
 	hash := ""
+	var hvs hashutil.HashValues
 	cTime := time.Now()
 	aTime := time.Now()
 	mTime := time.Now()
 	if pcs.needGetFileSizeAndHash(isDir, act) {
-		size, hash, err = pcs.getFileSizeAndHash(path)
+		size, hash, hvs, err = pcs.getFileSizeAndHashCheckpoints(path, pcs.chunkSize, pcs.checkpointCount)
 		if err != nil {
 			return err
 		}
@@ -315,13 +318,14 @@ func (pcs *pushClientSync) send(act action.Action, path string) (err error) {
 	pd := push.PushData{
 		Action: act,
 		FileInfo: contract.FileInfo{
-			Path:  relPath,
-			IsDir: isDirValue,
-			Size:  size,
-			Hash:  hash,
-			CTime: cTime.Unix(),
-			ATime: aTime.Unix(),
-			MTime: mTime.Unix(),
+			Path:       relPath,
+			IsDir:      isDirValue,
+			Size:       size,
+			Hash:       hash,
+			HashValues: hvs,
+			CTime:      cTime.Unix(),
+			ATime:      aTime.Unix(),
+			MTime:      mTime.Unix(),
 		},
 	}
 	return pcs.sendPushData(pd, act, path)
@@ -352,7 +356,7 @@ func (pcs *pushClientSync) sendPushData(pd push.PushData, act action.Action, pat
 		return err
 	}
 	defer resp.Body.Close()
-	_, err = pcs.checkApiResult(resp)
+	_, _, err = pcs.checkApiResult(resp)
 	return err
 }
 
@@ -409,6 +413,12 @@ func (pcs *pushClientSync) sendFileChunk(path string, pd push.PushData) error {
 }
 
 func (pcs *pushClientSync) sendChunkRequest(path string, pd *push.PushData, offset *int64, chunkSize int, checkChunkHash *bool, chunk []byte, n int, isEnd *bool) (broken bool, err error) {
+	defer func() {
+		// only send HashValues once
+		if len(pd.FileInfo.HashValues) > 0 {
+			pd.FileInfo.HashValues = nil
+		}
+	}()
 	pd.Chunk.Offset = *offset
 	pd.Chunk.Size = int64(chunkSize)
 	if *checkChunkHash {
@@ -419,7 +429,7 @@ func (pcs *pushClientSync) sendChunkRequest(path string, pd *push.PushData, offs
 	if err != nil {
 		return true, err
 	}
-	code, err := pcs.checkApiResult(resp)
+	code, hv, err := pcs.checkApiResult(resp)
 	resp.Body.Close()
 	if err != nil {
 		return true, err
@@ -431,6 +441,10 @@ func (pcs *pushClientSync) sendChunkRequest(path string, pd *push.PushData, offs
 		log.Debug("upload a file chunk that not modified, continue to compare next chunk [%d]=> %s", *offset, path)
 		*checkChunkHash = true
 		*offset += int64(chunkSize)
+		// if the checkpoint compare result offset is greater than the next offset, then replace it
+		if hv != nil && hv.Offset > *offset {
+			*offset = hv.Offset
+		}
 	} else if code == contract.Modified {
 		// file is modified and the first chunk is modified too, upload the file in the next loop
 		*offset = 0
@@ -455,7 +469,7 @@ func (pcs *pushClientSync) sendTruncate(path string, pd push.PushData, offset in
 		return err
 	}
 	defer resp.Body.Close()
-	_, err = pcs.checkApiResult(resp)
+	_, _, err = pcs.checkApiResult(resp)
 	return err
 }
 
@@ -471,27 +485,38 @@ func (pcs *pushClientSync) needSendChunkRequest(loopCount, dataLen int) bool {
 	return dataLen > 0 || loopCount <= 1
 }
 
-func (pcs *pushClientSync) checkApiResult(resp *http.Response) (code contract.Code, err error) {
+func (pcs *pushClientSync) checkApiResult(resp *http.Response) (code contract.Code, hv *hashutil.HashValue, err error) {
 	var apiResult server.ApiResult
 	respData, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return code, err
+		return code, nil, err
 	}
 	err = jsonutil.Unmarshal(respData, &apiResult)
 	if err != nil {
-		return code, err
+		return code, nil, err
+	}
+
+	if apiResult.Data != nil {
+		dataBytes, err := jsonutil.Marshal(apiResult.Data)
+		if err != nil {
+			return code, nil, err
+		}
+		err = jsonutil.Unmarshal(dataBytes, &hv)
+		if err != nil {
+			return code, nil, err
+		}
 	}
 
 	code = apiResult.Code
 	switch code {
 	case contract.NotModified, contract.ChunkNotModified, contract.Modified, contract.ChunkModified:
-		return code, nil
+		return code, hv, nil
 	}
 
 	if code != contract.Success {
 		err = fmt.Errorf("send a request to the push server error => %s", apiResult.Message)
 	}
-	return code, err
+	return code, hv, err
 }
 
 func (pcs *pushClientSync) httpPostWithAuth(rawURL string, act action.Action, fieldName string, fileName string, pd push.PushData, chunk []byte) (resp *http.Response, err error) {

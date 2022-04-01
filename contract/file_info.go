@@ -1,5 +1,7 @@
 package contract
 
+import "github.com/no-src/gofs/util/hashutil"
+
 // FileInfo the basic file info description
 type FileInfo struct {
 	// Path the file path
@@ -10,6 +12,8 @@ type FileInfo struct {
 	Size int64 `json:"size"`
 	// Hash calculate the path hash value, if the path is a file
 	Hash string `json:"hash"`
+	// HashValues the hash value of the entire file and first chunk and some checkpoints
+	HashValues hashutil.HashValues `json:"hash_values"`
 	// CTime create time, unix sec
 	CTime int64 `json:"c_time"`
 	// ATime last access time, unix sec

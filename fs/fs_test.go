@@ -2,6 +2,7 @@ package fs
 
 import (
 	"github.com/no-src/gofs/util/osutil"
+	"io"
 	"os"
 	"testing"
 )
@@ -115,7 +116,7 @@ func TestIsEOF(t *testing.T) {
 		return
 	}
 	// move to end
-	_, err = f.Seek(1, 2)
+	_, err = f.Seek(0, io.SeekEnd)
 	if err != nil {
 		t.Errorf("test IsEOF error, seek file error [%s] => %s", file, err)
 		return

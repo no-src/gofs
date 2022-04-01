@@ -16,6 +16,7 @@ import (
 	"github.com/no-src/gofs/util/jsonutil"
 	"github.com/no-src/gofs/util/stringutil"
 	"github.com/no-src/log"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -194,7 +195,7 @@ func (rs *remoteClientSync) compare(sourceSize, destSize int64, sourceHash strin
 			return isSame, nil
 		}
 		// reset the offset
-		if _, err = destFile.Seek(0, 0); err != nil {
+		if _, err = destFile.Seek(0, io.SeekStart); err != nil {
 			return isSame, err
 		}
 	}

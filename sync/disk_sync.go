@@ -8,6 +8,7 @@ import (
 	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/log"
+	"io"
 	iofs "io/fs"
 	"os"
 	"path/filepath"
@@ -195,10 +196,10 @@ func (s *diskSync) compare(sourceSize, destSize int64, sourceFile *os.File, dest
 		}
 
 		// reset the offset
-		if _, err = sourceFile.Seek(0, 0); err != nil {
+		if _, err = sourceFile.Seek(0, io.SeekStart); err != nil {
 			return isSame, err
 		}
-		if _, err = destFile.Seek(0, 0); err != nil {
+		if _, err = destFile.Seek(0, io.SeekStart); err != nil {
 			return isSame, err
 		}
 	}
@@ -309,19 +310,27 @@ func (s *diskSync) SyncOnce(path string) error {
 }
 
 func (s *diskSync) getFileSizeAndHash(path string) (size int64, hash string, err error) {
+	size, hash, _, err = s.getFileSizeAndHashCheckpoints(path, 0, 0)
+	return size, hash, err
+}
+
+func (s *diskSync) getFileSizeAndHashCheckpoints(path string, chunkSize int64, checkpointCount int) (size int64, hash string, hvs hashutil.HashValues, err error) {
 	fileInfo, err := os.Stat(path)
 	if err != nil {
-		return size, hash, err
+		return size, hash, hvs, err
 	}
 	if fileInfo.IsDir() {
-		return size, hash, nil
+		return size, hash, hvs, nil
 	}
 	size = fileInfo.Size()
 	if size > 0 {
-		hash, err = hashutil.MD5FromFileName(path)
+		hvs, err = hashutil.CheckpointsMD5FromFileName(path, chunkSize, checkpointCount)
 		if err != nil {
-			return size, hash, err
+			return size, hash, hvs, err
+		}
+		if len(hvs) > 0 {
+			hash = hvs.Last().Hash
 		}
 	}
-	return size, hash, nil
+	return size, hash, hvs, nil
 }

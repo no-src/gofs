@@ -171,13 +171,13 @@ func (h *pushHandler) write(pushData push.PushData, c *gin.Context) (server.ApiR
 		return server.NewErrorApiResult(-505, msg), err
 	}
 
-	code, err := h.Save(fh, path, pushData)
+	code, hv, err := h.Save(fh, path, pushData)
 	if err != nil {
 		h.logger.Error(err, fmt.Sprintf("save upload file error => [%s]", path))
 		return server.NewErrorApiResult(-506, fmt.Sprintf("save upload file error => [%s]", fi.Path)), err
 	} else if code != contract.Unknown {
 		h.logger.Debug("upload a file that is %s => %s", code.String(), fi.Path)
-		return server.NewApiResult(code, code.String(), nil), nil
+		return server.NewApiResult(code, code.String(), hv), nil
 	}
 
 	// change file times
@@ -193,15 +193,15 @@ func (h *pushHandler) chtimes(absPath string, fi contract.FileInfo) error {
 	return os.Chtimes(absPath, time.Unix(fi.ATime, 0), time.Unix(fi.MTime, 0))
 }
 
-func (h *pushHandler) Save(file *multipart.FileHeader, dst string, pushData push.PushData) (code contract.Code, err error) {
+func (h *pushHandler) Save(file *multipart.FileHeader, dst string, pushData push.PushData) (code contract.Code, hv *hashutil.HashValue, err error) {
 	offset := pushData.Chunk.Offset
 	if pushData.PushAction < push.PushActionWrite {
-		code = h.compare(pushData.PushAction, dst, offset, pushData.FileInfo.Hash, pushData.FileInfo.Size, pushData.Chunk.Hash, pushData.Chunk.Size)
-		return code, nil
+		code, hv = h.compare(pushData.PushAction, dst, offset, pushData.FileInfo.Hash, pushData.FileInfo.Size, pushData.Chunk.Hash, pushData.Chunk.Size, pushData.FileInfo.HashValues)
+		return code, hv, nil
 	}
 	src, err := file.Open()
 	if err != nil {
-		return code, err
+		return code, nil, err
 	}
 	defer src.Close()
 
@@ -213,7 +213,7 @@ func (h *pushHandler) Save(file *multipart.FileHeader, dst string, pushData push
 	}
 
 	if err != nil {
-		return code, err
+		return code, nil, err
 	}
 	defer out.Close()
 
@@ -221,40 +221,40 @@ func (h *pushHandler) Save(file *multipart.FileHeader, dst string, pushData push
 		if pushData.PushAction == push.PushActionTruncate {
 			err = out.Truncate(offset)
 		} else {
-			_, err = out.Seek(offset, 0)
+			_, err = out.Seek(offset, io.SeekStart)
 		}
 		if err != nil {
-			return code, err
+			return code, nil, err
 		}
 	}
 	if pushData.PushAction == push.PushActionWrite {
 		_, err = io.Copy(out, src)
 	}
-	return code, err
+	return code, nil, err
 }
 
-func (h *pushHandler) compare(pushAction push.PushAction, dst string, offset int64, fileHash string, fileSize int64, chunkHash string, chunkSize int64) (code contract.Code) {
+func (h *pushHandler) compare(pushAction push.PushAction, dst string, offset int64, fileHash string, fileSize int64, chunkHash string, chunkSize int64, hvs hashutil.HashValues) (contract.Code, *hashutil.HashValue) {
 	switch pushAction {
 	case push.PushActionCompareFile:
 		if h.compareFile(dst, fileHash, fileSize) {
-			return contract.NotModified
+			return contract.NotModified, nil
 		}
 	case push.PushActionCompareChunk:
 		if h.compareChunk(dst, offset, chunkHash, chunkSize) {
-			return contract.ChunkNotModified
+			return contract.ChunkNotModified, nil
 		}
 	case push.PushActionCompareFileAndChunk:
-		if h.compareFile(dst, fileHash, fileSize) {
-			return contract.NotModified
-		}
-		if h.compareChunk(dst, offset, chunkHash, chunkSize) {
-			return contract.ChunkNotModified
+		hv := h.compareHashValues(dst, fileSize, chunkSize, hvs)
+		if hv != nil && hv.Offset == fileSize {
+			return contract.NotModified, hv
+		} else if hv != nil {
+			return contract.ChunkNotModified, hv
 		}
 	}
 	if pushAction == push.PushActionCompareChunk {
-		return contract.ChunkModified
+		return contract.ChunkModified, nil
 	}
-	return contract.Modified
+	return contract.Modified, nil
 }
 
 // compareFile compare file size and hash value
@@ -283,4 +283,14 @@ func (h *pushHandler) compareChunk(dstPath string, offset int64, chunkHash strin
 		}
 	}
 	return false
+}
+
+func (h *pushHandler) compareHashValues(dstPath string, sourceSize int64, chunkSize int64, hvs hashutil.HashValues) *hashutil.HashValue {
+	if sourceSize > 0 {
+		hv, err := hashutil.CompareHashValuesWithFileName(dstPath, chunkSize, hvs)
+		if err == nil && hv != nil {
+			return hv
+		}
+	}
+	return nil
 }

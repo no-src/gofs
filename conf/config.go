@@ -21,6 +21,7 @@ type Config struct {
 	IgnoreConf            string   `json:"ignore_conf" yaml:"ignore_conf"`
 	IgnoreDeletedPath     bool     `json:"ignore_deleted" yaml:"ignore_deleted"`
 	ChunkSize             int64    `json:"chunk_size" yaml:"chunk_size"`
+	CheckpointCount       int      `json:"checkpoint_count" yaml:"checkpoint_count"`
 
 	// retry
 	RetryCount int           `json:"retry_count" yaml:"retry_count"`

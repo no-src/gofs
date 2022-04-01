@@ -7,6 +7,7 @@ clear_deleted: false
 ignore_conf: ""
 ignore_deleted: true
 chunk_size: 1048576
+checkpoint_count: 10
 retry_count: 15
 retry_wait: 5s
 retry_async: false
