@@ -6,9 +6,9 @@ import (
 )
 
 // NewRemoteSync auto create an instance of remoteServerSync or remoteClientSync according to source and dest
-func NewRemoteSync(source, dest core.VFS, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
+func NewRemoteSync(source, dest core.VFS, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, checkpointCount int) (Sync, error) {
 	if source.Server() {
-		return NewRemoteServerSync(source, dest, enableTLS, certFile, keyFile, users, enableLogicallyDelete)
+		return NewRemoteServerSync(source, dest, enableTLS, certFile, keyFile, users, enableLogicallyDelete, chunkSize, checkpointCount)
 	}
-	return NewRemoteClientSync(source, dest, users, enableLogicallyDelete)
+	return NewRemoteClientSync(source, dest, users, enableLogicallyDelete, chunkSize)
 }

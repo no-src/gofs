@@ -33,7 +33,7 @@ func NewSync(source core.VFS, dest core.VFS, enableTLS bool, certFile string, ke
 	if source.IsDisk() && dest.IsDisk() {
 		return NewDiskSync(source, dest, enableLogicallyDelete)
 	} else if source.Is(core.RemoteDisk) {
-		return NewRemoteSync(source, dest, enableTLS, certFile, keyFile, users, enableLogicallyDelete)
+		return NewRemoteSync(source, dest, enableTLS, certFile, keyFile, users, enableLogicallyDelete, chunkSize, checkpointCount)
 	} else if dest.Is(core.RemoteDisk) {
 		return NewPushClientSync(source, dest, enableTLS, users, enableLogicallyDelete, chunkSize, checkpointCount)
 	}

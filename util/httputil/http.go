@@ -24,13 +24,21 @@ func HttpGet(url string) (resp *http.Response, err error) {
 }
 
 // HttpGetWithCookie get http resource with cookies
-func HttpGetWithCookie(url string, cookies ...*http.Cookie) (resp *http.Response, err error) {
+func HttpGetWithCookie(url string, header http.Header, cookies ...*http.Cookie) (resp *http.Response, err error) {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
 	for _, cookie := range cookies {
 		req.AddCookie(cookie)
+	}
+
+	if len(header) > 0 {
+		for k, vs := range header {
+			for _, v := range vs {
+				req.Header.Set(k, v)
+			}
+		}
 	}
 	return defaultClient.Do(req)
 }

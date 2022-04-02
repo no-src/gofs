@@ -309,11 +309,6 @@ func (s *diskSync) SyncOnce(path string) error {
 	})
 }
 
-func (s *diskSync) getFileSizeAndHash(path string) (size int64, hash string, err error) {
-	size, hash, _, err = s.getFileSizeAndHashCheckpoints(path, 0, 0)
-	return size, hash, err
-}
-
 func (s *diskSync) getFileSizeAndHashCheckpoints(path string, chunkSize int64, checkpointCount int) (size int64, hash string, hvs hashutil.HashValues, err error) {
 	fileInfo, err := os.Stat(path)
 	if err != nil {

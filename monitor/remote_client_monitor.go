@@ -279,6 +279,9 @@ func (m *remoteClientMonitor) execSync(msg sync.Message) (err error) {
 	values.Add(contract.FsCtime, stringutil.String(msg.CTime))
 	values.Add(contract.FsAtime, stringutil.String(msg.ATime))
 	values.Add(contract.FsMtime, stringutil.String(msg.MTime))
+	if len(msg.HashValues) > 0 {
+		values.Add(contract.FsHashValues, stringutil.String(msg.HashValues))
+	}
 
 	// replace question marks with "%3F" to avoid parse the path is breaking when it contains some question marks
 	path := msg.BaseUrl + strings.ReplaceAll(msg.Path, "?", "%3F") + fmt.Sprintf("?%s", values.Encode())

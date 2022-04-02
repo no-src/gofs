@@ -31,10 +31,11 @@ type remoteClientSync struct {
 	destAbsPath string
 	currentUser *auth.User
 	cookies     []*http.Cookie
+	chunkSize   int64
 }
 
 // NewRemoteClientSync create an instance of remoteClientSync to receive the file change message and execute it
-func NewRemoteClientSync(source, dest core.VFS, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
+func NewRemoteClientSync(source, dest core.VFS, users []*auth.User, enableLogicallyDelete bool, chunkSize int64) (Sync, error) {
 	if dest.IsEmpty() {
 		return nil, errors.New("dest is not found")
 	}
@@ -47,6 +48,7 @@ func NewRemoteClientSync(source, dest core.VFS, users []*auth.User, enableLogica
 	rs := &remoteClientSync{
 		destAbsPath: destAbsPath,
 		baseSync:    newBaseSync(source, dest, enableLogicallyDelete),
+		chunkSize:   chunkSize,
 	}
 	if len(users) > 0 {
 		rs.currentUser = users[0]
@@ -93,7 +95,7 @@ func (rs *remoteClientSync) Create(path string) error {
 			return err
 		}
 	}
-	_, _, _, aTime, mTime, err := rs.fileInfo(path)
+	_, _, _, _, aTime, mTime, err := rs.fileInfo(path)
 	if err != nil {
 		return err
 	}
@@ -127,7 +129,24 @@ func (rs *remoteClientSync) Write(path string) error {
 
 // write try to write a file to the destination
 func (rs *remoteClientSync) write(path, dest string) error {
-	resp, err := rs.httpGetWithAuth(path)
+	size, hash, hvs, _, aTime, mTime, err := rs.fileInfo(path)
+	if err != nil {
+		return err
+	}
+
+	// if source and dest is the same file, ignore the following steps and return directly
+	equal, hv := rs.compareHashValues(dest, size, hash, rs.chunkSize, hvs)
+	if equal {
+		log.Debug("Write:ignored, the file is unmodified => %s", path)
+		return nil
+	}
+	var offset int64
+	rangeHeader := make(http.Header)
+	if hv != nil {
+		offset = hv.Offset
+		rangeHeader.Add("Range", fmt.Sprintf("bytes=%d-%d", offset, size))
+	}
+	resp, err := rs.httpGetWithAuth(path, rangeHeader)
 	if err != nil {
 		return err
 	}
@@ -146,30 +165,16 @@ func (rs *remoteClientSync) write(path, dest string) error {
 			log.Error(err, "Write:close the dest file error")
 		}
 	}()
-	destStat, err := destFile.Stat()
-	if err != nil {
+
+	if _, err = destFile.Seek(offset, io.SeekStart); err != nil {
 		return err
 	}
 
 	reader := bufio.NewReader(resp.Body)
 	writer := bufio.NewWriter(destFile)
 
-	size, hash, _, aTime, mTime, err := rs.fileInfo(path)
-	if err != nil {
-		return err
-	}
-
-	// if source and dest is the same file, ignore the following steps and return directly
-	isSame, err := rs.compare(size, destStat.Size(), hash, destFile)
-	if err == nil && isSame {
-		log.Debug("Write:ignored, the file is unmodified => %s", path)
-		return nil
-	} else if err != nil {
-		return err
-	}
-
 	// truncate first before write to file
-	err = destFile.Truncate(0)
+	err = destFile.Truncate(offset)
 	if err != nil {
 		return err
 	}
@@ -188,18 +193,18 @@ func (rs *remoteClientSync) write(path, dest string) error {
 	return err
 }
 
-func (rs *remoteClientSync) compare(sourceSize, destSize int64, sourceHash string, destFile *os.File) (isSame bool, err error) {
-	if sourceSize > 0 && sourceSize == destSize {
-		isSame, err = rs.same(sourceHash, destFile)
-		if err == nil && isSame {
-			return isSame, nil
+func (rs *remoteClientSync) compareHashValues(dstPath string, sourceSize int64, sourceHash string, chunkSize int64, hvs hashutil.HashValues) (equal bool, hv *hashutil.HashValue) {
+	if sourceSize > 0 {
+		// calculate the entire file hash value
+		if len(hvs) == 0 || hvs.Last().Offset < sourceSize {
+			hvs = append(hvs, hashutil.NewHashValue(sourceSize, sourceHash))
 		}
-		// reset the offset
-		if _, err = destFile.Seek(0, io.SeekStart); err != nil {
-			return isSame, err
+		hv, err := hashutil.CompareHashValuesWithFileName(dstPath, chunkSize, hvs)
+		if err == nil && hv != nil {
+			return hv.Offset == sourceSize && hv.Hash == sourceHash && len(sourceHash) > 0, hv
 		}
 	}
-	return isSame, err
+	return false, nil
 }
 
 // chtimes change file times
@@ -247,7 +252,7 @@ func (rs *remoteClientSync) IsDir(path string) (bool, error) {
 	return contract.FsIsDir.Is(remoteUrl.Query().Get(contract.FsDir)), nil
 }
 
-func (rs *remoteClientSync) fileInfo(path string) (size int64, hash string, cTime, aTime, mTime time.Time, err error) {
+func (rs *remoteClientSync) fileInfo(path string) (size int64, hash string, hvs hashutil.HashValues, cTime, aTime, mTime time.Time, err error) {
 	remoteUrl, err := url.Parse(path)
 	if err != nil {
 		return
@@ -261,6 +266,12 @@ func (rs *remoteClientSync) fileInfo(path string) (size int64, hash string, cTim
 		return
 	}
 	hash = remoteUrl.Query().Get(contract.FsHash)
+	hashValues := remoteUrl.Query().Get(contract.FsHashValues)
+	if len(hashValues) > 0 {
+		if err = jsonutil.Unmarshal([]byte(hashValues), &hvs); err != nil {
+			return
+		}
+	}
 
 	cTime = time.Now()
 	aTime = time.Now()
@@ -298,7 +309,7 @@ func (rs *remoteClientSync) sync(serverAddr, path string) error {
 	reqValues.Add(contract.FsPath, path)
 	reqValues.Add(contract.FsNeedHash, contract.FsNeedHashValueTrue)
 	queryUrl := fmt.Sprintf("%s%s?%s", serverAddr, server.QueryRoute, reqValues.Encode())
-	resp, err := rs.httpGetWithAuth(queryUrl)
+	resp, err := rs.httpGetWithAuth(queryUrl, nil)
 	if err != nil {
 		return err
 	}
@@ -378,24 +389,8 @@ func (rs *remoteClientSync) buildDestAbsFile(sourceFileAbs string) (string, erro
 	return filepath.Join(rs.destAbsPath, strings.TrimPrefix(remoteUrl.Path, server.SourceRoutePrefix)), nil
 }
 
-func (rs *remoteClientSync) same(sourceHash string, destFile *os.File) (bool, error) {
-	if len(sourceHash) == 0 {
-		return false, nil
-	}
-	destHash, err := hashutil.MD5FromFile(destFile)
-	if err != nil {
-		log.Error(err, "calculate md5 hash of the dest file error [%s]", destFile.Name())
-		return false, err
-	}
-
-	if len(sourceHash) > 0 && sourceHash == destHash {
-		return true, nil
-	}
-	return false, nil
-}
-
-func (rs *remoteClientSync) httpGetWithAuth(rawURL string) (resp *http.Response, err error) {
-	resp, err = httputil.HttpGetWithCookie(rawURL, rs.cookies...)
+func (rs *remoteClientSync) httpGetWithAuth(rawURL string, header http.Header) (resp *http.Response, err error) {
+	resp, err = httputil.HttpGetWithCookie(rawURL, header, rs.cookies...)
 	if err != nil {
 		return nil, err
 	}
@@ -416,7 +411,7 @@ func (rs *remoteClientSync) httpGetWithAuth(rawURL string) (resp *http.Response,
 		if len(cookies) > 0 {
 			rs.cookies = cookies
 			log.Debug("try to auto login file server success maybe, retry to get resource => %s", rawURL)
-			return httputil.HttpGetWithCookie(rawURL, rs.cookies...)
+			return httputil.HttpGetWithCookie(rawURL, header, rs.cookies...)
 		}
 		return nil, errors.New("file server is unauthorized")
 	}

@@ -11,6 +11,7 @@ import (
 	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/tran"
+	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/gofs/util/jsonutil"
 	"github.com/no-src/log"
 	"path/filepath"
@@ -20,19 +21,23 @@ import (
 
 type remoteServerSync struct {
 	diskSync
-	server     tran.Server
-	serverAddr string
+	server          tran.Server
+	serverAddr      string
+	chunkSize       int64
+	checkpointCount int
 }
 
 // NewRemoteServerSync create an instance of remoteServerSync execute send file change message
-func NewRemoteServerSync(source, dest core.VFS, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableLogicallyDelete bool) (Sync, error) {
+func NewRemoteServerSync(source, dest core.VFS, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, checkpointCount int) (Sync, error) {
 	ds, err := newDiskSync(source, dest, enableLogicallyDelete)
 	if err != nil {
 		return nil, err
 	}
 
 	rs := &remoteServerSync{
-		diskSync: *ds,
+		diskSync:        *ds,
+		chunkSize:       chunkSize,
+		checkpointCount: checkpointCount,
 	}
 	rs.server = tran.NewServer(source.Host(), source.Port(), enableTLS, certFile, keyFile, users)
 
@@ -108,11 +113,12 @@ func (rs *remoteServerSync) send(act action.Action, path string) (err error) {
 
 	var size int64
 	hash := ""
+	var hvs hashutil.HashValues
 	cTime := time.Now()
 	aTime := time.Now()
 	mTime := time.Now()
 	if !isDir && act == action.WriteAction {
-		size, hash, err = rs.getFileSizeAndHash(path)
+		size, hash, hvs, err = rs.getFileSizeAndHashCheckpoints(path, rs.chunkSize, rs.checkpointCount)
 		if err != nil {
 			return err
 		}
@@ -138,13 +144,14 @@ func (rs *remoteServerSync) send(act action.Action, path string) (err error) {
 		Action:  act,
 		BaseUrl: rs.serverAddr + server.SourceRoutePrefix,
 		FileInfo: contract.FileInfo{
-			Path:  path,
-			IsDir: isDirValue,
-			Size:  size,
-			Hash:  hash,
-			CTime: cTime.Unix(),
-			ATime: aTime.Unix(),
-			MTime: mTime.Unix(),
+			Path:       path,
+			IsDir:      isDirValue,
+			Size:       size,
+			Hash:       hash,
+			HashValues: hvs,
+			CTime:      cTime.Unix(),
+			ATime:      aTime.Unix(),
+			MTime:      mTime.Unix(),
 		},
 	}
 
