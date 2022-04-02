@@ -102,7 +102,7 @@ func TestCheckpointsMD5FromFileNameError(t *testing.T) {
 		t.Errorf("test TestCheckpointsMD5FromFileName with not exist file path error, expect get an error")
 	}
 
-	_, err = checkpointsMD5FromFile(nil, chunkSize, checkpointCount)
+	_, err = CheckpointsMD5FromFile(nil, chunkSize, checkpointCount)
 	if err == nil {
 		t.Errorf("test checkpointsMD5FromFile with nil *os.File error, expect get an error")
 	}

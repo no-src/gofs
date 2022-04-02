@@ -23,6 +23,8 @@ const (
 	FsPath = "path"
 	// FsNeedHash return file hash or not
 	FsNeedHash = "need_hash"
+	// FsNeedCheckpoint return file checkpoint hash or not
+	FsNeedCheckpoint = "need_checkpoint"
 )
 
 const (

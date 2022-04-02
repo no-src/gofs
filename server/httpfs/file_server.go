@@ -145,7 +145,7 @@ func initRoute(engine *gin.Engine, opt server.Option, logger log.Logger) {
 	}
 
 	if enableFileApi {
-		rootGroup.GET(server.QueryRoute, handler.NewFileApiHandler(http.Dir(source.Path()), logger).Handle)
+		rootGroup.GET(server.QueryRoute, handler.NewFileApiHandler(logger, http.Dir(source.Path()), opt.ChunkSize, opt.CheckpointCount).Handle)
 	}
 }
 

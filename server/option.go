@@ -25,6 +25,8 @@ type Option struct {
 	EnableLogicallyDelete bool
 	EnablePushServer      bool
 	EnableReport          bool
+	ChunkSize             int64
+	CheckpointCount       int
 }
 
 // NewServerOption create an instance of the Option, store all the web server options
@@ -45,6 +47,8 @@ func NewServerOption(config conf.Config, init wait.WaitDone, users []*auth.User,
 		EnableLogicallyDelete: config.EnableLogicallyDelete,
 		EnablePushServer:      config.EnablePushServer,
 		EnableReport:          config.EnableReport,
+		ChunkSize:             config.ChunkSize,
+		CheckpointCount:       config.CheckpointCount,
 	}
 	return opt
 }

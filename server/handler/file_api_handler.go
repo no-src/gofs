@@ -15,15 +15,19 @@ import (
 )
 
 type fileApiHandler struct {
-	root   http.FileSystem
-	logger log.Logger
+	logger          log.Logger
+	root            http.FileSystem
+	chunkSize       int64
+	checkpointCount int
 }
 
 // NewFileApiHandler create an instance of the fileApiHandler
-func NewFileApiHandler(root http.FileSystem, logger log.Logger) GinHandler {
+func NewFileApiHandler(logger log.Logger, root http.FileSystem, chunkSize int64, checkpointCount int) GinHandler {
 	return &fileApiHandler{
-		root:   root,
-		logger: logger,
+		logger:          logger,
+		root:            root,
+		chunkSize:       chunkSize,
+		checkpointCount: checkpointCount,
 	}
 }
 
@@ -37,7 +41,9 @@ func (h *fileApiHandler) Handle(c *gin.Context) {
 
 	var fileList []contract.FileInfo
 	path := c.Query(contract.FsPath)
-	needHash := c.Query(contract.FsNeedHash)
+	needHash := c.Query(contract.FsNeedHash) == contract.FsNeedHashValueTrue
+	needCheckpoint := c.Query(contract.FsNeedCheckpoint) == contract.ParamValueTrue
+
 	sourcePrefix := strings.Trim(server.SourceRoutePrefix, "/")
 	destPrefix := strings.Trim(server.DestRoutePrefix, "/")
 	if !strings.HasPrefix(strings.ToLower(path), sourcePrefix) && !strings.HasPrefix(strings.ToLower(path), destPrefix) {
@@ -73,7 +79,7 @@ func (h *fileApiHandler) Handle(c *gin.Context) {
 	}
 
 	if stat.IsDir() {
-		dirFileList, err := h.readDir(f, needHash, path)
+		dirFileList, err := h.readDir(f, needHash, needCheckpoint, path)
 		if err != nil {
 			c.JSON(http.StatusOK, server.NewErrorApiResult(-505, "read dir error"))
 			return
@@ -84,7 +90,7 @@ func (h *fileApiHandler) Handle(c *gin.Context) {
 	c.JSON(http.StatusOK, server.NewApiResult(contract.Success, contract.SuccessDesc, fileList))
 }
 
-func (h *fileApiHandler) readDir(f http.File, needHash string, path string) (fileList []contract.FileInfo, err error) {
+func (h *fileApiHandler) readDir(f http.File, needHash bool, needCheckpoint bool, path string) (fileList []contract.FileInfo, err error) {
 	files, err := f.Readdir(-1)
 	if err != nil {
 		h.logger.Error(err, "file server read dir error")
@@ -100,20 +106,32 @@ func (h *fileApiHandler) readDir(f http.File, needHash string, path string) (fil
 		}
 
 		hash := ""
-		if needHash == contract.FsNeedHashValueTrue && !file.IsDir() {
+		var hvs hashutil.HashValues
+		if !file.IsDir() && (needHash || needCheckpoint) {
 			if cf, err := h.root.Open(filepath.ToSlash(filepath.Join(path, file.Name()))); err == nil {
-				hash, _ = hashutil.MD5FromFile(cf)
+				if needCheckpoint {
+					hvs, _ = hashutil.CheckpointsMD5FromFile(cf.(*os.File), h.chunkSize, h.checkpointCount)
+				}
+				if needHash {
+					if len(hvs) > 0 {
+						hash = hvs.Last().Hash
+					} else {
+						hash, _ = hashutil.MD5FromFile(cf)
+					}
+				}
+				cf.Close()
 			}
 		}
 
 		fileList = append(fileList, contract.FileInfo{
-			Path:  file.Name(),
-			IsDir: contract.ParseFsDirValue(file.IsDir()),
-			Size:  file.Size(),
-			Hash:  hash,
-			ATime: aTime.Unix(),
-			CTime: cTime.Unix(),
-			MTime: mTime.Unix(),
+			Path:       file.Name(),
+			IsDir:      contract.ParseFsDirValue(file.IsDir()),
+			Size:       file.Size(),
+			Hash:       hash,
+			HashValues: hvs,
+			ATime:      aTime.Unix(),
+			CTime:      cTime.Unix(),
+			MTime:      mTime.Unix(),
 		})
 	}
 	return fileList, nil

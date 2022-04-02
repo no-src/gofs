@@ -97,10 +97,11 @@ func CheckpointsMD5FromFileName(path string, chunkSize int64, checkpointCount in
 		return nil, err
 	}
 	defer f.Close()
-	return checkpointsMD5FromFile(f, chunkSize, checkpointCount)
+	return CheckpointsMD5FromFile(f, chunkSize, checkpointCount)
 }
 
-func checkpointsMD5FromFile(f *os.File, chunkSize int64, checkpointCount int) (hvs HashValues, err error) {
+// CheckpointsMD5FromFile calculate the hash value of the entire file and first chunk and some checkpoints
+func CheckpointsMD5FromFile(f *os.File, chunkSize int64, checkpointCount int) (hvs HashValues, err error) {
 	stat, err := f.Stat()
 	if err != nil {
 		return nil, err
