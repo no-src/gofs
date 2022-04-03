@@ -193,20 +193,6 @@ func (rs *remoteClientSync) write(path, dest string) error {
 	return err
 }
 
-func (rs *remoteClientSync) compareHashValues(dstPath string, sourceSize int64, sourceHash string, chunkSize int64, hvs hashutil.HashValues) (equal bool, hv *hashutil.HashValue) {
-	if sourceSize > 0 {
-		// calculate the entire file hash value
-		if len(hvs) == 0 || hvs.Last().Offset < sourceSize {
-			hvs = append(hvs, hashutil.NewHashValue(sourceSize, sourceHash))
-		}
-		hv, err := hashutil.CompareHashValuesWithFileName(dstPath, chunkSize, hvs)
-		if err == nil && hv != nil {
-			return hv.Offset == sourceSize && hv.Hash == sourceHash && len(sourceHash) > 0, hv
-		}
-	}
-	return false, nil
-}
-
 // chtimes change file times
 func (rs *remoteClientSync) chtimes(dest string, aTime, mTime time.Time) {
 	if err := os.Chtimes(dest, aTime, mTime); err != nil {
