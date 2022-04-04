@@ -16,18 +16,20 @@ import (
 
 type diskSync struct {
 	baseSync
-	sourceAbsPath string
-	destAbsPath   string
+	sourceAbsPath   string
+	destAbsPath     string
+	chunkSize       int64
+	checkpointCount int
 }
 
 // NewDiskSync create a diskSync instance
 // source is source path to read
 // dest is dest path to write
-func NewDiskSync(source, dest core.VFS, enableLogicallyDelete bool) (s Sync, err error) {
-	return newDiskSync(source, dest, enableLogicallyDelete)
+func NewDiskSync(source, dest core.VFS, enableLogicallyDelete bool, chunkSize int64, checkpointCount int) (s Sync, err error) {
+	return newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount)
 }
 
-func newDiskSync(source, dest core.VFS, enableLogicallyDelete bool) (s *diskSync, err error) {
+func newDiskSync(source, dest core.VFS, enableLogicallyDelete bool, chunkSize int64, checkpointCount int) (s *diskSync, err error) {
 	if source.IsEmpty() {
 		return nil, errors.New("source is not found")
 	}
@@ -46,9 +48,11 @@ func newDiskSync(source, dest core.VFS, enableLogicallyDelete bool) (s *diskSync
 	}
 
 	s = &diskSync{
-		sourceAbsPath: sourceAbsPath,
-		destAbsPath:   destAbsPath,
-		baseSync:      newBaseSync(source, dest, enableLogicallyDelete),
+		sourceAbsPath:   sourceAbsPath,
+		destAbsPath:     destAbsPath,
+		baseSync:        newBaseSync(source, dest, enableLogicallyDelete),
+		chunkSize:       chunkSize,
+		checkpointCount: checkpointCount,
 	}
 	return s, nil
 }
@@ -82,14 +86,12 @@ func (s *diskSync) Create(path string) error {
 			return err
 		}
 		f, err := fs.CreateFile(dest)
-		defer func() {
-			if err = f.Close(); err != nil {
-				log.Error(err, "Create:close file error")
-			}
-		}()
 		if err != nil {
 			return err
 		}
+		defer func() {
+			log.ErrorIf(f.Close(), "Create:close file error")
+		}()
 	}
 	_, aTime, mTime, err := fs.GetFileTime(path)
 	if err != nil {
@@ -131,13 +133,26 @@ func (s *diskSync) write(path, dest string) error {
 		return err
 	}
 	defer func() {
-		if err = sourceFile.Close(); err != nil {
-			log.Error(err, "Write:close the source file error")
-		}
+		log.ErrorIf(sourceFile.Close(), "Write:close the source file error")
 	}()
+
 	sourceStat, err := sourceFile.Stat()
 	if err != nil {
 		return err
+	}
+
+	destStat, err := os.Stat(dest)
+	if err != nil {
+		return err
+	}
+
+	sourceSize := sourceStat.Size()
+	destSize := destStat.Size()
+
+	var offset int64
+	if destSize > 0 && s.compare(sourceFile, sourceSize, dest, &offset) {
+		log.Debug("Write:ignored, the file is unmodified => %s", path)
+		return nil
 	}
 
 	destFile, err := fs.OpenRWFile(dest)
@@ -145,31 +160,22 @@ func (s *diskSync) write(path, dest string) error {
 		return err
 	}
 	defer func() {
-		if err = destFile.Close(); err != nil {
-			log.Error(err, "Write:close the dest file error")
-		}
+		log.ErrorIf(destFile.Close(), "Write:close the dest file error")
 	}()
-	destStat, err := destFile.Stat()
-	if err != nil {
+
+	if _, err = sourceFile.Seek(offset, io.SeekStart); err != nil {
 		return err
 	}
 
-	sourceSize := sourceStat.Size()
+	if _, err = destFile.Seek(offset, io.SeekStart); err != nil {
+		return err
+	}
 
 	reader := bufio.NewReader(sourceFile)
 	writer := bufio.NewWriter(destFile)
 
-	// if source and dest is the same file, ignore the following steps and return directly
-	isSame, err := s.compare(sourceSize, destStat.Size(), sourceFile, destFile)
-	if err == nil && isSame {
-		log.Debug("Write:ignored, the file is unmodified => %s", path)
-		return nil
-	} else if err != nil {
-		return err
-	}
-
 	// truncate first before write to file
-	err = destFile.Truncate(0)
+	err = destFile.Truncate(offset)
 	if err != nil {
 		return err
 	}
@@ -188,22 +194,20 @@ func (s *diskSync) write(path, dest string) error {
 	return err
 }
 
-func (s *diskSync) compare(sourceSize, destSize int64, sourceFile *os.File, destFile *os.File) (isSame bool, err error) {
-	if sourceSize > 0 && sourceSize == destSize {
-		isSame, err = s.same(sourceFile, destFile)
-		if err == nil && isSame {
-			return isSame, nil
+func (s *diskSync) compare(sourceFile *os.File, sourceSize int64, dest string, offset *int64) (equal bool) {
+	hvs, _ := hashutil.CheckpointsMD5FromFile(sourceFile, s.chunkSize, s.checkpointCount)
+	if len(hvs) > 0 && hvs.Last().Offset == sourceSize {
+		// if source and dest is the same file, ignore the following steps and return directly
+		equal, hv := s.compareHashValues(dest, sourceSize, hvs.Last().Hash, s.chunkSize, hvs)
+		if equal {
+			return equal
 		}
 
-		// reset the offset
-		if _, err = sourceFile.Seek(0, io.SeekStart); err != nil {
-			return isSame, err
-		}
-		if _, err = destFile.Seek(0, io.SeekStart); err != nil {
-			return isSame, err
+		if hv != nil {
+			*offset = hv.Offset
 		}
 	}
-	return isSame, err
+	return false
 }
 
 // chtimes change file times
@@ -215,26 +219,6 @@ func (s *diskSync) chtimes(source, dest string) {
 	} else {
 		log.Warn("Write:get file times error => %s =>[%s]", err.Error(), source)
 	}
-}
-
-func (s *diskSync) same(sourceFile *os.File, destFile *os.File) (bool, error) {
-	sourceHash, err := hashutil.MD5FromFile(sourceFile)
-	if err != nil {
-		log.Error(err, "calculate md5 hash of the source file error [%s]", sourceFile.Name())
-		return false, err
-	}
-
-	destHash, err := hashutil.MD5FromFile(destFile)
-	if err != nil {
-		log.Error(err, "calculate md5 hash of the dest file error [%s]", destFile.Name())
-		return false, err
-	}
-
-	if len(sourceHash) > 0 && sourceHash == destHash {
-		return true, nil
-	}
-
-	return false, nil
 }
 
 // Remove removes the source file or dir in dest

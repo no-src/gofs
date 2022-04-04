@@ -46,7 +46,7 @@ const timeout = time.Minute * 3
 
 // NewPushClientSync create an instance of the pushClientSync
 func NewPushClientSync(source, dest core.VFS, enableTLS bool, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, checkpointCount int) (Sync, error) {
-	ds, err := newDiskSync(source, dest, enableLogicallyDelete)
+	ds, err := newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount)
 	if err != nil {
 		return nil, err
 	}
@@ -111,10 +111,7 @@ func (pcs *pushClientSync) auth() error {
 	go func() {
 		pcs.currentHashUser.RefreshExpires()
 		authData := auth.GenerateAuthCommandData(pcs.currentHashUser)
-		err := pcs.client.Write(authData)
-		if err != nil {
-			log.Error(err, "send auth request error")
-		}
+		log.ErrorIf(pcs.client.Write(authData), "send auth request error")
 	}()
 
 	var status contract.Status
@@ -133,9 +130,7 @@ func (pcs *pushClientSync) auth() error {
 
 func (pcs *pushClientSync) info() error {
 	go func() {
-		if err := pcs.client.Write(contract.InfoCommand); err != nil {
-			log.Error(err, "write info command error")
-		}
+		log.ErrorIf(pcs.client.Write(contract.InfoCommand), "write info command error")
 	}()
 	var info contract.FileServerInfo
 	var infoMsg contract.Message
