@@ -4,7 +4,7 @@ package hashutil
 type HashValue struct {
 	// Offset the file data to calculate the hash value from zero to offset
 	Offset int64 `json:"offset"`
-	// Hash the file hash value
+	// Hash the file checkpoint hash value
 	Hash string `json:"hash"`
 }
 
