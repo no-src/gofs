@@ -81,6 +81,12 @@ Monitor source directory and sync change files to dest directory.
 
 You can use the `logically_delete` flag to enable the logically delete and avoid deleting files by mistake.
 
+Set the `checkpoint_count` flag to use the checkpoint in the file to reduce transfer unmodified file chunks, by
+default `checkpoint_count=10`, which means it has `10+2` checkpoints at most. There are two additional checkpoints at
+the head and tail. The first checkpoint is equal to the `chunk_size`, it is optional. The last checkpoint is equal to
+the file size, it is required. The checkpoint offset set by the `checkpoint_count` is always more than `chunk_size`,
+unless the file size is less than or equal to `chunk_size`, then the `checkpoint_count` will be zero, so it is optional.
+
 ```bash
 $ gofs -source=./source -dest=./dest
 ```
@@ -145,6 +151,8 @@ The `source` flag detail see [Remote Server Source Protocol](#remote-server-sour
 Pay attention to that remote disk server users must have read permission at least, for
 example, `-users="gofs|password|r"`.
 
+You can use the `checkpoint_count` flag like the [Local Disk](#local-disk).
+
 ```bash
 # Start a remote disk server
 # Replace the `tls_cert_file` and `tls_key_file` flags with your real cert files in the production environment
@@ -191,6 +199,8 @@ Start a remote push client to sync change files to the [Remote Push Server](#rem
 
 Use the `chunk_size` flag to set the chunk size of the big file to upload. The default value of `chunk_size`
 is `1048576`, which means `1MB`.
+
+You can use the `checkpoint_count` flag like the [Local Disk](#local-disk).
 
 More flag usage see [Remote Disk Client](#remote-disk-client).
 

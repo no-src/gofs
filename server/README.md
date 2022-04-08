@@ -55,7 +55,7 @@ Response field description:
     - `size` file size of bytes, directory is always `0`
     - `hash` return file hash value if set `need_hash=1`
     - `hash_values` return the hash value of the entire file and first chunk and some checkpoints if
-      set `need_checkpoint=1`
+      set `need_checkpoint=1`. The details of checkpoints see the use of `checkpoint_count` flag
         - `offset` the file data to calculate the hash value from zero to offset
         - `hash` the file checkpoint hash value
     - `c_time` file create time

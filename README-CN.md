@@ -78,6 +78,11 @@ cert.pem  key.pem  source  dest
 
 你可以使用`logically_delete`命令行参数来启用逻辑删除，从而避免误删数据
 
+设置`checkpoint_count`命令行参数来使用文件中的检查点来减少传输未修改的文件块，默认情况下`checkpoint_count=10`
+，这意味着它最多有`10+2`个检查点。在头部和尾部还有两个额外的检查点。第一个检查点等于`chunk_size`
+，它是可选的。最后一个检查点等于文件大小，这是必需的。由`checkpoint_count`设置的检查点偏移量总是大于`chunk_size`，除非文件大小小于或等于`chunk_size`，那么`checkpoint_count`
+将变为`0`，所以它是可选的
+
 ```bash
 $ gofs -source=./source -dest=./dest
 ```
@@ -137,6 +142,8 @@ $ gofs -source=./source -dest=./dest -server -tls_cert_file=cert.pem -tls_key_fi
 
 注意远程磁盘服务端的用户至少要拥有读权限，例如：`-users="gofs|password|r"`
 
+你可以使用`checkpoint_count`命令行参数就跟[本地磁盘](#本地磁盘)一样
+
 ```bash
 # 启动一个远程磁盘服务端
 # 在生产环境中请将`tls_cert_file`和`tls_key_file`命令行参数替换为正式的证书和密钥文件
@@ -178,6 +185,8 @@ $ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./
 启动一个远程推送客户端将本地文件变更同步到[远程推送服务端](#远程推送服务端)
 
 使用`chunk_size`命令行参数来设置大文件上传时切分的区块大小，默认值为`1048576`，即`1MB`
+
+你可以使用`checkpoint_count`命令行参数就跟[本地磁盘](#本地磁盘)一样
 
 更多命令行参数用法请参见[远程磁盘客户端](#远程磁盘客户端)
 
