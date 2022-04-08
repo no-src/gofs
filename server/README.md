@@ -31,13 +31,14 @@ Request field description:
 
 - `path` query file path, for example `path=source`
 - `need_hash` return file hash or not, `1` or `0`, default is `0`
+- `need_checkpoint` return file checkpoint hash or not, `1` or `0`, default is `0`
 
 ##### Example
 
-Go to query the source path and return all file hash values.
+Query the source path and return all files and checkpoints hash values.
 
 ```text
-http://127.0.0.1/query?path=source&need_hash=1
+http://127.0.0.1/query?path=source&need_hash=1&need_checkpoint=1
 ```
 
 #### Response
@@ -53,6 +54,10 @@ Response field description:
     - `is_dir` is directory or not, `1` or `0`
     - `size` file size of bytes, directory is always `0`
     - `hash` return file hash value if set `need_hash=1`
+    - `hash_values` return the hash value of the entire file and first chunk and some checkpoints if
+      set `need_checkpoint=1`
+        - `offset` the file data to calculate the hash value from zero to offset
+        - `hash` the file checkpoint hash value
     - `c_time` file create time
     - `a_time` file last access time
     - `m_time` file last modify time
@@ -67,22 +72,88 @@ Here is an example response:
   "message": "success",
   "data": [
     {
+      "path": "go1.18.linux-amd64.tar.gz",
+      "is_dir": 0,
+      "size": 141702072,
+      "hash": "67622d8e307cb055b8ce2c2e03cb58cf",
+      "hash_values": [
+        {
+          "offset": 1048576,
+          "hash": "29d68359be77cdbe3d59791f0e367012"
+        },
+        {
+          "offset": 13631488,
+          "hash": "576b3746abb1f71bfbc794c750fb2c19"
+        },
+        {
+          "offset": 27262976,
+          "hash": "3a720d0a1a1c8abce3bf39cb7bc38507"
+        },
+        {
+          "offset": 40894464,
+          "hash": "946efd928cda9d0b20e9a74c4ba5db4f"
+        },
+        {
+          "offset": 54525952,
+          "hash": "eae47693bea9473c5ed859862685e4a7"
+        },
+        {
+          "offset": 68157440,
+          "hash": "ea700e864621fbee4a50d7b0e70b2e52"
+        },
+        {
+          "offset": 81788928,
+          "hash": "6c68022d11128ba256fb73a90b5232ef"
+        },
+        {
+          "offset": 95420416,
+          "hash": "ccfb4397caee4088b90e45d07829f1bf"
+        },
+        {
+          "offset": 109051904,
+          "hash": "d01e494ca88aa08d8a8a5279948db0b0"
+        },
+        {
+          "offset": 122683392,
+          "hash": "86bf50e8553674c26e2fbdb4477e44f4"
+        },
+        {
+          "offset": 136314880,
+          "hash": "51bba2e19d9519babccb0d5f4eedd7c3"
+        },
+        {
+          "offset": 141702072,
+          "hash": "67622d8e307cb055b8ce2c2e03cb58cf"
+        }
+      ],
+      "c_time": 1649431872,
+      "a_time": 1649431873,
+      "m_time": 1647397031
+    },
+    {
       "path": "hello_gofs.txt",
       "is_dir": 0,
       "size": 11,
       "hash": "5eb63bbbe01eeed093cb22bb8f5acdc3",
-      "c_time": 1642731076,
-      "a_time": 1642731088,
-      "m_time": 1642731088
+      "hash_values": [
+        {
+          "offset": 11,
+          "hash": "5eb63bbbe01eeed093cb22bb8f5acdc3"
+        }
+      ],
+      "c_time": 1649431542,
+      "a_time": 1649434237,
+      "m_time": 1649434237
     },
     {
       "path": "resource",
       "is_dir": 1,
       "size": 0,
       "hash": "",
-      "c_time": 1642731096,
-      "a_time": 1642731102,
-      "m_time": 1642731102
+      "hash_values": null,
+      "c_time": 1649431669,
+      "a_time": 1649431898,
+      "m_time": 1649431898
     }
   ]
 }
