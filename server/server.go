@@ -7,8 +7,10 @@ import (
 	"strings"
 )
 
-var serverAddr *net.TCPAddr
-var enableTLS bool
+var (
+	serverAddr *net.TCPAddr
+	enableTLS  bool
+)
 
 const (
 	// RootGroupRoute the group route of root

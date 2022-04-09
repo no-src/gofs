@@ -6,8 +6,10 @@ import (
 	"github.com/no-src/log"
 )
 
-var defaultIgnore Ignore
-var matchIgnoreDeletedPath bool
+var (
+	defaultIgnore          Ignore
+	matchIgnoreDeletedPath bool
+)
 
 // Init init default ignore component
 // ignoreConf the config file path of the ignore component

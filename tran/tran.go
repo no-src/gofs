@@ -2,6 +2,11 @@ package tran
 
 import "errors"
 
+const (
+	// LF the string of linefeed
+	LF = "\n"
+)
+
 var (
 	// EndIdentity the network communication end identity
 	EndIdentity = []byte("_$#END#$_")
@@ -11,11 +16,6 @@ var (
 	ErrorEndIdentity = append(ErrorIdentity, EndIdentity...)
 	// LFBytes the linefeed bytes
 	LFBytes = []byte(LF)
-)
-
-const (
-	// LF the string of linefeed
-	LF = "\n"
 )
 
 var (

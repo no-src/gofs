@@ -40,9 +40,8 @@ type pushClientSync struct {
 	infoChan        chan contract.Message
 	chunkSize       int64
 	checkpointCount int
+	timeout         time.Duration
 }
-
-const timeout = time.Minute * 3
 
 // NewPushClientSync create an instance of the pushClientSync
 func NewPushClientSync(source, dest core.VFS, enableTLS bool, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, checkpointCount int) (Sync, error) {
@@ -70,6 +69,7 @@ func NewPushClientSync(source, dest core.VFS, enableTLS bool, users []*auth.User
 		infoChan:        make(chan contract.Message, 100),
 		chunkSize:       chunkSize,
 		checkpointCount: checkpointCount,
+		timeout:         time.Minute * 3,
 	}
 
 	if len(users) > 0 {
@@ -117,8 +117,8 @@ func (pcs *pushClientSync) auth() error {
 	var status contract.Status
 	select {
 	case status = <-pcs.authChan:
-	case <-time.After(timeout):
-		return fmt.Errorf("auth timeout for %s", timeout.String())
+	case <-time.After(pcs.timeout):
+		return fmt.Errorf("auth timeout for %s", pcs.timeout.String())
 	}
 	if status.Code != contract.Success {
 		return errors.New("receive auth command response error => " + status.Message)
@@ -136,8 +136,8 @@ func (pcs *pushClientSync) info() error {
 	var infoMsg contract.Message
 	select {
 	case infoMsg = <-pcs.infoChan:
-	case <-time.After(timeout):
-		return fmt.Errorf("info timeout for %s", timeout.String())
+	case <-time.After(pcs.timeout):
+		return fmt.Errorf("info timeout for %s", pcs.timeout.String())
 	}
 	err := jsonutil.Unmarshal(infoMsg.Data, &info)
 	if err != nil {

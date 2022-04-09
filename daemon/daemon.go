@@ -29,9 +29,7 @@ func Daemon(recordPid bool, daemonDelay time.Duration, monitorDelay time.Duratio
 		p, err := startSubprocess()
 		if err == nil && p != nil {
 			if recordPid {
-				if err = writePidFile(os.Getppid(), os.Getpid(), p.Pid); err != nil {
-					log.Error(err, "write pid info to file error")
-				}
+				log.ErrorIf(writePidFile(os.Getppid(), os.Getpid(), p.Pid), "write pid info to file error")
 			}
 			if monitor(p.Pid, monitorDelay) {
 				return
@@ -81,9 +79,7 @@ func monitor(pid int, monitorDelay time.Duration) (isShutdown bool) {
 			log.Error(err, "[%d] subprocess status error", pid)
 			if p != nil {
 				log.Info("[%d] try to kill the subprocess", pid)
-				if err = p.Kill(); err != nil {
-					log.Error(err, "[%d] try to kill the subprocess error", pid)
-				}
+				log.ErrorIf(p.Kill(), "[%d] try to kill the subprocess error", pid)
 			}
 			return
 		}
@@ -129,10 +125,7 @@ func KillPPid() {
 		p, err := os.FindProcess(ppid)
 		if err == nil {
 			if p != nil {
-				err = p.Kill()
-				if err != nil {
-					log.Error(err, "[%d] kill parent process error", ppid)
-				}
+				log.ErrorIf(p.Kill(), "[%d] kill parent process error", ppid)
 			}
 		} else {
 			log.Error(err, "[%d] find parent process error", ppid)

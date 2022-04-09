@@ -16,9 +16,11 @@ const logo = `
                                   \|_________|
 
 `
-const openSourceUrl = "https://github.com/no-src/gofs"
-const documentationUrl = "https://pkg.go.dev/github.com/no-src/gofs@" + version.VERSION
-const releaseUrl = "https://github.com/no-src/gofs/releases"
+const (
+	openSourceUrl    = "https://github.com/no-src/gofs"
+	documentationUrl = "https://pkg.go.dev/github.com/no-src/gofs@" + version.VERSION
+	releaseUrl       = "https://github.com/no-src/gofs/releases"
+)
 
 // PrintAbout print the program logo and basic info
 func PrintAbout() {

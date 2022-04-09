@@ -165,10 +165,7 @@ func (srv *tcpServer) Send(data []byte) error {
 		if err != nil {
 			log.Error(err, "tcp server:Send message error => Write")
 		}
-		err = writer.Flush()
-		if err != nil {
-			log.Error(err, "tcp server:Send message error => Flush")
-		}
+		log.ErrorIf(writer.Flush(), "tcp server:Send message error => Flush")
 		return true
 	})
 	return nil

@@ -14,9 +14,11 @@ import (
 	"time"
 )
 
-var defaultClient = &http.Client{}
-var noRedirectClient = &http.Client{}
-var defaultTransport http.RoundTripper
+var (
+	defaultClient    = &http.Client{}
+	noRedirectClient = &http.Client{}
+	defaultTransport http.RoundTripper
+)
 
 // HttpGet get http resource
 func HttpGet(url string) (resp *http.Response, err error) {

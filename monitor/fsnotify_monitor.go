@@ -194,21 +194,15 @@ func (m *fsNotifyMonitor) create(event fsnotify.Event) {
 
 func (m *fsNotifyMonitor) remove(event fsnotify.Event) {
 	m.removeWrite(event.Name)
-	if err := m.syncer.Remove(event.Name); err != nil {
-		log.Error(err, "Remove event execute error => [%s]", event.Name)
-	}
+	log.ErrorIf(m.syncer.Remove(event.Name), "Remove event execute error => [%s]", event.Name)
 }
 
 func (m *fsNotifyMonitor) rename(event fsnotify.Event) {
-	if err := m.syncer.Rename(event.Name); err != nil {
-		log.Error(err, "Rename event execute error => [%s]", event.Name)
-	}
+	log.ErrorIf(m.syncer.Rename(event.Name), "Rename event execute error => [%s]", event.Name)
 }
 
 func (m *fsNotifyMonitor) chmod(event fsnotify.Event) {
-	if err := m.syncer.Chmod(event.Name); err != nil {
-		log.Error(err, "Chmod event execute error => [%s]", event.Name)
-	}
+	log.ErrorIf(m.syncer.Chmod(event.Name), "Chmod event execute error => [%s]", event.Name)
 }
 
 func (m *fsNotifyMonitor) Close() error {

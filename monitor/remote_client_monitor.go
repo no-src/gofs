@@ -33,9 +33,8 @@ type remoteClientMonitor struct {
 	authorized  bool
 	authChan    chan contract.Status
 	infoChan    chan contract.Message
+	timeout     time.Duration
 }
-
-const timeout = time.Minute * 3
 
 // NewRemoteClientMonitor create an instance of remoteClientMonitor to monitor the remote file change
 func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, host string, port int, enableTLS bool, users []*auth.User, eventWriter io.Writer) (Monitor, error) {
@@ -50,6 +49,7 @@ func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, 
 		authChan:    make(chan contract.Status, 100),
 		infoChan:    make(chan contract.Message, 100),
 		closed:      cbool.New(false),
+		timeout:     time.Minute * 3,
 	}
 	if len(users) > 0 {
 		user := users[0]
@@ -75,8 +75,8 @@ func (m *remoteClientMonitor) auth() error {
 	var status contract.Status
 	select {
 	case status = <-m.authChan:
-	case <-time.After(timeout):
-		return fmt.Errorf("auth timeout for %s", timeout.String())
+	case <-time.After(m.timeout):
+		return fmt.Errorf("auth timeout for %s", m.timeout.String())
 	}
 	if status.Code != contract.Success {
 		return errors.New("receive auth command response error => " + status.Message)
@@ -124,16 +124,14 @@ func (m *remoteClientMonitor) Start() error {
 // sync try to sync all the files once
 func (m *remoteClientMonitor) sync() (err error) {
 	go func() {
-		if err := m.client.Write(contract.InfoCommand); err != nil {
-			log.Error(err, "write info command error")
-		}
+		log.ErrorIf(m.client.Write(contract.InfoCommand), "write info command error")
 	}()
 	var info contract.FileServerInfo
 	var infoMsg contract.Message
 	select {
 	case infoMsg = <-m.infoChan:
-	case <-time.After(timeout):
-		return fmt.Errorf("sync timeout for %s", timeout.String())
+	case <-time.After(m.timeout):
+		return fmt.Errorf("sync timeout for %s", m.timeout.String())
 	}
 	err = jsonutil.Unmarshal(infoMsg.Data, &info)
 	if err != nil {
@@ -174,9 +172,7 @@ func (m *remoteClientMonitor) waitShutdown(st *cbool.CBool, wd wait.WaitDone) {
 	case <-st.SetC(<-m.shutdown):
 		{
 			if st.Get() {
-				if err := m.Close(); err != nil {
-					log.Error(err, "close remote client monitor error")
-				}
+				log.ErrorIf(m.Close(), "close remote client monitor error")
 				wd.Done()
 			}
 		}

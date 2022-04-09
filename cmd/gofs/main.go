@@ -135,9 +135,7 @@ func executeOnce() (exit bool) {
 
 	// clear the deleted files
 	if config.ClearDeletedPath {
-		if err := fs.ClearDeletedFile(config.Dest.Path()); err != nil {
-			log.Error(err, "clear the deleted files error")
-		}
+		log.ErrorIf(fs.ClearDeletedFile(config.Dest.Path()), "clear the deleted files error")
 		return true
 	}
 
@@ -184,10 +182,7 @@ func startWebServer(webLogger log.Logger, userList []*auth.User) {
 	if config.EnableFileServer {
 		waitInit := wait.NewWaitDone()
 		go func() {
-			err := httpfs.StartFileServer(server.NewServerOption(config, waitInit, userList, webLogger))
-			if err != nil {
-				log.Error(err, "start the file server [%s] error", config.FileServerAddr)
-			}
+			log.ErrorIf(httpfs.StartFileServer(server.NewServerOption(config, waitInit, userList, webLogger)), "start the file server [%s] error", config.FileServerAddr)
 		}()
 		waitInit.Wait()
 	}

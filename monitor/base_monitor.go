@@ -131,9 +131,7 @@ func (m *baseMonitor) startSyncWrite() {
 				return err
 			}, fmt.Sprintf("write file => %s", name))
 		} else {
-			if err := m.syncer.Write(name); err != nil {
-				log.Error(err, "write file error => [%s]", name)
-			}
+			log.ErrorIf(m.syncer.Write(name), "write file error => [%s]", name)
 		}
 	}
 }

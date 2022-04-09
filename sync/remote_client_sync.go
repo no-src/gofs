@@ -87,9 +87,7 @@ func (rs *remoteClientSync) Create(path string) error {
 		}
 		f, err := fs.CreateFile(dest)
 		defer func() {
-			if err = f.Close(); err != nil {
-				log.Error(err, "Create:close file error")
-			}
+			log.ErrorIf(f.Close(), "Create:close file error")
 		}()
 		if err != nil {
 			return err
@@ -151,9 +149,7 @@ func (rs *remoteClientSync) write(path, dest string) error {
 		return err
 	}
 	defer func() {
-		if err = resp.Body.Close(); err != nil {
-			log.Error(err, "Write:close the resp body error")
-		}
+		log.ErrorIf(resp.Body.Close(), "Write:close the resp body error")
 	}()
 
 	destFile, err := fs.OpenRWFile(dest)
@@ -161,9 +157,7 @@ func (rs *remoteClientSync) write(path, dest string) error {
 		return err
 	}
 	defer func() {
-		if err = destFile.Close(); err != nil {
-			log.Error(err, "Write:close the dest file error")
-		}
+		log.ErrorIf(destFile.Close(), "Write:close the dest file error")
 	}()
 
 	if _, err = destFile.Seek(offset, io.SeekStart); err != nil {
@@ -332,7 +326,6 @@ func (rs *remoteClientSync) sync(serverAddr, path string) error {
 }
 
 func (rs *remoteClientSync) syncFiles(files []contract.FileInfo, serverAddr, path string) {
-	var err error
 	for _, file := range files {
 		if ignore.MatchPath(file.Path, "remote client sync", "sync once") {
 			continue
@@ -348,20 +341,14 @@ func (rs *remoteClientSync) syncFiles(files []contract.FileInfo, serverAddr, pat
 		syncPath := fmt.Sprintf("%s/%s?%s", serverAddr, currentPath, values.Encode())
 
 		// create directory or file
-		if err = rs.Create(syncPath); err != nil {
-			log.Error(err, "sync create directory or file error => [syncPath=%s]", syncPath)
-		}
+		log.ErrorIf(rs.Create(syncPath), "sync create directory or file error => [syncPath=%s]", syncPath)
 
 		if file.IsDir.Bool() {
 			// sync current directory content
-			if err = rs.sync(serverAddr, currentPath); err != nil {
-				log.Error(err, "sync current directory content error => [serverAddr=%s] [currentPath=%s]", serverAddr, currentPath)
-			}
+			log.ErrorIf(rs.sync(serverAddr, currentPath), "sync current directory content error => [serverAddr=%s] [currentPath=%s]", serverAddr, currentPath)
 		} else {
 			// sync remote file to local disk
-			if err = rs.Write(syncPath); err != nil {
-				log.Error(err, "sync remote file to local disk error => [syncPath=%s]", syncPath)
-			}
+			log.ErrorIf(rs.Write(syncPath), "sync remote file to local disk error => [syncPath=%s]", syncPath)
 		}
 	}
 }
