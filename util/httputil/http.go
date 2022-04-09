@@ -3,15 +3,17 @@ package httputil
 import (
 	"bytes"
 	"crypto/tls"
-	"io"
 	"mime/multipart"
 	"net"
 	"net/http"
 	"net/url"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
+)
+
+const (
+	HeaderContentType = "Content-Type"
 )
 
 var (
@@ -59,51 +61,7 @@ func HttpPostWithCookie(url string, data url.Values, cookies ...*http.Cookie) (r
 	for _, cookie := range cookies {
 		req.AddCookie(cookie)
 	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	return defaultClient.Do(req)
-}
-
-// HttpPostFileWithCookie send a post request with form data, file and cookies
-func HttpPostFileWithCookie(url string, fieldName, fileName string, data url.Values, cookies ...*http.Cookie) (resp *http.Response, err error) {
-	f, err := os.Open(fileName)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	body := new(bytes.Buffer)
-	w := multipart.NewWriter(body)
-
-	for k, v := range data {
-		for _, item := range v {
-			w.WriteField(k, item)
-		}
-	}
-
-	fw, err := w.CreateFormFile(fieldName, filepath.Base(fileName))
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = io.Copy(fw, f)
-	if err != nil {
-		return nil, err
-	}
-	err = w.Close()
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodPost, url, body)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(cookies) > 0 {
-		for _, cookie := range cookies {
-			req.AddCookie(cookie)
-		}
-	}
-	req.Header.Set("Content-Type", w.FormDataContentType())
+	req.Header.Set(HeaderContentType, "application/x-www-form-urlencoded")
 	return defaultClient.Do(req)
 }
 
@@ -143,7 +101,7 @@ func HttpPostFileChunkWithCookie(url string, fieldName string, fileName string, 
 			req.AddCookie(cookie)
 		}
 	}
-	req.Header.Set("Content-Type", w.FormDataContentType())
+	req.Header.Set(HeaderContentType, w.FormDataContentType())
 	return defaultClient.Do(req)
 }
 
