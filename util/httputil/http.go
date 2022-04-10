@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	// HeaderContentType the Content-Type http header
 	HeaderContentType = "Content-Type"
 )
 
