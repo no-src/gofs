@@ -37,14 +37,6 @@ go install -tags netgo github.com/no-src/gofs/...@latest
 go install -ldflags="-H windowsgui" github.com/no-src/gofs/...@latest
 ```
 
-### 移除Web文件服务器
-
-如果你不需要一个Web文件服务器，可以使用下面命令构建一个体积更小的不带Web文件服务器的程序
-
-```bash
-go install -tags "no_server" github.com/no-src/gofs/...@latest
-```
-
 ## 快速开始
 
 ### 先决条件

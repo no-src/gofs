@@ -1,5 +1,3 @@
-//go:build !no_server
-
 package httpfs
 
 import (

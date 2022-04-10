@@ -40,14 +40,6 @@ You can install a program run in the background using the following command on W
 go install -ldflags="-H windowsgui" github.com/no-src/gofs/...@latest
 ```
 
-### Remove File Server
-
-If you don't need a file server, you can install the program without the file server to reduce the file size of this.
-
-```bash
-go install -tags "no_server" github.com/no-src/gofs/...@latest
-```
-
 ## Quick Start
 
 ### Prerequisites
