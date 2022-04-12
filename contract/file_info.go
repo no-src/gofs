@@ -14,7 +14,7 @@ type FileInfo struct {
 	Hash string `json:"hash"`
 	// HashValues the hash value of the entire file and first chunk and some checkpoints
 	HashValues hashutil.HashValues `json:"hash_values"`
-	// CTime create time, unix sec
+	// CTime creation time, unix sec
 	CTime int64 `json:"c_time"`
 	// ATime last access time, unix sec
 	ATime int64 `json:"a_time"`

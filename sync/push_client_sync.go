@@ -379,18 +379,18 @@ func (pcs *pushClientSync) sendFileChunk(path string, pd push.PushData) error {
 			isEnd = true
 		}
 		chunkSize := n
-		pd.PushAction = push.PushActionWrite
+		pd.PushAction = push.WritePushAction
 		if pcs.needCheckHash(loopCount, chunkSize) {
 			// if file size is greater than zero in first loop, try to compare file and chunk hash
 			isEnd = false
 			n = 0
-			pd.PushAction = push.PushActionCompareFileAndChunk
+			pd.PushAction = push.CompareFileAndChunkPushAction
 			checkChunkHash = true
 		} else if pcs.isReadEmptyFile(loopCount, chunkSize) {
 			// if read data nothing, send the empty file and cancel file compare request
 			loopCount++
 		} else if checkChunkHash {
-			pd.PushAction = push.PushActionCompareChunk
+			pd.PushAction = push.CompareChunkPushAction
 			n = 0
 		}
 
@@ -457,7 +457,7 @@ func (pcs *pushClientSync) sendChunkRequest(path string, pd *push.PushData, offs
 }
 
 func (pcs *pushClientSync) sendTruncate(path string, pd push.PushData, offset int64) error {
-	pd.PushAction = push.PushActionTruncate
+	pd.PushAction = push.TruncatePushAction
 	pd.Chunk.Offset = offset
 	resp, err := pcs.httpPostWithAuth(pcs.pushAddr, action.WriteAction, push.ParamUpFile, path, pd, nil)
 	if err != nil {

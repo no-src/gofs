@@ -4,16 +4,16 @@ package push
 type PushAction int
 
 const (
-	// PushActionUnknown the unknown push action
-	PushActionUnknown PushAction = iota
-	// PushActionCompareFile compare the file hash value before upload the file
-	PushActionCompareFile
-	// PushActionCompareChunk compare the file chunk hash value before upload the file chunk
-	PushActionCompareChunk
-	// PushActionCompareFileAndChunk compare the file hash value and first file chunk hash value before upload the file
-	PushActionCompareFileAndChunk
-	// PushActionWrite upload the file or file chunk
-	PushActionWrite
-	// PushActionTruncate truncate the file with the specific size
-	PushActionTruncate
+	// UnknownPushAction the unknown push action
+	UnknownPushAction PushAction = iota
+	// CompareFilePushAction compare the file hash value before upload the file
+	CompareFilePushAction
+	// CompareChunkPushAction compare the file chunk hash value before upload the file chunk
+	CompareChunkPushAction
+	// CompareFileAndChunkPushAction compare the file hash value and first file chunk hash value before upload the file
+	CompareFileAndChunkPushAction
+	// WritePushAction upload the file or file chunk
+	WritePushAction
+	// TruncatePushAction truncate the file with the specific size
+	TruncatePushAction
 )

@@ -24,7 +24,7 @@ func TestString(t *testing.T) {
 	testString(t, "hello", "hello")
 
 	// int
-	testString(t, int(100), "100")
+	testString(t, 100, "100")
 
 	// uint64
 	testString(t, uint64(200), "200")

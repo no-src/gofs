@@ -58,7 +58,7 @@ Response field description:
       set `need_checkpoint=1`. The details of checkpoints see the use of `checkpoint_count` flag
         - `offset` the file data to calculate the hash value from zero to offset
         - `hash` the file checkpoint hash value
-    - `c_time` file create time
+    - `c_time` file creation time
     - `a_time` file last access time
     - `m_time` file last modify time
 
@@ -181,7 +181,7 @@ Request field description:
         - `is_dir` is directory or not, `1` or `0`
         - `size` file size of bytes, directory is always `0`
         - `hash` file hash value
-        - `c_time` file create time
+        - `c_time` file creation time
         - `a_time` file last access time
         - `m_time` file last modify time
     - `chunk`

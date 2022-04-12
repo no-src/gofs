@@ -13,7 +13,7 @@ const (
 	FsHash = "hash"
 	// FsHashValues the hash value of the entire file and first chunk and some checkpoints
 	FsHashValues = "hash_values"
-	// FsCtime file create time
+	// FsCtime file creation time
 	FsCtime = "ctime"
 	// FsAtime file last access time
 	FsAtime = "atime"
