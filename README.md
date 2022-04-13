@@ -105,7 +105,7 @@ $ gofs -source=./source -dest=./dest -sync_cron="*/30 * * * * *"
 Start a daemon to create subprocess to work, and record pid info to pid file.
 
 ```bash
-$  gofs -source=./source -dest=./dest -daemon -daemon_pid
+$ gofs -source=./source -dest=./dest -daemon -daemon_pid
 ```
 
 ### File Server

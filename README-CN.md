@@ -101,7 +101,7 @@ $ gofs -source=./source -dest=./dest -sync_cron="*/30 * * * * *"
 启动守护进程来创建一个工作进程处理实际的任务，并将相关进程的pid信息记录到pid文件中
 
 ```bash
-$  gofs -source=./source -dest=./dest -daemon -daemon_pid
+$ gofs -source=./source -dest=./dest -daemon -daemon_pid
 ```
 
 ### Web文件服务器
