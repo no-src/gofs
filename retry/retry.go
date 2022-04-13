@@ -2,8 +2,9 @@ package retry
 
 import (
 	"context"
-	"github.com/no-src/gofs/wait"
 	"time"
+
+	"github.com/no-src/gofs/wait"
 )
 
 // Retry if execute return error, then retry to execute with the specified rule

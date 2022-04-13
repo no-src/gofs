@@ -1,16 +1,17 @@
 package report
 
 import (
+	"os"
+	"runtime"
+	"strings"
+	"sync"
+
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/eventlog"
 	"github.com/no-src/gofs/internal/toplist"
 	"github.com/no-src/gofs/util/timeutil"
 	"github.com/no-src/gofs/version"
-	"os"
-	"runtime"
-	"strings"
-	"sync"
 )
 
 var (

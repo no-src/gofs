@@ -1,10 +1,11 @@
 package middleware
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/server"
-	"net/http"
 )
 
 // NoRoute the middleware of the 404 status

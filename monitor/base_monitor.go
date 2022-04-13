@@ -3,28 +3,29 @@ package monitor
 import (
 	"errors"
 	"fmt"
-	"github.com/no-src/gofs/eventlog"
-	"github.com/no-src/gofs/retry"
-	"github.com/no-src/gofs/sync"
-	"github.com/no-src/log"
-	"github.com/robfig/cron/v3"
 	"io"
 	"net/url"
 	"os"
 	"sort"
 	"strings"
-	goSync "sync"
+	"sync"
 	"time"
+
+	"github.com/no-src/gofs/eventlog"
+	"github.com/no-src/gofs/retry"
+	nssync "github.com/no-src/gofs/sync"
+	"github.com/no-src/log"
+	"github.com/robfig/cron/v3"
 )
 
 type baseMonitor struct {
-	syncer      sync.Sync
+	syncer      nssync.Sync
 	retry       retry.Retry
 	writeMap    map[string]*writeMessage
 	writeList   writeMessageList
 	writeChan   chan *writeMessage
 	writeNotify chan bool
-	mu          goSync.Mutex
+	mu          sync.Mutex
 	syncSpec    string
 	cronChan    chan bool
 	shutdown    chan bool
@@ -32,7 +33,7 @@ type baseMonitor struct {
 	el          eventlog.EventLog
 }
 
-func newBaseMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, eventWriter io.Writer) baseMonitor {
+func newBaseMonitor(syncer nssync.Sync, retry retry.Retry, syncOnce bool, eventWriter io.Writer) baseMonitor {
 	return baseMonitor{
 		syncer:      syncer,
 		retry:       retry,

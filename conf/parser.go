@@ -2,10 +2,11 @@ package conf
 
 import (
 	"errors"
-	"github.com/no-src/gofs/util/jsonutil"
-	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
+
+	"github.com/no-src/gofs/util/jsonutil"
+	"gopkg.in/yaml.v3"
 )
 
 var (

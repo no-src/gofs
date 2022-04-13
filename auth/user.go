@@ -3,9 +3,10 @@ package auth
 import (
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/gofs/util/randutil"
-	"strings"
 )
 
 // User a login user info

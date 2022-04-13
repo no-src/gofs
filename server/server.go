@@ -2,9 +2,10 @@ package server
 
 import (
 	"fmt"
-	"github.com/no-src/log"
 	"net"
 	"strings"
+
+	"github.com/no-src/log"
 )
 
 var (

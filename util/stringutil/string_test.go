@@ -3,8 +3,9 @@ package stringutil
 import (
 	"encoding/json"
 	"errors"
-	"github.com/no-src/gofs/util/jsonutil"
 	"testing"
+
+	"github.com/no-src/gofs/util/jsonutil"
 )
 
 func TestString(t *testing.T) {

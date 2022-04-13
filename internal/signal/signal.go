@@ -1,10 +1,11 @@
 package signal
 
 import (
-	"github.com/no-src/log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/no-src/log"
 )
 
 // Notify receive signal and try to shut down

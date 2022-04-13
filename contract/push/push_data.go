@@ -7,7 +7,6 @@ import (
 
 // PushData the request data of the push api
 type PushData struct {
-
 	// Action the action of file change
 	Action action.Action `json:"action"`
 

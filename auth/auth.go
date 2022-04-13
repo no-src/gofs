@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+
 	"github.com/no-src/gofs/contract"
 )
 

@@ -9,6 +9,7 @@ import (
 type Message struct {
 	contract.Status
 	contract.FileInfo
+
 	// Action the action of file change
 	Action action.Action `json:"action"`
 	// BaseUrl the base url of file server

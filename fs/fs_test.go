@@ -1,10 +1,11 @@
 package fs
 
 import (
-	"github.com/no-src/gofs/util/osutil"
 	"io"
 	"os"
 	"testing"
+
+	"github.com/no-src/gofs/util/osutil"
 )
 
 const (

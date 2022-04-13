@@ -2,9 +2,10 @@ package version
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/no-src/gofs"
 	"github.com/no-src/log"
-	"strings"
 )
 
 // VERSION the current program version info

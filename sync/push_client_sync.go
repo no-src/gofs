@@ -3,12 +3,20 @@ package sync
 import (
 	"errors"
 	"fmt"
+	"io"
+	"io/fs"
+	"net/http"
+	"net/url"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/no-src/gofs/action"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/contract/push"
 	"github.com/no-src/gofs/core"
-	"github.com/no-src/gofs/fs"
+	nsfs "github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/client"
@@ -17,17 +25,11 @@ import (
 	"github.com/no-src/gofs/util/httputil"
 	"github.com/no-src/gofs/util/jsonutil"
 	"github.com/no-src/log"
-	"io"
-	iofs "io/fs"
-	"net/http"
-	"net/url"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 type pushClientSync struct {
 	diskSync
+
 	source          core.VFS
 	dest            core.VFS
 	sourceAbsPath   string
@@ -241,7 +243,7 @@ func (pcs *pushClientSync) SyncOnce(path string) error {
 	if err != nil {
 		return err
 	}
-	return filepath.WalkDir(absPath, func(currentPath string, d iofs.DirEntry, err error) error {
+	return filepath.WalkDir(absPath, func(currentPath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -294,7 +296,7 @@ func (pcs *pushClientSync) send(act action.Action, path string) (err error) {
 
 	if pcs.needGetFileTime(act) {
 		var timeErr error
-		cTime, aTime, mTime, timeErr = fs.GetFileTime(path)
+		cTime, aTime, mTime, timeErr = nsfs.GetFileTime(path)
 		if timeErr != nil {
 			return timeErr
 		}
@@ -372,10 +374,10 @@ func (pcs *pushClientSync) sendFileChunk(path string, pd push.PushData) error {
 	for {
 		loopCount++
 		n, err := f.ReadAt(chunk, offset)
-		if fs.IsNonEOF(err) {
+		if nsfs.IsNonEOF(err) {
 			return err
 		}
-		if fs.IsEOF(err) {
+		if nsfs.IsEOF(err) {
 			isEnd = true
 		}
 		chunkSize := n

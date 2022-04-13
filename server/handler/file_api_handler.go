@@ -1,17 +1,18 @@
 package handler
 
 import (
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/log"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strings"
-	"time"
 )
 
 type fileApiHandler struct {

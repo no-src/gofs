@@ -1,11 +1,12 @@
 package core
 
 import (
-	"github.com/no-src/log"
 	"net/url"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/no-src/log"
 )
 
 // VFS virtual file system

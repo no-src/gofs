@@ -3,6 +3,12 @@ package monitor
 import (
 	"errors"
 	"fmt"
+	"io"
+	"net/url"
+	"os"
+	"strings"
+	"time"
+
 	"github.com/no-src/gofs/action"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
@@ -17,15 +23,11 @@ import (
 	"github.com/no-src/gofs/util/stringutil"
 	"github.com/no-src/gofs/wait"
 	"github.com/no-src/log"
-	"io"
-	"net/url"
-	"os"
-	"strings"
-	"time"
 )
 
 type remoteClientMonitor struct {
 	baseMonitor
+	
 	client      tran.Client
 	closed      *cbool.CBool
 	messages    *clist.CList

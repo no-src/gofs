@@ -4,6 +4,10 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"path/filepath"
+	"strings"
+	"time"
+
 	"github.com/no-src/gofs/action"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
@@ -14,13 +18,11 @@ import (
 	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/gofs/util/jsonutil"
 	"github.com/no-src/log"
-	"path/filepath"
-	"strings"
-	"time"
 )
 
 type remoteServerSync struct {
 	diskSync
+
 	server          tran.Server
 	serverAddr      string
 	chunkSize       int64

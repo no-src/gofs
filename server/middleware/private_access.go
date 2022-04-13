@@ -1,13 +1,14 @@
 package middleware
 
 import (
+	"net"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/handler"
 	"github.com/no-src/log"
-	"net"
-	"net/http"
 )
 
 type privateAccessHandler struct {

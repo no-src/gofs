@@ -1,17 +1,19 @@
 package tran
 
 import (
+	"net"
+	"time"
+
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/internal/cbool"
 	"github.com/no-src/gofs/report"
 	"github.com/no-src/log"
-	"net"
-	"time"
 )
 
 // Conn the component of network connection
 type Conn struct {
 	net.Conn
+
 	authorized     *cbool.CBool
 	user           *auth.HashUser
 	connTime       *time.Time

@@ -2,9 +2,10 @@ package core
 
 import (
 	"flag"
-	"github.com/no-src/gofs/util/jsonutil"
 	"testing"
 	"time"
+
+	"github.com/no-src/gofs/util/jsonutil"
 )
 
 func TestDurationMarshalText(t *testing.T) {

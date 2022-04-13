@@ -2,8 +2,9 @@ package toplist
 
 import (
 	"errors"
-	"github.com/no-src/gofs/util/jsonutil"
 	"sync"
+
+	"github.com/no-src/gofs/util/jsonutil"
 )
 
 // TopList store some elements in list with specified capacity, the oldest elements that exceed specified capacity will be discarded

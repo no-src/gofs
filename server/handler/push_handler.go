@@ -3,6 +3,13 @@ package handler
 import (
 	"errors"
 	"fmt"
+	"io"
+	"mime/multipart"
+	"net/http"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/no-src/gofs/action"
 	"github.com/no-src/gofs/contract"
@@ -13,12 +20,6 @@ import (
 	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/gofs/util/jsonutil"
 	"github.com/no-src/log"
-	"io"
-	"mime/multipart"
-	"net/http"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 type pushHandler struct {

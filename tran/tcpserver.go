@@ -5,14 +5,15 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"errors"
-	"github.com/no-src/gofs/auth"
-	"github.com/no-src/gofs/report"
-	"github.com/no-src/gofs/util/stringutil"
-	"github.com/no-src/log"
 	"net"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/no-src/gofs/auth"
+	"github.com/no-src/gofs/report"
+	"github.com/no-src/gofs/util/stringutil"
+	"github.com/no-src/log"
 )
 
 type tcpServer struct {

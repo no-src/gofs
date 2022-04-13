@@ -3,6 +3,8 @@ package middleware
 import (
 	"errors"
 	"fmt"
+	"net/http"
+
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/no-src/gofs/auth"
@@ -10,7 +12,6 @@ import (
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/handler"
 	"github.com/no-src/log"
-	"net/http"
 )
 
 type authHandler struct {

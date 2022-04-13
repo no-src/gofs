@@ -2,6 +2,12 @@ package monitor
 
 import (
 	"errors"
+	"io"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/fsnotify/fsnotify"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/eventlog"
@@ -12,15 +18,11 @@ import (
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/util/osutil"
 	"github.com/no-src/log"
-	"io"
-	iofs "io/fs"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 type fsNotifyMonitor struct {
 	baseMonitor
+	
 	watcher *fsnotify.Watcher
 	events  *clist.CList
 }
@@ -49,7 +51,7 @@ func (m *fsNotifyMonitor) monitor(dir string) (err error) {
 		log.Error(err, "parse dir to abs dir error")
 		return err
 	}
-	err = filepath.WalkDir(dir, func(path string, d iofs.DirEntry, err error) error {
+	err = filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}

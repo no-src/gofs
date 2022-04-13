@@ -2,6 +2,12 @@ package httpfs
 
 import (
 	"fmt"
+	"html/template"
+	"io"
+	"net/http"
+	"os"
+	"time"
+
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-contrib/sessions"
@@ -14,11 +20,6 @@ import (
 	"github.com/no-src/gofs/server/handler"
 	"github.com/no-src/gofs/server/middleware"
 	"github.com/no-src/log"
-	"html/template"
-	"io"
-	"net/http"
-	"os"
-	"time"
 )
 
 // StartFileServer start a file server by gin

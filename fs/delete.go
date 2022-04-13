@@ -2,12 +2,13 @@ package fs
 
 import (
 	"fmt"
-	"github.com/no-src/log"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
 	"time"
+
+	"github.com/no-src/log"
 )
 
 var deletedPathRegexp *regexp.Regexp

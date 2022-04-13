@@ -2,9 +2,10 @@ package retry
 
 import (
 	"context"
+	"time"
+
 	"github.com/no-src/gofs/wait"
 	"github.com/no-src/log"
-	"time"
 )
 
 type defaultRetry struct {

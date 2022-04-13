@@ -2,8 +2,9 @@ package auth
 
 import (
 	"bytes"
-	"github.com/no-src/gofs/util/hashutil"
 	"testing"
+
+	"github.com/no-src/gofs/util/hashutil"
 )
 
 func TestParseAuthCommandData(t *testing.T) {

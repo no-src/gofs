@@ -2,7 +2,7 @@ package randutil
 
 import (
 	"crypto/rand"
-	mathRand "math/rand"
+	mathrand "math/rand"
 )
 
 // RandomString generate a random string, max length is 20
@@ -15,7 +15,7 @@ func RandomString(length int) (s string) {
 	_, err := read(bytes)
 	if err != nil {
 		for i := 0; i < 32; i++ {
-			bytes[i] = byte(mathRand.Intn(256))
+			bytes[i] = byte(mathrand.Intn(256))
 		}
 	}
 	var h [32]byte

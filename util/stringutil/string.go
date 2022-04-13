@@ -2,9 +2,10 @@ package stringutil
 
 import (
 	"fmt"
-	"github.com/no-src/gofs/util/jsonutil"
 	"strconv"
 	"strings"
+
+	"github.com/no-src/gofs/util/jsonutil"
 )
 
 // ToString support to convert the current instance to string value

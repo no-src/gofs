@@ -2,9 +2,10 @@ package fs
 
 import (
 	"errors"
-	"github.com/no-src/gofs/util/osutil"
 	"os"
 	"testing"
+
+	"github.com/no-src/gofs/util/osutil"
 )
 
 func TestIsDeleted(t *testing.T) {

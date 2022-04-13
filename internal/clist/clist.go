@@ -14,8 +14,7 @@ type CList struct {
 // New create an instance of CList
 func New() *CList {
 	return &CList{
-		v:  list.New(),
-		mu: sync.Mutex{},
+		v: list.New(),
 	}
 }
 

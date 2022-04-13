@@ -3,11 +3,12 @@ package client
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"net/url"
+
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/util/httputil"
 	"github.com/no-src/log"
-	"net/http"
-	"net/url"
 )
 
 // ErrSignIn the current user sign in failed

@@ -1,12 +1,13 @@
 package handler
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/report"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/log"
-	"net/http"
 )
 
 type reportHandler struct {

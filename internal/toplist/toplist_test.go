@@ -2,8 +2,9 @@ package toplist
 
 import (
 	"bytes"
-	"github.com/no-src/gofs/util/jsonutil"
 	"testing"
+
+	"github.com/no-src/gofs/util/jsonutil"
 )
 
 func TestTopListWithCapZero(t *testing.T) {

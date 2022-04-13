@@ -3,13 +3,14 @@ package handler
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"net/url"
+
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/log"
-	"net/http"
-	"net/url"
 )
 
 type loginHandler struct {

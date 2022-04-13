@@ -3,6 +3,7 @@ package contract
 // FileServerInfo the file server basic info
 type FileServerInfo struct {
 	Status
+	
 	// ServerAddr the server running address
 	ServerAddr string `json:"server_addr"`
 	// SourcePath the source base path of the file server

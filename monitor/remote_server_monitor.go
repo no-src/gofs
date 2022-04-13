@@ -1,9 +1,10 @@
 package monitor
 
 import (
+	"io"
+
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/sync"
-	"io"
 )
 
 // NewRemoteServerMonitor create an instance of the fsNotifyMonitor

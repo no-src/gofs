@@ -3,10 +3,11 @@ package daemon
 import (
 	"bufio"
 	"fmt"
-	"github.com/no-src/gofs/util/osutil"
-	"github.com/no-src/log"
 	"os"
 	"time"
+
+	"github.com/no-src/gofs/util/osutil"
+	"github.com/no-src/log"
 )
 
 // SubprocessTag mark the current process is subprocess

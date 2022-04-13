@@ -2,11 +2,12 @@ package monitor
 
 import (
 	"fmt"
+	"io"
+
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/sync"
-	"io"
 )
 
 // Monitor file system monitor

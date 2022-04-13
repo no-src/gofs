@@ -3,19 +3,21 @@ package sync
 import (
 	"bufio"
 	"errors"
+	"io"
+	"io/fs"
+	"os"
+	"path/filepath"
+
 	"github.com/no-src/gofs/core"
-	"github.com/no-src/gofs/fs"
+	nsfs "github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/log"
-	"io"
-	iofs "io/fs"
-	"os"
-	"path/filepath"
 )
 
 type diskSync struct {
 	baseSync
+	
 	sourceAbsPath   string
 	destAbsPath     string
 	chunkSize       int64
@@ -63,7 +65,7 @@ func (s *diskSync) Create(path string) error {
 	if err != nil {
 		return err
 	}
-	exist, err := fs.FileExist(dest)
+	exist, err := nsfs.FileExist(dest)
 	if err != nil {
 		return err
 	}
@@ -85,7 +87,7 @@ func (s *diskSync) Create(path string) error {
 		if err != nil {
 			return err
 		}
-		f, err := fs.CreateFile(dest)
+		f, err := nsfs.CreateFile(dest)
 		if err != nil {
 			return err
 		}
@@ -93,7 +95,7 @@ func (s *diskSync) Create(path string) error {
 			log.ErrorIf(f.Close(), "Create:close file error")
 		}()
 	}
-	_, aTime, mTime, err := fs.GetFileTime(path)
+	_, aTime, mTime, err := nsfs.GetFileTime(path)
 	if err != nil {
 		return err
 	}
@@ -155,7 +157,7 @@ func (s *diskSync) write(path, dest string) error {
 		return nil
 	}
 
-	destFile, err := fs.OpenRWFile(dest)
+	destFile, err := nsfs.OpenRWFile(dest)
 	if err != nil {
 		return err
 	}
@@ -212,7 +214,7 @@ func (s *diskSync) compare(sourceFile *os.File, sourceSize int64, dest string, o
 
 // chtimes change file times
 func (s *diskSync) chtimes(source, dest string) {
-	if _, aTime, mTime, err := fs.GetFileTime(source); err == nil {
+	if _, aTime, mTime, err := nsfs.GetFileTime(source); err == nil {
 		if err = os.Chtimes(dest, aTime, mTime); err != nil {
 			log.Warn("Write:change file times error => %s =>[%s]", err.Error(), dest)
 		}
@@ -265,7 +267,7 @@ func (s *diskSync) buildDestAbsFile(sourceFileAbs string) (string, error) {
 }
 
 func (s *diskSync) IsDir(path string) (bool, error) {
-	return fs.IsDir(path)
+	return nsfs.IsDir(path)
 }
 
 // SyncOnce auto sync source directory to dest directory once.
@@ -274,7 +276,7 @@ func (s *diskSync) SyncOnce(path string) error {
 	if err != nil {
 		return err
 	}
-	return filepath.WalkDir(absPath, func(currentPath string, d iofs.DirEntry, err error) error {
+	return filepath.WalkDir(absPath, func(currentPath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}

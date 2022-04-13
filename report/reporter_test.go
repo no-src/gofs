@@ -1,10 +1,11 @@
 package report
 
 import (
-	"github.com/no-src/gofs/auth"
-	"github.com/no-src/gofs/eventlog"
 	"testing"
 	"time"
+
+	"github.com/no-src/gofs/auth"
+	"github.com/no-src/gofs/eventlog"
 )
 
 func TestReporterWithEnable(t *testing.T) {

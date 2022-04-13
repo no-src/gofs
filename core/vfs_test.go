@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/no-src/gofs/util/jsonutil"
 	"testing"
+
+	"github.com/no-src/gofs/util/jsonutil"
 )
 
 const (

@@ -6,12 +6,13 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/no-src/gofs/internal/cbool"
-	"github.com/no-src/log"
 	"io"
 	"net"
 	"os"
 	"sync"
+
+	"github.com/no-src/gofs/internal/cbool"
+	"github.com/no-src/log"
 )
 
 type tcpClient struct {
@@ -36,7 +37,6 @@ func NewClient(host string, port int, enableTLS bool) Client {
 		network:   "tcp",
 		closed:    cbool.New(true),
 		enableTLS: enableTLS,
-		mu:        sync.Mutex{},
 	}
 	return client
 }
