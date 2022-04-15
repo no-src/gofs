@@ -17,8 +17,7 @@ func TestParseActionFromString(t *testing.T) {
 func testParseActionFromString(t *testing.T, expect Action, action string) {
 	actual := ParseActionFromString(action)
 	if actual != expect {
-		t.Logf("[%s] => expect: %v, but actual: %v \n", action, expect, actual)
-		t.Fail()
+		t.Errorf("[%s] => expect: %v, but actual: %v \n", action, expect, actual)
 	}
 }
 
@@ -35,8 +34,7 @@ func TestActionInt(t *testing.T) {
 func testActionInt(t *testing.T, expect int, action Action) {
 	actual := action.Int()
 	if actual != expect {
-		t.Logf("[%s] => expect: %v, but actual: %v \n", action, expect, actual)
-		t.Fail()
+		t.Errorf("[%s] => expect: %v, but actual: %v \n", action, expect, actual)
 	}
 }
 
@@ -52,7 +50,6 @@ func TestActionString(t *testing.T) {
 func testActionString(t *testing.T, expect string, action Action) {
 	actual := action.String()
 	if actual != expect {
-		t.Logf("[%s] => expect: %v, but actual: %v \n", action, expect, actual)
-		t.Fail()
+		t.Errorf("[%s] => expect: %v, but actual: %v \n", action, expect, actual)
 	}
 }

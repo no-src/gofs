@@ -30,8 +30,7 @@ func testCheckTo(t *testing.T, expect bool, current, target string) {
 	tPerm := ToPerm(target)
 	actual := cPerm.CheckTo(tPerm)
 	if actual != expect {
-		t.Logf("[%s=>%s] => expect: %v, but actual: %v \n", current, target, expect, actual)
-		t.Fail()
+		t.Errorf("[%s=>%s] => expect: %v, but actual: %v \n", current, target, expect, actual)
 	}
 }
 
@@ -50,7 +49,6 @@ func testToPermWithDefault(t *testing.T, expect string, perm string) {
 	cPerm := ToPermWithDefault(perm, ReadPerm)
 	actual := cPerm.String()
 	if actual != expect {
-		t.Logf("[%s] => expect: %v, but actual: %v \n", perm, expect, actual)
-		t.Fail()
+		t.Errorf("[%s] => expect: %v, but actual: %v \n", perm, expect, actual)
 	}
 }

@@ -7,7 +7,6 @@ func TestMatch(t *testing.T) {
 	err := Init("./testdata/demo.ignore", true)
 	if err != nil {
 		t.Errorf("init default ignore component error => %v", err)
-		t.FailNow()
 		return
 	}
 	testMatch(t, true, "/source/.hello.swp")
@@ -27,8 +26,7 @@ func TestMatch(t *testing.T) {
 func testMatch(t *testing.T, expect bool, path string) {
 	actual := Match(path)
 	if actual != expect {
-		t.Logf("[%s] => expect: %v, but actual: %v \n", path, expect, actual)
-		t.Fail()
+		t.Errorf("[%s] => expect: %v, but actual: %v \n", path, expect, actual)
 	}
 }
 
@@ -37,7 +35,6 @@ func TestMatchPath(t *testing.T) {
 	err := Init("./testdata/demo.ignore", true)
 	if err != nil {
 		t.Errorf("init default ignore component error => %v", err)
-		t.FailNow()
 		return
 	}
 	testMatchPath(t, true, "/hello.txt.1643351810.deleted")
@@ -46,7 +43,6 @@ func TestMatchPath(t *testing.T) {
 	err = Init("./testdata/demo.ignore", false)
 	if err != nil {
 		t.Errorf("init default ignore component error => %v", err)
-		t.FailNow()
 		return
 	}
 	testMatchPath(t, false, "/hello.txt.1643351810.deleted")
@@ -57,8 +53,7 @@ func TestMatchPath(t *testing.T) {
 func testMatchPath(t *testing.T, expect bool, path string) {
 	actual := MatchPath(path, "test suit", "test")
 	if actual != expect {
-		t.Logf("[%s] => expect: %v, but actual: %v \n", path, expect, actual)
-		t.Fail()
+		t.Errorf("[%s] => expect: %v, but actual: %v \n", path, expect, actual)
 	}
 }
 
@@ -67,7 +62,6 @@ func TestParseError(t *testing.T) {
 	_, err := parse([]byte(text))
 	if err == nil {
 		t.Errorf("parse the rule text should be return error => [%s] error => %v", text, err)
-		t.FailNow()
 		return
 	}
 }
@@ -78,7 +72,6 @@ func TestInitErrorFileNotFound(t *testing.T) {
 	err := Init(c, true)
 	if err == nil {
 		t.Errorf("init default ignore component should be return error => %s", c)
-		t.FailNow()
 		return
 	}
 }
@@ -88,7 +81,6 @@ func TestInitWithNoConfig(t *testing.T) {
 	err := Init("", true)
 	if err != nil {
 		t.Errorf("init default ignore component error => %v", err)
-		t.FailNow()
 		return
 	}
 	testMatch(t, false, "bin")

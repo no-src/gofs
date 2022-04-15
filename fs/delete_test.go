@@ -59,8 +59,7 @@ func TestIsDeleted(t *testing.T) {
 func testIsDeleted(t *testing.T, expect bool, path string) {
 	actual := IsDeleted(path)
 	if actual != expect {
-		t.Logf("[%s] => expect: %v, but actual: %v \n", path, expect, actual)
-		t.Fail()
+		t.Errorf("[%s] => expect: %v, but actual: %v \n", path, expect, actual)
 	}
 }
 
