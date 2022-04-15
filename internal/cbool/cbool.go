@@ -11,8 +11,7 @@ type CBool struct {
 // New create an instance of CBool
 func New(v bool) *CBool {
 	return &CBool{
-		mu: sync.RWMutex{},
-		v:  v,
+		v: v,
 	}
 }
 
