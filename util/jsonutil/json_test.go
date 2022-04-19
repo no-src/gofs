@@ -3,12 +3,7 @@ package jsonutil
 import "testing"
 
 func TestMarshal(t *testing.T) {
-	jd := jsonData{
-		Code:    1,
-		Message: "success",
-		Secret:  "xyz",
-		c:       100,
-	}
+	jd := getTestJsonData()
 	data, err := Marshal(jd)
 	if err != nil {
 		t.Errorf("test Marshal error => %s", err)
@@ -18,6 +13,20 @@ func TestMarshal(t *testing.T) {
 	actual := string(data)
 	if expect != actual {
 		t.Errorf("test Marshal error, expect:%s, actual:%s", expect, actual)
+	}
+}
+
+func TestMarshalIndent(t *testing.T) {
+	jd := getTestJsonData()
+	data, err := MarshalIndent(jd)
+	if err != nil {
+		t.Errorf("test MarshalIndent error => %s", err)
+		return
+	}
+	expect := "{\n    \"code\": 1,\n    \"message\": \"success\"\n}"
+	actual := string(data)
+	if expect != actual {
+		t.Errorf("test MarshalIndent error, expect:\n%s \nactual:\n%s", expect, actual)
 	}
 }
 
@@ -41,4 +50,14 @@ type jsonData struct {
 	Message string `json:"message"`
 	Secret  string `json:"-"`
 	c       int
+}
+
+func getTestJsonData() jsonData {
+	jd := jsonData{
+		Code:    1,
+		Message: "success",
+		Secret:  "xyz",
+		c:       100,
+	}
+	return jd
 }
