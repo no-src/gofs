@@ -22,7 +22,7 @@ import (
 
 type fsNotifyMonitor struct {
 	baseMonitor
-	
+
 	watcher *fsnotify.Watcher
 	events  *clist.CList
 }

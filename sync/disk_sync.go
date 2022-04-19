@@ -17,7 +17,7 @@ import (
 
 type diskSync struct {
 	baseSync
-	
+
 	sourceAbsPath   string
 	destAbsPath     string
 	chunkSize       int64

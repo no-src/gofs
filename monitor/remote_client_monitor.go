@@ -27,7 +27,7 @@ import (
 
 type remoteClientMonitor struct {
 	baseMonitor
-	
+
 	client      tran.Client
 	closed      *cbool.CBool
 	messages    *clist.CList

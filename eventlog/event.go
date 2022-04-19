@@ -2,7 +2,7 @@ package eventlog
 
 import (
 	"fmt"
-	
+
 	"github.com/no-src/gofs/util/timeutil"
 )
 
