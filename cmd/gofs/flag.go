@@ -84,6 +84,9 @@ func parseFlags() {
 	flag.IntVar(&config.RandomPasswordLen, "rand_pwd_len", 10, "the length of the random user's password")
 	flag.StringVar(&config.RandomDefaultPerm, "rand_perm", "r", "the default permission of every random user, like 'rwx'")
 
+	// checksum
+	flag.BoolVar(&config.Checksum, "checksum", false, "calculate and print the checksum for source file")
+
 	flag.Parse()
 }
 

@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/no-src/gofs/about"
 	"github.com/no-src/gofs/auth"
+	"github.com/no-src/gofs/checksum"
 	"github.com/no-src/gofs/conf"
 	"github.com/no-src/gofs/daemon"
 	"github.com/no-src/gofs/fs"
@@ -136,6 +137,12 @@ func executeOnce() (exit bool) {
 	// clear the deleted files
 	if config.ClearDeletedPath {
 		log.ErrorIf(fs.ClearDeletedFile(config.Dest.Path()), "clear the deleted files error")
+		return true
+	}
+
+	// calculate checksum
+	if config.Checksum {
+		checksum.PrintChecksum(config.Source.Path(), config.ChunkSize, config.CheckpointCount)
 		return true
 	}
 

@@ -38,5 +38,6 @@
   "rand_user_count": 0,
   "rand_user_len": 6,
   "rand_pwd_len": 10,
-  "rand_perm": "r"
+  "rand_perm": "r",
+  "checksum": false
 }

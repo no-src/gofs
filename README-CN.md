@@ -298,6 +298,16 @@ $ gofs -source=./source -dest=./dest -log_file -log_level=0 -log_dir="./logs/" -
 $ gofs -conf=./gofs.yaml
 ```
 
+### 校验和
+
+你可以使用`checksum`命令行参数来计算并打印文件的校验和
+
+`chunk_size`和`checkpoint_count`命令行参数在这里同在[本地磁盘](#本地磁盘)中一样有效
+
+```bash
+$ gofs -source=./gofs -checksum
+```
+
 ## 更多信息
 
 ### 帮助信息

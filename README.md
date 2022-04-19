@@ -318,6 +318,16 @@ or the response of [Config API](#config-api).
 $ gofs -conf=./gofs.yaml
 ```
 
+### Checksum
+
+You can use the `checksum` flag to calculate the file checksum and print the result.
+
+The `chunk_size` and `checkpoint_count` flags are effective here the same as in the [Local Disk](#local-disk).
+
+```bash
+$ gofs -source=./gofs -checksum
+```
+
 ## For More Information
 
 ### Help Info

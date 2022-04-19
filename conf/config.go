@@ -64,4 +64,7 @@ type Config struct {
 	RandomUserNameLen int    `json:"rand_user_len" yaml:"rand_user_len"`
 	RandomPasswordLen int    `json:"rand_pwd_len" yaml:"rand_pwd_len"`
 	RandomDefaultPerm string `json:"rand_perm" yaml:"rand_perm"`
+
+	// checksum
+	Checksum bool `json:"checksum" yaml:"checksum"`
 }
