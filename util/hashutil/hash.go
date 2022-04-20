@@ -38,10 +38,7 @@ func MD5FromFile(file io.Reader) (hash string, err error) {
 
 // MD5FromFileName calculate the hash value of the file
 func MD5FromFileName(path string) (hash string, err error) {
-	if len(path) == 0 {
-		return hash, errEmptyPath
-	}
-	f, err := os.Open(path)
+	f, err := open(path)
 	if err != nil {
 		return hash, err
 	}
@@ -51,10 +48,7 @@ func MD5FromFileName(path string) (hash string, err error) {
 
 // MD5FromFileChunk calculate the hash value of the file chunk
 func MD5FromFileChunk(path string, offset int64, chunkSize int64) (hash string, err error) {
-	if len(path) == 0 {
-		return hash, errEmptyPath
-	}
-	f, err := os.Open(path)
+	f, err := open(path)
 	if err != nil {
 		return hash, err
 	}
@@ -89,10 +83,7 @@ func MD5FromString(s string) (hash string) {
 // the checkpoint hash is optional
 // the entire file hash is required
 func CheckpointsMD5FromFileName(path string, chunkSize int64, checkpointCount int) (hvs HashValues, err error) {
-	if len(path) == 0 {
-		return nil, errEmptyPath
-	}
-	f, err := os.Open(path)
+	f, err := open(path)
 	if err != nil {
 		return nil, err
 	}
@@ -106,10 +97,8 @@ func CheckpointsMD5FromFile(f *os.File, chunkSize int64, checkpointCount int) (h
 	if err != nil {
 		return nil, err
 	}
-	return checkpointsMD5FromFileWithFileSize(f, stat.Size(), chunkSize, checkpointCount)
-}
+	fileSize := stat.Size()
 
-func checkpointsMD5FromFileWithFileSize(f *os.File, fileSize int64, chunkSize int64, checkpointCount int) (hvs HashValues, err error) {
 	// add first chunk hash
 	if chunkSize > 0 && fileSize > chunkSize {
 		hvs = append(hvs, NewHashValue(chunkSize, ""))
@@ -200,19 +189,13 @@ func calcHashValuesWithFile(f *os.File, chunkSize int64, hvs HashValues) error {
 
 // CompareHashValuesWithFileName calculate the file hashes and return the last continuous hit HashValue.
 // The offset in the HashValues must equal chunkSize * N, and N greater than zero
-func CompareHashValuesWithFileName(path string, chunkSize int64, hvs HashValues) (*HashValue, error) {
-	if len(path) == 0 {
-		return nil, errEmptyPath
-	}
-	f, err := os.Open(path)
+func CompareHashValuesWithFileName(path string, chunkSize int64, hvs HashValues) (eq *HashValue, err error) {
+	f, err := open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
-	return compareHashValuesWithFile(f, chunkSize, hvs)
-}
 
-func compareHashValuesWithFile(f *os.File, chunkSize int64, hvs HashValues) (eq *HashValue, err error) {
 	if chunkSize <= 0 {
 		return nil, errChunkSizeInvalid
 	}
@@ -254,4 +237,11 @@ func compareHashValuesWithFile(f *os.File, chunkSize int64, hvs HashValues) (eq 
 		}
 	}
 	return eq, nil
+}
+
+func open(path string) (*os.File, error) {
+	if len(path) == 0 {
+		return nil, errEmptyPath
+	}
+	return os.Open(path)
 }

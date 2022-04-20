@@ -8,6 +8,7 @@ import (
 )
 
 const testFilePath = "./hash_test.go"
+const testDirPath = "./"
 const notExistFilePath = "./not_exist.txt"
 
 func TestMD5FromFileError(t *testing.T) {
@@ -102,14 +103,14 @@ func TestCheckpointsMD5FromFileNameError(t *testing.T) {
 		t.Errorf("test TestCheckpointsMD5FromFileName with not exist file path error, expect get an error")
 	}
 
+	_, err = CheckpointsMD5FromFileName(testDirPath, chunkSize, checkpointCount)
+	if err == nil {
+		t.Errorf("test CheckpointsMD5FromFileName with dir path error, expect get an error")
+	}
+
 	_, err = CheckpointsMD5FromFile(nil, chunkSize, checkpointCount)
 	if err == nil {
 		t.Errorf("test checkpointsMD5FromFile with nil *os.File error, expect get an error")
-	}
-
-	_, err = checkpointsMD5FromFileWithFileSize(nil, 0, chunkSize, checkpointCount)
-	if err == nil {
-		t.Errorf("test checkpointsMD5FromFileWithFileSize with nil *os.File error, expect get an error")
 	}
 }
 
@@ -177,9 +178,9 @@ func TestCompareHashValuesWithFileNameError(t *testing.T) {
 	}
 
 	hvs = append(hvs, NewHashValue(2, "e529a9cea4a728eb9c5828b13b22844c"))
-	_, err = compareHashValuesWithFile(nil, defaultChunkSize, hvs)
+	_, err = CompareHashValuesWithFileName(testDirPath, defaultChunkSize, hvs)
 	if err == nil {
-		t.Errorf("test CompareHashValuesWithFileName with nil *os.File error, expect get an error")
+		t.Errorf("test CompareHashValuesWithFileName with dir path error, expect get an error")
 	}
 }
 
