@@ -3,53 +3,78 @@ package action
 import "testing"
 
 func TestParseActionFromString(t *testing.T) {
-	testParseActionFromString(t, CreateAction, "1")
-	testParseActionFromString(t, WriteAction, "2")
-	testParseActionFromString(t, RemoveAction, "3")
-	testParseActionFromString(t, RenameAction, "4")
-	testParseActionFromString(t, ChmodAction, "5")
-	testParseActionFromString(t, UnknownAction, "99999")
-	testParseActionFromString(t, UnknownAction, "xyz")
-	testParseActionFromString(t, UnknownAction, "0")
-	testParseActionFromString(t, UnknownAction, "-1")
-}
+	testCases := []struct {
+		action string
+		expect Action
+	}{
+		{"1", CreateAction},
+		{"2", WriteAction},
+		{"3", RemoveAction},
+		{"4", RenameAction},
+		{"5", ChmodAction},
+		{"99999", UnknownAction},
+		{"xyz", UnknownAction},
+		{"0", UnknownAction},
+		{"-1", UnknownAction},
+	}
 
-func testParseActionFromString(t *testing.T, expect Action, action string) {
-	actual := ParseActionFromString(action)
-	if actual != expect {
-		t.Errorf("[%s] => expect: %v, but actual: %v \n", action, expect, actual)
+	for _, tc := range testCases {
+		t.Run(tc.action, func(t *testing.T) {
+			actual := ParseActionFromString(tc.action)
+			if actual != tc.expect {
+				t.Errorf("[%s] => expect: %v, but actual: %v", tc.action, tc.expect, actual)
+			}
+		})
 	}
 }
 
-func TestActionInt(t *testing.T) {
-	testActionInt(t, 0, UnknownAction)
-	testActionInt(t, 1, CreateAction)
-	testActionInt(t, 2, WriteAction)
-	testActionInt(t, 3, RemoveAction)
-	testActionInt(t, 4, RenameAction)
-	testActionInt(t, 5, ChmodAction)
-	testActionInt(t, 10, Action(10))
-	testActionInt(t, UnknownAction.Int(), Action(10).Valid())
-}
-func testActionInt(t *testing.T, expect int, action Action) {
-	actual := action.Int()
-	if actual != expect {
-		t.Errorf("[%s] => expect: %v, but actual: %v \n", action, expect, actual)
+func TestAction_Int(t *testing.T) {
+	testCases := []struct {
+		name   string
+		action Action
+		expect int
+	}{
+		{"UnknownAction", UnknownAction, 0},
+		{"CreateAction", CreateAction, 1},
+		{"WriteAction", WriteAction, 2},
+		{"RemoveAction", RemoveAction, 3},
+		{"RenameAction", RenameAction, 4},
+		{"ChmodAction", ChmodAction, 5},
+		{"Action(10)", Action(10), 10},
+		{"Action(10).Valid()", Action(10).Valid(), UnknownAction.Int()},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := tc.action.Int()
+			if actual != tc.expect {
+				t.Errorf("[%s] => expect: %v, but actual: %v", tc.action, tc.expect, actual)
+			}
+		})
 	}
 }
 
-func TestActionString(t *testing.T) {
-	testActionString(t, "Unknown", UnknownAction)
-	testActionString(t, "Create", CreateAction)
-	testActionString(t, "Write", WriteAction)
-	testActionString(t, "Remove", RemoveAction)
-	testActionString(t, "Rename", RenameAction)
-	testActionString(t, "Chmod", ChmodAction)
-	testActionString(t, "Invalid", Action(10))
-}
-func testActionString(t *testing.T, expect string, action Action) {
-	actual := action.String()
-	if actual != expect {
-		t.Errorf("[%s] => expect: %v, but actual: %v \n", action, expect, actual)
+func TestAction_String(t *testing.T) {
+	testCases := []struct {
+		name   string
+		action Action
+		expect string
+	}{
+		{"UnknownAction", UnknownAction, "Unknown"},
+		{"CreateAction", CreateAction, "Create"},
+		{"WriteAction", WriteAction, "Write"},
+		{"RemoveAction", RemoveAction, "Remove"},
+		{"RenameAction", RenameAction, "Rename"},
+		{"ChmodAction", ChmodAction, "Chmod"},
+		{"Action(10)", Action(10), "Invalid"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := tc.action.String()
+			if actual != tc.expect {
+				t.Errorf("[%s] => expect: %v, but actual: %v", tc.action, tc.expect, actual)
+			}
+		})
 	}
 }
