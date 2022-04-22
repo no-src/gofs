@@ -18,7 +18,7 @@ func TestWaitDone(t *testing.T) {
 	}
 }
 
-func TestWaitDoneWithError(t *testing.T) {
+func TestWaitDone_ReturnError(t *testing.T) {
 	errWaitDone := errors.New("wait done error")
 	wd := NewWaitDone()
 	go func() {

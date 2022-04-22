@@ -10,10 +10,10 @@ func TestPrintChecksum(t *testing.T) {
 	}
 }
 
-func TestPrintChecksumError(t *testing.T) {
+func TestPrintChecksum_ReturnError(t *testing.T) {
 	path := "./"
 	err := PrintChecksum(path, 1024*1024, 10)
 	if err == nil {
-		t.Errorf("test PrintChecksum expect get error but get nil")
+		t.Errorf("test PrintChecksum expect to get an error but get nil")
 	}
 }
