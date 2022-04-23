@@ -3,52 +3,68 @@ package auth
 import "testing"
 
 func TestCheckTo(t *testing.T) {
-	testCheckTo(t, false, "", "")
-	testCheckTo(t, false, "", "rwx")
-	testCheckTo(t, false, "  ", "")
-	testCheckTo(t, false, "  ", "rwx")
-	testCheckTo(t, true, "r", "rwx")
-	testCheckTo(t, true, "w", "rwx")
-	testCheckTo(t, true, "x", "rwx")
-	testCheckTo(t, true, "rw", "rwx")
-	testCheckTo(t, true, "rwx", "rwx")
+	testCases := []struct {
+		current string
+		target  string
+		expect  bool
+	}{
+		{"", "", false},
+		{"", "rwx", false},
+		{"  ", "", false},
+		{"  ", "rwx", false},
 
-	testCheckTo(t, false, "rwx", "r")
-	testCheckTo(t, false, "rwx", "w")
-	testCheckTo(t, false, "rwx", "x")
-	testCheckTo(t, false, "rwx", "rw")
-	testCheckTo(t, false, "rwx", "rx")
-	testCheckTo(t, false, "rwx", "wx")
+		{"r", "rwx", true},
+		{"w", "rwx", true},
+		{"x", "rwx", true},
+		{"rw", "rwx", true},
+		{"rwx", "rwx", true},
 
-	testCheckTo(t, false, "r", "w")
-	testCheckTo(t, false, "w", "x")
-	testCheckTo(t, false, "x", "r")
-}
+		{"rwx", "r", false},
+		{"rwx", "w", false},
+		{"rwx", "x", false},
+		{"rwx", "rw", false},
+		{"rwx", "rx", false},
+		{"rwx", "wx", false},
 
-func testCheckTo(t *testing.T, expect bool, current, target string) {
-	cPerm := ToPerm(current)
-	tPerm := ToPerm(target)
-	actual := cPerm.CheckTo(tPerm)
-	if actual != expect {
-		t.Errorf("[%s=>%s] => expect: %v, but actual: %v \n", current, target, expect, actual)
+		{"r", "w", false},
+		{"w", "x", false},
+		{"x", "r", false},
+	}
+
+	for _, tc := range testCases {
+		t.Run("["+tc.current+"]=>["+tc.target+"]", func(t *testing.T) {
+			cPerm := ToPerm(tc.current)
+			tPerm := ToPerm(tc.target)
+			actual := cPerm.CheckTo(tPerm)
+			if actual != tc.expect {
+				t.Errorf("[%s=>%s] => expect: %v, but actual: %v \n", tc.current, tc.target, tc.expect, actual)
+			}
+		})
 	}
 }
 
 func TestToPermWithDefault(t *testing.T) {
-	testToPermWithDefault(t, "r", "r")
-	testToPermWithDefault(t, "w", "w")
-	testToPermWithDefault(t, "x", "x")
-	testToPermWithDefault(t, "r", "")
-	testToPermWithDefault(t, "", "a")
-	testToPermWithDefault(t, "", "abc")
-	testToPermWithDefault(t, "", "abcd")
-	testToPermWithDefault(t, "", "rrrr")
-}
+	testCases := []struct {
+		perm   string
+		expect string
+	}{
+		{"r", "r"},
+		{"w", "w"},
+		{"x", "x"},
+		{"", "r"},
+		{"a", ""},
+		{"abc", ""},
+		{"abcd", ""},
+		{"rrrr", ""},
+	}
 
-func testToPermWithDefault(t *testing.T, expect string, perm string) {
-	cPerm := ToPermWithDefault(perm, ReadPerm)
-	actual := cPerm.String()
-	if actual != expect {
-		t.Errorf("[%s] => expect: %v, but actual: %v \n", perm, expect, actual)
+	for _, tc := range testCases {
+		t.Run("["+tc.perm+"]=>["+tc.expect+"]", func(t *testing.T) {
+			cPerm := ToPermWithDefault(tc.perm, ReadPerm)
+			actual := cPerm.String()
+			if actual != tc.expect {
+				t.Errorf("[%s] => expect: %v, but actual: %v \n", tc.perm, tc.expect, actual)
+			}
+		})
 	}
 }

@@ -1,57 +1,71 @@
 package auth
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestToHashUserList(t *testing.T) {
-	// normal convert
-	var users []*User
-	users = append(users, newUserNoError(t, 1, "root", "toor", DefaultPerm))
-	users = append(users, newUserNoError(t, 2, "guest", "guest", DefaultPerm))
-	hashUsers, err := ToHashUserList(users)
-	if err != nil {
-		t.Errorf("convert to hash user list error => %v", err)
-		return
-	}
-	if len(hashUsers) != len(users) {
-		t.Errorf("convert to hash user list error")
-		return
+	testCases := []struct {
+		name  string
+		users []*User
+	}{
+		{"normal user list", getTestUserList(t)},
+		{"empty user list", nil},
 	}
 
-	// contain nil user
-	_, err = ToHashUserList(append(users, nil))
-	if err == nil {
-		t.Errorf("convert to hash user list should be return error => %v", err)
-		return
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			expectLen := len(tc.users)
+			hashUsers, err := ToHashUserList(tc.users)
+			if err != nil {
+				t.Errorf("convert to hash user list error => %v", err)
+				return
+			}
+			if len(hashUsers) != expectLen {
+				t.Errorf("convert to hash user list error, expect length:%d, actual length:%d", expectLen, len(hashUsers))
+			}
+		})
+	}
+}
+
+func TestToHashUserList_ReturnError(t *testing.T) {
+	testCases := []struct {
+		name  string
+		users []*User
+	}{
+		{"contain nil user", append(getTestUserList(t), nil)},
 	}
 
-	// empty user list
-	hashUsers, err = ToHashUserList(nil)
-	if err != nil {
-		t.Errorf("convert an empty user list to hash user list error => %v", err)
-		return
-	}
-	if len(hashUsers) != 0 {
-		t.Errorf("convert an empty user list to hash user list should be return an empty hash user list")
-		return
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := ToHashUserList(tc.users)
+			if err == nil {
+				t.Errorf("convert to hash user list expect to get an error but get nil")
+			}
+		})
 	}
 }
 
 func TestIsExpired(t *testing.T) {
 	hashUser := NewHashUser("698d51a19d8a121c", "bcbe3365e6ac95ea", DefaultPerm)
-	if hashUser.IsExpired() {
-		t.Errorf("current hash user should not be expired => %s %s", hashUser.UserNameHash, hashUser.Expires)
-		return
+	testCases := []struct {
+		name     string
+		hashUser *HashUser
+		expires  string
+		expect   bool
+	}{
+		{"expires init", hashUser, hashUser.Expires, false},
+		{"expires empty", hashUser, "", true},
+		{"expires invalid length", hashUser, "invalid", true},
+		{"expires invalid value", hashUser, "2006010215040x", true},
 	}
 
-	hashUser.Expires = "invalid"
-	if !hashUser.IsExpired() {
-		t.Errorf("current hash user should be expired => %s %s", hashUser.UserNameHash, hashUser.Expires)
-		return
-	}
-
-	hashUser.Expires = "2006010215040x"
-	if !hashUser.IsExpired() {
-		t.Errorf("current hash user should be expired => %s %s", hashUser.UserNameHash, hashUser.Expires)
-		return
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.hashUser.Expires = tc.expires
+			if hashUser.IsExpired() != tc.expect {
+				t.Errorf("current hash user[%s:%s] IsExpired expect:%v, actual:%v", hashUser.UserNameHash, hashUser.Expires, tc.expect, hashUser.IsExpired())
+			}
+		})
 	}
 }
