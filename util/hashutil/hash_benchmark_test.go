@@ -13,7 +13,7 @@ func BenchmarkMD5FromFileName(b *testing.B) {
 	}
 }
 
-func BenchmarkCheckpointsMD5FromFileNameOnlyEntireFile(b *testing.B) {
+func BenchmarkCheckpointsMD5FromFileName_OnlyEntireFile(b *testing.B) {
 	benchmarkCheckpointsMD5FromFileName(b, 0, 0)
 }
 
@@ -21,7 +21,7 @@ func BenchmarkCheckpointsMD5FromFileName(b *testing.B) {
 	benchmarkCheckpointsMD5FromFileName(b, 1024, 10)
 }
 
-func BenchmarkCheckpointsMD5FromFileNameWithDefaultChunkSize(b *testing.B) {
+func BenchmarkCheckpointsMD5FromFileName_WithDefaultChunkSize(b *testing.B) {
 	benchmarkCheckpointsMD5FromFileName(b, defaultChunkSize, 10)
 }
 

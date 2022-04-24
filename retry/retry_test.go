@@ -13,11 +13,11 @@ const (
 	testWaitTime   = time.Millisecond
 )
 
-func TestDefaultRetrySuccessAsync(t *testing.T) {
+func TestDefaultRetry_SuccessAsync(t *testing.T) {
 	testDefaultRetrySuccess(t, true)
 }
 
-func TestDefaultRetrySuccessSync(t *testing.T) {
+func TestDefaultRetry_SuccessSync(t *testing.T) {
 	testDefaultRetrySuccess(t, false)
 }
 
@@ -41,11 +41,11 @@ func testDefaultRetrySuccess(t *testing.T, async bool) {
 	}
 }
 
-func TestDefaultRetryFailedAsync(t *testing.T) {
+func TestDefaultRetry_FailedAsync(t *testing.T) {
 	testDefaultRetryFailed(t, true)
 }
 
-func TestDefaultRetryFailedSync(t *testing.T) {
+func TestDefaultRetry_FailedSync(t *testing.T) {
 	testDefaultRetryFailed(t, false)
 }
 
@@ -63,11 +63,11 @@ func testDefaultRetryFailed(t *testing.T, async bool) {
 	}
 }
 
-func TestDefaultRetryAbortAsync(t *testing.T) {
+func TestDefaultRetry_AbortAsync(t *testing.T) {
 	testDefaultRetryAbort(t, true)
 }
 
-func TestDefaultRetryAbortSync(t *testing.T) {
+func TestDefaultRetry_AbortSync(t *testing.T) {
 	testDefaultRetryAbort(t, false)
 }
 
@@ -87,11 +87,11 @@ func testDefaultRetryAbort(t *testing.T, async bool) {
 	}
 }
 
-func TestDefaultRetryFailedThenSuccessAsync(t *testing.T) {
+func TestDefaultRetry_FailedThenSuccessAsync(t *testing.T) {
 	testDefaultRetryFailedThenSuccess(t, true)
 }
 
-func TestDefaultRetryFailedThenSuccessSync(t *testing.T) {
+func TestDefaultRetry_FailedThenSuccessSync(t *testing.T) {
 	testDefaultRetryFailedThenSuccess(t, false)
 }
 
@@ -109,7 +109,7 @@ func testDefaultRetryFailedThenSuccess(t *testing.T, async bool) {
 	}
 }
 
-func TestDefaultRetryPanic(t *testing.T) {
+func TestDefaultRetry_Panic(t *testing.T) {
 	tw := testWork{}
 	r := New(testRetryCount, testWaitTime, true)
 	w := r.Do(tw.doPanic, "do work panic")

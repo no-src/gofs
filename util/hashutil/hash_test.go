@@ -7,115 +7,172 @@ import (
 	"testing"
 )
 
-const testFilePath = "./hash_test.go"
-const testDirPath = "./"
-const notExistFilePath = "./not_exist.txt"
+const (
+	testFilePath     = "./hash_test.go"
+	testDirPath      = "./"
+	notExistFilePath = "./not_exist.txt"
+)
 
-func TestMD5FromFileError(t *testing.T) {
-	_, err := MD5FromFile(nil)
-	if err == nil {
-		t.Errorf("test MD5FromFile error, should get an error")
+func TestMD5FromFile_ReturnError(t *testing.T) {
+	testCases := []struct {
+		name   string
+		reader io.Reader
+	}{
+		{"nil reader", nil},
+		{"always write to error", readwrite{nil}},
 	}
 
-	f, err := os.Open(testFilePath)
-	if err != nil {
-		t.Errorf("test MD5FromFile error => %s", err)
-		return
-	}
-	_, err = MD5FromFile(readwrite{f})
-	if err == nil {
-		t.Errorf("test MD5FromFile error, should get an error")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if _, err := MD5FromFile(tc.reader); err == nil {
+				t.Errorf("test MD5FromFile error, expect to get an error but get nil")
+			}
+		})
 	}
 }
 
 func TestMD5FromFileName(t *testing.T) {
-	_, err := MD5FromFileName(testFilePath)
-	if err != nil {
-		t.Errorf("test MD5FromFileName error => %s", err)
+	testCases := []struct {
+		path string
+	}{
+		{testFilePath},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.path, func(t *testing.T) {
+			if _, err := MD5FromFileName(tc.path); err != nil {
+				t.Errorf("test MD5FromFileName error => %s", err)
+			}
+		})
 	}
 }
 
-func TestMD5FromFileNameError(t *testing.T) {
-	_, err := MD5FromFileName(notExistFilePath)
-	if err == nil {
-		t.Errorf("test MD5FromFileName with not exist file error, should get an error")
+func TestMD5FromFileName_ReturnError(t *testing.T) {
+	testCases := []struct {
+		name string
+		path string
+	}{
+		{"not exist file path", notExistFilePath},
+		{"empty path", ""},
 	}
 
-	_, err = MD5FromFileName("")
-	if err == nil {
-		t.Errorf("test MD5FromFileName with empty path error, should get an error")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if _, err := MD5FromFileName(tc.path); err == nil {
+				t.Errorf("test MD5FromFileName error, expect to get an error but get nil")
+			}
+		})
 	}
 }
 
 func TestMD5FromString(t *testing.T) {
-	testMD5FromString(t, "", "d41d8cd98f00b204e9800998ecf8427e")
-	testMD5FromString(t, "golang", "21cc28409729565fc1a4d2dd92db269f")
-	testMD5FromString(t, "hello test", "7a6d667ea5ed4467c017b2ed6ea07e78")
-}
+	testCases := []struct {
+		str    string
+		expect string
+	}{
+		{"", "d41d8cd98f00b204e9800998ecf8427e"},
+		{"golang", "21cc28409729565fc1a4d2dd92db269f"},
+		{"hello test", "7a6d667ea5ed4467c017b2ed6ea07e78"},
+	}
 
-func testMD5FromString(t *testing.T, str, expect string) {
-	actual := MD5FromString(str)
-	if actual != expect {
-		t.Errorf("test MD5 error, expect:%s, actual:%s", expect, actual)
+	for _, tc := range testCases {
+		t.Run("["+tc.str+"]", func(t *testing.T) {
+			actual := MD5FromString(tc.str)
+			if actual != tc.expect {
+				t.Errorf("test MD5FromString error, expect:%s, actual:%s", tc.expect, actual)
+			}
+		})
 	}
 }
 
 func TestMD5FromFileChunk(t *testing.T) {
-	_, err := MD5FromFileChunk(testFilePath, 10, 100)
-	if err != nil {
-		t.Errorf("test MD5FromFileChunk error => %s", err)
+	testCases := []struct {
+		name      string
+		path      string
+		offset    int64
+		chunkSize int64
+	}{
+		{"normal", testFilePath, 10, 100},
+		{"with read to end", testFilePath, 1024 * 1024 * 10, 1000},
 	}
 
-	_, err = MD5FromFileChunk(testFilePath, 1024*1024*10, 1000)
-	if err != nil {
-		t.Errorf("test MD5FromFileChunk with read to end error => %s", err)
-	}
-}
-
-func TestMD5FromFileChunkError(t *testing.T) {
-	_, err := MD5FromFileChunk(notExistFilePath, 10, 100)
-	if err == nil {
-		t.Errorf("test MD5FromFileChunk with not exist file error, should get an error")
-	}
-
-	_, err = MD5FromFileChunk("", 10, 100)
-	if err == nil {
-		t.Errorf("test MD5FromFileChunk with empty path error, should get an error")
-	}
-
-	_, err = MD5FromFileChunk(testFilePath, -1, 100)
-	if err == nil {
-		t.Errorf("test MD5FromFileChunk with invalid offset error, should get an error")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if _, err := MD5FromFileChunk(tc.path, tc.offset, tc.chunkSize); err != nil {
+				t.Errorf("test MD5FromFileChunk error => %s", err)
+			}
+		})
 	}
 }
 
-func TestCheckpointsMD5FromFileNameError(t *testing.T) {
+func TestMD5FromFileChunk_ReturnError(t *testing.T) {
+	testCases := []struct {
+		name      string
+		path      string
+		offset    int64
+		chunkSize int64
+	}{
+		{"with not exist file", notExistFilePath, 10, 100},
+		{"with empty path", "", 10, 100},
+		{"with invalid offset", testFilePath, -1, 100},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if _, err := MD5FromFileChunk(tc.path, tc.offset, tc.chunkSize); err == nil {
+				t.Errorf("test MD5FromFileChunk error, expect to get an error but get nil")
+			}
+		})
+	}
+}
+
+func TestCheckpointsMD5FromFileName_ReturnError(t *testing.T) {
 	var chunkSize int64 = 20
 	checkpointCount := 10
 
-	_, err := CheckpointsMD5FromFileName("", chunkSize, checkpointCount)
-	if err == nil {
-		t.Errorf("test TestCheckpointsMD5FromFileName with empty path error, expect get an error")
+	testCases := []struct {
+		name            string
+		path            string
+		chunkSize       int64
+		checkpointCount int
+	}{
+		{"with empty path", "", chunkSize, checkpointCount},
+		{"with not exist file path", notExistFilePath, chunkSize, checkpointCount},
+		{"with dir path", testDirPath, chunkSize, checkpointCount},
 	}
 
-	_, err = CheckpointsMD5FromFileName(notExistFilePath, chunkSize, checkpointCount)
-	if err == nil {
-		t.Errorf("test TestCheckpointsMD5FromFileName with not exist file path error, expect get an error")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if _, err := CheckpointsMD5FromFileName(tc.path, tc.chunkSize, tc.checkpointCount); err == nil {
+				t.Errorf("test CheckpointsMD5FromFileName error, expect to get an error but get nil")
+			}
+		})
+	}
+}
+
+func TestCheckpointsMD5FromFile_ReturnError(t *testing.T) {
+	var chunkSize int64 = 20
+	checkpointCount := 10
+
+	testCases := []struct {
+		name            string
+		f               *os.File
+		chunkSize       int64
+		checkpointCount int
+	}{
+		{"with nil *os.File", nil, chunkSize, checkpointCount},
 	}
 
-	_, err = CheckpointsMD5FromFileName(testDirPath, chunkSize, checkpointCount)
-	if err == nil {
-		t.Errorf("test CheckpointsMD5FromFileName with dir path error, expect get an error")
-	}
-
-	_, err = CheckpointsMD5FromFile(nil, chunkSize, checkpointCount)
-	if err == nil {
-		t.Errorf("test checkpointsMD5FromFile with nil *os.File error, expect get an error")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if _, err := CheckpointsMD5FromFile(tc.f, tc.chunkSize, tc.checkpointCount); err == nil {
+				t.Errorf("test checkpointsMD5FromFile error, expect to get an error but get nil")
+			}
+		})
 	}
 }
 
 func TestCheckpointsMD5FromFileName(t *testing.T) {
-	var chunkSize int64 = 20
 	checkpointCount := 10
 	path := testFilePath
 	hash, err := MD5FromFileName(path)
@@ -124,14 +181,26 @@ func TestCheckpointsMD5FromFileName(t *testing.T) {
 		return
 	}
 
-	testCheckpointsMD5FromFileName(t, path, chunkSize, checkpointCount, hash)
-	testCheckpointsMD5FromFileName(t, path, chunkSize, 0, hash)
+	testCases := []struct {
+		name            string
+		path            string
+		chunkSize       int64
+		checkpointCount int
+		expect          string
+	}{
+		{"", path, 20, checkpointCount, hash},
+		{"", path, 20, 0, hash},
+		{"", path, 1024, checkpointCount, hash},
+		{"", path, 1024, 0, hash},
+		{"", path, 0, checkpointCount, hash},
+		{"", path, 0, 0, hash},
+	}
 
-	chunkSize = 1024
-	testCheckpointsMD5FromFileName(t, path, chunkSize, checkpointCount, hash)
-	testCheckpointsMD5FromFileName(t, path, chunkSize, 0, hash)
-	testCheckpointsMD5FromFileName(t, path, 0, checkpointCount, hash)
-	testCheckpointsMD5FromFileName(t, path, 0, 0, hash)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			testCheckpointsMD5FromFileName(t, tc.path, tc.chunkSize, tc.checkpointCount, tc.expect)
+		})
+	}
 }
 
 func testCheckpointsMD5FromFileName(t *testing.T, path string, chunkSize int64, checkpointCount int, expect string) {
@@ -149,38 +218,64 @@ func testCheckpointsMD5FromFileName(t *testing.T, path string, chunkSize int64, 
 
 func TestCalcHashValuesWithFile(t *testing.T) {
 	var hvs HashValues
-	err := calcHashValuesWithFile(nil, 0, hvs)
-	if err == nil {
-		t.Errorf("test calcHashValuesWithFile with zero chunk size error, expect get an error")
+	testCases := []struct {
+		name      string
+		f         *os.File
+		chunkSize int64
+		hvs       HashValues
+	}{
+		{"with empty HashValues", nil, defaultChunkSize, hvs},
 	}
 
-	err = calcHashValuesWithFile(nil, defaultChunkSize, hvs)
-	if err != nil {
-		t.Errorf("test calcHashValuesWithFile with empty HashValues error, expect get an nil, actual:%v", err)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if err := calcHashValuesWithFile(tc.f, tc.chunkSize, tc.hvs); err != nil {
+				t.Errorf("test calcHashValuesWithFile error => %v", err)
+			}
+		})
 	}
 }
 
-func TestCompareHashValuesWithFileNameError(t *testing.T) {
+func TestCalcHashValuesWithFile_ReturnError(t *testing.T) {
 	var hvs HashValues
-	_, err := CompareHashValuesWithFileName("", defaultChunkSize, hvs)
-	if err == nil {
-		t.Errorf("test CompareHashValuesWithFileName with empty path error, expect get an error")
+	testCases := []struct {
+		name      string
+		f         *os.File
+		chunkSize int64
+		hvs       HashValues
+	}{
+		{"with zero chunk size", nil, 0, hvs},
 	}
 
-	_, err = CompareHashValuesWithFileName(notExistFilePath, defaultChunkSize, hvs)
-	if err == nil {
-		t.Errorf("test CompareHashValuesWithFileName with not exist file path error, expect get an error")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if err := calcHashValuesWithFile(tc.f, tc.chunkSize, tc.hvs); err == nil {
+				t.Errorf("test calcHashValuesWithFile error, expect to get an error but get nil")
+			}
+		})
+	}
+}
+
+func TestCompareHashValuesWithFileName_ReturnError(t *testing.T) {
+	var hvs HashValues
+	testCases := []struct {
+		name      string
+		path      string
+		chunkSize int64
+		hvs       HashValues
+	}{
+		{"with empty path", "", defaultChunkSize, hvs},
+		{"with not exist file path", notExistFilePath, defaultChunkSize, hvs},
+		{"with zero chunk size", testFilePath, 0, hvs},
+		{"with dir path", testDirPath, defaultChunkSize, append(HashValues{}, NewHashValue(2, "e529a9cea4a728eb9c5828b13b22844c"))},
 	}
 
-	_, err = CompareHashValuesWithFileName(testFilePath, 0, hvs)
-	if err == nil {
-		t.Errorf("test CompareHashValuesWithFileName with zero chunk size error, expect get an error")
-	}
-
-	hvs = append(hvs, NewHashValue(2, "e529a9cea4a728eb9c5828b13b22844c"))
-	_, err = CompareHashValuesWithFileName(testDirPath, defaultChunkSize, hvs)
-	if err == nil {
-		t.Errorf("test CompareHashValuesWithFileName with dir path error, expect get an error")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if _, err := CompareHashValuesWithFileName(tc.path, tc.chunkSize, tc.hvs); err == nil {
+				t.Errorf("test CompareHashValuesWithFileName error, expect to get an error but get nil")
+			}
+		})
 	}
 }
 
@@ -190,21 +285,25 @@ func TestCompareHashValuesWithFileName(t *testing.T) {
 	var hvs HashValues
 	invalidHash := "815417267f76f6f460a4a61f9db75fdb"
 
-	testCompareHashValuesWithFileName(t, path, chunkSize, hvs, nil)
+	testCases := []struct {
+		name      string
+		path      string
+		chunkSize int64
+		hvs       HashValues
+		expect    *HashValue
+	}{
+		{"", path, chunkSize, hvs, nil},
+		{"", path, chunkSize, append(HashValues{}, NewHashValue(1, invalidHash)), nil},
+		{"", path, chunkSize, append(HashValues{}, NewHashValue(2, "e529a9cea4a728eb9c5828b13b22844c")), NewHashValue(2, "e529a9cea4a728eb9c5828b13b22844c")},
+		{"", path, chunkSize, append(HashValues{}, NewHashValue(2, "e529a9cea4a728eb9c5828b13b22844c"), NewHashValue(7, "efe90a8e604a7c840e88d03a67f6b7d8")), NewHashValue(7, "efe90a8e604a7c840e88d03a67f6b7d8")},
+		{"", path, chunkSize, append(HashValues{}, NewHashValue(1024*1024, invalidHash)), nil},
+	}
 
-	hvs = append(hvs, NewHashValue(1, invalidHash))
-	testCompareHashValuesWithFileName(t, path, chunkSize, hvs, nil)
-
-	hvs = make(HashValues, 0)
-	hvs = append(hvs, NewHashValue(2, "e529a9cea4a728eb9c5828b13b22844c"))
-	testCompareHashValuesWithFileName(t, path, chunkSize, hvs, NewHashValue(2, "e529a9cea4a728eb9c5828b13b22844c"))
-
-	hvs = append(hvs, NewHashValue(7, "efe90a8e604a7c840e88d03a67f6b7d8"))
-	testCompareHashValuesWithFileName(t, path, chunkSize, hvs, NewHashValue(7, "efe90a8e604a7c840e88d03a67f6b7d8"))
-
-	hvs = make(HashValues, 0)
-	hvs = append(hvs, NewHashValue(1024*1024, invalidHash))
-	testCompareHashValuesWithFileName(t, path, chunkSize, hvs, nil)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			testCompareHashValuesWithFileName(t, tc.path, tc.chunkSize, tc.hvs, tc.expect)
+		})
+	}
 }
 
 func testCompareHashValuesWithFileName(t *testing.T, path string, chunkSize int64, hvs HashValues, expect *HashValue) {
@@ -216,13 +315,13 @@ func testCompareHashValuesWithFileName(t *testing.T, path string, chunkSize int6
 
 	if expect == nil {
 		if hv != nil {
-			t.Errorf("test CompareHashValuesWithFileName error, expect get an nil HashValue")
+			t.Errorf("test CompareHashValuesWithFileName error, expect to get an nil HashValue")
 		}
 		return
 	}
 
 	if hv == nil {
-		t.Errorf("test CompareHashValuesWithFileName error, get an nil HashValue, expact:[%d => %s]", expect.Offset, expect.Hash)
+		t.Errorf("test CompareHashValuesWithFileName error, get an nil HashValue, expect:[%d => %s]", expect.Offset, expect.Hash)
 		return
 	}
 

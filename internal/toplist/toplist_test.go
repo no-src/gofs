@@ -7,7 +7,7 @@ import (
 	"github.com/no-src/gofs/util/jsonutil"
 )
 
-func TestTopListWithCapZero(t *testing.T) {
+func TestTopList_WithCapZero(t *testing.T) {
 	// desc
 	capacity := 0
 	_, err := New(capacity)
@@ -23,7 +23,7 @@ func TestTopListWithCapZero(t *testing.T) {
 	}
 }
 
-func TestTopListWithCapOne(t *testing.T) {
+func TestTopList_WithCapOne(t *testing.T) {
 	// desc
 	capacity := 1
 	tl, err := New(capacity)
@@ -77,7 +77,7 @@ func TestTopListWithCapOne(t *testing.T) {
 	topListTop(t, tl, 2, s)
 }
 
-func TestTopListWithCapTwo(t *testing.T) {
+func TestTopList_WithCapTwo(t *testing.T) {
 	// desc
 	capacity := 2
 	tl, err := New(capacity)
@@ -157,7 +157,7 @@ func TestTopListWithCapTwo(t *testing.T) {
 	topListTop(t, tl, 2, s2, s3)
 }
 
-func TestTopListMarshalJSON(t *testing.T) {
+func TestTopList_MarshalJSON(t *testing.T) {
 	capacity := 2
 	tl, err := New(capacity)
 	if err != nil {

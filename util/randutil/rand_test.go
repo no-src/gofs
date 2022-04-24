@@ -14,7 +14,7 @@ func TestRandomString(t *testing.T) {
 	}
 }
 
-func TestRandomStringMoreThanMaxLength(t *testing.T) {
+func TestRandomString_MoreThanMaxLength(t *testing.T) {
 	randLen := 30
 	maxLen := 20
 	randStr := RandomString(randLen)
@@ -23,7 +23,7 @@ func TestRandomStringMoreThanMaxLength(t *testing.T) {
 	}
 }
 
-func TestRandomStringWithReadError(t *testing.T) {
+func TestRandomString_WithReadError(t *testing.T) {
 	read = func(b []byte) (n int, err error) {
 		return 0, errors.New("read error test")
 	}

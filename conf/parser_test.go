@@ -1,6 +1,7 @@
 package conf
 
 import (
+	"errors"
 	"os"
 	"testing"
 )
@@ -10,47 +11,52 @@ const (
 	yamlConfigPath = "./example/gofs-remote-server.yaml"
 )
 
-func TestParseJsonConfiguration(t *testing.T) {
-	c := Config{}
-	path := jsonConfigPath
-	err := Parse(path, &c)
-	if err != nil {
-		t.Errorf("parse json configuration error => %s", path)
+func TestParse(t *testing.T) {
+	testCases := []struct {
+		name string
+		path string
+	}{
+		{"json configuration", jsonConfigPath},
+		{"yaml configuration", yamlConfigPath},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			c := Config{}
+			err := Parse(tc.path, &c)
+			if err != nil {
+				t.Errorf("parse configuration error => %s", tc.path)
+			}
+		})
 	}
 }
 
-func TestParseYamlConfiguration(t *testing.T) {
-	c := Config{}
-	path := yamlConfigPath
-	err := Parse(path, &c)
-	if err != nil {
-		t.Errorf("parse yaml configuration error => %s", path)
+func TestParse_ReturnError(t *testing.T) {
+	testCases := []struct {
+		name   string
+		path   string
+		expect error
+	}{
+		{"empty path", "", errEmptyConfigPath},
+		{"unsupported config format", "./parser_test.go", errUnSupportedConfigFormat},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			c := Config{}
+			err := Parse(tc.path, &c)
+			if !errors.Is(err, tc.expect) {
+				t.Errorf("parse configuration error, expert err:%s, actual err:%s", tc.expect, err)
+			}
+		})
 	}
 }
 
-func TestParseEmptyPath(t *testing.T) {
-	c := Config{}
-	path := ""
-	err := Parse(path, &c)
-	if err != errEmptyConfigPath {
-		t.Errorf("parse configuration error, expert err:%s, actual err:%s", errEmptyConfigPath, err)
-	}
-}
-
-func TestParseNotExistPath(t *testing.T) {
+func TestParse_ReturnError_NotExistPath(t *testing.T) {
 	c := Config{}
 	path := "./not-exist-file.json"
 	err := Parse(path, &c)
 	if !os.IsNotExist(err) {
 		t.Errorf("parse configuration error, expert error not exist, actual err:%s", err)
-	}
-}
-
-func TestParseUnSupportedConfigFormat(t *testing.T) {
-	c := Config{}
-	path := "./parser_test.go"
-	err := Parse(path, &c)
-	if err != errUnSupportedConfigFormat {
-		t.Errorf("parse configuration error, expert err:%s, actual err:%s", errUnSupportedConfigFormat, err)
 	}
 }

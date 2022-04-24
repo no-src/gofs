@@ -5,24 +5,40 @@ import (
 	"testing"
 )
 
-func TestFormat(t *testing.T) {
-	expert := "json"
-	actual := JsonFormat.Name()
-	if actual != expert {
-		t.Errorf("test json format error expert:%s, actual:%s", expert, actual)
+func TestFormat_Name(t *testing.T) {
+	testCases := []struct {
+		format Format
+		expect string
+	}{
+		{JsonFormat, "json"},
+		{YamlFormat, "yaml"},
 	}
 
-	expert = "yaml"
-	actual = YamlFormat.Name()
-	if actual != expert {
-		t.Errorf("test yaml format error expert:%s, actual:%s", expert, actual)
+	for _, tc := range testCases {
+		t.Run(tc.expect, func(t *testing.T) {
+			actual := tc.format.Name()
+			if actual != tc.expect {
+				t.Errorf("test format name error expect:%s, actual:%s", tc.expect, actual)
+			}
+		})
+	}
+}
+
+func TestFormat_MatchExt(t *testing.T) {
+	testCases := []struct {
+		path   string
+		format Format
+		expect bool
+	}{
+		{jsonConfigPath, JsonFormat, true},
+		{yamlConfigPath, YamlFormat, true},
 	}
 
-	if !JsonFormat.MatchExt(filepath.Ext(jsonConfigPath)) {
-		t.Errorf("match json confile error => %s", jsonConfigPath)
-	}
-
-	if !YamlFormat.MatchExt(filepath.Ext(yamlConfigPath)) {
-		t.Errorf("match yarm confile error => %s", yamlConfigPath)
+	for _, tc := range testCases {
+		t.Run(tc.path, func(t *testing.T) {
+			if !tc.format.MatchExt(filepath.Ext(tc.path)) {
+				t.Errorf("match %s confile error => %s", tc.format.Name(), tc.path)
+			}
+		})
 	}
 }

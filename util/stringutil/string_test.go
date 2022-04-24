@@ -9,41 +9,36 @@ import (
 )
 
 func TestString(t *testing.T) {
-	// custom
-	testString(t, str{
-		name: "golang",
-	}, "golang")
-
-	// custom with error
-	jsonutil.Marshal = func(v any) ([]byte, error) {
+	alwaysErrorMarshal := func(v any) ([]byte, error) {
 		return nil, errors.New("marshal error test")
 	}
-	testString(t, []string{"hello"}, `[hello]`)
+	testCases := []struct {
+		name    string
+		marshal func(v any) ([]byte, error)
+		v       any
+		expect  string
+	}{
+		{"custom", json.Marshal, str{name: "golang"}, "golang"},
+		{"custom with error", alwaysErrorMarshal, []string{"hello"}, `[hello]`},
+		{"string", json.Marshal, "hello", "hello"},
+		{"int", json.Marshal, 100, "100"},
+		{"uint64", json.Marshal, uint64(200), "200"},
+		{"int64", json.Marshal, int64(300), "300"},
+		{"bool", json.Marshal, true, "true"},
+		{"error", json.Marshal, errors.New("test error info"), "test error info"},
+		{"null", json.Marshal, nil, "null"},
+		{"other", json.Marshal, []string{"hello", "world"}, `["hello","world"]`},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			jsonutil.Marshal = tc.marshal
+			testString(t, tc.v, tc.expect)
+		})
+	}
+
+	// reset
 	jsonutil.Marshal = json.Marshal
-
-	// string
-	testString(t, "hello", "hello")
-
-	// int
-	testString(t, 100, "100")
-
-	// uint64
-	testString(t, uint64(200), "200")
-
-	// int64
-	testString(t, int64(300), "300")
-
-	// bool
-	testString(t, true, "true")
-
-	// error
-	testString(t, errors.New("test error info"), "test error info")
-
-	// null
-	testString(t, nil, "null")
-
-	// other
-	testString(t, []string{"hello", "world"}, `["hello","world"]`)
 }
 
 func testString(t *testing.T, v any, expect string) {
@@ -54,42 +49,80 @@ func testString(t *testing.T, v any, expect string) {
 }
 
 func TestInt64(t *testing.T) {
-	s := "100001"
-	var expect int64 = 100001
-	actual, err := Int64(s)
-	if err != nil {
-		t.Errorf("test Int64 error [%s] => %s", s, err)
-		return
+	testCases := []struct {
+		str    string
+		expect int64
+	}{
+		{"-1", -1},
+		{"0", 0},
+		{"1", 1},
+		{"0005", 5},
+		{"+10", 10},
+		{"100001", 100001},
 	}
-	if actual != expect {
-		t.Errorf("test Int64 error, expect:%d,actual:%d", expect, actual)
+
+	for _, tc := range testCases {
+		t.Run(tc.str, func(t *testing.T) {
+			actual, err := Int64(tc.str)
+			if err != nil {
+				t.Errorf("test Int64 error [%s] => %s", tc.str, err)
+				return
+			}
+			if actual != tc.expect {
+				t.Errorf("test Int64 error, expect:%d,actual:%d", tc.expect, actual)
+			}
+		})
 	}
 }
 
-func TestInt64Error(t *testing.T) {
-	s := "100001x"
-	_, err := Int64(s)
-	if err == nil {
-		t.Errorf("test Int64 error, should get an error => %s", s)
-		return
+func TestInt64_ReturnError(t *testing.T) {
+	testCases := []struct {
+		str string
+	}{
+		{""},
+		{"		"},
+		{"\t"},
+		{"\r"},
+		{"\n"},
+		{"a"},
+		{"abc"},
+		{"100001x"},
+		{"@#()"},
+		{"123@#()"},
+		{"--1"},
+		{" 11"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.str, func(t *testing.T) {
+			_, err := Int64(tc.str)
+			if err == nil {
+				t.Errorf("test Int64 error, expect to get an error but get nil => %s", tc.str)
+			}
+		})
 	}
 }
 
 func TestIsEmpty(t *testing.T) {
-	expect := true
-	testIsEmpty(t, "", expect)
-	testIsEmpty(t, " ", expect)
-	testIsEmpty(t, "		", expect)
-	testIsEmpty(t, "\t", expect)
-	testIsEmpty(t, "\r", expect)
-	testIsEmpty(t, "\n", expect)
-	expect = false
-	testIsEmpty(t, "hello", expect)
-}
+	testCases := []struct {
+		str    string
+		expect bool
+	}{
+		{"", true},
+		{" ", true},
+		{"		", true},
+		{"\t", true},
+		{"\r", true},
+		{"\n", true},
+		{"hello", false},
+	}
 
-func testIsEmpty(t *testing.T, s string, expect bool) {
-	if IsEmpty(s) != expect {
-		t.Errorf("test IsEmpty error, expect %v", expect)
+	for _, tc := range testCases {
+		t.Run("["+tc.str+"]", func(t *testing.T) {
+			if IsEmpty(tc.str) != tc.expect {
+				t.Errorf("test IsEmpty error, expect %v", tc.expect)
+			}
+		})
 	}
 }
 
