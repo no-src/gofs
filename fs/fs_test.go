@@ -14,126 +14,209 @@ const (
 )
 
 func TestGetFileTime(t *testing.T) {
-	file := testExistFilePath
-	_, _, _, err := GetFileTime(file)
-	if err != nil {
-		t.Errorf("get file time error %s => %v", file, err)
-		return
+	testCases := []struct {
+		path string
+	}{
+		{testExistFilePath},
 	}
 
-	file = testNotFoundFilePath
-	_, _, _, err = GetFileTime(file)
-	if err == nil {
-		t.Errorf("get file time from a not exist file should be return error %s => %v", file, err)
-		return
+	for _, tc := range testCases {
+		t.Run(tc.path, func(t *testing.T) {
+			if _, _, _, err := GetFileTime(tc.path); err != nil {
+				t.Errorf("get file time error %s => %v", tc.path, err)
+			}
+		})
 	}
 }
 
-func TestGetFileTimeBySys(t *testing.T) {
-	_, _, _, err := GetFileTimeBySys(nil)
-	if err == nil {
-		t.Errorf("GetFileTimeBySys with a nil value should be return error")
-		return
+func TestGetFileTime_ReturnError(t *testing.T) {
+	testCases := []struct {
+		path string
+	}{
+		{testNotFoundFilePath},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.path, func(t *testing.T) {
+			if _, _, _, err := GetFileTime(tc.path); err == nil {
+				t.Errorf("get file time error, expect to get an error but get nil => %s", tc.path)
+			}
+		})
+	}
+}
+
+func TestGetFileTimeBySys_ReturnError(t *testing.T) {
+	testCases := []struct {
+		name string
+		sys  any
+	}{
+		{"nil sys", nil},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if _, _, _, err := GetFileTimeBySys(nil); err == nil {
+				t.Errorf("test GetFileTimeBySys expect to get an error but get nil")
+			}
+		})
 	}
 }
 
 func TestFileExist(t *testing.T) {
-	file := testExistFilePath
-	exist, err := FileExist(file)
-	if err != nil {
-		t.Errorf("check file exist error %s => %v", file, err)
-		return
-	}
-	if !exist {
-		t.Errorf("check file exist error, file should be exist => %s", file)
-		return
+	testCases := []struct {
+		path   string
+		expect bool
+	}{
+		{testExistFilePath, true},
+		{testNotFoundFilePath, false},
 	}
 
-	file = testNotFoundFilePath
-	exist, err = FileExist(file)
-	if err != nil {
-		t.Errorf("check file exist error %s => %v", file, err)
-		return
+	for _, tc := range testCases {
+		t.Run(tc.path, func(t *testing.T) {
+			exist, err := FileExist(tc.path)
+			if err != nil {
+				t.Errorf("check file exist error %s => %v", tc.path, err)
+				return
+			}
+			if exist != tc.expect {
+				t.Errorf("check file exist error, exist expect:%v,actual:%v => %s", tc.expect, exist, tc.path)
+			}
+		})
 	}
+}
 
-	if exist {
-		t.Errorf("check file exist error, file should be not exist => %s", file)
-		return
-	}
-
+func TestFileExist_ReturnError(t *testing.T) {
 	if !osutil.IsWindows() {
 		isNotExist = isNotExistAlwaysFalseMock
 		defer func() {
 			isNotExist = os.IsNotExist
 		}()
 	}
-	file = "|/"
-	_, err = FileExist(file)
-	if err == nil {
-		t.Errorf("check an invalid file should be return error %s => %v", file, err)
-		return
+
+	testCases := []struct {
+		name   string
+		path   string
+		expect bool
+	}{
+		{"invalid path", "|/", true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if _, err := FileExist(tc.path); err == nil {
+				t.Errorf("test file exist error, expect to get an error but get nil => %s", tc.path)
+			}
+		})
 	}
 }
 
 func TestCreateFile(t *testing.T) {
-	file := testExistFilePath
-	_, err := CreateFile(file)
-	if err != nil {
-		t.Errorf("create file error %s => %v", file, err)
-		return
+	testCases := []struct {
+		path string
+	}{
+		{testExistFilePath},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.path, func(t *testing.T) {
+			if _, err := CreateFile(tc.path); err != nil {
+				t.Errorf("create file error %s => %v", tc.path, err)
+			}
+		})
 	}
 }
 
 func TestOpenRWFile(t *testing.T) {
-	file := testExistFilePath
-	_, err := OpenRWFile(file)
-	if err != nil {
-		t.Errorf("create file error %s => %v", file, err)
-		return
+	testCases := []struct {
+		path string
+	}{
+		{testExistFilePath},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.path, func(t *testing.T) {
+			if _, err := OpenRWFile(tc.path); err != nil {
+				t.Errorf("open read write file error %s => %v", tc.path, err)
+			}
+		})
 	}
 }
 
 func TestIsDir(t *testing.T) {
-	file := testExistFilePath
-	_, err := IsDir(file)
-	if err != nil {
-		t.Errorf("check path is dir error %s => %v", file, err)
-		return
+	testCases := []struct {
+		path string
+	}{
+		{testExistFilePath},
 	}
 
-	file = testNotFoundFilePath
-	_, err = IsDir(file)
-	if err == nil {
-		t.Errorf("check path is dir from a not exist file should be return error %s => %v", file, err)
-		return
+	for _, tc := range testCases {
+		t.Run(tc.path, func(t *testing.T) {
+			if _, err := IsDir(tc.path); err != nil {
+				t.Errorf("check path is dir error %s => %v", tc.path, err)
+			}
+		})
+	}
+}
+
+func TestIsDir_ReturnError(t *testing.T) {
+	testCases := []struct {
+		path string
+	}{
+		{testNotFoundFilePath},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.path, func(t *testing.T) {
+			if _, err := IsDir(tc.path); err == nil {
+				t.Errorf("check path is dir error, expect to get an error but get nil => %s", tc.path)
+			}
+		})
 	}
 }
 
 func TestIsEOF(t *testing.T) {
-	file := testExistFilePath
-	f, err := os.Open(file)
-	if err != nil {
-		t.Errorf("test IsEOF error, open file error [%s] => %s", file, err)
-		return
+	testCases := []struct {
+		path string
+	}{
+		{testExistFilePath},
 	}
-	// move to end
-	_, err = f.Seek(0, io.SeekEnd)
-	if err != nil {
-		t.Errorf("test IsEOF error, seek file error [%s] => %s", file, err)
-		return
-	}
-	data := make([]byte, 1024)
-	_, err = f.Read(data)
-	if !IsEOF(err) {
-		t.Errorf("test IsEOF error, read file error [%s] => %s", file, err)
+
+	for _, tc := range testCases {
+		t.Run(tc.path, func(t *testing.T) {
+			f, err := os.Open(tc.path)
+			if err != nil {
+				t.Errorf("test IsEOF error, open file error [%s] => %s", tc.path, err)
+				return
+			}
+			// move to end
+			_, err = f.Seek(0, io.SeekEnd)
+			if err != nil {
+				t.Errorf("test IsEOF error, seek file error [%s] => %s", tc.path, err)
+				return
+			}
+			data := make([]byte, 1024)
+			_, err = f.Read(data)
+			if !IsEOF(err) {
+				t.Errorf("test IsEOF error, read file error [%s] => %s", tc.path, err)
+			}
+		})
 	}
 }
 
 func TestIsNonEOF(t *testing.T) {
-	file := testNotFoundFilePath
-	_, err := os.Stat(file)
-	if !IsNonEOF(err) {
-		t.Errorf("test IsNonEOF error, get actual err:%s", err)
+	testCases := []struct {
+		path string
+	}{
+		{testNotFoundFilePath},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.path, func(t *testing.T) {
+			_, err := os.Stat(tc.path)
+			if !IsNonEOF(err) {
+				t.Errorf("test IsNonEOF error, get actual err:%s", err)
+			}
+		})
 	}
 }
 

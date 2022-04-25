@@ -1,20 +1,29 @@
 package core
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestVFSType(t *testing.T) {
-	testVFSType(t, -1, "Unknown")
-	testVFSType(t, Unknown, "Unknown")
-	testVFSType(t, Disk, "Disk")
-	testVFSType(t, RemoteDisk, "RemoteDisk")
-	testVFSType(t, FTP, "FTP")
-	testVFSType(t, SFTP, "SFTP")
-	testVFSType(t, NetworkDisk, "NetworkDisk")
-	testVFSType(t, SharedFolder, "SharedFolder")
-}
+	testCases := []struct {
+		vfsType VFSType
+		desc    string
+	}{
+		{-1, "Unknown"},
+		{Unknown, "Unknown"},
+		{Disk, "Disk"},
+		{RemoteDisk, "RemoteDisk"},
+		{FTP, "FTP"},
+		{SFTP, "SFTP"},
+		{NetworkDisk, "NetworkDisk"},
+		{SharedFolder, "SharedFolder"},
+	}
 
-func testVFSType(t *testing.T, vfsType VFSType, desc string) {
-	if vfsType.String() != desc {
-		t.Errorf("test VFSType string error, expect:%s, actual:%s", vfsType.String(), desc)
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.vfsType.String() != tc.desc {
+				t.Errorf("test VFSType string error, expect:%s, actual:%s", tc.vfsType.String(), tc.desc)
+			}
+		})
 	}
 }
