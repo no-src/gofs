@@ -32,6 +32,21 @@ running.
 go install -tags netgo github.com/no-src/gofs/...@latest
 ```
 
+You can use the [build-docker.sh](/scripts/build-docker.sh) script to build the docker image and you should clone this
+repository and `cd` to the root path of the repository first.
+
+```bash
+$ ./scripts/build-docker.sh
+```
+
+Or pull the docker image directly from [DockerHub](https://hub.docker.com/r/nosrc/gofs) with the command below.
+
+```bash
+$ docker pull nosrc/gofs
+```
+
+For more scripts about release and docker, see the [scripts](scripts) directory.
+
 ### Run In the Background
 
 You can install a program run in the background using the following command on Windows.

@@ -29,6 +29,20 @@ go install github.com/no-src/gofs/...@latest
 go install -tags netgo github.com/no-src/gofs/...@latest
 ```
 
+你可以使用[build-docker.sh](/scripts/build-docker.sh)脚本来构建docker镜像，首先你需要克隆本仓库并且`cd`到本仓库的根目录
+
+```bash
+$ ./scripts/build-docker.sh
+```
+
+或者使用以下命令直接从[DockerHub](https://hub.docker.com/r/nosrc/gofs)中拉取docker镜像
+
+```bash
+$ docker pull nosrc/gofs
+```
+
+更多关于发布与docker的脚本参见[scripts](scripts)目录
+
 ### 后台运行
 
 在windows系统中，你可以使用下面的命令构建一个在后台运行的不带命令行界面的程序
