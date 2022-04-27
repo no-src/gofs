@@ -4,4 +4,8 @@ WORKDIR /app
 
 ENV PATH=$PATH:/app
 
+EXPOSE 80
+EXPOSE 443
+EXPOSE 8105
+
 COPY ./gofs .
