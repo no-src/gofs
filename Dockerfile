@@ -9,3 +9,5 @@ EXPOSE 443
 EXPOSE 8105
 
 COPY ./gofs .
+
+WORKDIR /workspace
