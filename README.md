@@ -45,7 +45,7 @@ Or pull the docker image directly from [DockerHub](https://hub.docker.com/r/nosr
 $ docker pull nosrc/gofs
 ```
 
-For more scripts about release and docker, see the [scripts](scripts) directory.
+For more scripts about release and docker, see the [scripts](/scripts) directory.
 
 ### Run In the Background
 
