@@ -63,9 +63,5 @@ rm -rf "$GOFS_RELEASE"
 
 ############################# windows-release #############################
 
-# reset go env for linux
-export GOOS=linux
-export GOARCH=amd64
-
 # reset commit file
 echo -e "\c" >version/commit
