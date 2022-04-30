@@ -65,3 +65,6 @@ rm -rf "$GOFS_RELEASE"
 
 # reset commit file
 echo -e "\c" >version/commit
+
+# reset go_version file
+echo -e "\c" >version/go_version
