@@ -17,5 +17,8 @@ func PrintVersion() {
 	if commit := strings.TrimSpace(gofs.Commit); len(commit) > 0 {
 		v += fmt.Sprintf("\ngit commit %s", commit)
 	}
+	if goVersion := strings.TrimSpace(gofs.GoVersion); len(goVersion) > 0 {
+		v += fmt.Sprintf("\ngo version %s", goVersion)
+	}
 	log.Log(v)
 }
