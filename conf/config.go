@@ -22,6 +22,7 @@ type Config struct {
 	IgnoreDeletedPath     bool     `json:"ignore_deleted" yaml:"ignore_deleted"`
 	ChunkSize             int64    `json:"chunk_size" yaml:"chunk_size"`
 	CheckpointCount       int      `json:"checkpoint_count" yaml:"checkpoint_count"`
+	ForceChecksum         bool     `json:"force_checksum" yaml:"force_checksum"`
 
 	// retry
 	RetryCount int           `json:"retry_count" yaml:"retry_count"`

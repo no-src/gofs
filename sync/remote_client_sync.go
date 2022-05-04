@@ -37,7 +37,7 @@ type remoteClientSync struct {
 }
 
 // NewRemoteClientSync create an instance of remoteClientSync to receive the file change message and execute it
-func NewRemoteClientSync(source, dest core.VFS, users []*auth.User, enableLogicallyDelete bool, chunkSize int64) (Sync, error) {
+func NewRemoteClientSync(source, dest core.VFS, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, forceChecksum bool) (Sync, error) {
 	if dest.IsEmpty() {
 		return nil, errors.New("dest is not found")
 	}
@@ -49,7 +49,7 @@ func NewRemoteClientSync(source, dest core.VFS, users []*auth.User, enableLogica
 
 	rs := &remoteClientSync{
 		destAbsPath: destAbsPath,
-		baseSync:    newBaseSync(source, dest, enableLogicallyDelete),
+		baseSync:    newBaseSync(source, dest, enableLogicallyDelete, forceChecksum),
 		chunkSize:   chunkSize,
 	}
 	if len(users) > 0 {
@@ -132,6 +132,12 @@ func (rs *remoteClientSync) write(path, dest string) error {
 	size, hash, hvs, _, aTime, mTime, err := rs.fileInfo(path)
 	if err != nil {
 		return err
+	}
+
+	destStat, err := os.Stat(dest)
+	if err == nil && rs.quickCompare(size, destStat.Size(), mTime, destStat.ModTime()) {
+		log.Debug("Write:ignored, the file size and file modification time are both unmodified => %s", path)
+		return nil
 	}
 
 	// if source and dest is the same file, ignore the following steps and return directly

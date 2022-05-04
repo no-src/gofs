@@ -18,4 +18,7 @@ type PushData struct {
 
 	// Chunk the basic file chunk info
 	Chunk contract.Chunk `json:"chunk"`
+
+	// ForceChecksum if the file size and file modification time of the source file is equal to the destination file and ForceChecksum is false, then ignore the current file transfer
+	ForceChecksum bool `json:"force_checksum"`
 }

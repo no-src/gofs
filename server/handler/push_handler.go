@@ -197,7 +197,7 @@ func (h *pushHandler) chtimes(absPath string, fi contract.FileInfo) error {
 func (h *pushHandler) Save(file *multipart.FileHeader, dst string, pushData push.PushData) (code contract.Code, hv *hashutil.HashValue, err error) {
 	offset := pushData.Chunk.Offset
 	if pushData.PushAction < push.WritePushAction {
-		code, hv = h.compare(pushData.PushAction, dst, offset, pushData.FileInfo.Hash, pushData.FileInfo.Size, pushData.Chunk.Hash, pushData.Chunk.Size, pushData.FileInfo.HashValues)
+		code, hv = h.compare(dst, pushData)
 		return code, hv, nil
 	}
 	src, err := file.Open()
@@ -234,20 +234,33 @@ func (h *pushHandler) Save(file *multipart.FileHeader, dst string, pushData push
 	return code, nil, err
 }
 
-func (h *pushHandler) compare(pushAction push.PushAction, dst string, offset int64, fileHash string, fileSize int64, chunkHash string, chunkSize int64, hvs hashutil.HashValues) (contract.Code, *hashutil.HashValue) {
+func (h *pushHandler) compare(dst string, pushData push.PushData) (contract.Code, *hashutil.HashValue) {
+	fileSize := pushData.FileInfo.Size
+	chunkSize := pushData.Chunk.Size
+	hvs := pushData.FileInfo.HashValues
+	pushAction := pushData.PushAction
+
+	if pushAction == push.CompareFilePushAction || pushAction == push.CompareFileAndChunkPushAction {
+		destStat, err := os.Stat(dst)
+		if err == nil && h.quickCompare(fileSize, destStat.Size(), pushData.FileInfo.MTime, destStat.ModTime().Unix(), pushData.ForceChecksum) {
+			log.Debug("[push handler] the file size and file modification time are both unmodified => %s", pushData.FileInfo.Path)
+			return contract.NotModified, nil
+		}
+	}
+
 	switch pushAction {
 	case push.CompareFilePushAction:
-		if h.compareFile(dst, fileHash, fileSize) {
+		if h.compareFile(dst, pushData.FileInfo.Hash, fileSize) {
 			return contract.NotModified, nil
 		}
 	case push.CompareChunkPushAction:
-		if h.compareChunk(dst, offset, chunkHash, chunkSize) {
+		if h.compareChunk(dst, pushData.Chunk.Offset, pushData.Chunk.Hash, chunkSize) {
 			return contract.ChunkNotModified, nil
 		}
 	case push.CompareFileAndChunkPushAction:
 		hv := h.compareHashValues(dst, fileSize, chunkSize, hvs)
 		if hv != nil && hv.Offset == fileSize {
-			return contract.NotModified, hv
+			return contract.NotModified, nil
 		} else if hv != nil {
 			return contract.ChunkNotModified, hv
 		}
@@ -256,6 +269,13 @@ func (h *pushHandler) compare(pushAction push.PushAction, dst string, offset int
 		return contract.ChunkModified, nil
 	}
 	return contract.Modified, nil
+}
+
+func (h *pushHandler) quickCompare(sourceSize, destSize int64, sourceUnixModTime, destUnixModTime int64, forceChecksum bool) (equal bool) {
+	if !forceChecksum && sourceSize == destSize && sourceUnixModTime == destUnixModTime {
+		return true
+	}
+	return false
 }
 
 // compareFile compare file size and hash value

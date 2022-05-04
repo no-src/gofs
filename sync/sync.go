@@ -30,13 +30,13 @@ type Sync interface {
 }
 
 // NewSync auto create an instance of the expected sync according to source and dest
-func NewSync(source core.VFS, dest core.VFS, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, checkpointCount int) (Sync, error) {
+func NewSync(source core.VFS, dest core.VFS, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool) (Sync, error) {
 	if source.IsDisk() && dest.IsDisk() {
-		return NewDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount)
+		return NewDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum)
 	} else if source.Is(core.RemoteDisk) {
-		return NewRemoteSync(source, dest, enableTLS, certFile, keyFile, users, enableLogicallyDelete, chunkSize, checkpointCount)
+		return NewRemoteSync(source, dest, enableTLS, certFile, keyFile, users, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum)
 	} else if dest.Is(core.RemoteDisk) {
-		return NewPushClientSync(source, dest, enableTLS, users, enableLogicallyDelete, chunkSize, checkpointCount)
+		return NewPushClientSync(source, dest, enableTLS, users, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum)
 	}
 	return nil, fmt.Errorf("file system unsupported ! source=>%s dest=>%s", source.Type().String(), dest.Type().String())
 }

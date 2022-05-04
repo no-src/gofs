@@ -41,6 +41,7 @@ func parseFlags() {
 	flag.BoolVar(&config.IgnoreDeletedPath, "ignore_deleted", true, "ignore to sync the deleted file")
 	flag.Int64Var(&config.ChunkSize, "chunk_size", 1024*1024, "the chunk size of the big file")
 	flag.IntVar(&config.CheckpointCount, "checkpoint_count", 10, "use the checkpoint in the file to reduce transfer unmodified file chunks")
+	flag.BoolVar(&config.ForceChecksum, "force_checksum", false, "if the file size and file modification time of the source file is equal to the destination file and -force_checksum is false, then ignore the current file transfer")
 
 	// retry
 	flag.IntVar(&config.RetryCount, "retry_count", 15, "if execute failed, then retry to work -retry_count times")

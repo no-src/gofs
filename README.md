@@ -94,6 +94,10 @@ the head and tail. The first checkpoint is equal to the `chunk_size`, it is opti
 the file size, it is required. The checkpoint offset set by the `checkpoint_count` is always more than `chunk_size`,
 unless the file size is less than or equal to `chunk_size`, then the `checkpoint_count` will be zero, so it is optional.
 
+By default, if the file size and file modification time of the source file is equal to the destination file, then ignore
+the current file transfer. You can use the `force_checksum` flag to force enable the checksum to compare whether the
+file is equal or not.
+
 ```bash
 $ gofs -source=./source -dest=./dest
 ```
@@ -176,6 +180,9 @@ like [Sync Once](#sync-once).
 
 Use the `sync_cron` flag to sync the whole path from remote disk server to local dest directory with cron,
 like [Sync Cron](#sync-cron).
+
+Use the `force_checksum` flag to force enable the checksum to compare whether the file is equal or not,
+like [Local Disk](#local-disk).
 
 The `source` flag detail see [Remote Server Source Protocol](#remote-server-source-protocol).
 

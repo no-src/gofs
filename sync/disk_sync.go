@@ -27,11 +27,11 @@ type diskSync struct {
 // NewDiskSync create a diskSync instance
 // source is source path to read
 // dest is dest path to write
-func NewDiskSync(source, dest core.VFS, enableLogicallyDelete bool, chunkSize int64, checkpointCount int) (s Sync, err error) {
-	return newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount)
+func NewDiskSync(source, dest core.VFS, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool) (s Sync, err error) {
+	return newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum)
 }
 
-func newDiskSync(source, dest core.VFS, enableLogicallyDelete bool, chunkSize int64, checkpointCount int) (s *diskSync, err error) {
+func newDiskSync(source, dest core.VFS, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool) (s *diskSync, err error) {
 	if source.IsEmpty() {
 		return nil, errors.New("source is not found")
 	}
@@ -52,7 +52,7 @@ func newDiskSync(source, dest core.VFS, enableLogicallyDelete bool, chunkSize in
 	s = &diskSync{
 		sourceAbsPath:   sourceAbsPath,
 		destAbsPath:     destAbsPath,
-		baseSync:        newBaseSync(source, dest, enableLogicallyDelete),
+		baseSync:        newBaseSync(source, dest, enableLogicallyDelete, forceChecksum),
 		chunkSize:       chunkSize,
 		checkpointCount: checkpointCount,
 	}
@@ -150,6 +150,11 @@ func (s *diskSync) write(path, dest string) error {
 
 	sourceSize := sourceStat.Size()
 	destSize := destStat.Size()
+
+	if s.quickCompare(sourceSize, destSize, sourceStat.ModTime(), destStat.ModTime()) {
+		log.Debug("Write:ignored, the file size and file modification time are both unmodified => %s", path)
+		return nil
+	}
 
 	var offset int64
 	if destSize > 0 && s.compare(sourceFile, sourceSize, dest, &offset) {

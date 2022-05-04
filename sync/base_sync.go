@@ -1,6 +1,8 @@
 package sync
 
 import (
+	"time"
+
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/util/hashutil"
@@ -10,13 +12,15 @@ type baseSync struct {
 	source                core.VFS
 	dest                  core.VFS
 	enableLogicallyDelete bool
+	forceChecksum         bool
 }
 
-func newBaseSync(source, dest core.VFS, enableLogicallyDelete bool) baseSync {
+func newBaseSync(source, dest core.VFS, enableLogicallyDelete bool, forceChecksum bool) baseSync {
 	return baseSync{
 		source:                source,
 		dest:                  dest,
 		enableLogicallyDelete: enableLogicallyDelete,
+		forceChecksum:         forceChecksum,
 	}
 }
 
@@ -45,4 +49,11 @@ func (s *baseSync) compareHashValues(dstPath string, sourceSize int64, sourceHas
 		}
 	}
 	return false, nil
+}
+
+func (s *baseSync) quickCompare(sourceSize, destSize int64, sourceModTime, destModTime time.Time) (equal bool) {
+	if !s.forceChecksum && sourceSize == destSize && sourceModTime == destModTime {
+		return true
+	}
+	return false
 }

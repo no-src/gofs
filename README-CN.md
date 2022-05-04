@@ -89,6 +89,8 @@ cert.pem  key.pem  source  dest
 ，它是可选的。最后一个检查点等于文件大小，这是必需的。由`checkpoint_count`设置的检查点偏移量总是大于`chunk_size`，除非文件大小小于或等于`chunk_size`，那么`checkpoint_count`
 将变为`0`，所以它是可选的
 
+默认情况下，如果源文件的大小和修改时间与目标文件相同，则忽略当前文件的传输。你可以使用`force_checksum`命令行参数强制启用校验和来比较文件是否相等
+
 ```bash
 $ gofs -source=./source -dest=./dest
 ```
@@ -164,6 +166,8 @@ $ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./
 使用`sync_once`命令行参数，可以直接将远程磁盘服务端的文件整个全量同步到本地目标目录，就跟[全量同步](#全量同步)一样
 
 使用`sync_cron`命令行参数，可以定时将远程磁盘服务端的文件整个全量同步到本地目标目录，就跟[定时同步](#定时同步)一样
+
+使用`force_checksum`命令行参数强制启用校验和来比较文件是否相等，就跟[本地磁盘](#本地磁盘)一样
 
 `source`命令行参数详见[远程磁盘服务端数据源协议](#远程磁盘服务端数据源协议)
 

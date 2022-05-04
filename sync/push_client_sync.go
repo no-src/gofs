@@ -46,8 +46,8 @@ type pushClientSync struct {
 }
 
 // NewPushClientSync create an instance of the pushClientSync
-func NewPushClientSync(source, dest core.VFS, enableTLS bool, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, checkpointCount int) (Sync, error) {
-	ds, err := newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount)
+func NewPushClientSync(source, dest core.VFS, enableTLS bool, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool) (Sync, error) {
+	ds, err := newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum)
 	if err != nil {
 		return nil, err
 	}
@@ -324,6 +324,7 @@ func (pcs *pushClientSync) send(act action.Action, path string) (err error) {
 			ATime:      aTime.Unix(),
 			MTime:      mTime.Unix(),
 		},
+		ForceChecksum: pcs.forceChecksum,
 	}
 	return pcs.sendPushData(pd, act, path)
 }

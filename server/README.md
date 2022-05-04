@@ -188,6 +188,8 @@ Request field description:
         - `offset` the offset relative to the origin of the file
         - `size` file chunk size of bytes, directory is always `0`
         - `hash` file chunk hash value
+    - `force_checksum` if the file size and file modification time of the source file is equal to the destination file
+      and force_checksum is `false`, then ignore the current file transfer, default is `false`
 - `up_file` the field name of upload file or chunk
 
 ##### Example
@@ -198,21 +200,21 @@ Upload a file to the remote push server.
 POST https://127.0.0.1/w/push HTTP/1.1
 Host: 127.0.0.1
 User-Agent: Go-http-client/1.1
-Content-Length: 632
-Content-Type: multipart/form-data; boundary=d633162324641d10fc7ed0c03f2632807141c09b2b9e91a5b502b838fae7
-Cookie: session_id=MTY0Nzk3NTMwMnxOd3dBTkU1UlMxb3lObE16VkZaVlZFMVdTa2d5VUV0TlNUZFdXbGRhVlVsSk4wNUhWVXRCVlV4RU0wdFlRVWRKUzFwQ1FqWlhTVUU9fD0l0l5GztC1TeOaR75R_dm90Z2c1q1X7xPPPMO2OPZl
+Content-Length: 674
+Content-Type: multipart/form-data; boundary=d9e3eb63103de1c2698b0675a70567e47bed1b06c71ff9e26199967312d1
+Cookie: session_id=MTY1MTY4MTkxNXxOd3dBTkVkQlZFMUNTVk5UTmsxS00wNVlTbEJMTnpJM1RFWklVVmhQUTBsTlFWaEZUbFZhVjB4VU5UYzJTazFNTWpSRFJFWlpUVUU9fMFwFk6SpF9vVsNcwNe6LnmxVCgshxv-ubZzZbTTDgnq
 Accept-Encoding: gzip
 
---d633162324641d10fc7ed0c03f2632807141c09b2b9e91a5b502b838fae7
+--d9e3eb63103de1c2698b0675a70567e47bed1b06c71ff9e26199967312d1
 Content-Disposition: form-data; name="push_data"
 
-{"action":2,"push_action":4,"file_info":{"path":"hello_gofs.txt","is_dir":0,"size":5,"hash":"5d41402abc4b2a76b9719d911017c592","c_time":1647974350,"a_time":1647975313,"m_time":1647975313},"chunk":{"offset":0,"hash":"5d41402abc4b2a76b9719d911017c592","size":5}}
---d633162324641d10fc7ed0c03f2632807141c09b2b9e91a5b502b838fae7
+{"action":2,"push_action":4,"file_info":{"path":"hello_gofs.txt","is_dir":0,"size":5,"hash":"5d41402abc4b2a76b9719d911017c592","hash_values":null,"c_time":1651681421,"a_time":1651681421,"m_time":1651681421},"chunk":{"offset":0,"hash":"5d41402abc4b2a76b9719d911017c592","size":5},"force_checksum":false}
+--d9e3eb63103de1c2698b0675a70567e47bed1b06c71ff9e26199967312d1
 Content-Disposition: form-data; name="up_file"; filename="hello_gofs.txt"
 Content-Type: application/octet-stream
 
 hello
---d633162324641d10fc7ed0c03f2632807141c09b2b9e91a5b502b838fae7--
+--d9e3eb63103de1c2698b0675a70567e47bed1b06c71ff9e26199967312d1--
 ```
 
 #### Response
