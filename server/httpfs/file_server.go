@@ -31,7 +31,7 @@ func StartFileServer(opt server.Option) error {
 	engine := gin.New()
 	engine.NoRoute(middleware.NoRoute)
 
-	initCompress(engine, opt.EnableCompress)
+	initCompress(engine, opt.EnableFileServerCompress)
 	initDefaultMiddleware(engine, logger)
 	if err := initHTMLTemplate(engine); err != nil {
 		return err
@@ -46,7 +46,7 @@ func StartFileServer(opt server.Option) error {
 	opt.Init.Done()
 
 	if opt.EnableTLS {
-		return engine.RunTLS(opt.Addr, opt.CertFile, opt.KeyFile)
+		return engine.RunTLS(opt.Addr, opt.TLSCertFile, opt.TLSKeyFile)
 	}
 	log.Warn("file server is not a security connection, you need the https replaced maybe!")
 	return engine.Run(opt.Addr)

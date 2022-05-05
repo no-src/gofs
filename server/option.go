@@ -10,45 +10,45 @@ import (
 
 // Option the web server option
 type Option struct {
-	Source                core.VFS
-	Dest                  core.VFS
-	Addr                  string
-	Init                  wait.WaitDone
-	EnableTLS             bool
-	CertFile              string
-	KeyFile               string
-	Users                 []*auth.User
-	EnableCompress        bool
-	Logger                log.Logger
-	EnableManage          bool
-	ManagePrivate         bool
-	EnableLogicallyDelete bool
-	EnablePushServer      bool
-	EnableReport          bool
-	ChunkSize             int64
-	CheckpointCount       int
+	Source                   core.VFS
+	Dest                     core.VFS
+	Addr                     string
+	EnableTLS                bool
+	TLSCertFile              string
+	TLSKeyFile               string
+	EnableFileServerCompress bool
+	EnableManage             bool
+	ManagePrivate            bool
+	EnableLogicallyDelete    bool
+	EnablePushServer         bool
+	EnableReport             bool
+	ChunkSize                int64
+	CheckpointCount          int
+	Init                     wait.WaitDone
+	Users                    []*auth.User
+	Logger                   log.Logger
 }
 
 // NewServerOption create an instance of the Option, store all the web server options
 func NewServerOption(config conf.Config, init wait.WaitDone, users []*auth.User, logger log.Logger) Option {
 	opt := Option{
-		Source:                config.Source,
-		Dest:                  config.Dest,
-		Addr:                  config.FileServerAddr,
-		Init:                  init,
-		EnableTLS:             config.EnableTLS,
-		CertFile:              config.TLSCertFile,
-		KeyFile:               config.TLSKeyFile,
-		Users:                 users,
-		EnableCompress:        config.EnableFileServerCompress,
-		Logger:                logger,
-		EnableManage:          config.EnableManage,
-		ManagePrivate:         config.ManagePrivate,
-		EnableLogicallyDelete: config.EnableLogicallyDelete,
-		EnablePushServer:      config.EnablePushServer,
-		EnableReport:          config.EnableReport,
-		ChunkSize:             config.ChunkSize,
-		CheckpointCount:       config.CheckpointCount,
+		Source:                   config.Source,
+		Dest:                     config.Dest,
+		Addr:                     config.FileServerAddr,
+		EnableTLS:                config.EnableTLS,
+		TLSCertFile:              config.TLSCertFile,
+		TLSKeyFile:               config.TLSKeyFile,
+		EnableFileServerCompress: config.EnableFileServerCompress,
+		EnableManage:             config.EnableManage,
+		ManagePrivate:            config.ManagePrivate,
+		EnableLogicallyDelete:    config.EnableLogicallyDelete,
+		EnablePushServer:         config.EnablePushServer,
+		EnableReport:             config.EnableReport,
+		ChunkSize:                config.ChunkSize,
+		CheckpointCount:          config.CheckpointCount,
+		Init:                     init,
+		Users:                    users,
+		Logger:                   logger,
 	}
 	return opt
 }
