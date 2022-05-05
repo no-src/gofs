@@ -23,10 +23,8 @@ import (
 type remoteServerSync struct {
 	diskSync
 
-	server          tran.Server
-	serverAddr      string
-	chunkSize       int64
-	checkpointCount int
+	server     tran.Server
+	serverAddr string
 }
 
 // NewRemoteServerSync create an instance of remoteServerSync execute send file change message
@@ -37,9 +35,7 @@ func NewRemoteServerSync(source, dest core.VFS, enableTLS bool, certFile string,
 	}
 
 	rs := &remoteServerSync{
-		diskSync:        *ds,
-		chunkSize:       chunkSize,
-		checkpointCount: checkpointCount,
+		diskSync: *ds,
 	}
 	rs.server = tran.NewServer(source.Host(), source.Port(), enableTLS, certFile, keyFile, users)
 

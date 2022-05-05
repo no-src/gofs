@@ -30,9 +30,6 @@ import (
 type pushClientSync struct {
 	diskSync
 
-	source          core.VFS
-	dest            core.VFS
-	sourceAbsPath   string
 	pushAddr        string
 	cookies         []*http.Cookie
 	currentUser     *auth.User
@@ -40,38 +37,26 @@ type pushClientSync struct {
 	client          tran.Client
 	authChan        chan contract.Status
 	infoChan        chan contract.Message
-	chunkSize       int64
-	checkpointCount int
 	timeout         time.Duration
 }
 
 // NewPushClientSync create an instance of the pushClientSync
 func NewPushClientSync(source, dest core.VFS, enableTLS bool, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool) (Sync, error) {
+	if chunkSize <= 0 {
+		return nil, errors.New("chunk size must greater than zero")
+	}
+
 	ds, err := newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum)
 	if err != nil {
 		return nil, err
 	}
 
-	sourceAbsPath, err := source.Abs()
-	if err != nil {
-		return nil, err
-	}
-
-	if chunkSize <= 0 {
-		return nil, errors.New("chunk size must greater than zero")
-	}
-
 	s := &pushClientSync{
-		source:          source,
-		dest:            dest,
-		sourceAbsPath:   sourceAbsPath,
-		diskSync:        *ds,
-		client:          tran.NewClient(dest.Host(), dest.Port(), enableTLS),
-		authChan:        make(chan contract.Status, 100),
-		infoChan:        make(chan contract.Message, 100),
-		chunkSize:       chunkSize,
-		checkpointCount: checkpointCount,
-		timeout:         time.Minute * 3,
+		diskSync: *ds,
+		client:   tran.NewClient(dest.Host(), dest.Port(), enableTLS),
+		authChan: make(chan contract.Status, 100),
+		infoChan: make(chan contract.Message, 100),
+		timeout:  time.Minute * 3,
 	}
 
 	if len(users) > 0 {
@@ -260,14 +245,6 @@ func (pcs *pushClientSync) SyncOnce(path string) error {
 		}
 		return err
 	})
-}
-
-func (pcs *pushClientSync) Source() core.VFS {
-	return pcs.source
-}
-
-func (pcs *pushClientSync) Dest() core.VFS {
-	return pcs.dest
 }
 
 func (pcs *pushClientSync) send(act action.Action, path string) (err error) {
