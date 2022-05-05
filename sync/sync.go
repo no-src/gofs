@@ -3,7 +3,6 @@ package sync
 import (
 	"fmt"
 
-	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/core"
 )
 
@@ -30,13 +29,13 @@ type Sync interface {
 }
 
 // NewSync auto create an instance of the expected sync according to source and dest
-func NewSync(source core.VFS, dest core.VFS, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool) (Sync, error) {
-	if source.IsDisk() && dest.IsDisk() {
-		return NewDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum)
-	} else if source.Is(core.RemoteDisk) {
-		return NewRemoteSync(source, dest, enableTLS, certFile, keyFile, users, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum)
-	} else if dest.Is(core.RemoteDisk) {
-		return NewPushClientSync(source, dest, enableTLS, users, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum)
+func NewSync(opt Option) (Sync, error) {
+	if opt.Source.IsDisk() && opt.Dest.IsDisk() {
+		return NewDiskSync(opt.Source, opt.Dest, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum)
+	} else if opt.Source.Is(core.RemoteDisk) {
+		return NewRemoteSync(opt.Source, opt.Dest, opt.EnableTLS, opt.TLSCertFile, opt.TLSKeyFile, opt.Users, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum)
+	} else if opt.Dest.Is(core.RemoteDisk) {
+		return NewPushClientSync(opt.Source, opt.Dest, opt.EnableTLS, opt.Users, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum)
 	}
-	return nil, fmt.Errorf("file system unsupported ! source=>%s dest=>%s", source.Type().String(), dest.Type().String())
+	return nil, fmt.Errorf("file system unsupported ! source=>%s dest=>%s", opt.Source.Type().String(), opt.Dest.Type().String())
 }
