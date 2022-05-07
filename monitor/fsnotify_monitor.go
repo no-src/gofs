@@ -28,7 +28,7 @@ type fsNotifyMonitor struct {
 }
 
 // NewFsNotifyMonitor create an instance of fsNotifyMonitor to monitor the disk change
-func NewFsNotifyMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, eventWriter io.Writer) (m Monitor, err error) {
+func NewFsNotifyMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration) (m Monitor, err error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func NewFsNotifyMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, even
 	}
 	m = &fsNotifyMonitor{
 		watcher:     watcher,
-		baseMonitor: newBaseMonitor(syncer, retry, syncOnce, eventWriter),
+		baseMonitor: newBaseMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime),
 		events:      clist.New(),
 	}
 	return m, nil
@@ -134,11 +134,14 @@ func (m *fsNotifyMonitor) startReceiveEvents() error {
 // startProcessEvents start loop to process all file change events
 func (m *fsNotifyMonitor) startProcessEvents() error {
 	for {
+		m.waitSyncDelay(m.events.Len)
+
 		element := m.events.Front()
 		if element == nil || element.Value == nil {
 			if element != nil {
 				m.events.Remove(element)
 			}
+			m.resetSyncDelay()
 			<-time.After(time.Second)
 			continue
 		}

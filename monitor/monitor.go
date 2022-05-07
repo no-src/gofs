@@ -3,6 +3,7 @@ package monitor
 import (
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/core"
@@ -26,14 +27,14 @@ type Monitor interface {
 // syncer a Sync component
 // retry a Retry component
 // syncOnce tag a sync once command, the sync once command will execute when call the Start
-func NewMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, enableTLS bool, users []*auth.User, eventWriter io.Writer) (Monitor, error) {
+func NewMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, enableTLS bool, users []*auth.User, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration) (Monitor, error) {
 	source := syncer.Source()
 	if source.IsDisk() {
-		return NewFsNotifyMonitor(syncer, retry, syncOnce, eventWriter)
+		return NewFsNotifyMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime)
 	} else if source.Is(core.RemoteDisk) && source.Server() {
-		return NewRemoteServerMonitor(syncer, retry, syncOnce, eventWriter)
+		return NewRemoteServerMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime)
 	} else if source.Is(core.RemoteDisk) && !source.Server() {
-		return NewRemoteClientMonitor(syncer, retry, syncOnce, source.Host(), source.Port(), enableTLS, users, eventWriter)
+		return NewRemoteClientMonitor(syncer, retry, syncOnce, source.Host(), source.Port(), enableTLS, users, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime)
 	}
 	return nil, fmt.Errorf("file system unsupported ! source=>%s", source.Type().String())
 }

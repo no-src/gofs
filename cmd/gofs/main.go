@@ -222,7 +222,7 @@ func initMonitor(userList []*auth.User, eventLogger log.Logger) (monitor.Monitor
 	r := retry.New(config.RetryCount, config.RetryWait.Duration(), config.RetryAsync)
 
 	// create monitor
-	m, err := monitor.NewMonitor(syncer, r, config.SyncOnce, config.EnableTLS, userList, eventLogger)
+	m, err := monitor.NewMonitor(syncer, r, config.SyncOnce, config.EnableTLS, userList, eventLogger, config.EnableSyncDelay, config.SyncDelayEvents, config.SyncDelayTime.Duration())
 	if err != nil {
 		log.Error(err, "create the instance of Monitor error")
 		return nil, err

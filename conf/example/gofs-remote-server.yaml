@@ -9,6 +9,9 @@ ignore_deleted: true
 chunk_size: 1048576
 checkpoint_count: 10
 force_checksum: false
+sync_delay: false
+sync_delay_events: 10
+sync_delay_time: 30s
 retry_count: 15
 retry_wait: 5s
 retry_async: false

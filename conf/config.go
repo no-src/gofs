@@ -24,6 +24,11 @@ type Config struct {
 	CheckpointCount       int      `json:"checkpoint_count" yaml:"checkpoint_count"`
 	ForceChecksum         bool     `json:"force_checksum" yaml:"force_checksum"`
 
+	// file monitor
+	EnableSyncDelay bool          `json:"sync_delay" yaml:"sync_delay"`
+	SyncDelayEvents int           `json:"sync_delay_events" yaml:"sync_delay_events"`
+	SyncDelayTime   core.Duration `json:"sync_delay_time" yaml:"sync_delay_time"`
+
 	// retry
 	RetryCount int           `json:"retry_count" yaml:"retry_count"`
 	RetryWait  core.Duration `json:"retry_wait" yaml:"retry_wait"`

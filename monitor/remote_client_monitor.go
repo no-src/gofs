@@ -39,7 +39,7 @@ type remoteClientMonitor struct {
 }
 
 // NewRemoteClientMonitor create an instance of remoteClientMonitor to monitor the remote file change
-func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, host string, port int, enableTLS bool, users []*auth.User, eventWriter io.Writer) (Monitor, error) {
+func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, host string, port int, enableTLS bool, users []*auth.User, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration) (Monitor, error) {
 	if syncer == nil {
 		err := errors.New("syncer can't be nil")
 		return nil, err
@@ -47,7 +47,7 @@ func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, 
 	m := &remoteClientMonitor{
 		client:      tran.NewClient(host, port, enableTLS),
 		messages:    clist.New(),
-		baseMonitor: newBaseMonitor(syncer, retry, syncOnce, eventWriter),
+		baseMonitor: newBaseMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime),
 		authChan:    make(chan contract.Status, 100),
 		infoChan:    make(chan contract.Message, 100),
 		closed:      cbool.New(false),
@@ -243,11 +243,14 @@ func (m *remoteClientMonitor) parseMessage(data []byte) error {
 // startProcessMessage start loop to process the file change messages
 func (m *remoteClientMonitor) startProcessMessage() {
 	for {
+		m.waitSyncDelay(m.messages.Len)
+
 		element := m.messages.Front()
 		if element == nil || element.Value == nil {
 			if element != nil {
 				m.messages.Remove(element)
 			}
+			m.resetSyncDelay()
 			<-time.After(time.Second)
 			continue
 		}

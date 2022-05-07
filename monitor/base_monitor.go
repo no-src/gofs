@@ -19,32 +19,42 @@ import (
 )
 
 type baseMonitor struct {
-	syncer      nssync.Sync
-	retry       retry.Retry
-	writeMap    map[string]*writeMessage
-	writeList   writeMessageList
-	writeChan   chan *writeMessage
-	writeNotify chan bool
-	mu          sync.Mutex
-	syncSpec    string
-	cronChan    chan bool
-	shutdown    chan bool
-	syncOnce    bool
-	el          eventlog.EventLog
+	syncer          nssync.Sync
+	retry           retry.Retry
+	writeMap        map[string]*writeMessage
+	writeList       writeMessageList
+	writeChan       chan *writeMessage
+	writeNotify     chan bool
+	mu              sync.Mutex
+	syncSpec        string
+	cronChan        chan bool
+	shutdown        chan bool
+	syncOnce        bool
+	el              eventlog.EventLog
+	enableSyncDelay bool
+	syncDelayEvents int
+	syncDelayTime   time.Duration
+	lastSyncTime    time.Time
+	syncing         bool
 }
 
-func newBaseMonitor(syncer nssync.Sync, retry retry.Retry, syncOnce bool, eventWriter io.Writer) baseMonitor {
-	return baseMonitor{
-		syncer:      syncer,
-		retry:       retry,
-		writeMap:    make(map[string]*writeMessage),
-		writeChan:   make(chan *writeMessage, 100),
-		writeNotify: make(chan bool, 100),
-		cronChan:    make(chan bool, 1),
-		shutdown:    make(chan bool, 1),
-		syncOnce:    syncOnce,
-		el:          eventlog.New(eventWriter),
+func newBaseMonitor(syncer nssync.Sync, retry retry.Retry, syncOnce bool, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration) baseMonitor {
+	m := baseMonitor{
+		syncer:          syncer,
+		retry:           retry,
+		writeMap:        make(map[string]*writeMessage),
+		writeChan:       make(chan *writeMessage, 100),
+		writeNotify:     make(chan bool, 100),
+		cronChan:        make(chan bool, 1),
+		shutdown:        make(chan bool, 1),
+		syncOnce:        syncOnce,
+		el:              eventlog.New(eventWriter),
+		enableSyncDelay: enableSyncDelay,
+		syncDelayEvents: syncDelayEvents,
+		syncDelayTime:   syncDelayTime,
 	}
+	m.resetSyncDelay()
+	return m
 }
 
 // addWrite add or update a write message
@@ -198,4 +208,35 @@ func (m *baseMonitor) Shutdown() (err error) {
 	}()
 	m.shutdown <- true
 	return err
+}
+
+func (m *baseMonitor) waitSyncDelay(eventLenFunc func() int) {
+	for {
+		if m.enableSyncDelay && !m.syncing {
+			currentEvents := eventLenFunc()
+			if currentEvents > 0 {
+				if currentEvents < m.syncDelayEvents && time.Now().Before(m.lastSyncTime.Add(m.syncDelayTime)) {
+					log.Debug("[sync delay] waiting for sync, sync delay time => %s, sync delay events => %d, last sync time => %s, current event count => %d ", m.syncDelayTime, m.syncDelayEvents, m.lastSyncTime, currentEvents)
+					<-time.After(time.Second)
+					continue
+				}
+				log.Debug("[sync delay] starting sync, sync delay time => %s, sync delay events => %d, last sync time => %s, current event count => %d ", m.syncDelayTime, m.syncDelayEvents, m.lastSyncTime, currentEvents)
+				m.syncing = true
+			}
+		}
+		break
+	}
+}
+
+func (m *baseMonitor) resetSyncDelay() {
+	if m.enableSyncDelay {
+		syncing := m.syncing
+		m.lastSyncTime = time.Now()
+		m.syncing = false
+		if syncing {
+			log.Debug("[sync delay] reset sync delay, sync delay time => %s, sync delay events => %d, last sync time => %s ", m.syncDelayTime, m.syncDelayEvents, m.lastSyncTime)
+		}
+	} else {
+		m.syncing = true
+	}
 }
