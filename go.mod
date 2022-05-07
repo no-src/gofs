@@ -8,7 +8,7 @@ require (
 	github.com/gin-contrib/pprof v1.3.0
 	github.com/gin-contrib/sessions v0.0.4
 	github.com/gin-gonic/gin v1.7.7
-	github.com/no-src/log v0.1.2
+	github.com/no-src/log v0.1.3
 	github.com/robfig/cron/v3 v3.0.1
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 )
