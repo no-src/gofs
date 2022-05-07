@@ -29,5 +29,5 @@ jobs:
         run: go test -v -race ./... -coverprofile=coverage.txt -covermode=atomic -timeout=10m
 
       - name: Codecov
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         if: matrix.os == 'ubuntu-latest'
