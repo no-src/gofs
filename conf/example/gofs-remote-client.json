@@ -22,6 +22,7 @@
   "log_flush": true,
   "log_flush_interval": "3s",
   "log_event": false,
+  "log_sample_rate": 1,
   "daemon": false,
   "daemon_pid": false,
   "daemon_delay": "1s",

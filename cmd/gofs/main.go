@@ -166,7 +166,7 @@ func initDefaultLogger() error {
 		loggers = append(loggers, flogger)
 	}
 
-	log.InitDefaultLogger(log.NewMultiLogger(loggers...))
+	log.InitDefaultLoggerWithSample(log.NewMultiLogger(loggers...), config.LogSampleRate)
 	return nil
 }
 

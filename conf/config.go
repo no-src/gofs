@@ -41,6 +41,7 @@ type Config struct {
 	LogFlush         bool          `json:"log_flush" yaml:"log_flush"`
 	LogFlushInterval core.Duration `json:"log_flush_interval" yaml:"log_flush_interval"`
 	EnableEventLog   bool          `json:"log_event" yaml:"log_event"`
+	LogSampleRate    float64       `json:"log_sample_rate" yaml:"log_sample_rate"`
 
 	// daemon
 	IsDaemon           bool          `json:"daemon" yaml:"daemon"`

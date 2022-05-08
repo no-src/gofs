@@ -324,6 +324,9 @@ Use the `log_flush_interval` flag to set the log flush interval duration, defaul
 
 Use the `log_event` flag to enable the event log, write to file, default is `false`.
 
+Use the `log_sample_rate` flag to set the sample rate for the sample logger, and the value ranges from 0 to 1, default
+is `1`.
+
 ```bash
 # set the logger config in "Local Disk" mode
 $ gofs -source=./source -dest=./dest -log_file -log_level=0 -log_dir="./logs/" -log_flush -log_flush_interval=3s -log_event

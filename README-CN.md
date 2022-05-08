@@ -301,6 +301,8 @@ https://127.0.0.1/manage/report
 
 使用`log_event`命令行参数启用事件日志，所有事件都会记录到文件中，默认为禁用
 
+使用`log_sample_rate`命令行参数设置采样日志的采样率，取值范围为0到1，默认值为`1`
+
 ```bash
 # 在"本地磁盘"模式下设置日志信息
 $ gofs -source=./source -dest=./dest -log_file -log_level=0 -log_dir="./logs/" -log_flush -log_flush_interval=3s -log_event

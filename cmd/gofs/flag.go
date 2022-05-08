@@ -60,6 +60,7 @@ func parseFlags() {
 	flag.BoolVar(&config.LogFlush, "log_flush", true, "enable auto flush log with interval")
 	core.DurationVar(&config.LogFlushInterval, "log_flush_interval", time.Second*3, "set the log flush interval duration, you need to enable -log_flush first")
 	flag.BoolVar(&config.EnableEventLog, "log_event", false, "enable the event log")
+	flag.Float64Var(&config.LogSampleRate, "log_sample_rate", 1, "set the sample rate for the sample logger, and the value ranges from 0 to 1")
 
 	// daemon
 	flag.BoolVar(&config.IsDaemon, "daemon", false, "enable daemon to create and monitor a subprocess to work, you can use [go build -ldflags=\"-H windowsgui\"] to build on Windows")
