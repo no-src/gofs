@@ -216,11 +216,11 @@ func (m *baseMonitor) waitSyncDelay(eventLenFunc func() int) {
 			currentEvents := eventLenFunc()
 			if currentEvents > 0 {
 				if currentEvents < m.syncDelayEvents && time.Now().Before(m.lastSyncTime.Add(m.syncDelayTime)) {
-					log.Debug("[sync delay] waiting for sync, sync delay time => %s, sync delay events => %d, last sync time => %s, current event count => %d ", m.syncDelayTime, m.syncDelayEvents, m.lastSyncTime, currentEvents)
+					log.DebugSample("[sync delay] [waiting] sync delay time => %s, sync delay events => %d, last sync time => %s, current event count => %d ", m.syncDelayTime, m.syncDelayEvents, m.lastSyncTime, currentEvents)
 					<-time.After(time.Second)
 					continue
 				}
-				log.Debug("[sync delay] starting sync, sync delay time => %s, sync delay events => %d, last sync time => %s, current event count => %d ", m.syncDelayTime, m.syncDelayEvents, m.lastSyncTime, currentEvents)
+				log.Debug("[sync delay] [starting] sync delay time => %s, sync delay events => %d, last sync time => %s, current event count => %d ", m.syncDelayTime, m.syncDelayEvents, m.lastSyncTime, currentEvents)
 				m.syncing = true
 			}
 		}
@@ -234,7 +234,7 @@ func (m *baseMonitor) resetSyncDelay() {
 		m.lastSyncTime = time.Now()
 		m.syncing = false
 		if syncing {
-			log.Debug("[sync delay] reset sync delay, sync delay time => %s, sync delay events => %d, last sync time => %s ", m.syncDelayTime, m.syncDelayEvents, m.lastSyncTime)
+			log.Debug("[sync delay] [reset] sync delay time => %s, sync delay events => %d, last sync time => %s ", m.syncDelayTime, m.syncDelayEvents, m.lastSyncTime)
 		}
 	} else {
 		m.syncing = true
