@@ -39,7 +39,7 @@ type baseMonitor struct {
 }
 
 func newBaseMonitor(syncer nssync.Sync, retry retry.Retry, syncOnce bool, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration) baseMonitor {
-	m := baseMonitor{
+	return baseMonitor{
 		syncer:          syncer,
 		retry:           retry,
 		writeMap:        make(map[string]*writeMessage),
@@ -52,9 +52,9 @@ func newBaseMonitor(syncer nssync.Sync, retry retry.Retry, syncOnce bool, eventW
 		enableSyncDelay: enableSyncDelay,
 		syncDelayEvents: syncDelayEvents,
 		syncDelayTime:   syncDelayTime,
+		lastSyncTime:    time.Now(),
+		syncing:         !enableSyncDelay,
 	}
-	m.resetSyncDelay()
-	return m
 }
 
 // addWrite add or update a write message
@@ -229,9 +229,9 @@ func (m *baseMonitor) waitSyncDelay(eventLenFunc func() int) {
 }
 
 func (m *baseMonitor) resetSyncDelay() {
+	m.lastSyncTime = time.Now()
 	if m.enableSyncDelay {
 		syncing := m.syncing
-		m.lastSyncTime = time.Now()
 		m.syncing = false
 		if syncing {
 			log.Debug("[sync delay] [reset] sync delay time => %s, sync delay events => %d, last sync time => %s ", m.syncDelayTime, m.syncDelayEvents, m.lastSyncTime)
