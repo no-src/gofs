@@ -91,6 +91,8 @@ cert.pem  key.pem  source  dest
 
 默认情况下，如果源文件的大小和修改时间与目标文件相同，则忽略当前文件的传输。你可以使用`force_checksum`命令行参数强制启用校验和来比较文件是否相等
 
+如果你想要降低同步的频率，你可以使用`sync_delay`命令行参数来启用同步延迟，当事件数量大于等于`sync_delay_events`或者距离上次同步已经等待超过`sync_delay_time`时开始同步
+
 ```bash
 $ gofs -source=./source -dest=./dest
 ```
@@ -150,7 +152,7 @@ $ gofs -source=./source -dest=./dest -server -tls_cert_file=cert.pem -tls_key_fi
 
 注意远程磁盘服务端的用户至少要拥有读权限，例如：`-users="gofs|password|r"`
 
-你可以使用`checkpoint_count`命令行参数就跟[本地磁盘](#本地磁盘)一样
+你可以使用`checkpoint_count`和`sync_delay`命令行参数就跟[本地磁盘](#本地磁盘)一样
 
 ```bash
 # 启动一个远程磁盘服务端
@@ -163,13 +165,15 @@ $ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./
 
 启动一个远程磁盘客户端将远程磁盘服务端的文件变更同步到本地目标目录
 
+`source`命令行参数详见[远程磁盘服务端数据源协议](#远程磁盘服务端数据源协议)
+
 使用`sync_once`命令行参数，可以直接将远程磁盘服务端的文件整个全量同步到本地目标目录，就跟[全量同步](#全量同步)一样
 
 使用`sync_cron`命令行参数，可以定时将远程磁盘服务端的文件整个全量同步到本地目标目录，就跟[定时同步](#定时同步)一样
 
 使用`force_checksum`命令行参数强制启用校验和来比较文件是否相等，就跟[本地磁盘](#本地磁盘)一样
 
-`source`命令行参数详见[远程磁盘服务端数据源协议](#远程磁盘服务端数据源协议)
+你可以使用`sync_delay`命令行参数就跟[本地磁盘](#本地磁盘)一样
 
 ```bash
 # 启动一个远程磁盘客户端
@@ -196,7 +200,7 @@ $ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./
 
 使用`chunk_size`命令行参数来设置大文件上传时切分的区块大小，默认值为`1048576`，即`1MB`
 
-你可以使用`checkpoint_count`命令行参数就跟[本地磁盘](#本地磁盘)一样
+你可以使用`checkpoint_count`和`sync_delay`命令行参数就跟[本地磁盘](#本地磁盘)一样
 
 更多命令行参数用法请参见[远程磁盘客户端](#远程磁盘客户端)
 

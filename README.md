@@ -98,6 +98,10 @@ By default, if the file size and file modification time of the source file is eq
 the current file transfer. You can use the `force_checksum` flag to force enable the checksum to compare whether the
 file is equal or not.
 
+If you want to reduce the frequency of synchronization, you can use the `sync_delay` flag to enable sync delay, start
+sync when the event count is equal or greater than `sync_delay_events`, or wait for `sync_delay_time` interval time
+since the last sync.
+
 ```bash
 $ gofs -source=./source -dest=./dest
 ```
@@ -162,7 +166,7 @@ The `source` flag detail see [Remote Server Source Protocol](#remote-server-sour
 Pay attention to that remote disk server users must have read permission at least, for
 example, `-users="gofs|password|r"`.
 
-You can use the `checkpoint_count` flag like the [Local Disk](#local-disk).
+You can use the `checkpoint_count` and `sync_delay` flags like the [Local Disk](#local-disk).
 
 ```bash
 # Start a remote disk server
@@ -175,6 +179,8 @@ $ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./
 
 Start a remote disk client to sync change files from remote disk server.
 
+The `source` flag detail see [Remote Server Source Protocol](#remote-server-source-protocol).
+
 Use the `sync_once` flag to sync the whole path immediately from remote disk server to local dest directory,
 like [Sync Once](#sync-once).
 
@@ -184,7 +190,7 @@ like [Sync Cron](#sync-cron).
 Use the `force_checksum` flag to force enable the checksum to compare whether the file is equal or not,
 like [Local Disk](#local-disk).
 
-The `source` flag detail see [Remote Server Source Protocol](#remote-server-source-protocol).
+You can use the `sync_delay` flag like the [Local Disk](#local-disk).
 
 ```bash
 # Start a remote disk client
@@ -214,7 +220,7 @@ Start a remote push client to sync change files to the [Remote Push Server](#rem
 Use the `chunk_size` flag to set the chunk size of the big file to upload. The default value of `chunk_size`
 is `1048576`, which means `1MB`.
 
-You can use the `checkpoint_count` flag like the [Local Disk](#local-disk).
+You can use the `checkpoint_count` and `sync_delay` flags like the [Local Disk](#local-disk).
 
 More flag usage see [Remote Disk Client](#remote-disk-client).
 
