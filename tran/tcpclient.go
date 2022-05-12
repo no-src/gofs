@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/tls"
-	"crypto/x509"
 	"errors"
 	"fmt"
 	"io"
@@ -50,21 +49,11 @@ func NewClient(host string, port int, enableTLS bool, certFile string, insecureS
 func (client *tcpClient) Connect() (err error) {
 	address := fmt.Sprintf("%s:%d", client.host, client.port)
 	if client.enableTLS {
-		tlsConfig := &tls.Config{
-			InsecureSkipVerify: client.insecureSkipVerify,
+		var tlsConfig *tls.Config
+		tlsConfig, err = httputil.NewTLSConfig(client.insecureSkipVerify, client.certFile)
+		if err != nil {
+			return err
 		}
-		if !client.insecureSkipVerify {
-			roots := x509.NewCertPool()
-			var pemCerts []byte
-			if pemCerts, err = os.ReadFile(client.certFile); err != nil {
-				return err
-			}
-			if !roots.AppendCertsFromPEM(pemCerts) {
-				return httputil.ErrAppendCertsFromPemFailed
-			}
-			tlsConfig.RootCAs = roots
-		}
-
 		client.innerConn, err = tls.Dial(client.network, address, tlsConfig)
 		// innerConn is not nil whatever err is nil or not
 		if err != nil {

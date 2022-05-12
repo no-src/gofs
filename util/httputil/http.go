@@ -27,8 +27,8 @@ var (
 )
 
 var (
-	// ErrAppendCertsFromPemFailed attempts to parse a series of PEM encoded certificates failed
-	ErrAppendCertsFromPemFailed = errors.New("append certs from pem failed")
+	// errAppendCertsFromPemFailed attempts to parse a series of PEM encoded certificates failed
+	errAppendCertsFromPemFailed = errors.New("append certs from pem failed")
 )
 
 // HttpGet get http resource
@@ -119,8 +119,8 @@ func HttpPostWithoutRedirect(url string, data url.Values) (resp *http.Response, 
 	return noRedirectClient.PostForm(url, data)
 }
 
-// Init init default http util
-func Init(insecureSkipVerify bool, certFile string) error {
+// NewTLSConfig create a tls config
+func NewTLSConfig(insecureSkipVerify bool, certFile string) (*tls.Config, error) {
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: insecureSkipVerify,
 	}
@@ -128,12 +128,21 @@ func Init(insecureSkipVerify bool, certFile string) error {
 		roots := x509.NewCertPool()
 		pemCerts, err := os.ReadFile(certFile)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if !roots.AppendCertsFromPEM(pemCerts) {
-			return ErrAppendCertsFromPemFailed
+			return nil, errAppendCertsFromPemFailed
 		}
 		tlsConfig.RootCAs = roots
+	}
+	return tlsConfig, nil
+}
+
+// Init init default http util
+func Init(insecureSkipVerify bool, certFile string) error {
+	tlsConfig, err := NewTLSConfig(insecureSkipVerify, certFile)
+	if err != nil {
+		return err
 	}
 	defaultTransport = &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
