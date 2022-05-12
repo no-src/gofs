@@ -61,9 +61,10 @@ type Config struct {
 	EnableReport             bool   `json:"report" yaml:"report"`
 
 	// tls transfer
-	EnableTLS   bool   `json:"tls" yaml:"tls"`
-	TLSCertFile string `json:"tls_cert_file" yaml:"tls_cert_file"`
-	TLSKeyFile  string `json:"tls_key_file" yaml:"tls_key_file"`
+	EnableTLS             bool   `json:"tls" yaml:"tls"`
+	TLSCertFile           string `json:"tls_cert_file" yaml:"tls_cert_file"`
+	TLSKeyFile            string `json:"tls_key_file" yaml:"tls_key_file"`
+	TLSInsecureSkipVerify bool   `json:"tls_insecure_skip_verify" yaml:"tls_insecure_skip_verify"`
 
 	// login user
 	Users             string `json:"users" yaml:"users"`

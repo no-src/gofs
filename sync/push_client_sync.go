@@ -41,7 +41,7 @@ type pushClientSync struct {
 }
 
 // NewPushClientSync create an instance of the pushClientSync
-func NewPushClientSync(source, dest core.VFS, enableTLS bool, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool) (Sync, error) {
+func NewPushClientSync(source, dest core.VFS, enableTLS bool, certFile string, insecureSkipVerify bool, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool) (Sync, error) {
 	if chunkSize <= 0 {
 		return nil, errors.New("chunk size must greater than zero")
 	}
@@ -53,7 +53,7 @@ func NewPushClientSync(source, dest core.VFS, enableTLS bool, users []*auth.User
 
 	s := &pushClientSync{
 		diskSync: *ds,
-		client:   tran.NewClient(dest.Host(), dest.Port(), enableTLS),
+		client:   tran.NewClient(dest.Host(), dest.Port(), enableTLS, certFile, insecureSkipVerify),
 		authChan: make(chan contract.Status, 100),
 		infoChan: make(chan contract.Message, 100),
 		timeout:  time.Minute * 3,

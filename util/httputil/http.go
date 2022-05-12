@@ -3,10 +3,13 @@ package httputil
 import (
 	"bytes"
 	"crypto/tls"
+	"crypto/x509"
+	"errors"
 	"mime/multipart"
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -21,6 +24,11 @@ var (
 	defaultClient    = &http.Client{}
 	noRedirectClient = &http.Client{}
 	defaultTransport http.RoundTripper
+)
+
+var (
+	// ErrAppendCertsFromPemFailed attempts to parse a series of PEM encoded certificates failed
+	ErrAppendCertsFromPemFailed = errors.New("append certs from pem failed")
 )
 
 // HttpGet get http resource
@@ -111,7 +119,22 @@ func HttpPostWithoutRedirect(url string, data url.Values) (resp *http.Response, 
 	return noRedirectClient.PostForm(url, data)
 }
 
-func init() {
+// Init init default http util
+func Init(insecureSkipVerify bool, certFile string) error {
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: insecureSkipVerify,
+	}
+	if !insecureSkipVerify {
+		roots := x509.NewCertPool()
+		pemCerts, err := os.ReadFile(certFile)
+		if err != nil {
+			return err
+		}
+		if !roots.AppendCertsFromPEM(pemCerts) {
+			return ErrAppendCertsFromPemFailed
+		}
+		tlsConfig.RootCAs = roots
+	}
 	defaultTransport = &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
@@ -123,13 +146,12 @@ func init() {
 		IdleConnTimeout:       90 * time.Second,
 		TLSHandshakeTimeout:   10 * time.Second,
 		ExpectContinueTimeout: 1 * time.Second,
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
-		},
+		TLSClientConfig:       tlsConfig,
 	}
 	defaultClient.Transport = defaultTransport
 	noRedirectClient.Transport = defaultTransport
 	noRedirectClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		return http.ErrUseLastResponse
 	}
+	return nil
 }

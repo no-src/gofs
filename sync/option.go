@@ -13,6 +13,7 @@ type Option struct {
 	EnableTLS             bool
 	TLSCertFile           string
 	TLSKeyFile            string
+	TLSInsecureSkipVerify bool
 	EnableLogicallyDelete bool
 	ChunkSize             int64
 	CheckpointCount       int
@@ -28,6 +29,7 @@ func NewSyncOption(config conf.Config, users []*auth.User) Option {
 		EnableTLS:             config.EnableTLS,
 		TLSCertFile:           config.TLSCertFile,
 		TLSKeyFile:            config.TLSKeyFile,
+		TLSInsecureSkipVerify: config.TLSInsecureSkipVerify,
 		EnableLogicallyDelete: config.EnableLogicallyDelete,
 		ChunkSize:             config.ChunkSize,
 		CheckpointCount:       config.CheckpointCount,

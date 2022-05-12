@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"io"
@@ -12,17 +13,20 @@ import (
 	"sync"
 
 	"github.com/no-src/gofs/internal/cbool"
+	"github.com/no-src/gofs/util/httputil"
 	"github.com/no-src/log"
 )
 
 type tcpClient struct {
-	network   string
-	host      string
-	port      int
-	innerConn net.Conn
-	closed    *cbool.CBool
-	enableTLS bool
-	mu        sync.Mutex
+	network            string
+	host               string
+	port               int
+	innerConn          net.Conn
+	closed             *cbool.CBool
+	enableTLS          bool
+	certFile           string
+	insecureSkipVerify bool
+	mu                 sync.Mutex
 }
 
 var (
@@ -30,13 +34,15 @@ var (
 )
 
 // NewClient create an instance of tcpClient
-func NewClient(host string, port int, enableTLS bool) Client {
+func NewClient(host string, port int, enableTLS bool, certFile string, insecureSkipVerify bool) Client {
 	client := &tcpClient{
-		host:      host,
-		port:      port,
-		network:   "tcp",
-		closed:    cbool.New(true),
-		enableTLS: enableTLS,
+		host:               host,
+		port:               port,
+		network:            "tcp",
+		closed:             cbool.New(true),
+		enableTLS:          enableTLS,
+		certFile:           certFile,
+		insecureSkipVerify: insecureSkipVerify,
 	}
 	return client
 }
@@ -44,9 +50,22 @@ func NewClient(host string, port int, enableTLS bool) Client {
 func (client *tcpClient) Connect() (err error) {
 	address := fmt.Sprintf("%s:%d", client.host, client.port)
 	if client.enableTLS {
-		client.innerConn, err = tls.Dial(client.network, address, &tls.Config{
-			InsecureSkipVerify: true,
-		})
+		tlsConfig := &tls.Config{
+			InsecureSkipVerify: client.insecureSkipVerify,
+		}
+		if !client.insecureSkipVerify {
+			roots := x509.NewCertPool()
+			var pemCerts []byte
+			if pemCerts, err = os.ReadFile(client.certFile); err != nil {
+				return err
+			}
+			if !roots.AppendCertsFromPEM(pemCerts) {
+				return httputil.ErrAppendCertsFromPemFailed
+			}
+			tlsConfig.RootCAs = roots
+		}
+
+		client.innerConn, err = tls.Dial(client.network, address, tlsConfig)
 		// innerConn is not nil whatever err is nil or not
 		if err != nil {
 			client.innerConn = nil

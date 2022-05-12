@@ -14,6 +14,7 @@ import (
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/httpfs"
 	"github.com/no-src/gofs/sync"
+	"github.com/no-src/gofs/util/httputil"
 	"github.com/no-src/gofs/version"
 	"github.com/no-src/gofs/wait"
 	"github.com/no-src/log"
@@ -52,6 +53,10 @@ func main() {
 	err := initFlags()
 	if err != nil {
 		log.Error(err, "init flags default value error")
+		return
+	}
+
+	if !initHttpUtil() {
 		return
 	}
 
@@ -104,10 +109,7 @@ func main() {
 	defer log.Info("gofs exited")
 	go signal.Notify(m.Shutdown)
 	defer m.Close()
-	err = m.Start()
-	if err != nil {
-		log.Error(err, "start to monitor failed")
-	}
+	log.ErrorIf(m.Start(), "start to monitor failed")
 }
 
 func parseConfig() error {
@@ -222,7 +224,7 @@ func initMonitor(userList []*auth.User, eventLogger log.Logger) (monitor.Monitor
 	r := retry.New(config.RetryCount, config.RetryWait.Duration(), config.RetryAsync)
 
 	// create monitor
-	m, err := monitor.NewMonitor(syncer, r, config.SyncOnce, config.EnableTLS, userList, eventLogger, config.EnableSyncDelay, config.SyncDelayEvents, config.SyncDelayTime.Duration())
+	m, err := monitor.NewMonitor(syncer, r, config.SyncOnce, config.EnableTLS, config.TLSCertFile, config.TLSInsecureSkipVerify, userList, eventLogger, config.EnableSyncDelay, config.SyncDelayEvents, config.SyncDelayTime.Duration())
 	if err != nil {
 		log.Error(err, "create the instance of Monitor error")
 		return nil, err
@@ -234,4 +236,13 @@ func initMonitor(userList []*auth.User, eventLogger log.Logger) (monitor.Monitor
 		return nil, err
 	}
 	return m, nil
+}
+
+// initHttpUtil init default http util
+func initHttpUtil() bool {
+	if err := httputil.Init(config.TLSInsecureSkipVerify, config.TLSCertFile); err != nil {
+		log.Error(err, "init http util error")
+		return false
+	}
+	return true
 }

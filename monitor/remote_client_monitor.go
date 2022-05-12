@@ -39,13 +39,13 @@ type remoteClientMonitor struct {
 }
 
 // NewRemoteClientMonitor create an instance of remoteClientMonitor to monitor the remote file change
-func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, host string, port int, enableTLS bool, users []*auth.User, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration) (Monitor, error) {
+func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, host string, port int, enableTLS bool, certFile string, insecureSkipVerify bool, users []*auth.User, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration) (Monitor, error) {
 	if syncer == nil {
 		err := errors.New("syncer can't be nil")
 		return nil, err
 	}
 	m := &remoteClientMonitor{
-		client:      tran.NewClient(host, port, enableTLS),
+		client:      tran.NewClient(host, port, enableTLS, certFile, insecureSkipVerify),
 		messages:    clist.New(),
 		baseMonitor: newBaseMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime),
 		authChan:    make(chan contract.Status, 100),
