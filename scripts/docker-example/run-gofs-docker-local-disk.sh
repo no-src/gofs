@@ -2,5 +2,7 @@
 
 mkdir -p source dest
 
-docker run -it --rm -v "$PWD":/workspace --name running-gofs-local-disk nosrc/gofs:latest \
-  gofs -source=./source -dest=./dest
+export WORKDIR=/workspace
+
+docker run -it --rm -v "$PWD":"$WORKDIR" --name running-gofs-local-disk nosrc/gofs:latest \
+  gofs -source="$WORKDIR/source" -dest="$WORKDIR/dest"
