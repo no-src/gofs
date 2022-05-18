@@ -39,7 +39,7 @@
   "tls": true,
   "tls_cert_file": "cert.pem",
   "tls_key_file": "key.pem",
-  "tls_insecure_skip_verify": false,
+  "tls_insecure_skip_verify": true,
   "users": "gofs|password|rwx",
   "rand_user_count": 0,
   "rand_user_len": 6,

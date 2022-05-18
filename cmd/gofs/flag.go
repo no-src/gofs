@@ -83,7 +83,7 @@ func parseFlags() {
 	flag.BoolVar(&config.EnableTLS, "tls", true, fmt.Sprintf("enable the tls connections, if disable it, server_addr is \"%s\" default", server.DefaultAddrHttp))
 	flag.StringVar(&config.TLSCertFile, "tls_cert_file", "gofs.pem", "cert file for tls connections")
 	flag.StringVar(&config.TLSKeyFile, "tls_key_file", "gofs.key", "key file for tls connections")
-	flag.BoolVar(&config.TLSInsecureSkipVerify, "tls_insecure_skip_verify", false, "controls whether a client verifies the server's certificate chain and host name")
+	flag.BoolVar(&config.TLSInsecureSkipVerify, "tls_insecure_skip_verify", true, "controls whether a client skip verifies the server's certificate chain and host name")
 
 	// login user
 	flag.StringVar(&config.Users, "users", "", "the server accounts, the server allows anonymous access if there is no effective account, format like this, user1|password1|rwx,user2|password2|rwx")
