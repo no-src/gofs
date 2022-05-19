@@ -35,6 +35,8 @@ manage: false
 manage_private: true
 push_server: false
 report: false
+session_mode: 1
+session_connection: ""
 tls: true
 tls_cert_file: cert.pem
 tls_key_file: key.pem

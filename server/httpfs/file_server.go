@@ -36,7 +36,7 @@ func StartFileServer(opt server.Option) error {
 	if err := initHTMLTemplate(engine); err != nil {
 		return err
 	}
-	if err := initSession(engine); err != nil {
+	if err := initSession(engine, opt.SessionMode, opt.SessionConnection); err != nil {
 		return err
 	}
 	initRoute(engine, opt, logger)
@@ -61,8 +61,8 @@ func initEnvGinMode() {
 	gin.SetMode(mode)
 }
 
-func initSession(engine *gin.Engine) error {
-	store, err := server.DefaultSessionStore()
+func initSession(engine *gin.Engine, sessionMode int, sessionConnection string) error {
+	store, err := server.NewSessionStore(sessionMode, sessionConnection)
 	if err != nil {
 		return err
 	}

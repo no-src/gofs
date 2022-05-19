@@ -59,6 +59,8 @@ type Config struct {
 	ManagePrivate            bool   `json:"manage_private" yaml:"manage_private"`
 	EnablePushServer         bool   `json:"push_server" yaml:"push_server"`
 	EnableReport             bool   `json:"report" yaml:"report"`
+	SessionMode              int    `json:"session_mode" yaml:"session_mode"`
+	SessionConnection        string `json:"session_connection" yaml:"session_connection"`
 
 	// tls transfer
 	EnableTLS             bool   `json:"tls" yaml:"tls"`
