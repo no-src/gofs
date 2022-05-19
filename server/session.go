@@ -65,7 +65,7 @@ func parseRedisConnection(redisUrl string) (maxIdle int, network, address, passw
 		if err != nil {
 			err = fmt.Errorf("invalid redis max idle => %d", maxIdle)
 			return
-		} else if maxIdle < 0 {
+		} else if maxIdle <= 0 {
 			err = fmt.Errorf("invalid redis max idle => %d, max idle must be greater than zero", maxIdle)
 			return
 		}
