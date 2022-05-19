@@ -44,19 +44,7 @@ func main() {
 		return
 	}
 
-	// init ignore config
-	if err := ignore.Init(config.IgnoreConf, config.IgnoreDeletedPath); err != nil {
-		log.Error(err, "init ignore config error")
-		return
-	}
-
-	err := initFlags()
-	if err != nil {
-		log.Error(err, "init flags default value error")
-		return
-	}
-
-	if !initHttpUtil() {
+	if initial() {
 		return
 	}
 
@@ -89,7 +77,9 @@ func main() {
 	defer webLogger.Close()
 
 	// start a file web server
-	startWebServer(webLogger, userList)
+	if startWebServer(webLogger, userList) {
+		return
+	}
 
 	// init the event log
 	eventLogger, err := initEventLogger()
@@ -187,14 +177,17 @@ func initWebServerLogger() (log.Logger, error) {
 }
 
 // startWebServer start a file web server
-func startWebServer(webLogger log.Logger, userList []*auth.User) {
+func startWebServer(webLogger log.Logger, userList []*auth.User) (exit bool) {
 	if config.EnableFileServer {
 		waitInit := wait.NewWaitDone()
 		go func() {
 			log.ErrorIf(httpfs.StartFileServer(server.NewServerOption(config, waitInit, userList, webLogger)), "start the file server [%s] error", config.FileServerAddr)
 		}()
-		waitInit.Wait()
+		if waitInit.Wait() != nil {
+			return true
+		}
 	}
+	return false
 }
 
 // initEventLogger init the event logger
@@ -238,11 +231,16 @@ func initMonitor(userList []*auth.User, eventLogger log.Logger) (monitor.Monitor
 	return m, nil
 }
 
-// initHttpUtil init default http util
-func initHttpUtil() bool {
-	if err := httputil.Init(config.TLSInsecureSkipVerify, config.TLSCertFile); err != nil {
-		log.Error(err, "init http util error")
-		return false
+func initial() (exit bool) {
+	// init ignore config
+	if log.ErrorIf(ignore.Init(config.IgnoreConf, config.IgnoreDeletedPath), "init ignore config error") != nil {
+		return true
 	}
-	return true
+
+	if log.ErrorIf(initFlags(), "init flags default value error") != nil {
+		return true
+	}
+
+	// init default http util
+	return log.ErrorIf(httputil.Init(config.TLSInsecureSkipVerify, config.TLSCertFile), "init http util error") != nil
 }

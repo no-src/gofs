@@ -34,9 +34,11 @@ func StartFileServer(opt server.Option) error {
 	initCompress(engine, opt.EnableFileServerCompress)
 	initDefaultMiddleware(engine, logger)
 	if err := initHTMLTemplate(engine); err != nil {
+		opt.Init.DoneWithError(err)
 		return err
 	}
 	if err := initSession(engine, opt.SessionMode, opt.SessionConnection); err != nil {
+		opt.Init.DoneWithError(err)
 		return err
 	}
 	initRoute(engine, opt, logger)
