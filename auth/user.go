@@ -44,8 +44,8 @@ func (user *User) Perm() Perm {
 
 // ToHashUser convert User to HashUser
 func (user *User) ToHashUser() (hashUser *HashUser) {
-	userNameHash := hashutil.MD5FromString(user.userName)
-	passwordHash := hashutil.MD5FromString(user.password)
+	userNameHash := hashutil.HashFromString(user.userName)
+	passwordHash := hashutil.HashFromString(user.password)
 	hashUser = NewHashUser(userNameHash[:userNameHashLength], passwordHash[:passwordHashLength], user.Perm())
 	return hashUser
 }

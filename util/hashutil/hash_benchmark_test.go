@@ -2,36 +2,36 @@ package hashutil
 
 import "testing"
 
-func BenchmarkMD5FromFileName(b *testing.B) {
+func BenchmarkHashFromFileName(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := MD5FromFileName(testFilePath)
+		_, err := HashFromFileName(testFilePath)
 		if err != nil {
-			b.Errorf("test MD5FromFileName error =>%v", err)
+			b.Errorf("test HashFromFileName error =>%v", err)
 		}
 	}
 }
 
-func BenchmarkCheckpointsMD5FromFileName_OnlyEntireFile(b *testing.B) {
-	benchmarkCheckpointsMD5FromFileName(b, 0, 0)
+func BenchmarkCheckpointsHashFromFileName_OnlyEntireFile(b *testing.B) {
+	benchmarkCheckpointsHashFromFileName(b, 0, 0)
 }
 
-func BenchmarkCheckpointsMD5FromFileName(b *testing.B) {
-	benchmarkCheckpointsMD5FromFileName(b, 1024, 10)
+func BenchmarkCheckpointsHashFromFileName(b *testing.B) {
+	benchmarkCheckpointsHashFromFileName(b, 1024, 10)
 }
 
-func BenchmarkCheckpointsMD5FromFileName_WithDefaultChunkSize(b *testing.B) {
-	benchmarkCheckpointsMD5FromFileName(b, defaultChunkSize, 10)
+func BenchmarkCheckpointsHashFromFileName_WithDefaultChunkSize(b *testing.B) {
+	benchmarkCheckpointsHashFromFileName(b, defaultChunkSize, 10)
 }
 
-func benchmarkCheckpointsMD5FromFileName(b *testing.B, chunkSize int64, checkpointCount int) {
+func benchmarkCheckpointsHashFromFileName(b *testing.B, chunkSize int64, checkpointCount int) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := CheckpointsMD5FromFileName(testFilePath, chunkSize, checkpointCount)
+		_, err := CheckpointsHashFromFileName(testFilePath, chunkSize, checkpointCount)
 		if err != nil {
-			b.Errorf("benchmark test CheckpointsMD5FromFileName error chunkSize=%d checkpointCount=%d =>%v", chunkSize, checkpointCount, err)
+			b.Errorf("benchmark test CheckpointsHashFromFileName error chunkSize=%d checkpointCount=%d =>%v", chunkSize, checkpointCount, err)
 		}
 	}
 }

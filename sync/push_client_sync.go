@@ -397,7 +397,7 @@ func (pcs *pushClientSync) sendChunkRequest(path string, pd *push.PushData, offs
 	pd.Chunk.Offset = *offset
 	pd.Chunk.Size = int64(chunkSize)
 	if *checkChunkHash {
-		pd.Chunk.Hash = hashutil.MD5(chunk[:chunkSize])
+		pd.Chunk.Hash = hashutil.Hash(chunk[:chunkSize])
 	}
 
 	resp, err := pcs.httpPostWithAuth(pcs.pushAddr, action.WriteAction, push.ParamUpFile, path, *pd, chunk[:n])

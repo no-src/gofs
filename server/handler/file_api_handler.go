@@ -111,13 +111,13 @@ func (h *fileApiHandler) readDir(f http.File, needHash bool, needCheckpoint bool
 		if !file.IsDir() && (needHash || needCheckpoint) {
 			if cf, err := h.root.Open(filepath.ToSlash(filepath.Join(path, file.Name()))); err == nil {
 				if needCheckpoint {
-					hvs, _ = hashutil.CheckpointsMD5FromFile(cf.(*os.File), h.chunkSize, h.checkpointCount)
+					hvs, _ = hashutil.CheckpointsHashFromFile(cf.(*os.File), h.chunkSize, h.checkpointCount)
 				}
 				if needHash {
 					if len(hvs) > 0 {
 						hash = hvs.Last().Hash
 					} else {
-						hash, _ = hashutil.MD5FromFile(cf)
+						hash, _ = hashutil.HashFromFile(cf)
 					}
 				}
 				cf.Close()

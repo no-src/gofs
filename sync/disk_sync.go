@@ -202,7 +202,7 @@ func (s *diskSync) write(path, dest string) error {
 }
 
 func (s *diskSync) compare(sourceFile *os.File, sourceSize int64, dest string, offset *int64) (equal bool) {
-	hvs, _ := hashutil.CheckpointsMD5FromFile(sourceFile, s.chunkSize, s.checkpointCount)
+	hvs, _ := hashutil.CheckpointsHashFromFile(sourceFile, s.chunkSize, s.checkpointCount)
 	if len(hvs) > 0 && hvs.Last().Offset == sourceSize {
 		// if source and dest is the same file, ignore the following steps and return directly
 		equal, hv := s.compareHashValues(dest, sourceSize, hvs.Last().Hash, s.chunkSize, hvs)
@@ -310,7 +310,7 @@ func (s *diskSync) getFileSizeAndHashCheckpoints(path string, chunkSize int64, c
 	}
 	size = fileInfo.Size()
 	if size > 0 {
-		hvs, err = hashutil.CheckpointsMD5FromFileName(path, chunkSize, checkpointCount)
+		hvs, err = hashutil.CheckpointsHashFromFileName(path, chunkSize, checkpointCount)
 		if err != nil {
 			return size, hash, hvs, err
 		}

@@ -2,7 +2,6 @@ package hashutil
 
 import (
 	"bufio"
-	"crypto/md5"
 	"encoding/hex"
 	"errors"
 	"io"
@@ -19,13 +18,13 @@ const (
 	defaultChunkSize = 4096
 )
 
-// MD5FromFile calculate the hash value of the file
+// HashFromFile calculate the hash value of the file
 // If you reuse the file reader, please set its offset to start position first, like os.File.Seek
-func MD5FromFile(file io.Reader) (hash string, err error) {
+func HashFromFile(file io.Reader) (hash string, err error) {
 	if file == nil {
 		return hash, errNilFile
 	}
-	h := md5.New()
+	h := New()
 	reader := bufio.NewReader(file)
 	_, err = reader.WriteTo(h)
 	if err != nil {
@@ -36,18 +35,18 @@ func MD5FromFile(file io.Reader) (hash string, err error) {
 	return hash, nil
 }
 
-// MD5FromFileName calculate the hash value of the file
-func MD5FromFileName(path string) (hash string, err error) {
+// HashFromFileName calculate the hash value of the file
+func HashFromFileName(path string) (hash string, err error) {
 	f, err := open(path)
 	if err != nil {
 		return hash, err
 	}
 	defer f.Close()
-	return MD5FromFile(f)
+	return HashFromFile(f)
 }
 
-// MD5FromFileChunk calculate the hash value of the file chunk
-func MD5FromFileChunk(path string, offset int64, chunkSize int64) (hash string, err error) {
+// HashFromFileChunk calculate the hash value of the file chunk
+func HashFromFileChunk(path string, offset int64, chunkSize int64) (hash string, err error) {
 	f, err := open(path)
 	if err != nil {
 		return hash, err
@@ -61,38 +60,38 @@ func MD5FromFileChunk(path string, offset int64, chunkSize int64) (hash string, 
 	if err != nil {
 		return hash, err
 	}
-	return MD5(chunk[:n]), nil
+	return Hash(chunk[:n]), nil
 }
 
-// MD5 calculate the hash value of the bytes
-func MD5(bytes []byte) (hash string) {
-	h := md5.New()
+// Hash calculate the hash value of the bytes
+func Hash(bytes []byte) (hash string) {
+	h := New()
 	h.Write(bytes)
 	sum := h.Sum(nil)
 	hash = hex.EncodeToString(sum)
 	return hash
 }
 
-// MD5FromString calculate the hash value of the string
-func MD5FromString(s string) (hash string) {
-	return MD5([]byte(s))
+// HashFromString calculate the hash value of the string
+func HashFromString(s string) (hash string) {
+	return Hash([]byte(s))
 }
 
-// CheckpointsMD5FromFileName calculate the hash value of the entire file and first chunk and some checkpoints
+// CheckpointsHashFromFileName calculate the hash value of the entire file and first chunk and some checkpoints
 // the first chunk hash is optional
 // the checkpoint hash is optional
 // the entire file hash is required
-func CheckpointsMD5FromFileName(path string, chunkSize int64, checkpointCount int) (hvs HashValues, err error) {
+func CheckpointsHashFromFileName(path string, chunkSize int64, checkpointCount int) (hvs HashValues, err error) {
 	f, err := open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
-	return CheckpointsMD5FromFile(f, chunkSize, checkpointCount)
+	return CheckpointsHashFromFile(f, chunkSize, checkpointCount)
 }
 
-// CheckpointsMD5FromFile calculate the hash value of the entire file and first chunk and some checkpoints
-func CheckpointsMD5FromFile(f *os.File, chunkSize int64, checkpointCount int) (hvs HashValues, err error) {
+// CheckpointsHashFromFile calculate the hash value of the entire file and first chunk and some checkpoints
+func CheckpointsHashFromFile(f *os.File, chunkSize int64, checkpointCount int) (hvs HashValues, err error) {
 	stat, err := f.Stat()
 	if err != nil {
 		return nil, err
@@ -152,7 +151,7 @@ func calcHashValuesWithFile(f *os.File, chunkSize int64, hvs HashValues) error {
 	if len(hvs) == 0 {
 		return nil
 	}
-	h := md5.New()
+	h := New()
 	var writeLen int64
 	hvi := 0
 	hv := hvs[0]
@@ -202,7 +201,7 @@ func CompareHashValuesWithFileName(path string, chunkSize int64, hvs HashValues)
 	if len(hvs) == 0 {
 		return nil, nil
 	}
-	h := md5.New()
+	h := New()
 	var writeLen int64
 	hvi := 0
 	hv := hvs[0]

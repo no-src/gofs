@@ -283,7 +283,7 @@ func (h *pushHandler) compareFile(dstPath string, sourceHash string, sourceSize 
 	if sourceSize > 0 && len(sourceHash) > 0 {
 		destStat, err := os.Stat(dstPath)
 		if err == nil && destStat.Size() == sourceSize {
-			destHash, err := hashutil.MD5FromFileName(dstPath)
+			destHash, err := hashutil.HashFromFileName(dstPath)
 			if err == nil && destHash == sourceHash {
 				return true
 			}
@@ -297,7 +297,7 @@ func (h *pushHandler) compareChunk(dstPath string, offset int64, chunkHash strin
 	if chunkSize > 0 && len(chunkHash) > 0 {
 		destStat, err := os.Stat(dstPath)
 		if err == nil && destStat.Size() >= offset+chunkSize {
-			destHash, err := hashutil.MD5FromFileChunk(dstPath, offset, chunkSize)
+			destHash, err := hashutil.HashFromFileChunk(dstPath, offset, chunkSize)
 			if err == nil && destHash == chunkHash {
 				return true
 			}
