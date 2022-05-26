@@ -5,75 +5,31 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
+	"fmt"
 	"hash"
 	"hash/adler32"
 	"hash/crc32"
 	"hash/crc64"
 	"hash/fnv"
+	"strings"
 )
 
 var (
-	factory hashFactory
+	factory   hashFactory
+	factories map[string]hashFactory
 )
 
 type hashFactory func() hash.Hash
 
 // InitDefaultHash initial default hash factory
-func InitDefaultHash(algorithm string) {
-	switch algorithm {
-	case MD5Hash:
-		factory = func() hash.Hash {
-			return md5.New()
-		}
-	case SHA1Hash:
-		factory = func() hash.Hash {
-			return sha1.New()
-		}
-	case SHA256Hash:
-		factory = func() hash.Hash {
-			return sha256.New()
-		}
-	case SHA512Hash:
-		factory = func() hash.Hash {
-			return sha512.New()
-		}
-	case CRC32Hash:
-		factory = func() hash.Hash {
-			return crc32.NewIEEE()
-		}
-	case CRC64Hash:
-		factory = func() hash.Hash {
-			return crc64.New(crc64.MakeTable(crc64.ISO))
-		}
-	case Adler32Hash:
-		factory = func() hash.Hash {
-			return adler32.New()
-		}
-	case FNV132Hash:
-		factory = func() hash.Hash {
-			return fnv.New32()
-		}
-	case FNV1A32Hash:
-		factory = func() hash.Hash {
-			return fnv.New32a()
-		}
-	case FNV164Hash:
-		factory = func() hash.Hash {
-			return fnv.New64()
-		}
-	case FNV1A64Hash:
-		factory = func() hash.Hash {
-			return fnv.New64a()
-		}
-	case FNV1128Hash:
-		factory = func() hash.Hash {
-			return fnv.New128()
-		}
-	case FNV1A128Hash:
-		factory = func() hash.Hash {
-			return fnv.New128a()
-		}
+func InitDefaultHash(algorithm string) error {
+	algorithm = strings.ToLower(algorithm)
+	f, ok := factories[algorithm]
+	if ok {
+		factory = f
+		return nil
 	}
+	return fmt.Errorf("unsupported hash algorithm => %s", algorithm)
 }
 
 // New return default hash implementation
@@ -112,6 +68,51 @@ const (
 	FNV1A128Hash = "fnv-1a-128"
 )
 
+func register() {
+	factories = map[string]hashFactory{
+		MD5Hash: func() hash.Hash {
+			return md5.New()
+		},
+		SHA1Hash: func() hash.Hash {
+			return sha1.New()
+		},
+		SHA256Hash: func() hash.Hash {
+			return sha256.New()
+		},
+		SHA512Hash: func() hash.Hash {
+			return sha512.New()
+		},
+		CRC32Hash: func() hash.Hash {
+			return crc32.NewIEEE()
+		},
+		CRC64Hash: func() hash.Hash {
+			return crc64.New(crc64.MakeTable(crc64.ISO))
+		},
+		Adler32Hash: func() hash.Hash {
+			return adler32.New()
+		},
+		FNV132Hash: func() hash.Hash {
+			return fnv.New32()
+		},
+		FNV1A32Hash: func() hash.Hash {
+			return fnv.New32a()
+		},
+		FNV164Hash: func() hash.Hash {
+			return fnv.New64()
+		},
+		FNV1A64Hash: func() hash.Hash {
+			return fnv.New64a()
+		},
+		FNV1128Hash: func() hash.Hash {
+			return fnv.New128()
+		},
+		FNV1A128Hash: func() hash.Hash {
+			return fnv.New128a()
+		},
+	}
+}
+
 func init() {
+	register()
 	InitDefaultHash(DefaultHash)
 }
