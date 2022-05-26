@@ -91,6 +91,9 @@ cert.pem  key.pem  source  dest
 
 默认情况下，如果源文件的大小和修改时间与目标文件相同，则忽略当前文件的传输。你可以使用`force_checksum`命令行参数强制启用校验和来比较文件是否相等
 
+默认的校验和哈希算法为`md5`，你可以使用`checksum_algorithm`命令行参数来更改默认的哈希算法，当前支持的算法如下：`md5`、`sha1`、`sha256`、`sha512`、`crc32`、`crc64`
+、`adler32`、`fnv-1-32`、`fnv-1a-32`、`fnv-1-64`、`fnv-1a-64`、`fnv-1-128`、`fnv-1a-128`
+
 如果你想要降低同步的频率，你可以使用`sync_delay`命令行参数来启用同步延迟，当事件数量大于等于`sync_delay_events`或者距离上次同步已经等待超过`sync_delay_time`时开始同步
 
 ```bash
@@ -328,7 +331,7 @@ $ gofs -conf=./gofs.yaml
 
 你可以使用`checksum`命令行参数来计算并打印文件的校验和
 
-`chunk_size`和`checkpoint_count`命令行参数在这里同在[本地磁盘](#本地磁盘)中一样有效
+`chunk_size`、`checkpoint_count`和`checkpoint_count`命令行参数在这里同在[本地磁盘](#本地磁盘)中一样有效
 
 ```bash
 $ gofs -source=./gofs -checksum

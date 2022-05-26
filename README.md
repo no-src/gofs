@@ -98,6 +98,10 @@ By default, if the file size and file modification time of the source file is eq
 the current file transfer. You can use the `force_checksum` flag to force enable the checksum to compare whether the
 file is equal or not.
 
+The default checksum hash algorithm is `md5`, you can use the `checksum_algorithm` flag to change the default hash
+algorithm, current supported algorithms: `md5`, `sha1`, `sha256`, `sha512`, `crc32`, `crc64`, `adler32`, `fnv-1-32`
+, `fnv-1a-32`, `fnv-1-64`, `fnv-1a-64`, `fnv-1-128`, `fnv-1a-128`.
+
 If you want to reduce the frequency of synchronization, you can use the `sync_delay` flag to enable sync delay, start
 sync when the event count is equal or greater than `sync_delay_events`, or wait for `sync_delay_time` interval time
 since the last sync.
@@ -356,7 +360,8 @@ $ gofs -conf=./gofs.yaml
 
 You can use the `checksum` flag to calculate the file checksum and print the result.
 
-The `chunk_size` and `checkpoint_count` flags are effective here the same as in the [Local Disk](#local-disk).
+The `chunk_size`, `checkpoint_count` and `checksum_algorithm` flags are effective here the same as in
+the [Local Disk](#local-disk).
 
 ```bash
 $ gofs -source=./gofs -checksum

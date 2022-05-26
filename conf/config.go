@@ -23,6 +23,7 @@ type Config struct {
 	ChunkSize             int64    `json:"chunk_size" yaml:"chunk_size"`
 	CheckpointCount       int      `json:"checkpoint_count" yaml:"checkpoint_count"`
 	ForceChecksum         bool     `json:"force_checksum" yaml:"force_checksum"`
+	ChecksumAlgorithm     string   `json:"checksum_algorithm" yaml:"checksum_algorithm"`
 
 	// file monitor
 	EnableSyncDelay bool          `json:"sync_delay" yaml:"sync_delay"`

@@ -14,6 +14,7 @@ import (
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/httpfs"
 	"github.com/no-src/gofs/sync"
+	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/gofs/util/httputil"
 	"github.com/no-src/gofs/version"
 	"github.com/no-src/gofs/wait"
@@ -42,6 +43,10 @@ func Run() {
 
 	// execute and exit
 	if executeOnce() {
+		return
+	}
+
+	if initChecksum() {
 		return
 	}
 
@@ -130,12 +135,6 @@ func executeOnce() (exit bool) {
 	// clear the deleted files
 	if config.ClearDeletedPath {
 		log.ErrorIf(fs.ClearDeletedFile(config.Dest.Path()), "clear the deleted files error")
-		return true
-	}
-
-	// calculate checksum
-	if config.Checksum {
-		checksum.PrintChecksum(config.Source.Path(), config.ChunkSize, config.CheckpointCount)
 		return true
 	}
 
@@ -244,4 +243,19 @@ func initial() (exit bool) {
 
 	// init default http util
 	return log.ErrorIf(httputil.Init(config.TLSInsecureSkipVerify, config.TLSCertFile), "init http util error") != nil
+}
+
+func initChecksum() (exit bool) {
+	// init default hash algorithm
+	if log.ErrorIf(hashutil.InitDefaultHash(config.ChecksumAlgorithm), "init default hash algorithm error") != nil {
+		return true
+	}
+
+	// calculate checksum
+	if config.Checksum {
+		checksum.PrintChecksum(config.Source.Path(), config.ChunkSize, config.CheckpointCount)
+		return true
+	}
+
+	return false
 }
