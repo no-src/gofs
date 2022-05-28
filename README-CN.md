@@ -215,6 +215,10 @@ $ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./
 $ gofs -source="./source" -dest="rs://127.0.0.1:8105?local_sync_disabled=false&path=./dest" -users="gofs|password"
 ```
 
+### 中继
+
+如果你需要在两个无法直接相连的设备之间同步文件，可以使用反向代理作为中继服务器来实现，详情参见[中继模式](/relay/README-CN.md)
+
 ### 远程磁盘服务端数据源协议
 
 远程磁盘服务端数据源协议基于URI基本语法,详见[RFC 3986](https://www.rfc-editor.org/rfc/rfc3986.html)

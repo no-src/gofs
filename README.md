@@ -237,6 +237,11 @@ More flag usage see [Remote Disk Client](#remote-disk-client).
 $ gofs -source="./source" -dest="rs://127.0.0.1:8105?local_sync_disabled=false&path=./dest" -users="gofs|password"
 ```
 
+### Relay
+
+If you need to synchronize files between two devices that are unable to establish a direct connection, you can use a
+reverse proxy as a relay server. In more detail, see also [Relay](/relay/README.md).
+
 ### Remote Server Source Protocol
 
 The remote server source protocol is based on URI, see [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986.html).
