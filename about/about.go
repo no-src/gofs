@@ -20,6 +20,7 @@ const (
 	openSourceUrl    = "https://github.com/no-src/gofs"
 	documentationUrl = "https://pkg.go.dev/github.com/no-src/gofs@" + version.VERSION
 	releaseUrl       = "https://github.com/no-src/gofs/releases"
+	dockerImageUrl   = "https://hub.docker.com/r/nosrc/gofs"
 )
 
 // PrintAbout print the program logo and basic info
@@ -28,5 +29,6 @@ func PrintAbout() {
 	log.Log("The gofs is a file synchronization tool out of the box based on golang")
 	log.Log("Open source repository at: <%s>", openSourceUrl)
 	log.Log("Download the latest version at: <%s>", releaseUrl)
+	log.Log("The docker image repository address at: <%s>", dockerImageUrl)
 	log.Log("Full documentation at: <%s>", documentationUrl)
 }
