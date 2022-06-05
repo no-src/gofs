@@ -10,10 +10,13 @@ export GOFSIMAGENAME=nosrc/gofs
 export GOFSIMAGETAG=latest
 
 # remove the existing old image
-docker rmi -f $GOFSIMAGENAME
+docker rmi -f $GOFSIMAGENAME:$GOFSIMAGETAG
 
 # build Dockerfile
 docker build --build-arg GOPROXY=$GOPROXY -t $GOFSIMAGENAME:$GOFSIMAGETAG .
+
+# remove dangling images
+docker rmi -f $(docker images -q -f "dangling=true")
 
 # run a container to print the gofs version
 docker run -it --rm --name running-gofs-version $GOFSIMAGENAME:$GOFSIMAGETAG gofs -v
