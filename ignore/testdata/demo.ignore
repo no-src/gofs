@@ -1,3 +1,9 @@
+/*.exe
+/debug/*
+
+# switch to regexp rule
+[regexp]
+
 # ignore temp swap file
 \.[\s\S]*\.swp$
 
@@ -6,3 +12,8 @@
 ^/*bin/+[\s\S]*$
 ^[\s\S]+/bin/?$
 ^[\s\S]+/bin/+[\s\S]*$
+
+# switch to filepath rule
+[filepath]
+
+/log/gofs?.log

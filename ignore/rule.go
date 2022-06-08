@@ -1,23 +1,26 @@
 package ignore
 
-import (
-	"regexp"
+import "strings"
+
+// Rule the match rule provider
+type Rule interface {
+	// Match reports whether the string s is matched of this rule
+	Match(s string) bool
+	// SwitchName return the rule switch name
+	SwitchName() string
+	// Expression return the rule expression
+	Expression() string
+}
+
+const (
+	filePathSwitch = "[filepath]"
+	regexpSwitch   = "[regexp]"
 )
 
-type rule struct {
-	reg *regexp.Regexp
-}
-
-func newRule(expr string) (*rule, error) {
-	reg, err := regexp.Compile(expr)
-	if err != nil {
-		return nil, err
+func newRule(expr string, switchName string) (Rule, error) {
+	switchName = strings.TrimSpace(switchName)
+	if switchName == regexpSwitch {
+		return newRegexpRule(expr)
 	}
-	return &rule{
-		reg: reg,
-	}, nil
-}
-
-func (r *rule) Match(s string) bool {
-	return r.reg.MatchString(s)
+	return newFilePathRule(expr)
 }

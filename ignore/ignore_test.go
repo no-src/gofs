@@ -2,9 +2,13 @@ package ignore
 
 import "testing"
 
+const (
+	testIgnoreFile = "./testdata/demo.ignore"
+)
+
 func TestMatch(t *testing.T) {
 	resetDefaultIgnore()
-	err := Init("./testdata/demo.ignore", true)
+	err := Init(testIgnoreFile, true)
 	if err != nil {
 		t.Errorf("init default ignore component error => %v", err)
 		return
@@ -14,6 +18,27 @@ func TestMatch(t *testing.T) {
 		path   string
 		expect bool
 	}{
+		// for filepath rule
+		{"/gofs.exe", true},
+		{"/gofs.exe.bak", false},
+
+		{"/debug/", true},
+		{"/debug/xx.dll", true},
+		{"/debug/subdir", true},
+		{"/root/debug/", false},
+		{"/root/debug/xx.dll", false},
+		{"/root/debug/subdir", false},
+
+		{"/log/gofs1.log", true},
+		{"/log/gofs2.log", true},
+		{"/log/gofs.log", false},
+		{"/log/gofs11.log", false},
+		{"/root/log/gofs1.log", false},
+		{"/root/log/gofs2.log", false},
+		{"/root/log/gofs1.log", false},
+		{"/root/log/gofs2.log", false},
+
+		// for regexp rule
 		{"/source/.hello.swp", true},
 		{"/source/.hello.swp2", false},
 		{"bin", true},
@@ -36,7 +61,7 @@ func TestMatch(t *testing.T) {
 
 func TestMatchPath_WithIgnoreDeletedPath_True(t *testing.T) {
 	resetDefaultIgnore()
-	err := Init("./testdata/demo.ignore", true)
+	err := Init(testIgnoreFile, true)
 	if err != nil {
 		t.Errorf("init default ignore component error => %v", err)
 		return
@@ -59,7 +84,7 @@ func TestMatchPath_WithIgnoreDeletedPath_True(t *testing.T) {
 
 func TestMatchPath_WithIgnoreDeletedPath_False(t *testing.T) {
 	resetDefaultIgnore()
-	err := Init("./testdata/demo.ignore", false)
+	err := Init(testIgnoreFile, false)
 	if err != nil {
 		t.Errorf("init default ignore component error => %v", err)
 		return
@@ -82,11 +107,20 @@ func TestMatchPath_WithIgnoreDeletedPath_False(t *testing.T) {
 }
 
 func TestParse_ReturnError(t *testing.T) {
-	text := "/error**"
-	_, err := parse([]byte(text))
-	if err == nil {
-		t.Errorf("parse the rule text should be return error => [%s] error => %v", text, err)
-		return
+	testCases := []struct {
+		expr string
+	}{
+		{filePathSwitch + "\n*[]"},
+		{regexpSwitch + "\n/error**"},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.expr, func(t *testing.T) {
+			_, err := parse([]byte(tc.expr))
+			if err == nil {
+				t.Errorf("parse the rule text should be return error => [%s] error => %v", tc.expr, err)
+				return
+			}
+		})
 	}
 }
 

@@ -3,6 +3,8 @@ package ignore
 import (
 	"os"
 	"strings"
+
+	"github.com/no-src/log"
 )
 
 // Ignore support to check the string matches the ignore rule or not
@@ -11,7 +13,7 @@ type Ignore interface {
 }
 
 type ignore struct {
-	rules []*rule
+	rules []Rule
 }
 
 // New get a default Ignore instance
@@ -34,7 +36,7 @@ func (ig *ignore) Match(s string) bool {
 	return false
 }
 
-func parseIgnoreFile(ignoreFile string) ([]*rule, error) {
+func parseIgnoreFile(ignoreFile string) ([]Rule, error) {
 	conf, err := os.ReadFile(ignoreFile)
 	if err != nil {
 		return nil, err
@@ -42,17 +44,25 @@ func parseIgnoreFile(ignoreFile string) ([]*rule, error) {
 	return parse(conf)
 }
 
-func parse(data []byte) (rs []*rule, err error) {
+func parse(data []byte) (rs []Rule, err error) {
 	conf := string(data)
 	lines := strings.Split(conf, "\n")
+	switchName := filePathSwitch
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if len(line) > 0 && line[0] != '#' {
-			r, err := newRule(line)
-			if err != nil {
-				return nil, err
+			if line == filePathSwitch {
+				switchName = filePathSwitch
+			} else if line == regexpSwitch {
+				switchName = regexpSwitch
+			} else {
+				r, err := newRule(line, switchName)
+				if err != nil {
+					return nil, err
+				}
+				log.Debug("register %s rule, expression=%s", r.SwitchName(), r.Expression())
+				rs = append(rs, r)
 			}
-			rs = append(rs, r)
 		}
 	}
 	return rs, nil
