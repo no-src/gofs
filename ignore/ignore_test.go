@@ -1,6 +1,10 @@
 package ignore
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/no-src/gofs/util/osutil"
+)
 
 const (
 	testIgnoreFile = "./testdata/demo.ignore"
@@ -38,25 +42,6 @@ func TestMatch(t *testing.T) {
 		{"/root/log/gofs1.log", false},
 		{"/root/log/gofs2.log", false},
 
-		{"C:\\workspace\\logs\\info.log", true},
-		{"C:\\workspace\\logs\\", true},
-		{"C:\\workspace\\logs\\2022\\info.log", false},
-
-		{"C:\\workspace\\data\\2022\\my.db", true},
-		{"C:\\workspace\\data\\2022\\06", true},
-		{"C:\\workspace\\data\\2022\\06\\", false},
-		{"C:\\workspace\\data\\my.db", false},
-		{"C:\\workspace\\data\\2022\\06\\my.db", false},
-
-		{"C:\\workspace\\doc\\README.MD", true},
-		{"C:\\workspace\\doc\\README-CN.MD", true},
-		{"C:\\workspace\\doc\\.MD", true},
-		{"C:\\workspace\\doc\\*.MD", true},
-		{"C:\\workspace\\doc\\README.md", false},
-		{"C:\\workspace\\doc\\README-CN.md", false},
-		{"C:\\workspace\\doc\\.md", false},
-		{"C:\\workspace\\doc\\*.md", false},
-
 		// for regexp rule
 		{"/source/.hello.swp", true},
 		{"/source/.hello.swp2", false},
@@ -75,6 +60,48 @@ func TestMatch(t *testing.T) {
 		t.Run(tc.path, func(t *testing.T) {
 			testMatch(t, tc.expect, tc.path)
 		})
+	}
+}
+
+func TestMatch_Windows(t *testing.T) {
+	resetDefaultIgnore()
+	err := Init(testIgnoreFile, true)
+	if err != nil {
+		t.Errorf("init default ignore component error => %v", err)
+		return
+	}
+
+	testCases := []struct {
+		path   string
+		expect bool
+	}{
+		// for filepath rule
+		{"C:\\workspace\\logs\\info.log", true},
+		{"C:\\workspace\\logs\\", true},
+		{"C:\\workspace\\logs\\2022\\info.log", false},
+
+		{"C:\\workspace\\data\\2022\\my.db", true},
+		{"C:\\workspace\\data\\2022\\06", true},
+		{"C:\\workspace\\data\\2022\\06\\", false},
+		{"C:\\workspace\\data\\my.db", false},
+		{"C:\\workspace\\data\\2022\\06\\my.db", false},
+
+		{"C:\\workspace\\doc\\README.MD", true},
+		{"C:\\workspace\\doc\\README-CN.MD", true},
+		{"C:\\workspace\\doc\\.MD", true},
+		{"C:\\workspace\\doc\\*.MD", true},
+		{"C:\\workspace\\doc\\README.md", false},
+		{"C:\\workspace\\doc\\README-CN.md", false},
+		{"C:\\workspace\\doc\\.md", false},
+		{"C:\\workspace\\doc\\*.md", false},
+	}
+
+	if osutil.IsWindows() {
+		for _, tc := range testCases {
+			t.Run(tc.path, func(t *testing.T) {
+				testMatch(t, tc.expect, tc.path)
+			})
+		}
 	}
 }
 
