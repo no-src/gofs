@@ -1,5 +1,6 @@
 /*.exe
 /debug/*
+/log/gofs?.log
 
 # switch to regexp rule
 [regexp]
@@ -16,4 +17,6 @@
 # switch to filepath rule
 [filepath]
 
-/log/gofs?.log
+C:\workspace\logs\*
+C:\workspace\data\*\*
+C:\workspace\doc\*.MD

@@ -38,6 +38,25 @@ func TestMatch(t *testing.T) {
 		{"/root/log/gofs1.log", false},
 		{"/root/log/gofs2.log", false},
 
+		{"C:\\workspace\\logs\\info.log", true},
+		{"C:\\workspace\\logs\\", true},
+		{"C:\\workspace\\logs\\2022\\info.log", false},
+
+		{"C:\\workspace\\data\\2022\\my.db", true},
+		{"C:\\workspace\\data\\2022\\06", true},
+		{"C:\\workspace\\data\\2022\\06\\", false},
+		{"C:\\workspace\\data\\my.db", false},
+		{"C:\\workspace\\data\\2022\\06\\my.db", false},
+
+		{"C:\\workspace\\doc\\README.MD", true},
+		{"C:\\workspace\\doc\\README-CN.MD", true},
+		{"C:\\workspace\\doc\\.MD", true},
+		{"C:\\workspace\\doc\\*.MD", true},
+		{"C:\\workspace\\doc\\README.md", false},
+		{"C:\\workspace\\doc\\README-CN.md", false},
+		{"C:\\workspace\\doc\\.md", false},
+		{"C:\\workspace\\doc\\*.md", false},
+
 		// for regexp rule
 		{"/source/.hello.swp", true},
 		{"/source/.hello.swp2", false},
