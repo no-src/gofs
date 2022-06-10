@@ -147,7 +147,11 @@ func (m *fsNotifyMonitor) startProcessEvents() error {
 		}
 		event := element.Value.(fsnotify.Event)
 		if ignore.MatchPath(event.Name, "monitor", event.Op.String()) {
-			// ignore match
+			// if the rule is matched, then ignore the event except create a directory, because of the subdirectory maybe not match the ignore rule.
+			// so we should monitor the current directory here, otherwise we will lose some data.
+			// for example, we define an ignore rule "/home/logs/*" and create a directory "/home/logs" to trigger Create event, then create a file "/home/logs/2022/info.log".
+			// the file "info.log" does not match the ignore rule and should be synchronized to destination directory.
+			m.monitorDirIfCreate(event)
 		} else if event.Op&fsnotify.Write == fsnotify.Write {
 			m.write(event)
 		} else if event.Op&fsnotify.Create == fsnotify.Create {
@@ -208,6 +212,19 @@ func (m *fsNotifyMonitor) rename(event fsnotify.Event) {
 
 func (m *fsNotifyMonitor) chmod(event fsnotify.Event) {
 	log.ErrorIf(m.syncer.Chmod(event.Name), "Chmod event execute error => [%s]", event.Name)
+}
+
+// monitorDirIfCreate monitor the directory if you create a new directory
+func (m *fsNotifyMonitor) monitorDirIfCreate(event fsnotify.Event) {
+	if event.Op&fsnotify.Create == fsnotify.Create {
+		isDir, err := m.syncer.IsDir(event.Name)
+		if log.ErrorIf(err, "check path is dir or not error") != nil {
+			return
+		}
+		if isDir {
+			log.ErrorIf(m.monitor(event.Name), "monitor the directory error that matched ignore rule => [%s]", event.Name)
+		}
+	}
 }
 
 func (m *fsNotifyMonitor) Close() error {
