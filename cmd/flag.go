@@ -3,7 +3,6 @@ package cmd
 import (
 	"flag"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/no-src/gofs/conf"
@@ -14,10 +13,14 @@ import (
 	"github.com/no-src/log"
 )
 
-func parseFlags() (config conf.Config) {
+func parseFlags(args []string) (config conf.Config) {
+	if len(args) < 1 {
+		panic("at least one argument is required, starting with the program name")
+	}
+
 	// print help info if no arguments
-	if len(os.Args) <= 1 {
-		os.Args = append(os.Args, "-h")
+	if len(args) <= 1 {
+		args = append(args, "-h")
 	}
 
 	// other
@@ -93,7 +96,7 @@ func parseFlags() (config conf.Config) {
 	// checksum
 	flag.BoolVar(&config.Checksum, "checksum", false, "calculate and print the checksum for source file")
 
-	flag.Parse()
+	flag.CommandLine.Parse(args[1:])
 
 	return config
 }

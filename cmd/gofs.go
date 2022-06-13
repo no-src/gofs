@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/no-src/gofs/about"
 	"github.com/no-src/gofs/auth"
@@ -25,7 +26,12 @@ import (
 
 // Run running the gofs program
 func Run() {
-	RunWithConfig(parseFlags())
+	RunWithArgs(os.Args)
+}
+
+// RunWithArgs running the gofs program with specified command-line arguments, starting with the program name
+func RunWithArgs(args []string) {
+	RunWithConfig(parseFlags(args))
 }
 
 // RunWithConfig running the gofs program with specified config
