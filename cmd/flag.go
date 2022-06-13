@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"flag"
@@ -6,21 +6,15 @@ import (
 	"os"
 	"time"
 
-	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/conf"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/daemon"
-	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/log"
 )
 
-var (
-	config conf.Config
-)
-
-func parseFlags() {
+func parseFlags() (config conf.Config) {
 	// print help info if no arguments
 	if len(os.Args) <= 1 {
 		os.Args = append(os.Args, "-h")
@@ -100,78 +94,6 @@ func parseFlags() {
 	flag.BoolVar(&config.Checksum, "checksum", false, "calculate and print the checksum for source file")
 
 	flag.Parse()
-}
 
-// initFlags init flags default value
-func initFlags() error {
-
-	initFileServerFlags()
-
-	if err := generateRandomUser(); err != nil {
-		return err
-	}
-
-	if err := checkTLS(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// initFileServerFlags init flags about the file server
-func initFileServerFlags() {
-	if !config.EnableTLS && config.FileServerAddr == server.DefaultAddrHttps {
-		config.FileServerAddr = server.DefaultAddrHttp
-	}
-
-	// if start a remote server monitor, auto enable file server
-	if config.Source.Server() {
-		config.EnableFileServer = true
-	}
-}
-
-// generateRandomUser check and generate some random user
-func generateRandomUser() error {
-	if config.RandomUserCount > 0 && config.EnableFileServer {
-		userList, err := auth.RandomUser(config.RandomUserCount, config.RandomUserNameLen, config.RandomPasswordLen, config.RandomDefaultPerm)
-		if err != nil {
-			return err
-		}
-		randUserStr, err := auth.ParseStringUsers(userList)
-		if err != nil {
-			return err
-		}
-		if len(config.Users) > 0 {
-			config.Users = fmt.Sprintf("%s,%s", config.Users, randUserStr)
-		} else {
-			config.Users = randUserStr
-		}
-		log.Info("generate random users success => [%s]", config.Users)
-	}
-	return nil
-}
-
-// checkTLS check cert and key file of the TLS
-func checkTLS() error {
-	if config.EnableTLS && (config.Source.Server() || config.EnableFileServer) {
-		exist, err := fs.FileExist(config.TLSCertFile)
-		if err != nil {
-			return err
-		}
-		if !exist {
-			return fmt.Errorf("cert file is not found for tls => [%s], for more information, see -tls and -tls_cert_file flags", config.TLSCertFile)
-		}
-		exist, err = fs.FileExist(config.TLSKeyFile)
-		if err != nil {
-			return err
-		}
-		if !exist {
-			return fmt.Errorf("key file is not found for tls => [%s], for more information, see -tls and -tls_key_file flags", config.TLSKeyFile)
-		}
-	}
-	return nil
-}
-
-func init() {
-	conf.GlobalConfig = &config
+	return config
 }
