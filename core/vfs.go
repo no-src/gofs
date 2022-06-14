@@ -13,6 +13,7 @@ import (
 type VFS struct {
 	original          string
 	path              string
+	remotePath        string
 	fsType            VFSType
 	host              string
 	port              int
@@ -23,26 +24,35 @@ type VFS struct {
 
 const (
 	paramPath                = "path"
+	paramRemotePath          = "remote_path"
 	paramMode                = "mode"
 	paramFsServer            = "fs_server"
 	paramLocalSyncDisabled   = "local_sync_disabled"
 	valueModeServer          = "server"
 	valueLocalSyncIsDisabled = "true"
-	remoteServerScheme       = "rs://"
+	schemeDelimiter          = "://"
+	remoteServerScheme       = "rs"
 	remoteServerDefaultPort  = 8105
+	sftpServerScheme         = "sftp"
+	sftpServerDefaultPort    = 22
 )
 
-// Path file path
+// Path the local file path
 func (vfs *VFS) Path() string {
 	return vfs.path
 }
 
-// Abs returns an absolute representation of path
+// RemotePath the remote file path
+func (vfs *VFS) RemotePath() string {
+	return vfs.remotePath
+}
+
+// Abs returns an absolute representation of Path
 func (vfs *VFS) Abs() (string, error) {
 	return filepath.Abs(vfs.Path())
 }
 
-// IsEmpty whether the file path is empty
+// IsEmpty whether the local file path is empty
 func (vfs *VFS) IsEmpty() bool {
 	return len(vfs.Path()) == 0
 }
@@ -110,10 +120,13 @@ func NewVFS(path string) VFS {
 	vfs := NewDiskVFS(path)
 	lowerPath := strings.ToLower(path)
 	var err error
-	if strings.HasPrefix(lowerPath, remoteServerScheme) {
+	if strings.HasPrefix(lowerPath, remoteServerScheme+schemeDelimiter) {
 		// example of rs protocol to see README.md
 		vfs.fsType = RemoteDisk
-		_, vfs.host, vfs.port, vfs.path, vfs.server, vfs.fsServer, vfs.localSyncDisabled, err = parse(path)
+		_, vfs.host, vfs.port, vfs.path, vfs.remotePath, vfs.server, vfs.fsServer, vfs.localSyncDisabled, err = parse(path)
+	} else if strings.HasPrefix(lowerPath, sftpServerScheme+schemeDelimiter) {
+		vfs.fsType = SFTP
+		_, vfs.host, vfs.port, vfs.path, vfs.remotePath, vfs.server, vfs.fsServer, vfs.localSyncDisabled, err = parse(path)
 	}
 	if err != nil {
 		return NewEmptyVFS()
@@ -121,7 +134,7 @@ func NewVFS(path string) VFS {
 	return vfs
 }
 
-func parse(path string) (scheme string, host string, port int, localPath string, isServer bool, fsServer string, localSyncDisabled bool, err error) {
+func parse(path string) (scheme string, host string, port int, localPath string, remotePath string, isServer bool, fsServer string, localSyncDisabled bool, err error) {
 	parseUrl, err := url.Parse(path)
 	if err != nil {
 		return
@@ -130,11 +143,21 @@ func parse(path string) (scheme string, host string, port int, localPath string,
 	host = parseUrl.Hostname()
 	port, err = strconv.Atoi(parseUrl.Port())
 	if err != nil {
-		port = remoteServerDefaultPort
-		err = nil
-		log.Info("no remote server source port is specified, use default port => %d", port)
+		if scheme == remoteServerScheme {
+			port = remoteServerDefaultPort
+			err = nil
+			log.Info("no remote server source port is specified, use default port => %d", port)
+		} else if scheme == sftpServerScheme {
+			port = sftpServerDefaultPort
+			err = nil
+			log.Info("no sftp server destination port is specified, use default port => %d", port)
+		}
 	}
+
 	localPath = filepath.Clean(parseUrl.Query().Get(paramPath))
+	// maybe the remote os is different from the current os, force convert remote path to slash
+	remotePath = filepath.ToSlash(filepath.Clean(parseUrl.Query().Get(paramRemotePath)))
+
 	mode := parseUrl.Query().Get(paramMode)
 	if strings.ToLower(mode) == valueModeServer {
 		isServer = true

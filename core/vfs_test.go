@@ -13,6 +13,8 @@ const (
 	testVFSServerPath                     = "rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1"
 	testVFSServerPathWithNoPort           = "rs://127.0.0.1?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1"
 	testVFSServerPathWithNoSchemeFsServer = "rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=127.0.0.1"
+	testVFSSFTPDestPath                   = "sftp://127.0.0.1:22?mode=server&local_sync_disabled=true&path=./source&remote_path=/home/remote/dest"
+	testVFSSFTPDestPathWithNoPort         = "sftp://127.0.0.1?mode=server&local_sync_disabled=true&path=./source&remote_path=/home/remote/dest"
 )
 
 func TestVFS_MarshalText(t *testing.T) {
@@ -23,6 +25,8 @@ func TestVFS_MarshalText(t *testing.T) {
 		{testVFSServerPath},
 		{testVFSServerPathWithNoPort},
 		{testVFSServerPathWithNoSchemeFsServer},
+		{testVFSSFTPDestPath},
+		{testVFSSFTPDestPathWithNoPort},
 	}
 
 	for _, tc := range testCases {
@@ -52,6 +56,8 @@ func TestVFS_UnmarshalText(t *testing.T) {
 		{testVFSServerPath},
 		{testVFSServerPathWithNoPort},
 		{testVFSServerPathWithNoSchemeFsServer},
+		{testVFSSFTPDestPath},
+		{testVFSSFTPDestPathWithNoPort},
 	}
 
 	for _, tc := range testCases {
@@ -70,16 +76,18 @@ func TestVFS_UnmarshalText(t *testing.T) {
 
 func TestNewVFS_WithDefaultPort(t *testing.T) {
 	testCases := []struct {
-		path string
+		path       string
+		expectPort int
 	}{
-		{testVFSServerPathWithNoPort},
+		{testVFSServerPathWithNoPort, remoteServerDefaultPort},
+		{testVFSSFTPDestPathWithNoPort, sftpServerDefaultPort},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.path, func(t *testing.T) {
 			actual := NewVFS(tc.path)
-			if remoteServerDefaultPort != actual.Port() {
-				t.Errorf("test new vfs with default port error, expect:%d, actual:%d", remoteServerDefaultPort, actual.Port())
+			if tc.expectPort != actual.Port() {
+				t.Errorf("test new vfs with default port error, expect:%d, actual:%d", tc.expectPort, actual.Port())
 			}
 		})
 	}
@@ -108,7 +116,8 @@ func TestNewVFS_ReturnError(t *testing.T) {
 		path   string
 		expect VFS
 	}{
-		{testVFSServerPath + string([]byte{127}), NewEmptyVFS()}, // 0x7F DEL
+		{testVFSServerPath + string([]byte{127}), NewEmptyVFS()},   // 0x7F DEL
+		{testVFSSFTPDestPath + string([]byte{127}), NewEmptyVFS()}, // 0x7F DEL
 	}
 
 	for _, tc := range testCases {
@@ -145,6 +154,9 @@ func TestVFSVar(t *testing.T) {
 		{"testVFSServerPath", testVFSServerPath, NewEmptyVFS()},
 		{"testVFSServerPathWithNoPort", testVFSServerPathWithNoPort, NewEmptyVFS()},
 		{"testVFSServerPathWithNoSchemeFsServer", testVFSServerPathWithNoSchemeFsServer, NewEmptyVFS()},
+
+		{"testVFSSFTPDestPath", testVFSSFTPDestPath, NewEmptyVFS()},
+		{"testVFSSFTPDestPathWithNoPort", testVFSSFTPDestPathWithNoPort, NewEmptyVFS()},
 	}
 
 	for _, tc := range testCases {
@@ -188,6 +200,9 @@ func TestVFSFlag(t *testing.T) {
 		{"testVFSServerPath", testVFSServerPath, NewEmptyVFS()},
 		{"testVFSServerPathWithNoPort", testVFSServerPathWithNoPort, NewEmptyVFS()},
 		{"testVFSServerPathWithNoSchemeFsServer", testVFSServerPathWithNoSchemeFsServer, NewEmptyVFS()},
+
+		{"testVFSSFTPDestPath", testVFSSFTPDestPath, NewEmptyVFS()},
+		{"testVFSSFTPDestPathWithNoPort", testVFSSFTPDestPathWithNoPort, NewEmptyVFS()},
 	}
 
 	for _, tc := range testCases {
@@ -208,6 +223,10 @@ func compareVFS(t *testing.T, expect, actual VFS) {
 
 	if expect.Path() != actual.Path() {
 		t.Errorf("compare vfs Path error, expect:%s, actual:%s", expect.Path(), actual.Path())
+	}
+
+	if expect.RemotePath() != actual.RemotePath() {
+		t.Errorf("compare vfs RemotePath error, expect:%s, actual:%s", expect.RemotePath(), actual.RemotePath())
 	}
 
 	expectAbs, err := expect.Abs()
