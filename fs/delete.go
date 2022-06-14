@@ -18,7 +18,7 @@ func LogicallyDelete(path string) error {
 	if IsDeleted(path) {
 		return nil
 	}
-	deletedFile := toDeletedPath(path)
+	deletedFile := ToDeletedPath(path)
 	err := rename(path, deletedFile)
 	if os.IsNotExist(err) {
 		return nil
@@ -56,8 +56,8 @@ func ClearDeletedFile(clearPath string) error {
 	})
 }
 
-// toDeletedPath convert to the logically deleted file name
-func toDeletedPath(path string) string {
+// ToDeletedPath convert to the logically deleted file name
+func ToDeletedPath(path string) string {
 	return fmt.Sprintf("%s.%d.deleted", path, time.Now().Unix())
 }
 

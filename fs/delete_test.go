@@ -165,7 +165,7 @@ func TestToDeletedPath(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.path, func(t *testing.T) {
-			deletedPath := toDeletedPath(tc.path)
+			deletedPath := ToDeletedPath(tc.path)
 			if len(deletedPath) == 0 {
 				t.Errorf("convert to deleted path error %s => %s", tc.path, deletedPath)
 			}
