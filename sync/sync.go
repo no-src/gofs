@@ -36,6 +36,8 @@ func NewSync(opt Option) (Sync, error) {
 		return NewRemoteSync(opt.Source, opt.Dest, opt.EnableTLS, opt.TLSCertFile, opt.TLSKeyFile, opt.Users, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum)
 	} else if opt.Dest.Is(core.RemoteDisk) {
 		return NewPushClientSync(opt.Source, opt.Dest, opt.EnableTLS, opt.TLSCertFile, opt.TLSInsecureSkipVerify, opt.Users, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum)
+	} else if opt.Source.IsDisk() && opt.Dest.Is(core.SFTP) {
+		return NewSftpClientSync(opt.Source, opt.Dest, opt.Users, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum)
 	}
 	return nil, fmt.Errorf("file system unsupported ! source=>%s dest=>%s", opt.Source.Type().String(), opt.Dest.Type().String())
 }
