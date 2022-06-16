@@ -30,6 +30,10 @@ type sftpClient struct {
 
 // NewSFTPClient get a sftp client
 func NewSFTPClient(remoteAddr string, userName string, password string, autoReconnect bool) driver.Driver {
+	return newSFTPClient(remoteAddr, userName, password, autoReconnect)
+}
+
+func newSFTPClient(remoteAddr string, userName string, password string, autoReconnect bool) *sftpClient {
 	return &sftpClient{
 		remoteAddr:    remoteAddr,
 		userName:      userName,

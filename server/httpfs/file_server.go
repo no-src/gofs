@@ -1,6 +1,7 @@
 package httpfs
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -15,6 +16,7 @@ import (
 	"github.com/no-src/gofs"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/core"
+	"github.com/no-src/gofs/driver/sftp"
 	"github.com/no-src/gofs/report"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/handler"
@@ -41,7 +43,10 @@ func StartFileServer(opt server.Option) error {
 		opt.Init.DoneWithError(err)
 		return err
 	}
-	initRoute(engine, opt, logger)
+	if err := initRoute(engine, opt, logger); err != nil {
+		opt.Init.DoneWithError(err)
+		return err
+	}
 
 	log.Info("file server [%s] starting...", opt.Addr)
 	server.InitServerInfo(opt.Addr, opt.EnableTLS)
@@ -96,7 +101,7 @@ func initCompress(engine *gin.Engine, enableCompress bool) {
 	}
 }
 
-func initRoute(engine *gin.Engine, opt server.Option, logger log.Logger) {
+func initRoute(engine *gin.Engine, opt server.Option, logger log.Logger) error {
 	enableFileApi := false
 	source := opt.Source
 	dest := opt.Dest
@@ -143,11 +148,24 @@ func initRoute(engine *gin.Engine, opt server.Option, logger log.Logger) {
 	if dest.IsDisk() {
 		rootGroup.StaticFS(server.DestRoutePrefix, http.Dir(dest.Path()))
 		enableFileApi = true
+	} else if dest.Is(core.SFTP) {
+		if len(opt.Users) == 0 {
+			return errors.New("a user is required for sftp server")
+		}
+		user := opt.Users[0]
+		sftpDir, err := sftp.NewDir(dest.RemotePath(), dest.Addr(), user.UserName(), user.Password())
+		if err != nil {
+			return err
+		}
+		rootGroup.StaticFS(server.DestRoutePrefix, sftpDir)
+		enableFileApi = true
 	}
 
 	if enableFileApi {
 		rootGroup.GET(server.QueryRoute, handler.NewFileApiHandler(logger, http.Dir(source.Path()), opt.ChunkSize, opt.CheckpointCount).Handle)
 	}
+
+	return nil
 }
 
 var defaultLogFormatter = func(param gin.LogFormatterParams) string {

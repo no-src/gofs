@@ -1,0 +1,75 @@
+package sftp
+
+import (
+	"errors"
+	"io/fs"
+	"net/http"
+	"path"
+	"path/filepath"
+	"strings"
+
+	"github.com/pkg/sftp"
+)
+
+// Dir an implementation of http.FileSystem for sftp
+type Dir struct {
+	root   string
+	client *sftpClient
+}
+
+// NewDir returns a http.FileSystem instance for sftp
+func NewDir(root string, address string, userName string, password string) (http.FileSystem, error) {
+	root = strings.TrimSpace(root)
+	if len(root) == 0 {
+		root = "."
+	}
+	userName = strings.TrimSpace(userName)
+	if len(userName) == 0 {
+		return nil, errors.New("invalid username for sftp")
+	}
+	password = strings.TrimSpace(password)
+	if len(password) == 0 {
+		return nil, errors.New("invalid password for sftp")
+	}
+	client := newSFTPClient(address, userName, password, true)
+	return &Dir{
+		client: client,
+		root:   root,
+	}, client.Connect()
+}
+
+// Open opens the named file for reading
+func (d *Dir) Open(name string) (http.File, error) {
+	if filepath.Separator != '/' && strings.ContainsRune(name, filepath.Separator) {
+		return nil, errors.New("http: invalid character in file path")
+	}
+	fullName := filepath.ToSlash(filepath.Join(d.root, filepath.FromSlash(path.Clean("/"+name))))
+	f, err := d.client.Open(fullName)
+	if err != nil {
+		return nil, err
+	}
+	return newFile(f, d.client, f.Name()), nil
+}
+
+type file struct {
+	*sftp.File
+
+	client *sftpClient
+	name   string
+}
+
+func newFile(f *sftp.File, client *sftpClient, name string) *file {
+	return &file{
+		File:   f,
+		client: client,
+		name:   name,
+	}
+}
+
+func (f *file) Readdir(count int) (fis []fs.FileInfo, err error) {
+	fis, err = f.client.ReadDir(f.name)
+	if err == nil && count > 0 && len(fis) > count {
+		fis = fis[:count]
+	}
+	return fis, err
+}
