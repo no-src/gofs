@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"net/url"
 	"path/filepath"
 	"strconv"
@@ -62,14 +63,19 @@ func (vfs *VFS) Type() VFSType {
 	return vfs.fsType
 }
 
-// Host server or client host
+// Host returns the server host
 func (vfs *VFS) Host() string {
 	return vfs.host
 }
 
-// Port server or client port
+// Port returns the server port
 func (vfs *VFS) Port() int {
 	return vfs.port
+}
+
+// Addr returns the server address
+func (vfs *VFS) Addr() string {
+	return fmt.Sprintf("%s:%d", vfs.Host(), vfs.Port())
 }
 
 // IsDisk is local file system

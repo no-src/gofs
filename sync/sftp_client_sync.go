@@ -3,7 +3,6 @@ package sync
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	iofs "io/fs"
 	"os"
 	"path/filepath"
@@ -43,7 +42,7 @@ func NewSftpClientSync(source, dest core.VFS, users []*auth.User, enableLogicall
 
 	s := &sftpClientSync{
 		diskSync:    *ds,
-		remoteAddr:  fmt.Sprintf("%s:%d", dest.Host(), dest.Port()),
+		remoteAddr:  dest.Addr(),
 		remotePath:  dest.RemotePath(),
 		currentUser: users[0],
 	}

@@ -217,61 +217,36 @@ func TestVFSFlag(t *testing.T) {
 }
 
 func compareVFS(t *testing.T, expect, actual VFS) {
-	if expect.original != actual.original {
-		t.Errorf("compare vfs original error, expect:%s, actual:%s", expect.original, actual.original)
-	}
-
-	if expect.Path() != actual.Path() {
-		t.Errorf("compare vfs Path error, expect:%s, actual:%s", expect.Path(), actual.Path())
-	}
-
-	if expect.RemotePath() != actual.RemotePath() {
-		t.Errorf("compare vfs RemotePath error, expect:%s, actual:%s", expect.RemotePath(), actual.RemotePath())
-	}
+	assert(t, expect.original == actual.original, "compare vfs original error, expect:%s, actual:%s", expect.original, actual.original)
+	assert(t, expect.Path() == actual.Path(), "compare vfs Path error, expect:%s, actual:%s", expect.Path(), actual.Path())
+	assert(t, expect.RemotePath() == actual.RemotePath(), "compare vfs RemotePath error, expect:%s, actual:%s", expect.RemotePath(), actual.RemotePath())
 
 	expectAbs, err := expect.Abs()
 	if err != nil {
 		t.Errorf("compare vfs Abs error, parse expect abs error =>%s", err)
 		return
 	}
+
 	actualAbs, err := actual.Abs()
 	if err != nil {
 		t.Errorf("compare vfs Abs error, parse actual abs error =>%s", err)
 		return
 	}
-	if expectAbs != actualAbs {
-		t.Errorf("compare vfs Abs error, expect:%s, actual:%s", expectAbs, actualAbs)
-	}
 
-	if expect.IsEmpty() != actual.IsEmpty() {
-		t.Errorf("compare vfs IsEmpty error, expect:%v, actual:%v", expect.IsEmpty(), actual.IsEmpty())
-	}
+	assert(t, expectAbs == actualAbs, "compare vfs Abs error, expect:%s, actual:%s", expectAbs, actualAbs)
+	assert(t, expect.IsEmpty() == actual.IsEmpty(), "compare vfs IsEmpty error, expect:%v, actual:%v", expect.IsEmpty(), actual.IsEmpty())
+	assert(t, expect.Type() == actual.Type(), "compare vfs Type error, expect:%v, actual:%v", expect.Type(), actual.Type())
+	assert(t, expect.Host() == actual.Host(), "compare vfs Host error, expect:%s, actual:%s", expect.Host(), actual.Host())
+	assert(t, expect.Port() == actual.Port(), "compare vfs Port error, expect:%d, actual:%d", expect.Port(), actual.Port())
+	assert(t, expect.Addr() == actual.Addr(), "compare vfs Addr error, expect:%s, actual:%s", expect.Addr(), actual.Addr())
+	assert(t, expect.IsDisk() == actual.IsDisk(), "compare vfs IsDisk error, expect:%v, actual:%v", expect.IsDisk(), actual.IsDisk())
+	assert(t, expect.Server() == actual.Server(), "compare vfs Server error, expect:%v, actual:%v", expect.Server(), actual.Server())
+	assert(t, expect.FsServer() == actual.FsServer(), "compare vfs FsServer error, expect:%s, actual:%s", expect.FsServer(), actual.FsServer())
+	assert(t, expect.LocalSyncDisabled() == actual.LocalSyncDisabled(), "compare vfs LocalSyncDisabled error, expect:%v, actual:%v", expect.LocalSyncDisabled(), actual.LocalSyncDisabled())
+}
 
-	if expect.Type() != actual.Type() {
-		t.Errorf("compare vfs Type error, expect:%v, actual:%v", expect.Type(), actual.Type())
-	}
-
-	if expect.Host() != actual.Host() {
-		t.Errorf("compare vfs Host error, expect:%s, actual:%s", expect.Host(), actual.Host())
-	}
-
-	if expect.Port() != actual.Port() {
-		t.Errorf("compare vfs Port error, expect:%d, actual:%d", expect.Port(), actual.Port())
-	}
-
-	if expect.IsDisk() != actual.IsDisk() {
-		t.Errorf("compare vfs IsDisk error, expect:%v, actual:%v", expect.IsDisk(), actual.IsDisk())
-	}
-
-	if expect.Server() != actual.Server() {
-		t.Errorf("compare vfs Server error, expect:%v, actual:%v", expect.Server(), actual.Server())
-	}
-
-	if expect.FsServer() != actual.FsServer() {
-		t.Errorf("compare vfs FsServer error, expect:%s, actual:%s", expect.FsServer(), actual.FsServer())
-	}
-
-	if expect.LocalSyncDisabled() != actual.LocalSyncDisabled() {
-		t.Errorf("compare vfs LocalSyncDisabled error, expect:%v, actual:%v", expect.LocalSyncDisabled(), actual.LocalSyncDisabled())
+func assert(t *testing.T, ok bool, format string, args ...any) {
+	if !ok {
+		t.Errorf(format, args...)
 	}
 }
