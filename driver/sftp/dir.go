@@ -2,13 +2,10 @@ package sftp
 
 import (
 	"errors"
-	"io/fs"
 	"net/http"
 	"path"
 	"path/filepath"
 	"strings"
-
-	"github.com/pkg/sftp"
 )
 
 // Dir an implementation of http.FileSystem for sftp
@@ -44,32 +41,5 @@ func (d *Dir) Open(name string) (http.File, error) {
 		return nil, errors.New("http: invalid character in file path")
 	}
 	fullName := filepath.ToSlash(filepath.Join(d.root, filepath.FromSlash(path.Clean("/"+name))))
-	f, err := d.client.Open(fullName)
-	if err != nil {
-		return nil, err
-	}
-	return newFile(f, d.client, f.Name()), nil
-}
-
-type file struct {
-	*sftp.File
-
-	client *sftpClient
-	name   string
-}
-
-func newFile(f *sftp.File, client *sftpClient, name string) *file {
-	return &file{
-		File:   f,
-		client: client,
-		name:   name,
-	}
-}
-
-func (f *file) Readdir(count int) (fis []fs.FileInfo, err error) {
-	fis, err = f.client.ReadDir(f.name)
-	if err == nil && count > 0 && len(fis) > count {
-		fis = fis[:count]
-	}
-	return fis, err
+	return d.client.Open(fullName)
 }

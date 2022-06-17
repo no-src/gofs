@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"net"
+	"net/http"
 	"os"
 	"sync"
 	"time"
@@ -43,7 +44,6 @@ func newSFTPClient(remoteAddr string, userName string, password string, autoReco
 	}
 }
 
-// Connect connects the sftp server
 func (sc *sftpClient) Connect() error {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
@@ -104,14 +104,12 @@ func (sc *sftpClient) isClosed(err error) bool {
 	return err == sftp.ErrSSHFxConnectionLost
 }
 
-// MkdirAll creates a directory named path
 func (sc *sftpClient) MkdirAll(path string) error {
 	return sc.reconnectIfLost(func() error {
 		return sc.Client.MkdirAll(path)
 	})
 }
 
-// Create creates the named file
 func (sc *sftpClient) Create(path string) (rwc io.ReadWriteCloser, err error) {
 	err = sc.reconnectIfLost(func() error {
 		rwc, err = sc.Client.Create(path)
@@ -120,7 +118,6 @@ func (sc *sftpClient) Create(path string) (rwc io.ReadWriteCloser, err error) {
 	return rwc, err
 }
 
-// Remove removes the specified file or directory
 func (sc *sftpClient) Remove(path string) error {
 	return sc.reconnectIfLost(func() error {
 		f, err := sc.Client.Stat(path)
@@ -150,8 +147,8 @@ func (sc *sftpClient) Remove(path string) error {
 		}
 
 		// remove all files
-		for _, file := range files {
-			err = sc.Client.Remove(file)
+		for _, p := range files {
+			err = sc.Client.Remove(p)
 			if err != nil && !os.IsNotExist(err) {
 				return err
 			}
@@ -169,16 +166,34 @@ func (sc *sftpClient) Remove(path string) error {
 	})
 }
 
-// Rename renames a file
 func (sc *sftpClient) Rename(oldPath, newPath string) error {
 	return sc.reconnectIfLost(func() error {
 		return sc.Client.Rename(oldPath, newPath)
 	})
 }
 
-// Chtimes changes the access and modification times of the named file
 func (sc *sftpClient) Chtimes(path string, aTime time.Time, mTime time.Time) error {
 	return sc.reconnectIfLost(func() error {
 		return sc.Client.Chtimes(path, aTime, mTime)
 	})
+}
+
+func (sc *sftpClient) Open(path string) (f http.File, err error) {
+	err = sc.reconnectIfLost(func() error {
+		var sftpFile *sftp.File
+		sftpFile, err = sc.Client.Open(path)
+		if err == nil {
+			f = newFile(sftpFile, sc, path)
+		}
+		return err
+	})
+	return f, err
+}
+
+func (sc *sftpClient) ReadDir(path string) (fis []os.FileInfo, err error) {
+	err = sc.reconnectIfLost(func() error {
+		fis, err = sc.Client.ReadDir(path)
+		return err
+	})
+	return fis, err
 }
