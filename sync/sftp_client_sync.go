@@ -13,6 +13,7 @@ import (
 	"github.com/no-src/gofs/driver/sftp"
 	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/ignore"
+	"github.com/no-src/gofs/retry"
 	"github.com/no-src/log"
 )
 
@@ -26,7 +27,7 @@ type sftpClientSync struct {
 }
 
 // NewSftpClientSync create an instance of the sftpClientSync
-func NewSftpClientSync(source, dest core.VFS, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool) (Sync, error) {
+func NewSftpClientSync(source, dest core.VFS, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool, r retry.Retry) (Sync, error) {
 	if chunkSize <= 0 {
 		return nil, errors.New("chunk size must greater than zero")
 	}
@@ -47,7 +48,7 @@ func NewSftpClientSync(source, dest core.VFS, users []*auth.User, enableLogicall
 		currentUser: users[0],
 	}
 
-	s.client = sftp.NewSFTPClient(s.remoteAddr, s.currentUser.UserName(), s.currentUser.Password(), true)
+	s.client = sftp.NewSFTPClient(s.remoteAddr, s.currentUser.UserName(), s.currentUser.Password(), true, r)
 
 	err = s.start()
 	if err != nil {

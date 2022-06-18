@@ -30,16 +30,16 @@ type sftpClient struct {
 }
 
 // NewSFTPClient get a sftp client
-func NewSFTPClient(remoteAddr string, userName string, password string, autoReconnect bool) driver.Driver {
-	return newSFTPClient(remoteAddr, userName, password, autoReconnect)
+func NewSFTPClient(remoteAddr string, userName string, password string, autoReconnect bool, r retry.Retry) driver.Driver {
+	return newSFTPClient(remoteAddr, userName, password, autoReconnect, r)
 }
 
-func newSFTPClient(remoteAddr string, userName string, password string, autoReconnect bool) *sftpClient {
+func newSFTPClient(remoteAddr string, userName string, password string, autoReconnect bool, r retry.Retry) *sftpClient {
 	return &sftpClient{
 		remoteAddr:    remoteAddr,
 		userName:      userName,
 		password:      password,
-		r:             retry.New(100, time.Second, false),
+		r:             r,
 		autoReconnect: autoReconnect,
 	}
 }

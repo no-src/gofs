@@ -96,8 +96,11 @@ func RunWithConfig(c conf.Config) {
 	}
 	defer webLogger.Close()
 
+	// create retry
+	r := retry.New(c.RetryCount, c.RetryWait.Duration(), c.RetryAsync)
+
 	// start a file web server
-	if startWebServer(c, webLogger, userList) {
+	if startWebServer(c, webLogger, userList, r) {
 		return
 	}
 
@@ -109,7 +112,7 @@ func RunWithConfig(c conf.Config) {
 	defer eventLogger.Close()
 
 	// init the monitor
-	m, err := initMonitor(c, userList, eventLogger)
+	m, err := initMonitor(c, userList, eventLogger, r)
 	if err != nil {
 		return
 	}
@@ -191,11 +194,11 @@ func initWebServerLogger(c conf.Config) (log.Logger, error) {
 }
 
 // startWebServer start a file web server
-func startWebServer(c conf.Config, webLogger log.Logger, userList []*auth.User) (exit bool) {
+func startWebServer(c conf.Config, webLogger log.Logger, userList []*auth.User, r retry.Retry) (exit bool) {
 	if c.EnableFileServer {
 		waitInit := wait.NewWaitDone()
 		go func() {
-			log.ErrorIf(httpfs.StartFileServer(server.NewServerOption(c, waitInit, userList, webLogger)), "start the file server [%s] error", c.FileServerAddr)
+			log.ErrorIf(httpfs.StartFileServer(server.NewServerOption(c, waitInit, userList, webLogger, r)), "start the file server [%s] error", c.FileServerAddr)
 		}()
 		if waitInit.Wait() != nil {
 			return true
@@ -219,16 +222,13 @@ func initEventLogger(c conf.Config) (log.Logger, error) {
 }
 
 // initMonitor init the monitor
-func initMonitor(c conf.Config, userList []*auth.User, eventLogger log.Logger) (monitor.Monitor, error) {
+func initMonitor(c conf.Config, userList []*auth.User, eventLogger log.Logger, r retry.Retry) (monitor.Monitor, error) {
 	// create syncer
-	syncer, err := sync.NewSync(sync.NewSyncOption(c, userList))
+	syncer, err := sync.NewSync(sync.NewSyncOption(c, userList, r))
 	if err != nil {
 		log.Error(err, "create the instance of Sync error")
 		return nil, err
 	}
-
-	// create retry
-	r := retry.New(c.RetryCount, c.RetryWait.Duration(), c.RetryAsync)
 
 	// create monitor
 	m, err := monitor.NewMonitor(syncer, r, c.SyncOnce, c.EnableTLS, c.TLSCertFile, c.TLSInsecureSkipVerify, userList, eventLogger, c.EnableSyncDelay, c.SyncDelayEvents, c.SyncDelayTime.Duration())

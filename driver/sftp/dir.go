@@ -6,6 +6,8 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/no-src/gofs/retry"
 )
 
 // Dir an implementation of http.FileSystem for sftp
@@ -15,7 +17,7 @@ type Dir struct {
 }
 
 // NewDir returns a http.FileSystem instance for sftp
-func NewDir(root string, address string, userName string, password string) (http.FileSystem, error) {
+func NewDir(root string, address string, userName string, password string, r retry.Retry) (http.FileSystem, error) {
 	root = strings.TrimSpace(root)
 	if len(root) == 0 {
 		root = "."
@@ -28,7 +30,7 @@ func NewDir(root string, address string, userName string, password string) (http
 	if len(password) == 0 {
 		return nil, errors.New("invalid password for sftp")
 	}
-	client := newSFTPClient(address, userName, password, true)
+	client := newSFTPClient(address, userName, password, true, r)
 	return &Dir{
 		client: client,
 		root:   root,

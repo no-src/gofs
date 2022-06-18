@@ -4,6 +4,7 @@ import (
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/conf"
 	"github.com/no-src/gofs/core"
+	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/wait"
 	"github.com/no-src/log"
 )
@@ -29,10 +30,11 @@ type Option struct {
 	Init                     wait.WaitDone
 	Users                    []*auth.User
 	Logger                   log.Logger
+	Retry                    retry.Retry
 }
 
 // NewServerOption create an instance of the Option, store all the web server options
-func NewServerOption(config conf.Config, init wait.WaitDone, users []*auth.User, logger log.Logger) Option {
+func NewServerOption(config conf.Config, init wait.WaitDone, users []*auth.User, logger log.Logger, r retry.Retry) Option {
 	opt := Option{
 		Source:                   config.Source,
 		Dest:                     config.Dest,
@@ -53,6 +55,7 @@ func NewServerOption(config conf.Config, init wait.WaitDone, users []*auth.User,
 		Init:                     init,
 		Users:                    users,
 		Logger:                   logger,
+		Retry:                    r,
 	}
 	return opt
 }

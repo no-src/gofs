@@ -4,6 +4,7 @@ import (
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/conf"
 	"github.com/no-src/gofs/core"
+	"github.com/no-src/gofs/retry"
 )
 
 // Option the sync component option
@@ -19,10 +20,11 @@ type Option struct {
 	CheckpointCount       int
 	ForceChecksum         bool
 	Users                 []*auth.User
+	Retry                 retry.Retry
 }
 
 // NewSyncOption create an instance of the Option, store all the sync component options
-func NewSyncOption(config conf.Config, users []*auth.User) Option {
+func NewSyncOption(config conf.Config, users []*auth.User, r retry.Retry) Option {
 	opt := Option{
 		Source:                config.Source,
 		Dest:                  config.Dest,
@@ -35,6 +37,7 @@ func NewSyncOption(config conf.Config, users []*auth.User) Option {
 		CheckpointCount:       config.CheckpointCount,
 		ForceChecksum:         config.ForceChecksum,
 		Users:                 users,
+		Retry:                 r,
 	}
 	return opt
 }

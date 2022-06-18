@@ -153,7 +153,7 @@ func initRoute(engine *gin.Engine, opt server.Option, logger log.Logger) error {
 			return errors.New("a user is required for sftp server")
 		}
 		user := opt.Users[0]
-		sftpDir, err := sftp.NewDir(dest.RemotePath(), dest.Addr(), user.UserName(), user.Password())
+		sftpDir, err := sftp.NewDir(dest.RemotePath(), dest.Addr(), user.UserName(), user.Password(), opt.Retry)
 		if err != nil {
 			return err
 		}
