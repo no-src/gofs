@@ -22,6 +22,7 @@ import (
 	"github.com/no-src/gofs/version"
 	"github.com/no-src/gofs/wait"
 	"github.com/no-src/log"
+	"github.com/no-src/log/level"
 )
 
 // Run running the gofs program
@@ -161,13 +162,13 @@ func executeOnce(c conf.Config) (exit bool) {
 // initDefaultLogger init the default logger
 func initDefaultLogger(c conf.Config) error {
 	var loggers []log.Logger
-	loggers = append(loggers, log.NewConsoleLogger(log.Level(c.LogLevel)))
+	loggers = append(loggers, log.NewConsoleLogger(level.Level(c.LogLevel)))
 	if c.EnableFileLogger {
 		filePrefix := "gofs_"
 		if c.IsDaemon {
 			filePrefix += "daemon_"
 		}
-		flogger, err := log.NewFileLoggerWithAutoFlush(log.Level(c.LogLevel), c.LogDir, filePrefix, c.LogFlush, c.LogFlushInterval.Duration())
+		flogger, err := log.NewFileLoggerWithAutoFlush(level.Level(c.LogLevel), c.LogDir, filePrefix, c.LogFlush, c.LogFlushInterval.Duration())
 		if err != nil {
 			log.Error(err, "init file logger error")
 			return err
@@ -181,9 +182,9 @@ func initDefaultLogger(c conf.Config) error {
 
 // initWebServerLogger init the web server logger
 func initWebServerLogger(c conf.Config) (log.Logger, error) {
-	var webLogger = log.NewConsoleLogger(log.Level(c.LogLevel))
+	var webLogger = log.NewConsoleLogger(level.Level(c.LogLevel))
 	if c.EnableFileLogger && c.EnableFileServer {
-		webFileLogger, err := log.NewFileLoggerWithAutoFlush(log.Level(c.LogLevel), c.LogDir, "web_", c.LogFlush, c.LogFlushInterval.Duration())
+		webFileLogger, err := log.NewFileLoggerWithAutoFlush(level.Level(c.LogLevel), c.LogDir, "web_", c.LogFlush, c.LogFlushInterval.Duration())
 		if err != nil {
 			log.Error(err, "init the web server file logger error")
 			return nil, err
@@ -211,7 +212,7 @@ func startWebServer(c conf.Config, webLogger log.Logger, userList []*auth.User, 
 func initEventLogger(c conf.Config) (log.Logger, error) {
 	var eventLogger = log.NewEmptyLogger()
 	if c.EnableEventLog {
-		eventFileLogger, err := log.NewFileLoggerWithAutoFlush(log.Level(c.LogLevel), c.LogDir, "event_", c.LogFlush, c.LogFlushInterval.Duration())
+		eventFileLogger, err := log.NewFileLoggerWithAutoFlush(level.Level(c.LogLevel), c.LogDir, "event_", c.LogFlush, c.LogFlushInterval.Duration())
 		if err != nil {
 			log.Error(err, "init the event file logger error")
 			return nil, err

@@ -10,7 +10,7 @@ import (
 	"github.com/no-src/gofs/daemon"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/util/hashutil"
-	"github.com/no-src/log"
+	"github.com/no-src/log/level"
 )
 
 func parseFlags(args []string) (config conf.Config) {
@@ -53,7 +53,7 @@ func parseFlags(args []string) (config conf.Config) {
 	flag.BoolVar(&config.RetryAsync, "retry_async", false, "execute retry asynchronously")
 
 	// log
-	flag.IntVar(&config.LogLevel, "log_level", int(log.InfoLevel), "set log level, default is INFO. DEBUG=0 INFO=1 WARN=2 ERROR=3")
+	flag.IntVar(&config.LogLevel, "log_level", int(level.InfoLevel), "set log level, default is INFO. DEBUG=0 INFO=1 WARN=2 ERROR=3")
 	flag.BoolVar(&config.EnableFileLogger, "log_file", true, "enable the file logger")
 	flag.StringVar(&config.LogDir, "log_dir", "./logs/", "set the directory of the log file")
 	flag.BoolVar(&config.LogFlush, "log_flush", true, "enable auto flush log with interval")
