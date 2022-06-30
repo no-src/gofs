@@ -10,6 +10,7 @@ import (
 	"github.com/no-src/gofs/daemon"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/util/hashutil"
+	"github.com/no-src/log/formatter"
 	"github.com/no-src/log/level"
 )
 
@@ -60,6 +61,7 @@ func parseFlags(args []string) (config conf.Config) {
 	core.DurationVar(&config.LogFlushInterval, "log_flush_interval", time.Second*3, "set the log flush interval duration, you need to enable -log_flush first")
 	flag.BoolVar(&config.EnableEventLog, "log_event", false, "enable the event log")
 	flag.Float64Var(&config.LogSampleRate, "log_sample_rate", 1, "set the sample rate for the sample logger, and the value ranges from 0 to 1")
+	flag.StringVar(&config.LogFormat, "log_format", formatter.TextFormatter, "set the log output format, current support text and json")
 
 	// daemon
 	flag.BoolVar(&config.IsDaemon, "daemon", false, "enable daemon to create and monitor a subprocess to work, you can use [go build -ldflags=\"-H windowsgui\"] to build on Windows")

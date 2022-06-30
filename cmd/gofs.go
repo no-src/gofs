@@ -22,6 +22,7 @@ import (
 	"github.com/no-src/gofs/version"
 	"github.com/no-src/gofs/wait"
 	"github.com/no-src/log"
+	"github.com/no-src/log/formatter"
 	"github.com/no-src/log/level"
 )
 
@@ -161,6 +162,13 @@ func executeOnce(c conf.Config) (exit bool) {
 
 // initDefaultLogger init the default logger
 func initDefaultLogger(c conf.Config) error {
+	// init log formatter
+	if c.LogFormat != formatter.TextFormatter {
+		log.Info("switch logger format to %s", c.LogFormat)
+	}
+	formatter.InitDefaultFormatter(c.LogFormat)
+	log.DefaultLogger().WithFormatter(formatter.New(c.LogFormat))
+
 	var loggers []log.Logger
 	loggers = append(loggers, log.NewConsoleLogger(level.Level(c.LogLevel)))
 	if c.EnableFileLogger {

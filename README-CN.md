@@ -316,6 +316,8 @@ https://127.0.0.1/manage/report
 
 使用`log_sample_rate`命令行参数设置采样日志的采样率，取值范围为0到1，默认值为`1`
 
+使用`log_format`命令行参数设置日志输出格式，当前支持`text`与`json`，默认为`text`
+
 ```bash
 # 在"本地磁盘"模式下设置日志信息
 $ gofs -source=./source -dest=./dest -log_file -log_level=0 -log_dir="./logs/" -log_flush -log_flush_interval=3s -log_event

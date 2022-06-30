@@ -345,6 +345,8 @@ Use the `log_event` flag to enable the event log, write to file, default is `fal
 Use the `log_sample_rate` flag to set the sample rate for the sample logger, and the value ranges from 0 to 1, default
 is `1`.
 
+Use the `log_format` flag to set the log output format, current support `text` and `json`, default is `text`.
+
 ```bash
 # set the logger config in "Local Disk" mode
 $ gofs -source=./source -dest=./dest -log_file -log_level=0 -log_dir="./logs/" -log_flush -log_flush_interval=3s -log_event
