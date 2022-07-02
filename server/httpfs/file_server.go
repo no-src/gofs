@@ -81,6 +81,7 @@ func initDefaultMiddleware(engine *gin.Engine, logger io.Writer) {
 	engine.Use(gin.LoggerWithConfig(gin.LoggerConfig{
 		Formatter: defaultLogFormatter,
 		Output:    logger,
+		SkipPaths: []string{"/favicon.ico"},
 	}), gin.Recovery(), middleware.ApiStat())
 }
 
