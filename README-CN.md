@@ -23,12 +23,6 @@ go install github.com/no-src/gofs/...@latest
 
 ### 在Docker中运行
 
-如果你想要在docker中运行，请在安装或者编译的时候使用`-tags netgo`命令行参数或者设置环境变量`CGO_ENABLED=0`,否则当你运行docker容器时可能会报找不到`gofs`的错误
-
-```bash
-go install -tags netgo github.com/no-src/gofs/...@latest
-```
-
 你可以使用[build-docker.sh](/scripts/build-docker.sh)脚本来构建docker镜像，首先你需要克隆本仓库并且`cd`到本仓库的根目录
 
 ```bash
