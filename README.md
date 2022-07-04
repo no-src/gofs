@@ -24,14 +24,6 @@ go install github.com/no-src/gofs/...@latest
 
 ### Run In Docker
 
-If you want to run in a docker, you should install or build with the `-tags netgo` flag or set the
-environment `CGO_ENABLED=0`, otherwise you may get an error that the `gofs` not found, when the docker container is
-running.
-
-```bash
-go install -tags netgo github.com/no-src/gofs/...@latest
-```
-
 You can use the [build-docker.sh](/scripts/build-docker.sh) script to build the docker image and you should clone this
 repository and `cd` to the root path of the repository first.
 
