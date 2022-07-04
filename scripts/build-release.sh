@@ -19,7 +19,7 @@ export GOOS=linux
 export GOARCH=amd64
 
 # build gofs
-go build -v -tags netgo -o . ./...
+go build -v -o . ./...
 
 export GOFS_RELEASE_GO_VERSION=$(go version | awk '{print $3}')
 export GOFS_RELEASE_VERSION=$(./gofs -v | awk 'NR==1 {print $3}')
