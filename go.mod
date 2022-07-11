@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/fsnotify/fsnotify v1.5.4
-	github.com/gin-contrib/gzip v0.0.5
+	github.com/gin-contrib/gzip v0.0.6
 	github.com/gin-contrib/pprof v1.4.0
 	github.com/gin-contrib/sessions v0.0.5
 	github.com/gin-gonic/gin v1.8.1
@@ -12,7 +12,7 @@ require (
 	github.com/pkg/sftp v1.13.5
 	github.com/robfig/cron/v3 v3.0.1
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
