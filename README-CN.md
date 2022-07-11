@@ -209,6 +209,14 @@ $ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./
 $ gofs -source="./source" -dest="rs://127.0.0.1:8105?local_sync_disabled=false&path=./dest" -users="gofs|password"
 ```
 
+### SFTP客户端
+
+启动一个SFTP客户端，将发生变更的文件同步到SFTP服务器
+
+```bash
+$ gofs -source="./source" -dest="sftp://127.0.0.1:22?local_sync_disabled=false&path=./dest&remote_path=/gofs_sftp_server" -users="sftp_user|sftp_pwd"
+```
+
 ### 中继
 
 如果你需要在两个无法直接相连的设备之间同步文件，可以使用反向代理作为中继服务器来实现，详情参见[中继模式](/relay/README-CN.md)

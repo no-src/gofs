@@ -229,6 +229,14 @@ More flag usage see [Remote Disk Client](#remote-disk-client).
 $ gofs -source="./source" -dest="rs://127.0.0.1:8105?local_sync_disabled=false&path=./dest" -users="gofs|password"
 ```
 
+### SFTP Client
+
+Start a SFTP client to sync change files to the SFTP server.
+
+```bash
+$ gofs -source="./source" -dest="sftp://127.0.0.1:22?local_sync_disabled=false&path=./dest&remote_path=/gofs_sftp_server" -users="sftp_user|sftp_pwd"
+```
+
 ### Relay
 
 If you need to synchronize files between two devices that are unable to establish a direct connection, you can use a
