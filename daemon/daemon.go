@@ -13,7 +13,7 @@ import (
 // SubprocessTag mark the current process is subprocess
 const SubprocessTag = "sub"
 
-var shutdown = make(chan bool, 1)
+var shutdown = make(chan struct{}, 1)
 
 // Daemon running as a daemon process, and create a subprocess for working
 func Daemon(recordPid bool, daemonDelay time.Duration, monitorDelay time.Duration) {
@@ -142,19 +142,14 @@ func Shutdown() (err error) {
 			err = fmt.Errorf("%v", r)
 		}
 	}()
-	shutdown <- true
 	close(shutdown)
 	return err
 }
 
 func wait(d time.Duration) (isShutdown bool) {
 	select {
-	case isShutdown = <-shutdown:
-		{
-			if isShutdown {
-				return isShutdown
-			}
-		}
+	case <-shutdown:
+		return true
 	case <-time.After(d):
 
 	}

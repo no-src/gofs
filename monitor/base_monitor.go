@@ -24,10 +24,10 @@ type baseMonitor struct {
 	writeMap        map[string]*writeMessage
 	writeList       writeMessageList
 	writeChan       chan *writeMessage
-	writeNotify     chan bool
+	writeNotify     chan struct{}
 	mu              sync.Mutex
 	syncSpec        string
-	cronChan        chan bool
+	cronChan        chan struct{}
 	shutdown        chan bool
 	syncOnce        bool
 	el              eventlog.EventLog
@@ -44,8 +44,8 @@ func newBaseMonitor(syncer nssync.Sync, retry retry.Retry, syncOnce bool, eventW
 		retry:           retry,
 		writeMap:        make(map[string]*writeMessage),
 		writeChan:       make(chan *writeMessage, 100),
-		writeNotify:     make(chan bool, 100),
-		cronChan:        make(chan bool, 1),
+		writeNotify:     make(chan struct{}, 100),
+		cronChan:        make(chan struct{}, 1),
 		shutdown:        make(chan bool, 1),
 		syncOnce:        syncOnce,
 		el:              eventlog.New(eventWriter),
@@ -73,7 +73,7 @@ func (m *baseMonitor) addWrite(name string) {
 		}
 	}
 	m.mu.Unlock()
-	m.writeNotify <- true
+	m.writeNotify <- struct{}{}
 }
 
 // removeWrite remove write message
@@ -86,7 +86,7 @@ func (m *baseMonitor) removeWrite(name string) {
 		log.Debug("removeWrite => [%s]", name)
 	}
 	m.mu.Unlock()
-	m.writeNotify <- true
+	m.writeNotify <- struct{}{}
 }
 
 // startReceiveWriteNotify start loop to receive write notification, and delay process
@@ -105,7 +105,7 @@ func (m *baseMonitor) startReceiveWriteNotify() {
 					m.mu.Unlock()
 					<-time.After(time.Second)
 					go func() {
-						m.writeNotify <- true
+						m.writeNotify <- struct{}{}
 					}()
 					continue
 				}
@@ -168,7 +168,7 @@ func (m *baseMonitor) startCron(f func() error) error {
 				log.Error(errors.New("cron task execute panic"), "%v", e)
 			}
 		}()
-		m.cronChan <- true
+		m.cronChan <- struct{}{}
 		log.Info("start execute cron task, spec=[%s]", m.syncSpec)
 		err := f()
 		if err != nil {

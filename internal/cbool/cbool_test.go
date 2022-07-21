@@ -23,8 +23,8 @@ func TestCBool(t *testing.T) {
 	if actual != expect {
 		t.Errorf("test CBoll SetC and Get failed, expect:%v, actual:%v", expect, actual)
 	}
-	actual = <-c
-	if actual != expect {
-		t.Errorf("test CBoll SetC value failed, expect:%v, actual:%v", expect, actual)
+	_, ok := <-c
+	if ok {
+		t.Errorf("test CBoll SetC value failed, channel should be closed")
 	}
 }

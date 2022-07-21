@@ -29,12 +29,12 @@ func (cb *CBool) Set(v bool) {
 	cb.v = v
 }
 
-// SetC to set the bool value and return a channel
-func (cb *CBool) SetC(v bool) <-chan bool {
+// SetC to set the bool value and return a closed channel
+func (cb *CBool) SetC(v bool) <-chan struct{} {
 	cb.mu.Lock()
 	defer cb.mu.Unlock()
 	cb.v = v
-	c := make(chan bool, 1)
-	c <- v
+	c := make(chan struct{})
+	close(c)
 	return c
 }
