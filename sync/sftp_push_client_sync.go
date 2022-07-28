@@ -17,7 +17,7 @@ import (
 	"github.com/no-src/log"
 )
 
-type sftpClientSync struct {
+type sftpPushClientSync struct {
 	diskSync
 
 	remoteAddr  string
@@ -26,8 +26,8 @@ type sftpClientSync struct {
 	client      driver.Driver
 }
 
-// NewSftpClientSync create an instance of the sftpClientSync
-func NewSftpClientSync(source, dest core.VFS, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool, r retry.Retry) (Sync, error) {
+// NewSftpPushClientSync create an instance of the sftpPushClientSync
+func NewSftpPushClientSync(source, dest core.VFS, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool, r retry.Retry) (Sync, error) {
 	if chunkSize <= 0 {
 		return nil, errors.New("chunk size must greater than zero")
 	}
@@ -41,7 +41,7 @@ func NewSftpClientSync(source, dest core.VFS, users []*auth.User, enableLogicall
 		return nil, err
 	}
 
-	s := &sftpClientSync{
+	s := &sftpPushClientSync{
 		diskSync:    *ds,
 		remoteAddr:  dest.Addr(),
 		remotePath:  dest.RemotePath(),
@@ -57,11 +57,11 @@ func NewSftpClientSync(source, dest core.VFS, users []*auth.User, enableLogicall
 	return s, nil
 }
 
-func (s *sftpClientSync) start() error {
+func (s *sftpPushClientSync) start() error {
 	return s.client.Connect()
 }
 
-func (s *sftpClientSync) Create(path string) error {
+func (s *sftpPushClientSync) Create(path string) error {
 	if !s.dest.LocalSyncDisabled() {
 		if err := s.diskSync.Create(path); err != nil {
 			return err
@@ -84,7 +84,7 @@ func (s *sftpClientSync) Create(path string) error {
 	return err
 }
 
-func (s *sftpClientSync) Write(path string) error {
+func (s *sftpPushClientSync) Write(path string) error {
 	if !s.dest.LocalSyncDisabled() {
 		if err := s.diskSync.Write(path); err != nil {
 			return err
@@ -129,7 +129,7 @@ func (s *sftpClientSync) Write(path string) error {
 	return err
 }
 
-func (s *sftpClientSync) Remove(path string) error {
+func (s *sftpPushClientSync) Remove(path string) error {
 	if !s.dest.LocalSyncDisabled() {
 		if err := s.diskSync.Remove(path); err != nil {
 			return err
@@ -139,7 +139,7 @@ func (s *sftpClientSync) Remove(path string) error {
 	return s.remove(path, false)
 }
 
-func (s *sftpClientSync) remove(path string, forceDelete bool) (err error) {
+func (s *sftpPushClientSync) remove(path string, forceDelete bool) (err error) {
 	destPath, err := s.buildDestAbsFile(path)
 	if err != nil {
 		return err
@@ -153,7 +153,7 @@ func (s *sftpClientSync) remove(path string, forceDelete bool) (err error) {
 }
 
 // logicallyDelete delete the path logically
-func (s *sftpClientSync) logicallyDelete(path string) error {
+func (s *sftpPushClientSync) logicallyDelete(path string) error {
 	if fs.IsDeleted(path) {
 		return nil
 	}
@@ -165,7 +165,7 @@ func (s *sftpClientSync) logicallyDelete(path string) error {
 	return err
 }
 
-func (s *sftpClientSync) Rename(path string) error {
+func (s *sftpPushClientSync) Rename(path string) error {
 	if !s.dest.LocalSyncDisabled() {
 		if err := s.diskSync.Remove(path); err != nil {
 			return err
@@ -175,16 +175,16 @@ func (s *sftpClientSync) Rename(path string) error {
 	return s.remove(path, true)
 }
 
-func (s *sftpClientSync) Chmod(path string) error {
+func (s *sftpPushClientSync) Chmod(path string) error {
 	log.Debug("Chmod is unimplemented [%s]", path)
 	return nil
 }
 
-func (s *sftpClientSync) IsDir(path string) (bool, error) {
+func (s *sftpPushClientSync) IsDir(path string) (bool, error) {
 	return s.diskSync.IsDir(path)
 }
 
-func (s *sftpClientSync) SyncOnce(path string) error {
+func (s *sftpPushClientSync) SyncOnce(path string) error {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return err
@@ -208,7 +208,7 @@ func (s *sftpClientSync) SyncOnce(path string) error {
 	})
 }
 
-func (s *sftpClientSync) buildDestAbsFile(sourceFileAbs string) (string, error) {
+func (s *sftpPushClientSync) buildDestAbsFile(sourceFileAbs string) (string, error) {
 	sourceFileRel, err := filepath.Rel(s.sourceAbsPath, sourceFileAbs)
 	if err != nil {
 		log.Error(err, "parse rel path error, basePath=%s destPath=%s", s.sourceAbsPath, sourceFileRel)
