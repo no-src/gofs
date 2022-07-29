@@ -4,7 +4,19 @@ import (
 	"errors"
 	"io"
 	"os"
+	"time"
 )
+
+var isNotExist = os.IsNotExist
+
+// StatFunc the function prototype of os.Stat
+type StatFunc func(name string) (os.FileInfo, error)
+
+// GetFileTimeFunc the function prototype of GetFileTime
+type GetFileTimeFunc func(path string) (cTime time.Time, aTime time.Time, mTime time.Time, err error)
+
+// IsDirFunc the function prototype of IsDir
+type IsDirFunc func(path string) (bool, error)
 
 // FileExist is file Exist
 func FileExist(path string) (exist bool, err error) {
@@ -47,4 +59,11 @@ func IsNonEOF(err error) bool {
 	return err != nil && !errors.Is(err, io.EOF)
 }
 
-var isNotExist = os.IsNotExist
+// GetFileTime get the creation time, last access time, last modify time of the path
+func GetFileTime(path string) (cTime time.Time, aTime time.Time, mTime time.Time, err error) {
+	stat, err := os.Stat(path)
+	if err != nil {
+		return
+	}
+	return GetFileTimeBySys(stat.Sys())
+}
