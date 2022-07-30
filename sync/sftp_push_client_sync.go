@@ -193,7 +193,7 @@ func (s *sftpPushClientSync) SyncOnce(path string) error {
 		if err != nil {
 			return err
 		}
-		if ignore.MatchPath(currentPath, "sftp client sync", "sync once") {
+		if ignore.MatchPath(currentPath, "sftp push client sync", "sync once") {
 			return nil
 		}
 		if d.IsDir() {

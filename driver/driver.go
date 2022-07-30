@@ -2,6 +2,9 @@ package driver
 
 import (
 	"io"
+	"io/fs"
+	"net/http"
+	"os"
 	"time"
 )
 
@@ -19,4 +22,12 @@ type Driver interface {
 	Rename(oldPath, newPath string) error
 	// Chtimes changes the access and modification times of the named file
 	Chtimes(path string, aTime time.Time, mTime time.Time) error
+	// WalkDir walks the file tree rooted at root, calling fn for each file or directory in the tree, including root
+	WalkDir(root string, fn fs.WalkDirFunc) error
+	// Open opens the named file for reading
+	Open(path string) (f http.File, err error)
+	// Stat returns the os.FileInfo describing the named file
+	Stat(path string) (fi os.FileInfo, err error)
+	// GetFileTime get the creation time, last access time, last modify time of the path
+	GetFileTime(path string) (cTime time.Time, aTime time.Time, mTime time.Time, err error)
 }

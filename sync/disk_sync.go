@@ -22,6 +22,10 @@ type diskSync struct {
 	destAbsPath     string
 	chunkSize       int64
 	checkpointCount int
+
+	isDirFn       nsfs.IsDirFunc
+	statFn        nsfs.StatFunc
+	getFileTimeFn nsfs.GetFileTimeFunc
 }
 
 // NewDiskSync create a diskSync instance
@@ -55,6 +59,9 @@ func newDiskSync(source, dest core.VFS, enableLogicallyDelete bool, chunkSize in
 		baseSync:        newBaseSync(source, dest, enableLogicallyDelete, forceChecksum),
 		chunkSize:       chunkSize,
 		checkpointCount: checkpointCount,
+		isDirFn:         nsfs.IsDir,
+		statFn:          os.Stat,
+		getFileTimeFn:   nsfs.GetFileTime,
 	}
 	return s, nil
 }
@@ -95,7 +102,7 @@ func (s *diskSync) Create(path string) error {
 			log.ErrorIf(f.Close(), "Create:close file error")
 		}()
 	}
-	_, aTime, mTime, err := nsfs.GetFileTime(path)
+	_, aTime, mTime, err := s.getFileTimeFn(path)
 	if err != nil {
 		return err
 	}
@@ -219,7 +226,7 @@ func (s *diskSync) compare(sourceFile *os.File, sourceSize int64, dest string, o
 
 // chtimes change file times
 func (s *diskSync) chtimes(source, dest string) {
-	if _, aTime, mTime, err := nsfs.GetFileTime(source); err == nil {
+	if _, aTime, mTime, err := s.getFileTimeFn(source); err == nil {
 		if err = os.Chtimes(dest, aTime, mTime); err != nil {
 			log.Warn("Write:change file times error => %s =>[%s]", err.Error(), dest)
 		}
@@ -272,7 +279,7 @@ func (s *diskSync) buildDestAbsFile(sourceFileAbs string) (string, error) {
 }
 
 func (s *diskSync) IsDir(path string) (bool, error) {
-	return nsfs.IsDir(path)
+	return s.isDirFn(path)
 }
 
 // SyncOnce auto sync source directory to dest directory once.

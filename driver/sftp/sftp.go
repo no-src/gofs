@@ -3,6 +3,7 @@ package sftp
 import (
 	"errors"
 	"io"
+	"io/fs"
 	"net"
 	"net/http"
 	"os"
@@ -197,3 +198,53 @@ func (sc *sftpClient) ReadDir(path string) (fis []os.FileInfo, err error) {
 	})
 	return fis, err
 }
+
+func (sc *sftpClient) Stat(path string) (fi os.FileInfo, err error) {
+	err = sc.reconnectIfLost(func() error {
+		fi, err = sc.Client.Stat(path)
+		return err
+	})
+	return fi, err
+}
+
+func (sc *sftpClient) GetFileTime(path string) (cTime time.Time, aTime time.Time, mTime time.Time, err error) {
+	err = sc.reconnectIfLost(func() error {
+		var fi os.FileInfo
+		fi, err = sc.Client.Stat(path)
+		if err != nil {
+			return err
+		}
+		cTime = fi.ModTime()
+		aTime = fi.ModTime()
+		mTime = fi.ModTime()
+		return nil
+	})
+	return
+}
+
+func (sc *sftpClient) WalkDir(root string, fn fs.WalkDirFunc) error {
+	return sc.reconnectIfLost(func() error {
+		walker := sc.Client.Walk(root)
+		for {
+			next := walker.Step()
+			if err := walker.Err(); err != nil {
+				return err
+			}
+			if !next {
+				return nil
+			}
+			if err := fn(walker.Path(), &statDirEntry{walker.Stat()}, walker.Err()); err != nil {
+				return err
+			}
+		}
+	})
+}
+
+type statDirEntry struct {
+	info fs.FileInfo
+}
+
+func (d *statDirEntry) Name() string               { return d.info.Name() }
+func (d *statDirEntry) IsDir() bool                { return d.info.IsDir() }
+func (d *statDirEntry) Type() fs.FileMode          { return d.info.Mode().Type() }
+func (d *statDirEntry) Info() (fs.FileInfo, error) { return d.info, nil }

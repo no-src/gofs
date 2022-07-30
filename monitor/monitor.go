@@ -35,6 +35,8 @@ func NewMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, enableTLS bo
 		return NewRemoteServerMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime)
 	} else if source.Is(core.RemoteDisk) && !source.Server() {
 		return NewRemoteClientMonitor(syncer, retry, syncOnce, source.Host(), source.Port(), enableTLS, certFile, insecureSkipVerify, users, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime)
+	} else if source.Is(core.SFTP) {
+		return NewSftpPullClientMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime)
 	}
 	return nil, fmt.Errorf("file system unsupported ! source=>%s", source.Type().String())
 }
