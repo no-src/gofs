@@ -229,12 +229,20 @@ More flag usage see [Remote Disk Client](#remote-disk-client).
 $ gofs -source="./source" -dest="rs://127.0.0.1:8105?local_sync_disabled=false&path=./dest" -users="gofs|password"
 ```
 
-### SFTP Client
+### SFTP Push Client
 
-Start a SFTP client to sync change files to the SFTP server.
+Start a SFTP push client to sync change files to the SFTP server.
 
 ```bash
 $ gofs -source="./source" -dest="sftp://127.0.0.1:22?local_sync_disabled=false&path=./dest&remote_path=/gofs_sftp_server" -users="sftp_user|sftp_pwd"
+```
+
+### SFTP Pull Client
+
+Start a SFTP pull client to pull the files from the SFTP server to the local destination path.
+
+```bash
+$ gofs -source="sftp://127.0.0.1:22?remote_path=/gofs_sftp_server" -dest="./dest" -users="sftp_user|sftp_pwd" -sync_once
 ```
 
 ### Relay

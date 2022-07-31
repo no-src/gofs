@@ -209,12 +209,20 @@ $ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./
 $ gofs -source="./source" -dest="rs://127.0.0.1:8105?local_sync_disabled=false&path=./dest" -users="gofs|password"
 ```
 
-### SFTP客户端
+### SFTP推送客户端
 
-启动一个SFTP客户端，将发生变更的文件同步到SFTP服务器
+启动一个SFTP推送客户端，将发生变更的文件同步到SFTP服务器
 
 ```bash
 $ gofs -source="./source" -dest="sftp://127.0.0.1:22?local_sync_disabled=false&path=./dest&remote_path=/gofs_sftp_server" -users="sftp_user|sftp_pwd"
+```
+
+### SFTP拉取客户端
+
+启动一个SFTP拉取客户端，将文件从SFTP服务器拉到本地目标路径
+
+```bash
+$ gofs -source="sftp://127.0.0.1:22?remote_path=/gofs_sftp_server" -dest="./dest" -users="sftp_user|sftp_pwd" -sync_once
 ```
 
 ### 中继
