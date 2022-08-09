@@ -11,7 +11,7 @@ require (
 	github.com/no-src/log v0.1.4
 	github.com/pkg/sftp v1.13.5
 	github.com/robfig/cron/v3 v3.0.1
-	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
+	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -35,9 +35,10 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.1 // indirect
 	github.com/quasoft/memstore v0.0.0-20191010062613-2bce066d2b0b // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
-	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2 // indirect
-	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad // indirect
-	golang.org/x/text v0.3.6 // indirect
+	golang.org/x/net v0.0.0-20220809012201-f428fae20770 // indirect
+	golang.org/x/sys v0.0.0-20220808155132-1c4a2a72c664 // indirect
+	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
+	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
