@@ -270,6 +270,7 @@ Response field description:
     - `go_arch` is the running program's architecture target
     - `go_version` returns the Go tree's version string
     - `version` returns the version info of the gofs
+    - `commit` returns last commit hash value of the gofs
     - `online` returns the client connection info that is online
         - `addr` the client connection address
         - `is_auth` whether the client is authorized
@@ -304,6 +305,7 @@ Here is an example response:
     "go_arch": "amd64",
     "go_version": "go1.18",
     "version": "v0.4.0",
+    "commit": "753f90b3dd1454ca4c87f43b1bb5e6aaabbd7689",
     "online": {
       "127.0.0.1:11993": {
         "addr": "127.0.0.1:11993",

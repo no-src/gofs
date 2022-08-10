@@ -16,6 +16,8 @@ type Report struct {
 	GOVersion string `json:"go_version"`
 	// Version returns the version info of the gofs
 	Version string `json:"version"`
+	// Commit returns last commit hash value of the gofs
+	Commit string `json:"commit"`
 	// Online returns the client connection info that is online
 	Online map[string]*ConnStat `json:"online"`
 	// Offline returns the client connection info that is offline
