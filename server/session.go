@@ -20,7 +20,7 @@ const (
 
 // NewSessionStore create a session store, stored in memory or redis, default is memory
 func NewSessionStore(sessionMode int, sessionConnection string) (sessions.Store, error) {
-	secret := make([]byte, 32)
+	secret := make([]byte, 64)
 	_, err := rand.Reader.Read(secret)
 	if err != nil {
 		return nil, err
@@ -36,9 +36,12 @@ func NewSessionStore(sessionMode int, sessionConnection string) (sessions.Store,
 }
 
 func redisSessionStore(redisUrl string, secret []byte) (sessions.Store, error) {
-	maxIdle, network, address, password, db, err := parseRedisConnection(redisUrl)
+	maxIdle, network, address, password, db, redisSecret, err := parseRedisConnection(redisUrl)
 	if err != nil {
 		return nil, err
+	}
+	if len(redisSecret) > 0 {
+		secret = redisSecret
 	}
 	// get the existing secret in the redis, if not exist, set the new secret
 	// TODO
@@ -46,8 +49,8 @@ func redisSessionStore(redisUrl string, secret []byte) (sessions.Store, error) {
 }
 
 // parseRedisConnection parse the redis connection string
-// for example => redis://127.0.0.1:6379?password=secret&db=10&max_idle=10
-func parseRedisConnection(redisUrl string) (maxIdle int, network, address, password string, db string, err error) {
+// for example => redis://127.0.0.1:6379?password=redis_password&db=10&max_idle=10&secret=redis_secret
+func parseRedisConnection(redisUrl string) (maxIdle int, network, address, password string, db string, secret []byte, err error) {
 	u, err := url.Parse(redisUrl)
 	if err != nil {
 		return
@@ -76,6 +79,9 @@ func parseRedisConnection(redisUrl string) (maxIdle int, network, address, passw
 
 	// password
 	password = u.Query().Get("password")
+
+	// secret
+	secret = []byte(u.Query().Get("secret"))
 
 	// db
 	defaultDB := "0"
