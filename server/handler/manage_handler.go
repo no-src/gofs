@@ -29,6 +29,9 @@ func (h *manageHandler) Handle(c *gin.Context) {
 	if len(config.Users) > 0 {
 		config.Users = "******"
 	}
+	if len(config.SessionConnection) > 0 {
+		config.SessionConnection = "******"
+	}
 	if format == conf.YamlFormat.Name() {
 		c.YAML(http.StatusOK, server.NewApiResult(contract.Success, contract.SuccessDesc, config))
 	} else {
