@@ -10,7 +10,6 @@ import (
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/server"
-	"github.com/no-src/gofs/server/handler"
 	"github.com/no-src/log"
 )
 
@@ -19,16 +18,16 @@ type authHandler struct {
 	perm   auth.Perm
 }
 
-// NewAuthHandler create an instance of the authHandler middleware
-func NewAuthHandler(logger log.Logger, perm string) handler.GinHandler {
+// NewAuthHandlerFunc returns a middleware that checks whether the user is sign in
+func NewAuthHandlerFunc(logger log.Logger, perm string) gin.HandlerFunc {
 	p := auth.ToPermWithDefault(perm, auth.DefaultPerm)
 	if !p.IsValid() {
 		logger.Warn("the auth middleware get an invalid permission")
 	}
-	return &authHandler{
+	return (&authHandler{
 		logger: logger,
 		perm:   p,
-	}
+	}).Handle
 }
 
 func (h *authHandler) Handle(c *gin.Context) {

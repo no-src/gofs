@@ -18,12 +18,12 @@ type loginHandler struct {
 	logger log.Logger
 }
 
-// NewLoginHandler create an instance of the loginHandler
-func NewLoginHandler(users []*auth.User, logger log.Logger) GinHandler {
-	return &loginHandler{
+// NewLoginHandlerFunc returns a gin.HandlerFunc that providers a login api
+func NewLoginHandlerFunc(users []*auth.User, logger log.Logger) gin.HandlerFunc {
+	return (&loginHandler{
 		users:  users,
 		logger: logger,
-	}
+	}).Handle
 }
 
 func (h *loginHandler) Handle(c *gin.Context) {

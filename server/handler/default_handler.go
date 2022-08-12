@@ -12,11 +12,11 @@ type defaultHandler struct {
 	logger log.Logger
 }
 
-// NewDefaultHandler create an instance of the defaultHandler
-func NewDefaultHandler(logger log.Logger) GinHandler {
-	return &defaultHandler{
+// NewDefaultHandlerFunc returns a gin.HandlerFunc that shows the default home page
+func NewDefaultHandlerFunc(logger log.Logger) gin.HandlerFunc {
+	return (&defaultHandler{
 		logger: logger,
-	}
+	}).Handle
 }
 
 func (h *defaultHandler) Handle(c *gin.Context) {

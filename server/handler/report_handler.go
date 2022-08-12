@@ -14,11 +14,11 @@ type reportHandler struct {
 	logger log.Logger
 }
 
-// NewReportHandler create an instance of the reportHandler
-func NewReportHandler(logger log.Logger) GinHandler {
-	return &reportHandler{
+// NewReportHandlerFunc returns a gin.HandlerFunc that providers a report api to show the application status
+func NewReportHandlerFunc(logger log.Logger) gin.HandlerFunc {
+	return (&reportHandler{
 		logger: logger,
-	}
+	}).Handle
 }
 
 func (h *reportHandler) Handle(c *gin.Context) {

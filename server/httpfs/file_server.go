@@ -111,28 +111,28 @@ func initRoute(engine *gin.Engine, opt server.Option, logger log.Logger) error {
 	loginGroup.GET(server.LoginIndexRoute, func(context *gin.Context) {
 		context.HTML(http.StatusOK, "login.html", nil)
 	})
-	loginGroup.POST(server.LoginSignInRoute, handler.NewLoginHandler(opt.Users, logger).Handle)
+	loginGroup.POST(server.LoginSignInRoute, handler.NewLoginHandlerFunc(opt.Users, logger))
 
 	rootGroup := engine.Group(server.RootGroupRoute)
 	wGroup := engine.Group(server.WriteGroupRoute)
 	manageGroup := engine.Group(server.ManageGroupRoute)
 	if len(opt.Users) > 0 {
-		rootGroup.Use(middleware.NewAuthHandler(logger, auth.ReadPerm).Handle)
-		wGroup.Use(middleware.NewAuthHandler(logger, auth.WritePerm).Handle)
-		manageGroup.Use(middleware.NewAuthHandler(logger, auth.ExecutePerm).Handle)
+		rootGroup.Use(middleware.NewAuthHandlerFunc(logger, auth.ReadPerm))
+		wGroup.Use(middleware.NewAuthHandlerFunc(logger, auth.WritePerm))
+		manageGroup.Use(middleware.NewAuthHandlerFunc(logger, auth.ExecutePerm))
 	} else {
 		server.PrintAnonymousAccessWarning()
 	}
-	rootGroup.GET(server.DefaultRoute, handler.NewDefaultHandler(logger).Handle)
+	rootGroup.GET(server.DefaultRoute, handler.NewDefaultHandlerFunc(logger))
 
 	if opt.EnableManage {
 		if opt.ManagePrivate {
-			manageGroup.Use(middleware.NewPrivateAccessHandler(logger).Handle)
+			manageGroup.Use(middleware.NewPrivateAccessHandlerFunc(logger))
 		}
 		pprof.RouteRegister(manageGroup, server.PProfRoutePrefix)
-		manageGroup.GET(server.ManageConfigRoute, handler.NewManageHandler(logger).Handle)
+		manageGroup.GET(server.ManageConfigRoute, handler.NewManageHandlerFunc(logger))
 		if opt.EnableReport {
-			manageGroup.GET(server.ManageReportRoute, handler.NewReportHandler(logger).Handle)
+			manageGroup.GET(server.ManageReportRoute, handler.NewReportHandlerFunc(logger))
 			report.GlobalReporter.Enable(true)
 		}
 	}
@@ -142,7 +142,7 @@ func initRoute(engine *gin.Engine, opt server.Option, logger log.Logger) error {
 		enableFileApi = true
 
 		if opt.EnablePushServer {
-			wGroup.POST(server.PushRoute, handler.NewPushHandler(logger, source, opt.EnableLogicallyDelete).Handle)
+			wGroup.POST(server.PushRoute, handler.NewPushHandlerFunc(logger, source, opt.EnableLogicallyDelete))
 		}
 	}
 
@@ -163,7 +163,7 @@ func initRoute(engine *gin.Engine, opt server.Option, logger log.Logger) error {
 	}
 
 	if enableFileApi {
-		rootGroup.GET(server.QueryRoute, handler.NewFileApiHandler(logger, http.Dir(source.Path()), opt.ChunkSize, opt.CheckpointCount).Handle)
+		rootGroup.GET(server.QueryRoute, handler.NewFileApiHandlerFunc(logger, http.Dir(source.Path()), opt.ChunkSize, opt.CheckpointCount))
 	}
 
 	return nil

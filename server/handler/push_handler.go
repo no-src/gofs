@@ -28,13 +28,13 @@ type pushHandler struct {
 	enableLogicallyDelete bool
 }
 
-// NewPushHandler create an instance of the pushHandler
-func NewPushHandler(logger log.Logger, source core.VFS, enableLogicallyDelete bool) GinHandler {
-	return &pushHandler{
+// NewPushHandlerFunc returns a gin.HandlerFunc that to manage the files
+func NewPushHandlerFunc(logger log.Logger, source core.VFS, enableLogicallyDelete bool) gin.HandlerFunc {
+	return (&pushHandler{
 		logger:                logger,
 		storagePath:           source.Path(),
 		enableLogicallyDelete: enableLogicallyDelete,
-	}
+	}).Handle
 }
 
 func (h *pushHandler) Handle(c *gin.Context) {

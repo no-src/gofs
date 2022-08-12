@@ -22,14 +22,14 @@ type fileApiHandler struct {
 	checkpointCount int
 }
 
-// NewFileApiHandler create an instance of the fileApiHandler
-func NewFileApiHandler(logger log.Logger, root http.FileSystem, chunkSize int64, checkpointCount int) GinHandler {
-	return &fileApiHandler{
+// NewFileApiHandlerFunc returns a gin.HandlerFunc that queries the file info
+func NewFileApiHandlerFunc(logger log.Logger, root http.FileSystem, chunkSize int64, checkpointCount int) gin.HandlerFunc {
+	return (&fileApiHandler{
 		logger:          logger,
 		root:            root,
 		chunkSize:       chunkSize,
 		checkpointCount: checkpointCount,
-	}
+	}).Handle
 }
 
 func (h *fileApiHandler) Handle(c *gin.Context) {

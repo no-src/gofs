@@ -15,11 +15,11 @@ type manageHandler struct {
 	logger log.Logger
 }
 
-// NewManageHandler create an instance of the manageHandler
-func NewManageHandler(logger log.Logger) GinHandler {
-	return &manageHandler{
+// NewManageHandlerFunc returns a gin.HandlerFunc that shows the application config
+func NewManageHandlerFunc(logger log.Logger) gin.HandlerFunc {
+	return (&manageHandler{
 		logger: logger,
-	}
+	}).Handle
 }
 
 func (h *manageHandler) Handle(c *gin.Context) {
