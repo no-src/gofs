@@ -103,7 +103,7 @@ func (s *sftpPullClientSync) write(path, dest string) error {
 		return err
 	}
 	defer func() {
-		log.ErrorIf(sourceFile.Close(), "Write:close the source file error")
+		log.ErrorIf(sourceFile.Close(), "[sftp pull client sync] [write] close the source file error")
 	}()
 
 	sourceStat, err := sourceFile.Stat()
@@ -120,7 +120,7 @@ func (s *sftpPullClientSync) write(path, dest string) error {
 	destSize := destStat.Size()
 
 	if s.quickCompare(sourceSize, destSize, sourceStat.ModTime(), destStat.ModTime()) {
-		log.Debug("Write:ignored, the file size and file modification time are both unmodified => %s", path)
+		log.Debug("[sftp pull client sync] [write] [ignored], the file size and file modification time are both unmodified => %s", path)
 		return nil
 	}
 
@@ -129,7 +129,7 @@ func (s *sftpPullClientSync) write(path, dest string) error {
 		return err
 	}
 	defer func() {
-		log.ErrorIf(destFile.Close(), "Write:close the dest file error")
+		log.ErrorIf(destFile.Close(), "[sftp pull client sync] [write] close the dest file error")
 	}()
 
 	reader := bufio.NewReader(sourceFile)

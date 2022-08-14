@@ -99,7 +99,7 @@ func (s *diskSync) Create(path string) error {
 			return err
 		}
 		defer func() {
-			log.ErrorIf(f.Close(), "Create:close file error")
+			log.ErrorIf(f.Close(), "[create] close the dest file error")
 		}()
 	}
 	_, aTime, mTime, err := s.getFileTimeFn(path)
@@ -142,7 +142,7 @@ func (s *diskSync) write(path, dest string) error {
 		return err
 	}
 	defer func() {
-		log.ErrorIf(sourceFile.Close(), "Write:close the source file error")
+		log.ErrorIf(sourceFile.Close(), "[write] close the source file error")
 	}()
 
 	sourceStat, err := sourceFile.Stat()
@@ -159,13 +159,13 @@ func (s *diskSync) write(path, dest string) error {
 	destSize := destStat.Size()
 
 	if s.quickCompare(sourceSize, destSize, sourceStat.ModTime(), destStat.ModTime()) {
-		log.Debug("Write:ignored, the file size and file modification time are both unmodified => %s", path)
+		log.Debug("[write] [ignored], the file size and file modification time are both unmodified => %s", path)
 		return nil
 	}
 
 	var offset int64
 	if destSize > 0 && s.compare(sourceFile, sourceSize, dest, &offset) {
-		log.Debug("Write:ignored, the file is unmodified => %s", path)
+		log.Debug("[write] [ignored], the file is unmodified => %s", path)
 		return nil
 	}
 
@@ -174,7 +174,7 @@ func (s *diskSync) write(path, dest string) error {
 		return err
 	}
 	defer func() {
-		log.ErrorIf(destFile.Close(), "Write:close the dest file error")
+		log.ErrorIf(destFile.Close(), "[write] close the dest file error")
 	}()
 
 	if _, err = sourceFile.Seek(offset, io.SeekStart); err != nil {
@@ -228,10 +228,10 @@ func (s *diskSync) compare(sourceFile *os.File, sourceSize int64, dest string, o
 func (s *diskSync) chtimes(source, dest string) {
 	if _, aTime, mTime, err := s.getFileTimeFn(source); err == nil {
 		if err = os.Chtimes(dest, aTime, mTime); err != nil {
-			log.Warn("Write:change file times error => %s =>[%s]", err.Error(), dest)
+			log.Warn("[write] change file times error => %s =>[%s]", err.Error(), dest)
 		}
 	} else {
-		log.Warn("Write:get file times error => %s =>[%s]", err.Error(), source)
+		log.Warn("[write] get file times error => %s =>[%s]", err.Error(), source)
 	}
 }
 

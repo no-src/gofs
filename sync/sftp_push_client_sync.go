@@ -108,7 +108,7 @@ func (s *sftpPushClientSync) Write(path string) error {
 		return err
 	}
 	defer func() {
-		log.ErrorIf(sourceFile.Close(), "sftp write: close the source file error")
+		log.ErrorIf(sourceFile.Close(), "[sftp push client sync] [write] close the source file error")
 	}()
 
 	reader := bufio.NewReader(sourceFile)
@@ -118,12 +118,12 @@ func (s *sftpPushClientSync) Write(path string) error {
 		return err
 	}
 	defer func() {
-		log.ErrorIf(destFile.Close(), "sftp write: close the dest file error")
+		log.ErrorIf(destFile.Close(), "[sftp push client sync] [write] close the dest file error")
 	}()
 	_, err = reader.WriteTo(destFile)
 	if err == nil {
 		if _, aTime, mTime, err := fs.GetFileTime(path); err == nil {
-			log.ErrorIf(s.client.Chtimes(destPath, aTime, mTime), "sftp change file times error")
+			log.ErrorIf(s.client.Chtimes(destPath, aTime, mTime), "[sftp push client sync] [write] change file times error")
 		}
 	}
 	return err

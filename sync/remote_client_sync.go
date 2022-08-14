@@ -89,7 +89,7 @@ func (rs *remoteClientSync) Create(path string) error {
 		}
 		f, err := fs.CreateFile(dest)
 		defer func() {
-			log.ErrorIf(f.Close(), "Create:close file error")
+			log.ErrorIf(f.Close(), "[create] close the dest file error")
 		}()
 		if err != nil {
 			return err
@@ -136,14 +136,14 @@ func (rs *remoteClientSync) write(path, dest string) error {
 
 	destStat, err := os.Stat(dest)
 	if err == nil && rs.quickCompare(size, destStat.Size(), mTime, destStat.ModTime()) {
-		log.Debug("Write:ignored, the file size and file modification time are both unmodified => %s", path)
+		log.Debug("[remote client sync] [write] [ignored], the file size and file modification time are both unmodified => %s", path)
 		return nil
 	}
 
 	// if source and dest is the same file, ignore the following steps and return directly
 	equal, hv := rs.compareHashValues(dest, size, hash, rs.chunkSize, hvs)
 	if equal {
-		log.Debug("Write:ignored, the file is unmodified => %s", path)
+		log.Debug("[remote client sync] [write] [ignored], the file is unmodified => %s", path)
 		return nil
 	}
 	var offset int64
@@ -157,7 +157,7 @@ func (rs *remoteClientSync) write(path, dest string) error {
 		return err
 	}
 	defer func() {
-		log.ErrorIf(resp.Body.Close(), "Write:close the resp body error")
+		log.ErrorIf(resp.Body.Close(), "[remote client sync] [write] close the resp body error")
 	}()
 
 	destFile, err := fs.OpenRWFile(dest)
@@ -165,7 +165,7 @@ func (rs *remoteClientSync) write(path, dest string) error {
 		return err
 	}
 	defer func() {
-		log.ErrorIf(destFile.Close(), "Write:close the dest file error")
+		log.ErrorIf(destFile.Close(), "[remote client sync] [write] close the dest file error")
 	}()
 
 	if _, err = destFile.Seek(offset, io.SeekStart); err != nil {
@@ -198,7 +198,7 @@ func (rs *remoteClientSync) write(path, dest string) error {
 // chtimes change file times
 func (rs *remoteClientSync) chtimes(dest string, aTime, mTime time.Time) {
 	if err := os.Chtimes(dest, aTime, mTime); err != nil {
-		log.Warn("Write:change file times error => %s =>[%s]", err.Error(), dest)
+		log.Warn("[remote client sync] change file times error => %s =>[%s]", err.Error(), dest)
 	}
 }
 
