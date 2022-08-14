@@ -173,7 +173,7 @@ func (m *fsNotifyMonitor) startProcessEvents() error {
 func (m *fsNotifyMonitor) write(event fsnotify.Event) {
 	// ignore is not exist error
 	if err := m.syncer.Create(event.Name); err != nil && !os.IsNotExist(err) {
-		log.Error(err, "Write event execute create error => [%s]", event.Name)
+		log.Error(err, "[write] event execute create error => [%s]", event.Name)
 	}
 	m.addWrite(event.Name)
 }
@@ -185,14 +185,14 @@ func (m *fsNotifyMonitor) create(event fsnotify.Event) {
 		isDir, err := m.syncer.IsDir(event.Name)
 		if err == nil && isDir {
 			if err = m.monitor(event.Name); err != nil {
-				log.Error(err, "Create event execute monitor error => [%s]", event.Name)
+				log.Error(err, "[create] event execute monitor error => [%s]", event.Name)
 			}
 		}
 		if err == nil && (!isDir || (isDir && !osutil.IsWindows())) {
 			// rename a file, will not trigger the Write event
 			// rename a dir, will not trigger the Write event on Linux, but it will trigger the Write event for parent dir on Windows
 			// send a Write event manually
-			log.Debug("prepare to send a Write event after Create event [%s]", event.Name)
+			log.Debug("prepare to send a [write] event after [create] event [%s]", event.Name)
 			m.events.PushBack(fsnotify.Event{
 				Name: event.Name,
 				Op:   fsnotify.Write,
@@ -203,15 +203,15 @@ func (m *fsNotifyMonitor) create(event fsnotify.Event) {
 
 func (m *fsNotifyMonitor) remove(event fsnotify.Event) {
 	m.removeWrite(event.Name)
-	log.ErrorIf(m.syncer.Remove(event.Name), "Remove event execute error => [%s]", event.Name)
+	log.ErrorIf(m.syncer.Remove(event.Name), "[remove] event execute error => [%s]", event.Name)
 }
 
 func (m *fsNotifyMonitor) rename(event fsnotify.Event) {
-	log.ErrorIf(m.syncer.Rename(event.Name), "Rename event execute error => [%s]", event.Name)
+	log.ErrorIf(m.syncer.Rename(event.Name), "[rename] event execute error => [%s]", event.Name)
 }
 
 func (m *fsNotifyMonitor) chmod(event fsnotify.Event) {
-	log.ErrorIf(m.syncer.Chmod(event.Name), "Chmod event execute error => [%s]", event.Name)
+	log.ErrorIf(m.syncer.Chmod(event.Name), "[chmod] event execute error => [%s]", event.Name)
 }
 
 // monitorDirIfCreate monitor the directory if you create a new directory
