@@ -1,7 +1,6 @@
 package driver
 
 import (
-	"io"
 	"io/fs"
 	"net/http"
 	"os"
@@ -15,7 +14,7 @@ type Driver interface {
 	// MkdirAll creates a directory named path
 	MkdirAll(path string) error
 	// Create creates the named file
-	Create(path string) (rwc io.ReadWriteCloser, err error)
+	Create(path string) (err error)
 	// Remove removes the specified file or directory
 	Remove(path string) error
 	// Rename renames a file
@@ -30,4 +29,6 @@ type Driver interface {
 	Stat(path string) (fi os.FileInfo, err error)
 	// GetFileTime get the creation time, last access time, last modify time of the path
 	GetFileTime(path string) (cTime time.Time, aTime time.Time, mTime time.Time, err error)
+	// Write write src file to dest file
+	Write(src string, dest string) error
 }

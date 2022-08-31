@@ -111,12 +111,16 @@ func (sc *sftpClient) MkdirAll(path string) error {
 	})
 }
 
-func (sc *sftpClient) Create(path string) (rwc io.ReadWriteCloser, err error) {
+func (sc *sftpClient) Create(path string) (err error) {
 	err = sc.reconnectIfLost(func() error {
-		rwc, err = sc.Client.Create(path)
+		var f *sftp.File
+		f, err = sc.Client.Create(path)
+		if err == nil {
+			log.ErrorIf(f.Close(), "close sftp file err => %s", path)
+		}
 		return err
 	})
-	return rwc, err
+	return err
 }
 
 func (sc *sftpClient) Remove(path string) error {
@@ -238,6 +242,28 @@ func (sc *sftpClient) WalkDir(root string, fn fs.WalkDirFunc) error {
 			}
 		}
 	})
+}
+
+func (sc *sftpClient) Write(src string, dest string) (err error) {
+	err = sc.reconnectIfLost(func() error {
+		var srcFile *os.File
+		srcFile, err = os.Open(src)
+		if err != nil {
+			return err
+		}
+		defer srcFile.Close()
+
+		var destFile *sftp.File
+		destFile, err = sc.Client.OpenFile(dest, os.O_WRONLY|os.O_CREATE)
+		if err != nil {
+			return err
+		}
+		defer destFile.Close()
+
+		_, err = io.Copy(destFile, srcFile)
+		return err
+	})
+	return err
 }
 
 type statDirEntry struct {

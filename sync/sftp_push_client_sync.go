@@ -1,7 +1,6 @@
 package sync
 
 import (
-	"bufio"
 	"errors"
 	iofs "io/fs"
 	"os"
@@ -79,7 +78,7 @@ func (s *sftpPushClientSync) Create(path string) error {
 	if isDir {
 		err = s.client.MkdirAll(destPath)
 	} else {
-		_, err = s.client.Create(destPath)
+		err = s.client.Create(destPath)
 	}
 	return err
 }
@@ -103,24 +102,8 @@ func (s *sftpPushClientSync) Write(path string) error {
 	if err != nil {
 		return err
 	}
-	sourceFile, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		log.ErrorIf(sourceFile.Close(), "[sftp push client sync] [write] close the source file error")
-	}()
 
-	reader := bufio.NewReader(sourceFile)
-
-	destFile, err := s.client.Create(destPath)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		log.ErrorIf(destFile.Close(), "[sftp push client sync] [write] close the dest file error")
-	}()
-	_, err = reader.WriteTo(destFile)
+	err = s.client.Write(path, destPath)
 	if err == nil {
 		if _, aTime, mTime, err := fs.GetFileTime(path); err == nil {
 			log.ErrorIf(s.client.Chtimes(destPath, aTime, mTime), "[sftp push client sync] [write] change file times error")
