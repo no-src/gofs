@@ -2,6 +2,7 @@ package sftp
 
 import (
 	"io/fs"
+	"net/http"
 
 	"github.com/pkg/sftp"
 )
@@ -13,7 +14,7 @@ type file struct {
 	name   string
 }
 
-func newFile(f *sftp.File, client *sftpClient, name string) *file {
+func newFile(f *sftp.File, client *sftpClient, name string) http.File {
 	return &file{
 		File:   f,
 		client: client,
