@@ -21,6 +21,7 @@ import (
 type sftpClient struct {
 	*sftp.Client
 
+	driverName    string
 	remoteAddr    string
 	userName      string
 	password      string
@@ -37,12 +38,17 @@ func NewSFTPClient(remoteAddr string, userName string, password string, autoReco
 
 func newSFTPClient(remoteAddr string, userName string, password string, autoReconnect bool, r retry.Retry) *sftpClient {
 	return &sftpClient{
+		driverName:    "sftp",
 		remoteAddr:    remoteAddr,
 		userName:      userName,
 		password:      password,
 		r:             r,
 		autoReconnect: autoReconnect,
 	}
+}
+
+func (sc *sftpClient) DriverName() string {
+	return sc.driverName
 }
 
 func (sc *sftpClient) Connect() error {

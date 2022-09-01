@@ -9,6 +9,8 @@ import (
 
 // Driver a data source client driver
 type Driver interface {
+	// DriverName return driver name
+	DriverName() string
 	// Connect connects the server
 	Connect() error
 	// MkdirAll creates a directory named path
