@@ -16,6 +16,7 @@ import (
 	"github.com/no-src/gofs"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/core"
+	"github.com/no-src/gofs/driver/minio"
 	"github.com/no-src/gofs/driver/sftp"
 	"github.com/no-src/gofs/report"
 	"github.com/no-src/gofs/server"
@@ -155,6 +156,17 @@ func initRoute(engine *gin.Engine, opt server.Option, logger log.Logger) error {
 		}
 		user := opt.Users[0]
 		sftpDir, err := sftp.NewDir(dest.RemotePath(), dest.Addr(), user.UserName(), user.Password(), opt.Retry)
+		if err != nil {
+			return err
+		}
+		rootGroup.StaticFS(server.DestRoutePrefix, sftpDir)
+		enableFileApi = true
+	} else if dest.Is(core.MinIO) {
+		if len(opt.Users) == 0 {
+			return errors.New("a user is required for MinIO server")
+		}
+		user := opt.Users[0]
+		sftpDir, err := minio.NewDir(dest.RemotePath(), dest.Addr(), dest.Secure(), user.UserName(), user.Password(), opt.Retry)
 		if err != nil {
 			return err
 		}

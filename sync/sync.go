@@ -40,6 +40,10 @@ func NewSync(opt Option) (Sync, error) {
 		return NewSftpPushClientSync(opt.Source, opt.Dest, opt.Users, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum, opt.Retry)
 	} else if opt.Source.Is(core.SFTP) && opt.Dest.IsDisk() {
 		return NewSftpPullClientSync(opt.Source, opt.Dest, opt.Users, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum, opt.Retry)
+	} else if opt.Source.IsDisk() && opt.Dest.Is(core.MinIO) {
+		return NewMinIOPushClientSync(opt.Source, opt.Dest, opt.Users, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum, opt.Retry)
+	} else if opt.Source.Is(core.MinIO) && opt.Dest.IsDisk() {
+		return NewMinIOPullClientSync(opt.Source, opt.Dest, opt.Users, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum, opt.Retry)
 	}
 	return nil, fmt.Errorf("file system unsupported ! source=>%s dest=>%s", opt.Source.Type().String(), opt.Dest.Type().String())
 }
