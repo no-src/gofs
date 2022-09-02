@@ -207,9 +207,10 @@ func startWebServer(c conf.Config, webLogger log.Logger, userList []*auth.User, 
 	if c.EnableFileServer {
 		waitInit := wait.NewWaitDone()
 		go func() {
-			log.ErrorIf(httpfs.StartFileServer(server.NewServerOption(c, waitInit, userList, webLogger, r)), "start the file server [%s] error", c.FileServerAddr)
+			httpfs.StartFileServer(server.NewServerOption(c, waitInit, userList, webLogger, r))
 		}()
-		if waitInit.Wait() != nil {
+
+		if log.ErrorIf(waitInit.Wait(), "start the file server [%s] error", c.FileServerAddr) != nil {
 			return true
 		}
 	}
