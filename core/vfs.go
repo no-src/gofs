@@ -21,21 +21,25 @@ type VFS struct {
 	server            bool
 	fsServer          string
 	localSyncDisabled bool
+	secure            bool
 }
 
 const (
-	paramPath                = "path"
-	paramRemotePath          = "remote_path"
-	paramMode                = "mode"
-	paramFsServer            = "fs_server"
-	paramLocalSyncDisabled   = "local_sync_disabled"
-	valueModeServer          = "server"
-	valueLocalSyncIsDisabled = "true"
-	schemeDelimiter          = "://"
-	remoteServerScheme       = "rs"
-	remoteServerDefaultPort  = 8105
-	sftpServerScheme         = "sftp"
-	sftpServerDefaultPort    = 22
+	paramPath               = "path"
+	paramRemotePath         = "remote_path"
+	paramMode               = "mode"
+	paramFsServer           = "fs_server"
+	paramLocalSyncDisabled  = "local_sync_disabled"
+	paramSecure             = "secure"
+	valueModeServer         = "server"
+	valueTrue               = "true"
+	schemeDelimiter         = "://"
+	remoteServerScheme      = "rs"
+	remoteServerDefaultPort = 8105
+	sftpServerScheme        = "sftp"
+	sftpServerDefaultPort   = 22
+	minIOServerScheme       = "minio"
+	minIOServerDefaultPort  = 9000
 )
 
 // Path the local file path
@@ -103,6 +107,11 @@ func (vfs *VFS) LocalSyncDisabled() bool {
 	return vfs.localSyncDisabled
 }
 
+// Secure use secure connection
+func (vfs *VFS) Secure() bool {
+	return vfs.secure
+}
+
 // NewDiskVFS create an instance of VFS for the local disk file system
 func NewDiskVFS(path string) VFS {
 	vfs := VFS{
@@ -129,10 +138,13 @@ func NewVFS(path string) VFS {
 	if strings.HasPrefix(lowerPath, remoteServerScheme+schemeDelimiter) {
 		// example of rs protocol to see README.md
 		vfs.fsType = RemoteDisk
-		_, vfs.host, vfs.port, vfs.path, vfs.remotePath, vfs.server, vfs.fsServer, vfs.localSyncDisabled, err = parse(path)
+		_, vfs.host, vfs.port, vfs.path, vfs.remotePath, vfs.server, vfs.fsServer, vfs.localSyncDisabled, vfs.secure, err = parse(path)
 	} else if strings.HasPrefix(lowerPath, sftpServerScheme+schemeDelimiter) {
 		vfs.fsType = SFTP
-		_, vfs.host, vfs.port, vfs.path, vfs.remotePath, vfs.server, vfs.fsServer, vfs.localSyncDisabled, err = parse(path)
+		_, vfs.host, vfs.port, vfs.path, vfs.remotePath, vfs.server, vfs.fsServer, vfs.localSyncDisabled, vfs.secure, err = parse(path)
+	} else if strings.HasPrefix(lowerPath, minIOServerScheme+schemeDelimiter) {
+		vfs.fsType = MinIO
+		_, vfs.host, vfs.port, vfs.path, vfs.remotePath, vfs.server, vfs.fsServer, vfs.localSyncDisabled, vfs.secure, err = parse(path)
 	}
 	if err != nil {
 		return NewEmptyVFS()
@@ -140,7 +152,7 @@ func NewVFS(path string) VFS {
 	return vfs
 }
 
-func parse(path string) (scheme string, host string, port int, localPath string, remotePath string, isServer bool, fsServer string, localSyncDisabled bool, err error) {
+func parse(path string) (scheme string, host string, port int, localPath string, remotePath string, isServer bool, fsServer string, localSyncDisabled bool, secure bool, err error) {
 	parseUrl, err := url.Parse(path)
 	if err != nil {
 		return
@@ -157,6 +169,10 @@ func parse(path string) (scheme string, host string, port int, localPath string,
 			port = sftpServerDefaultPort
 			err = nil
 			log.Info("no sftp server destination port is specified, use default port => %d", port)
+		} else if scheme == minIOServerScheme {
+			port = minIOServerDefaultPort
+			err = nil
+			log.Info("no MinIO server destination port is specified, use default port => %d", port)
 		}
 	}
 
@@ -177,8 +193,13 @@ func parse(path string) (scheme string, host string, port int, localPath string,
 	}
 
 	localSyncDisabledValue := parseUrl.Query().Get(paramLocalSyncDisabled)
-	if strings.ToLower(localSyncDisabledValue) == valueLocalSyncIsDisabled {
+	if strings.ToLower(localSyncDisabledValue) == valueTrue {
 		localSyncDisabled = true
+	}
+
+	isSecure := parseUrl.Query().Get(paramSecure)
+	if strings.ToLower(isSecure) == valueTrue {
+		secure = true
 	}
 	return
 }

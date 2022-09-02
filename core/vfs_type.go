@@ -14,6 +14,8 @@ const (
 	FTP
 	// SFTP the sftp data source
 	SFTP
+	// MinIO the MinIO data source
+	MinIO
 	// NetworkDisk the network disk data source
 	NetworkDisk
 	// SharedFolder the shared folder data source
@@ -31,6 +33,8 @@ func (t VFSType) String() string {
 		return "FTP"
 	case SFTP:
 		return "SFTP"
+	case MinIO:
+		return "MinIO"
 	case NetworkDisk:
 		return "NetworkDisk"
 	case SharedFolder:

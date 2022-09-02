@@ -15,6 +15,7 @@ func TestVFSType(t *testing.T) {
 		{RemoteDisk, "RemoteDisk"},
 		{FTP, "FTP"},
 		{SFTP, "SFTP"},
+		{MinIO, "MinIO"},
 		{NetworkDisk, "NetworkDisk"},
 		{SharedFolder, "SharedFolder"},
 	}

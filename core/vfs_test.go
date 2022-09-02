@@ -15,6 +15,8 @@ const (
 	testVFSServerPathWithNoSchemeFsServer = "rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=127.0.0.1"
 	testVFSSFTPDestPath                   = "sftp://127.0.0.1:22?mode=server&local_sync_disabled=true&path=./source&remote_path=/home/remote/dest"
 	testVFSSFTPDestPathWithNoPort         = "sftp://127.0.0.1?mode=server&local_sync_disabled=true&path=./source&remote_path=/home/remote/dest"
+	testVFSMinIODestPath                  = "minio://127.0.0.1:9000?mode=server&local_sync_disabled=true&path=./source&remote_path=/home/remote/dest&secure=true"
+	testVFSMinIODestPathWithNoPort        = "minio://127.0.0.1?mode=server&local_sync_disabled=true&path=./source&remote_path=/home/remote/dest&secure=false"
 )
 
 func TestVFS_MarshalText(t *testing.T) {
@@ -27,6 +29,8 @@ func TestVFS_MarshalText(t *testing.T) {
 		{testVFSServerPathWithNoSchemeFsServer},
 		{testVFSSFTPDestPath},
 		{testVFSSFTPDestPathWithNoPort},
+		{testVFSMinIODestPath},
+		{testVFSMinIODestPathWithNoPort},
 	}
 
 	for _, tc := range testCases {
@@ -58,6 +62,8 @@ func TestVFS_UnmarshalText(t *testing.T) {
 		{testVFSServerPathWithNoSchemeFsServer},
 		{testVFSSFTPDestPath},
 		{testVFSSFTPDestPathWithNoPort},
+		{testVFSMinIODestPath},
+		{testVFSMinIODestPathWithNoPort},
 	}
 
 	for _, tc := range testCases {
@@ -116,8 +122,9 @@ func TestNewVFS_ReturnError(t *testing.T) {
 		path   string
 		expect VFS
 	}{
-		{testVFSServerPath + string([]byte{127}), NewEmptyVFS()},   // 0x7F DEL
-		{testVFSSFTPDestPath + string([]byte{127}), NewEmptyVFS()}, // 0x7F DEL
+		{testVFSServerPath + string([]byte{127}), NewEmptyVFS()}, // 0x7F DEL
+		{testVFSSFTPDestPath + string([]byte{127}), NewEmptyVFS()},
+		{testVFSMinIODestPath + string([]byte{127}), NewEmptyVFS()},
 	}
 
 	for _, tc := range testCases {
@@ -157,6 +164,9 @@ func TestVFSVar(t *testing.T) {
 
 		{"testVFSSFTPDestPath", testVFSSFTPDestPath, NewEmptyVFS()},
 		{"testVFSSFTPDestPathWithNoPort", testVFSSFTPDestPathWithNoPort, NewEmptyVFS()},
+
+		{"testVFSMinIODestPath", testVFSMinIODestPath, NewEmptyVFS()},
+		{"testVFSMinIODestPathWithNoPort", testVFSMinIODestPathWithNoPort, NewEmptyVFS()},
 	}
 
 	for _, tc := range testCases {
@@ -243,6 +253,7 @@ func compareVFS(t *testing.T, expect, actual VFS) {
 	assert(t, expect.Server() == actual.Server(), "compare vfs Server error, expect:%v, actual:%v", expect.Server(), actual.Server())
 	assert(t, expect.FsServer() == actual.FsServer(), "compare vfs FsServer error, expect:%s, actual:%s", expect.FsServer(), actual.FsServer())
 	assert(t, expect.LocalSyncDisabled() == actual.LocalSyncDisabled(), "compare vfs LocalSyncDisabled error, expect:%v, actual:%v", expect.LocalSyncDisabled(), actual.LocalSyncDisabled())
+	assert(t, expect.Secure() == actual.Secure(), "compare vfs Secure error, expect:%v, actual:%v", expect.Secure(), actual.Secure())
 }
 
 func assert(t *testing.T, ok bool, format string, args ...any) {
