@@ -119,7 +119,7 @@ func (c *minIOClient) reconnectIfLost(f func() error) error {
 }
 
 func (c *minIOClient) isClosed(err error) bool {
-	return err != nil && c.IsOffline()
+	return minio.IsNetworkOrHostDown(err, false)
 }
 
 func (c *minIOClient) MkdirAll(path string) error {
