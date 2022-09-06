@@ -245,6 +245,22 @@ Start a SFTP pull client to pull the files from the SFTP server to the local des
 $ gofs -source="sftp://127.0.0.1:22?remote_path=/gofs_sftp_server" -dest="./dest" -users="sftp_user|sftp_pwd" -sync_once
 ```
 
+### MinIO Push Client
+
+Start a MinIO push client to sync change files to the MinIO server.
+
+```bash
+$ gofs -source="./source" -dest="minio://127.0.0.1:9000?local_sync_disabled=false&path=./dest&remote_path=minio-bucket" -users="minio_user|minio_pwd"
+```
+
+### MinIO Pull Client
+
+Start a MinIO pull client to pull the files from the MinIO server to the local destination path.
+
+```bash
+$ gofs -source="minio://127.0.0.1:9000?remote_path=minio-bucket" -dest="./dest" -users="minio_user|minio_pwd" -sync_once
+```
+
 ### Relay
 
 If you need to synchronize files between two devices that are unable to establish a direct connection, you can use a
