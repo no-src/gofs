@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -134,9 +135,25 @@ func (c *minIOClient) Create(path string) (err error) {
 	return err
 }
 
-func (c *minIOClient) Remove(path string) error {
+func (c *minIOClient) Remove(path string) (err error) {
 	return c.reconnectIfLost(func() error {
-		return c.Client.RemoveObject(c.ctx, c.bucketName, path, minio.RemoveObjectOptions{})
+		infoChan := c.Client.ListObjects(c.ctx, c.bucketName, minio.ListObjectsOptions{
+			Recursive: true,
+			Prefix:    path,
+		})
+		pathWithSlash := path
+		if !strings.HasSuffix(path, "/") {
+			pathWithSlash += "/"
+		}
+		for info := range infoChan {
+			if path == info.Key || strings.HasPrefix(info.Key, pathWithSlash) {
+				err = c.Client.RemoveObject(c.ctx, c.bucketName, info.Key, minio.RemoveObjectOptions{})
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return err
 	})
 }
 
