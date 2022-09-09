@@ -11,14 +11,19 @@ import (
 
 type minIOFileInfo struct {
 	info minio.ObjectInfo
+	root string
 }
 
 func newMinIOFileInfo(info minio.ObjectInfo) fs.FileInfo {
-	return &minIOFileInfo{info: info}
+	return newMinIOFileInfoWithRoot(info, "")
+}
+
+func newMinIOFileInfoWithRoot(info minio.ObjectInfo, root string) fs.FileInfo {
+	return &minIOFileInfo{info: info, root: root}
 }
 
 func (fi *minIOFileInfo) Name() string {
-	return fi.info.Key
+	return strings.TrimSuffix(strings.TrimPrefix(fi.info.Key, fi.root), "/")
 }
 
 func (fi *minIOFileInfo) Size() int64 {
@@ -34,10 +39,7 @@ func (fi *minIOFileInfo) ModTime() time.Time {
 }
 
 func (fi *minIOFileInfo) IsDir() bool {
-	if strings.HasSuffix(fi.Name(), "/") {
-		return true
-	}
-	return false
+	return strings.HasSuffix(fi.info.Key, "/")
 }
 
 func (fi *minIOFileInfo) Sys() any {

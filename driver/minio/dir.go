@@ -44,15 +44,11 @@ func (d *Dir) Open(name string) (http.File, error) {
 		return nil, errors.New("http: invalid character in file path")
 	}
 	fullName := filepath.ToSlash(filepath.FromSlash(path.Clean("/" + name)))
-	httpFile, err := d.client.Open(fullName)
-	if err != nil {
-		return nil, err
-	}
-	_, err = httpFile.Stat()
+	httpFile, err := d.client.openFileOrDir(fullName)
 	if err != nil {
 		var respErr minio.ErrorResponse
 		if errors.As(err, &respErr) && len(respErr.Key) == 0 {
-			return nil, errors.New("to list directory is unsupported")
+			return newDirFile(d.client.Client, d.bucketName, name), nil
 		}
 		return nil, err
 	}

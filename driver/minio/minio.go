@@ -184,6 +184,39 @@ func (c *minIOClient) Open(path string) (f http.File, err error) {
 	return f, err
 }
 
+func (c *minIOClient) openFileOrDir(path string) (f http.File, err error) {
+	err = c.reconnectIfLost(func() error {
+		infoChan := c.Client.ListObjects(c.ctx, c.bucketName, minio.ListObjectsOptions{
+			Prefix: path,
+		})
+		for info := range infoChan {
+			if info.Err != nil {
+				return err
+			}
+
+			if strings.Trim(info.Key, "/") == strings.Trim(path, "/") {
+				if strings.HasSuffix(info.Key, "/") {
+					f = newDirFile(c.Client, c.bucketName, info.Key)
+					return nil
+				}
+				var obj *minio.Object
+				obj, err = c.Client.GetObject(c.ctx, c.bucketName, info.Key, minio.GetObjectOptions{})
+				if err != nil {
+					return err
+				}
+				f = newFile(obj, c.Client, c.bucketName, path)
+				return nil
+			}
+			// not matched means path is directory
+			err = minio.ErrorResponse{}
+			return err
+		}
+		err = fs.ErrNotExist
+		return err
+	})
+	return f, err
+}
+
 func (c *minIOClient) ReadDir(path string) (fis []os.FileInfo, err error) {
 	err = c.reconnectIfLost(func() error {
 		infoChan := c.Client.ListObjects(c.ctx, c.bucketName, minio.ListObjectsOptions{Recursive: true})
