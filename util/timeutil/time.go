@@ -34,6 +34,11 @@ func (t Time) String() string {
 	return time.Unix(int64(t), 0).Format(defaultTimeFormat)
 }
 
+// Sub returns the duration t-u
+func (t Time) Sub(u Time) time.Duration {
+	return t.Time().Sub(u.Time())
+}
+
 // MarshalText implement interface encoding.TextMarshaler
 func (t Time) MarshalText() (text []byte, err error) {
 	return []byte(t.String()), nil

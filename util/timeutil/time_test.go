@@ -37,3 +37,13 @@ func TestNow(t *testing.T) {
 		t.Errorf("test Now error, expect:%s, actual:%s", expect, actual)
 	}
 }
+
+func TestSub(t *testing.T) {
+	expect := time.Minute
+	start := Now()
+	end := NewTime(start.Time().Add(expect))
+	actual := end.Sub(start)
+	if actual != expect {
+		t.Errorf("test Sub error, expect:%s, actual:%s", expect, actual)
+	}
+}
