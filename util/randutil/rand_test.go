@@ -35,4 +35,13 @@ func TestRandomString_WithReadError(t *testing.T) {
 	if len(randStr) != randLen {
 		t.Errorf("test RandomString error, expect len:%d, actual:%s", randLen, randStr)
 	}
+
+	randStr2 := RandomString(randLen)
+	if len(randStr2) != randLen {
+		t.Errorf("test RandomString error, expect len:%d, actual:%s", randLen, randStr2)
+	}
+
+	if randStr == randStr2 {
+		t.Errorf("test RandomString error, the first random string (%s) is the same as the second (%s)", randStr, randStr2)
+	}
 }
