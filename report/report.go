@@ -1,9 +1,19 @@
 package report
 
-import "github.com/no-src/gofs/internal/toplist"
+import (
+	"github.com/no-src/gofs/core"
+	"github.com/no-src/gofs/internal/toplist"
+	"github.com/no-src/gofs/util/timeutil"
+)
 
 // Report the program report data
 type Report struct {
+	// CurrentTime the current server time
+	CurrentTime timeutil.Time `json:"current_time"`
+	// StartTime the server start time
+	StartTime timeutil.Time `json:"start_time"`
+	// UpTime the server up time
+	UpTime core.Duration `json:"up_time"`
 	// Pid returns the process id of the caller
 	Pid int `json:"pid"`
 	// PPid returns the process id of the caller's parent

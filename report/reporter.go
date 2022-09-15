@@ -31,6 +31,8 @@ type Reporter struct {
 func (r *Reporter) GetReport() Report {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
+	r.report.CurrentTime = timeutil.Now()
+	r.report.UpTime = core.Duration(r.report.CurrentTime.Sub(r.report.StartTime))
 	return r.report
 }
 
@@ -146,6 +148,7 @@ func init() {
 
 func initGlobalReporter() {
 	report := Report{
+		StartTime: timeutil.Now(),
 		Pid:       os.Getpid(),
 		PPid:      os.Getppid(),
 		GOOS:      runtime.GOOS,
