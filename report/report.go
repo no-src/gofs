@@ -8,11 +8,11 @@ import (
 
 // Report the program report data
 type Report struct {
-	// CurrentTime the current server time
+	// CurrentTime returns the current server time
 	CurrentTime timeutil.Time `json:"current_time"`
-	// StartTime the server start time
+	// StartTime returns the server start time
 	StartTime timeutil.Time `json:"start_time"`
-	// UpTime the server up time
+	// UpTime returns the server up time
 	UpTime core.Duration `json:"up_time"`
 	// Pid returns the process id of the caller
 	Pid int `json:"pid"`

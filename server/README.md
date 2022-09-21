@@ -264,6 +264,9 @@ Response field description:
 - `code` status code,`1` means success, all status codes see [Status Code](#status-code)
 - `message` response status description
 - `data` response data
+    - `current_time` returns the current server time
+    - `start_time` returns the server start time
+    - `up_time` returns the server up time
     - `pid` returns the process id of the caller
     - `ppid` returns the process id of the caller's parent
     - `go_os` is the running program's operating system target
@@ -299,6 +302,9 @@ Here is an example response:
   "code": 1,
   "message": "success",
   "data": {
+    "current_time": "2022-03-28 01:36:31",
+    "start_time": "2022-03-28 01:00:00",
+    "up_time": "36m31s",
     "pid": 94032,
     "ppid": 9268,
     "go_os": "windows",
