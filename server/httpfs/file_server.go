@@ -117,26 +117,12 @@ func initRoute(engine *gin.Engine, opt server.Option, logger log.Logger) error {
 	rootGroup := engine.Group(server.RootGroupRoute)
 	wGroup := engine.Group(server.WriteGroupRoute)
 	manageGroup := engine.Group(server.ManageGroupRoute)
-	if len(opt.Users) > 0 {
-		rootGroup.Use(middleware.NewAuthHandlerFunc(logger, auth.ReadPerm))
-		wGroup.Use(middleware.NewAuthHandlerFunc(logger, auth.WritePerm))
-		manageGroup.Use(middleware.NewAuthHandlerFunc(logger, auth.ExecutePerm))
-	} else {
-		server.PrintAnonymousAccessWarning()
-	}
+
+	initRouteAuth(opt, logger, rootGroup, wGroup, manageGroup)
+
 	rootGroup.GET(server.DefaultRoute, handler.NewDefaultHandlerFunc(logger))
 
-	if opt.EnableManage {
-		if opt.ManagePrivate {
-			manageGroup.Use(middleware.NewPrivateAccessHandlerFunc(logger))
-		}
-		pprof.RouteRegister(manageGroup, server.PProfRoutePrefix)
-		manageGroup.GET(server.ManageConfigRoute, handler.NewManageHandlerFunc(logger))
-		if opt.EnableReport {
-			manageGroup.GET(server.ManageReportRoute, handler.NewReportHandlerFunc(logger))
-			report.GlobalReporter.Enable(true)
-		}
-	}
+	initManageRoute(opt, logger, manageGroup)
 
 	if source.IsDisk() || source.Is(core.RemoteDisk) {
 		rootGroup.StaticFS(server.SourceRoutePrefix, http.Dir(source.Path()))
@@ -179,6 +165,30 @@ func initRoute(engine *gin.Engine, opt server.Option, logger log.Logger) error {
 	}
 
 	return nil
+}
+
+func initRouteAuth(opt server.Option, logger log.Logger, rootGroup, wGroup, manageGroup *gin.RouterGroup) {
+	if len(opt.Users) > 0 {
+		rootGroup.Use(middleware.NewAuthHandlerFunc(logger, auth.ReadPerm))
+		wGroup.Use(middleware.NewAuthHandlerFunc(logger, auth.WritePerm))
+		manageGroup.Use(middleware.NewAuthHandlerFunc(logger, auth.ExecutePerm))
+	} else {
+		server.PrintAnonymousAccessWarning()
+	}
+}
+
+func initManageRoute(opt server.Option, logger log.Logger, manageGroup *gin.RouterGroup) {
+	if opt.EnableManage {
+		if opt.ManagePrivate {
+			manageGroup.Use(middleware.NewPrivateAccessHandlerFunc(logger))
+		}
+		pprof.RouteRegister(manageGroup, server.PProfRoutePrefix)
+		manageGroup.GET(server.ManageConfigRoute, handler.NewManageHandlerFunc(logger))
+		if opt.EnableReport {
+			manageGroup.GET(server.ManageReportRoute, handler.NewReportHandlerFunc(logger))
+			report.GlobalReporter.Enable(true)
+		}
+	}
 }
 
 var defaultLogFormatter = func(param gin.LogFormatterParams) string {
