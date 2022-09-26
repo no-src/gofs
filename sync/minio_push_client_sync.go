@@ -2,7 +2,7 @@ package sync
 
 import (
 	"errors"
-	
+
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/driver/minio"
