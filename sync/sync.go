@@ -2,7 +2,7 @@ package sync
 
 import (
 	"fmt"
-
+	
 	"github.com/no-src/gofs/core"
 )
 
@@ -31,7 +31,7 @@ type Sync interface {
 // NewSync auto create an instance of the expected sync according to source and dest
 func NewSync(opt Option) (Sync, error) {
 	if opt.Source.IsDisk() && opt.Dest.IsDisk() {
-		return NewDiskSync(opt.Source, opt.Dest, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum)
+		return NewDiskSync(opt.Source, opt.Dest, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum, opt.EncOpt)
 	} else if opt.Source.Is(core.RemoteDisk) {
 		return NewRemoteSync(opt.Source, opt.Dest, opt.EnableTLS, opt.TLSCertFile, opt.TLSKeyFile, opt.Users, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum)
 	} else if opt.Dest.Is(core.RemoteDisk) {

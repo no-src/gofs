@@ -12,6 +12,7 @@ import (
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/core"
+	"github.com/no-src/gofs/encrypt"
 	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/tran"
@@ -29,7 +30,7 @@ type remoteServerSync struct {
 
 // NewRemoteServerSync create an instance of remoteServerSync execute send file change message
 func NewRemoteServerSync(source, dest core.VFS, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool) (Sync, error) {
-	ds, err := newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum)
+	ds, err := newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum, encrypt.EmptyOption())
 	if err != nil {
 		return nil, err
 	}

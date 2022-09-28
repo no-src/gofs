@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/no-src/gofs/core"
+	"github.com/no-src/gofs/encrypt"
 	nsfs "github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/util/hashutil"
@@ -22,6 +23,7 @@ type diskSync struct {
 	destAbsPath     string
 	chunkSize       int64
 	checkpointCount int
+	encOpt          encrypt.Option
 
 	isDirFn       nsfs.IsDirFunc
 	statFn        nsfs.StatFunc
@@ -31,11 +33,11 @@ type diskSync struct {
 // NewDiskSync create a diskSync instance
 // source is source path to read
 // dest is dest path to write
-func NewDiskSync(source, dest core.VFS, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool) (s Sync, err error) {
-	return newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum)
+func NewDiskSync(source, dest core.VFS, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool, encOpt encrypt.Option) (s Sync, err error) {
+	return newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum, encOpt)
 }
 
-func newDiskSync(source, dest core.VFS, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool) (s *diskSync, err error) {
+func newDiskSync(source, dest core.VFS, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool, encOpt encrypt.Option) (s *diskSync, err error) {
 	if source.IsEmpty() {
 		return nil, errors.New("source is not found")
 	}
@@ -59,6 +61,7 @@ func newDiskSync(source, dest core.VFS, enableLogicallyDelete bool, chunkSize in
 		baseSync:        newBaseSync(source, dest, enableLogicallyDelete, forceChecksum),
 		chunkSize:       chunkSize,
 		checkpointCount: checkpointCount,
+		encOpt:          encOpt,
 		isDirFn:         nsfs.IsDir,
 		statFn:          os.Stat,
 		getFileTimeFn:   nsfs.GetFileTime,
@@ -68,10 +71,19 @@ func newDiskSync(source, dest core.VFS, enableLogicallyDelete bool, chunkSize in
 
 // Create creates the source file or dir to the dest
 func (s *diskSync) Create(path string) error {
+	enc := encrypt.NewEncrypt(s.encOpt, path)
 	dest, err := s.buildDestAbsFile(path)
 	if err != nil {
 		return err
 	}
+	isDir, err := s.IsDir(path)
+	if err != nil {
+		return err
+	}
+	if !isDir {
+		dest = enc.BuildEncryptName(path, dest)
+	}
+
 	exist, err := nsfs.FileExist(dest)
 	if err != nil {
 		return err
@@ -79,10 +91,7 @@ func (s *diskSync) Create(path string) error {
 	if exist {
 		return nil
 	}
-	isDir, err := s.IsDir(path)
-	if err != nil {
-		return err
-	}
+
 	if isDir {
 		err = os.MkdirAll(dest, os.ModePerm)
 		if err != nil {
@@ -137,6 +146,9 @@ func (s *diskSync) Write(path string) error {
 
 // write try to write a file to the destination
 func (s *diskSync) write(path, dest string) error {
+	enc := encrypt.NewEncrypt(s.encOpt, s.sourceAbsPath)
+	dest = enc.BuildEncryptName(path, dest)
+
 	sourceFile, err := os.Open(path)
 	if err != nil {
 		return err
@@ -158,15 +170,17 @@ func (s *diskSync) write(path, dest string) error {
 	sourceSize := sourceStat.Size()
 	destSize := destStat.Size()
 
-	if s.quickCompare(sourceSize, destSize, sourceStat.ModTime(), destStat.ModTime()) {
-		log.Debug("[write] [ignored], the file size and file modification time are both unmodified => %s", path)
-		return nil
-	}
-
 	var offset int64
-	if destSize > 0 && s.compare(sourceFile, sourceSize, dest, &offset) {
-		log.Debug("[write] [ignored], the file is unmodified => %s", path)
-		return nil
+	if !s.encOpt.Encrypt {
+		if s.quickCompare(sourceSize, destSize, sourceStat.ModTime(), destStat.ModTime()) {
+			log.Debug("[write] [ignored], the file size and file modification time are both unmodified => %s", path)
+			return nil
+		}
+
+		if destSize > 0 && s.compare(sourceFile, sourceSize, dest, &offset) {
+			log.Debug("[write] [ignored], the file is unmodified => %s", path)
+			return nil
+		}
 	}
 
 	destFile, err := nsfs.OpenRWFile(dest)
@@ -186,7 +200,10 @@ func (s *diskSync) write(path, dest string) error {
 	}
 
 	reader := bufio.NewReader(sourceFile)
-	writer := bufio.NewWriter(destFile)
+	writer, err := enc.NewWriter(destFile, path, destStat.Name())
+	if err != nil {
+		return err
+	}
 
 	// truncate first before write to file
 	err = destFile.Truncate(offset)
@@ -199,7 +216,7 @@ func (s *diskSync) write(path, dest string) error {
 		return err
 	}
 
-	err = writer.Flush()
+	err = writer.Close()
 
 	if err == nil {
 		log.Info("write to the dest file success, size[%d => %d] [%s] => [%s]", sourceSize, n, path, dest)
