@@ -98,6 +98,19 @@ func parseFlags(args []string) (config conf.Config) {
 	// checksum
 	flag.BoolVar(&config.Checksum, "checksum", false, "calculate and print the checksum for source file")
 
+	// encrypt
+	flag.BoolVar(&config.Encrypt, "encrypt", false, "enable the encrypt path")
+	flag.StringVar(&config.EncryptPath, "encrypt_path", "", "the files in the encrypt path will be encrypted before sync to destination")
+	flag.StringVar(&config.EncryptSecret, "encrypt_secret", "", "a secret string for encryption")
+	flag.StringVar(&config.EncryptSuffix, "encrypt_suffix", "", "append a suffix to the end of encrypt file")
+
+	// decrypt
+	flag.BoolVar(&config.Decrypt, "decrypt", false, "decrypt the files from decrypt path to decrypt output path")
+	flag.StringVar(&config.DecryptPath, "decrypt_path", "", "a directory or file to decrypt")
+	flag.StringVar(&config.DecryptSecret, "decrypt_secret", "", "a secret string for decryption")
+	flag.StringVar(&config.DecryptSuffix, "decrypt_suffix", "", "extract decrypt file and append a specified suffix to the end of the extract file")
+	flag.StringVar(&config.DecryptOut, "decrypt_out", "", "the decrypt files output directory path")
+
 	flag.CommandLine.Parse(args[1:])
 
 	return config

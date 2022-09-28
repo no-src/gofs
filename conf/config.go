@@ -79,4 +79,17 @@ type Config struct {
 
 	// checksum
 	Checksum bool `json:"checksum" yaml:"checksum"`
+
+	// encrypt
+	Encrypt       bool   `json:"encrypt" yaml:"encrypt"`
+	EncryptPath   string `json:"encrypt_path" yaml:"encrypt_path"`
+	EncryptSecret string `json:"encrypt_secret" yaml:"encrypt_secret"`
+	EncryptSuffix string `json:"encrypt_suffix" yaml:"encrypt_suffix"`
+
+	// decrypt
+	Decrypt       bool   `json:"decrypt" yaml:"decrypt"`
+	DecryptPath   string `json:"decrypt_path" yaml:"decrypt_path"`
+	DecryptSecret string `json:"decrypt_secret" yaml:"decrypt_secret"`
+	DecryptSuffix string `json:"decrypt_suffix" yaml:"decrypt_suffix"`
+	DecryptOut    string `json:"decrypt_out" yaml:"decrypt_out"`
 }

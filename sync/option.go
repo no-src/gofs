@@ -4,6 +4,7 @@ import (
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/conf"
 	"github.com/no-src/gofs/core"
+	"github.com/no-src/gofs/encrypt"
 	"github.com/no-src/gofs/retry"
 )
 
@@ -21,6 +22,7 @@ type Option struct {
 	ForceChecksum         bool
 	Users                 []*auth.User
 	Retry                 retry.Retry
+	EncOpt                encrypt.Option
 }
 
 // NewSyncOption create an instance of the Option, store all the sync component options
@@ -38,6 +40,7 @@ func NewSyncOption(config conf.Config, users []*auth.User, r retry.Retry) Option
 		ForceChecksum:         config.ForceChecksum,
 		Users:                 users,
 		Retry:                 r,
+		EncOpt:                encrypt.NewOption(config),
 	}
 	return opt
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/contract/push"
 	"github.com/no-src/gofs/core"
+	"github.com/no-src/gofs/encrypt"
 	nsfs "github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/server"
@@ -46,7 +47,7 @@ func NewPushClientSync(source, dest core.VFS, enableTLS bool, certFile string, i
 		return nil, errors.New("chunk size must greater than zero")
 	}
 
-	ds, err := newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum)
+	ds, err := newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum, encrypt.EmptyOption())
 	if err != nil {
 		return nil, err
 	}

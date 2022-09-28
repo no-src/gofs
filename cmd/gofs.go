@@ -9,6 +9,7 @@ import (
 	"github.com/no-src/gofs/checksum"
 	"github.com/no-src/gofs/conf"
 	"github.com/no-src/gofs/daemon"
+	"github.com/no-src/gofs/encrypt"
 	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/internal/signal"
@@ -157,6 +158,11 @@ func executeOnce(c conf.Config) (exit bool) {
 		return true
 	}
 
+	// decrypt the specified file or directory
+	if c.Decrypt {
+		log.ErrorIf(encrypt.NewDecrypt(encrypt.NewOption(c)).Decrypt(), "decrypt error")
+		return true
+	}
 	return false
 }
 

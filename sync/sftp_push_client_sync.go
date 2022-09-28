@@ -2,9 +2,11 @@ package sync
 
 import (
 	"errors"
+
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/driver/sftp"
+	"github.com/no-src/gofs/encrypt"
 	"github.com/no-src/gofs/retry"
 )
 
@@ -26,7 +28,7 @@ func NewSftpPushClientSync(source, dest core.VFS, users []*auth.User, enableLogi
 		return nil, errors.New("user account is required")
 	}
 
-	ds, err := newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum)
+	ds, err := newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum, encrypt.EmptyOption())
 	if err != nil {
 		return nil, err
 	}
