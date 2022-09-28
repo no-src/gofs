@@ -12,10 +12,10 @@ type Option struct {
 	EncryptSuffix string
 
 	Decrypt       bool
-	DecryptSecret []byte
 	DecryptPath   string
-	DecryptOut    string
+	DecryptSecret []byte
 	DecryptSuffix string
+	DecryptOut    string
 }
 
 // NewOption create an encryption option
@@ -26,10 +26,10 @@ func NewOption(config conf.Config) Option {
 		EncryptSecret: []byte(config.EncryptSecret),
 		EncryptSuffix: config.EncryptSuffix,
 		Decrypt:       config.Decrypt,
-		DecryptSecret: []byte(config.DecryptSecret),
 		DecryptPath:   config.DecryptPath,
-		DecryptOut:    config.DecryptOut,
+		DecryptSecret: []byte(config.DecryptSecret),
 		DecryptSuffix: config.DecryptSuffix,
+		DecryptOut:    config.DecryptOut,
 	}
 }
 
