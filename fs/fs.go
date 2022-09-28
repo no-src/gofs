@@ -4,10 +4,16 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
-var isNotExist = os.IsNotExist
+var (
+	isNotExist = os.IsNotExist
+	abs        = filepath.Abs
+	rel        = filepath.Rel
+)
 
 // StatFunc the function prototype of os.Stat
 type StatFunc func(name string) (os.FileInfo, error)
@@ -66,4 +72,21 @@ func GetFileTime(path string) (cTime time.Time, aTime time.Time, mTime time.Time
 		return
 	}
 	return GetFileTimeBySys(stat.Sys())
+}
+
+// IsSub whether it is a subdirectory of the parent
+func IsSub(parent, child string) (bool, error) {
+	pAbs, err := abs(parent)
+	if err != nil {
+		return false, err
+	}
+	cAbs, err := abs(child)
+	if err != nil {
+		return false, err
+	}
+	relPath, err := rel(pAbs, cAbs)
+	if err != nil {
+		return false, err
+	}
+	return !strings.HasPrefix(relPath, ".."), nil
 }

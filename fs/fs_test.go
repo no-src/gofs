@@ -1,8 +1,10 @@
 package fs
 
 import (
+	"errors"
 	"io"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/no-src/gofs/util/osutil"
@@ -220,6 +222,92 @@ func TestIsNonEOF(t *testing.T) {
 	}
 }
 
+func TestIsSub(t *testing.T) {
+	testCases := []struct {
+		parent string
+		child  string
+		isSub  bool
+	}{
+		{"", "", true},
+		{".", ".", true},
+		{"..", "..", true},
+
+		{"/a", "/a/b", true},
+		{"/a/b1", "/a/b2", false},
+		{"/a1", "/a2", false},
+		{"/a/b", "/a", false},
+		{"/", "/", true},
+		{"/a0", "/a0", true},
+
+		{"./a", "./a/b", true},
+		{"./a/b1", "./a/b2", false},
+		{"./a1", "./a2", false},
+		{"./a/b", "./a", false},
+		{"./", "./", true},
+		{"./a0", "./a0", true},
+
+		{"../a", "../a/b", true},
+		{"../a/b1", "../a/b2", false},
+		{"../a1", "../a2", false},
+		{"../a/b", "../a", false},
+		{"../", "../", true},
+		{"../a0", "../a0", true},
+
+		{"/a/b/c", "/a/../a/b/c/./d", true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.parent, func(t *testing.T) {
+			actual, err := IsSub(tc.parent, tc.child)
+			if err != nil {
+				t.Errorf("test IsSub error, get actual err:%s", err)
+			}
+			if actual != tc.isSub {
+				t.Errorf("test IsSub error, expect get %v but get %v", tc.isSub, actual)
+			}
+		})
+	}
+}
+
+func TestIsSub_ReturnError(t *testing.T) {
+	abs = absErrorMock
+	rel = relErrorMock
+	defer func() {
+		abs = filepath.Abs
+		rel = filepath.Rel
+	}()
+
+	testCases := []struct {
+		parent string
+		child  string
+	}{
+		{"", "/a"},
+		{"/a", ""},
+		{"/a", "/a"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.parent, func(t *testing.T) {
+			_, err := IsSub(tc.parent, tc.child)
+			if err == nil {
+				t.Errorf("test IsSub error, expect to get an error but get nil")
+			}
+		})
+	}
+}
+
 func isNotExistAlwaysFalseMock(err error) bool {
 	return false
+}
+
+// absErrorMock if the path is empty, then returns error
+func absErrorMock(path string) (string, error) {
+	if len(path) == 0 {
+		return "", errors.New("abs error mock")
+	}
+	return filepath.Abs(path)
+}
+
+func relErrorMock(basepath, targpath string) (string, error) {
+	return "", errors.New("rel error mock")
 }
