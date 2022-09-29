@@ -296,6 +296,29 @@ func TestIsSub_ReturnError(t *testing.T) {
 	}
 }
 
+func TestIsSub_ReturnError_Windows(t *testing.T) {
+	if !osutil.IsWindows() {
+		return
+	}
+
+	testCases := []struct {
+		parent string
+		child  string
+	}{
+		{"C:\\a", "D:\\a"},
+		{"C:\\a\\b", "D:\\a\\..\\"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.parent, func(t *testing.T) {
+			_, err := IsSub(tc.parent, tc.child)
+			if err == nil {
+				t.Errorf("test IsSub error, expect to get an error but get nil")
+			}
+		})
+	}
+}
+
 func isNotExistAlwaysFalseMock(err error) bool {
 	return false
 }
