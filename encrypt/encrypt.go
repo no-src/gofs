@@ -1,11 +1,10 @@
 package encrypt
 
 import (
+	"fmt"
 	"io"
-	"strings"
 
 	"github.com/no-src/gofs/fs"
-	"github.com/no-src/log"
 )
 
 // Encrypt the encryption component
@@ -15,41 +14,35 @@ type Encrypt struct {
 }
 
 // NewEncrypt create an encryption component
-func NewEncrypt(opt Option, parentPath string) Encrypt {
-	enc := Encrypt{
+func NewEncrypt(opt Option, parentPath string) (*Encrypt, error) {
+	enc := &Encrypt{
 		opt:        opt,
 		parentPath: parentPath,
 	}
-	if enc.opt.Decrypt {
+	if enc.opt.Encrypt {
 		isSub, err := fs.IsSub(parentPath, opt.EncryptPath)
-		if err != nil || !isSub {
-			log.Warn("disable encrypt because the encrypt path is not a subdirectory of the source path, source=%s encrypt=%s", parentPath, opt.EncryptPath)
-			enc.opt.Decrypt = false
+		if err != nil {
+			return nil, err
+		}
+		if !isSub {
+			return nil, fmt.Errorf("the encrypt path is not a subdirectory of the source path, source=%s encrypt=%s", parentPath, opt.EncryptPath)
 		}
 	}
-	return enc
+	return enc, nil
 }
 
 // NewWriter create an encryption writer
-func (e Encrypt) NewWriter(w io.Writer, source string, name string) (io.WriteCloser, error) {
+func (e *Encrypt) NewWriter(w io.Writer, source string, name string) (io.WriteCloser, error) {
 	if e.opt.Encrypt {
 		isSub, err := fs.IsSub(e.opt.EncryptPath, source)
 		if err == nil && isSub {
-			return newEncryptWriter(w, name, e.opt.EncryptSecret, e.opt.EncryptSuffix)
+			return newEncryptWriter(w, name, e.opt.EncryptSecret)
 		}
 	}
 	return newBufferWriter(w), nil
 }
 
-// BuildEncryptName returns the encryption name of the destination file
-func (e Encrypt) BuildEncryptName(source, dest string) string {
-	if e.opt.Encrypt {
-		suffix := e.opt.EncryptSuffix
-		suffix = strings.TrimSpace(suffix)
-		isSub, err := fs.IsSub(e.opt.EncryptPath, source)
-		if err == nil && isSub && len(suffix) > 0 {
-			dest = dest + suffix
-		}
-	}
-	return dest
+// Enabled encryption is enabled or not
+func (e *Encrypt) Enabled() bool {
+	return e.opt.Encrypt
 }

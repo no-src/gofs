@@ -23,7 +23,7 @@ type diskSync struct {
 	destAbsPath     string
 	chunkSize       int64
 	checkpointCount int
-	encOpt          encrypt.Option
+	enc             *encrypt.Encrypt
 
 	isDirFn       nsfs.IsDirFunc
 	statFn        nsfs.StatFunc
@@ -55,13 +55,18 @@ func newDiskSync(source, dest core.VFS, enableLogicallyDelete bool, chunkSize in
 		return nil, err
 	}
 
+	enc, err := encrypt.NewEncrypt(encOpt, sourceAbsPath)
+	if err != nil {
+		return nil, err
+	}
+
 	s = &diskSync{
 		sourceAbsPath:   sourceAbsPath,
 		destAbsPath:     destAbsPath,
 		baseSync:        newBaseSync(source, dest, enableLogicallyDelete, forceChecksum),
 		chunkSize:       chunkSize,
 		checkpointCount: checkpointCount,
-		encOpt:          encOpt,
+		enc:             enc,
 		isDirFn:         nsfs.IsDir,
 		statFn:          os.Stat,
 		getFileTimeFn:   nsfs.GetFileTime,
@@ -71,17 +76,9 @@ func newDiskSync(source, dest core.VFS, enableLogicallyDelete bool, chunkSize in
 
 // Create creates the source file or dir to the dest
 func (s *diskSync) Create(path string) error {
-	enc := encrypt.NewEncrypt(s.encOpt, path)
 	dest, err := s.buildDestAbsFile(path)
 	if err != nil {
 		return err
-	}
-	isDir, err := s.IsDir(path)
-	if err != nil {
-		return err
-	}
-	if !isDir {
-		dest = enc.BuildEncryptName(path, dest)
 	}
 
 	exist, err := nsfs.FileExist(dest)
@@ -90,6 +87,11 @@ func (s *diskSync) Create(path string) error {
 	}
 	if exist {
 		return nil
+	}
+
+	isDir, err := s.IsDir(path)
+	if err != nil {
+		return err
 	}
 
 	if isDir {
@@ -146,9 +148,6 @@ func (s *diskSync) Write(path string) error {
 
 // write try to write a file to the destination
 func (s *diskSync) write(path, dest string) error {
-	enc := encrypt.NewEncrypt(s.encOpt, s.sourceAbsPath)
-	dest = enc.BuildEncryptName(path, dest)
-
 	sourceFile, err := os.Open(path)
 	if err != nil {
 		return err
@@ -171,7 +170,7 @@ func (s *diskSync) write(path, dest string) error {
 	destSize := destStat.Size()
 
 	var offset int64
-	if !s.encOpt.Encrypt {
+	if !s.enc.Enabled() {
 		if s.quickCompare(sourceSize, destSize, sourceStat.ModTime(), destStat.ModTime()) {
 			log.Debug("[write] [ignored], the file size and file modification time are both unmodified => %s", path)
 			return nil
@@ -200,7 +199,7 @@ func (s *diskSync) write(path, dest string) error {
 	}
 
 	reader := bufio.NewReader(sourceFile)
-	writer, err := enc.NewWriter(destFile, path, destStat.Name())
+	writer, err := s.enc.NewWriter(destFile, path, destStat.Name())
 	if err != nil {
 		return err
 	}

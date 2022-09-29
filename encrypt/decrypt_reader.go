@@ -6,7 +6,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/no-src/log"
 )
@@ -16,7 +15,7 @@ type decryptReader struct {
 	secret []byte
 }
 
-func (r *decryptReader) WriteTo(path string, suffix string) (err error) {
+func (r *decryptReader) WriteTo(path string) (err error) {
 	for _, file := range r.zrc.File {
 		outPath := filepath.Join(path, file.Name)
 
@@ -40,10 +39,7 @@ func (r *decryptReader) WriteTo(path string, suffix string) (err error) {
 		if err != nil {
 			return err
 		}
-		suffix = strings.TrimSpace(suffix)
-		if len(suffix) > 0 {
-			outPath += suffix
-		}
+
 		var out *os.File
 		out, err = os.Create(outPath)
 		if err != nil {

@@ -4,7 +4,6 @@ import (
 	"archive/zip"
 	"bufio"
 	"io"
-	"strings"
 )
 
 type encryptWriter struct {
@@ -31,9 +30,9 @@ func (w *encryptWriter) Close() error {
 	return w.zw.Close()
 }
 
-func newEncryptWriter(w io.Writer, name string, secret []byte, suffix string) (io.WriteCloser, error) {
+func newEncryptWriter(w io.Writer, name string, secret []byte) (io.WriteCloser, error) {
 	zw := zip.NewWriter(w)
-	ew, err := zw.Create(strings.TrimSuffix(name, suffix))
+	ew, err := zw.Create(name)
 	if err != nil {
 		return nil, err
 	}

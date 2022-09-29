@@ -53,6 +53,6 @@ func (dec Decrypt) Decrypt() error {
 		}
 		outPath := filepath.Join(dec.opt.DecryptOut, rel)
 		outPath = filepath.Dir(outPath)
-		return r.WriteTo(outPath, dec.opt.DecryptSuffix)
+		return r.WriteTo(outPath)
 	})
 }

@@ -53,10 +53,8 @@
   "encrypt": false,
   "encrypt_path": "",
   "encrypt_secret": "",
-  "encrypt_suffix": "",
   "decrypt": false,
   "decrypt_path": "",
   "decrypt_secret": "",
-  "decrypt_suffix": "",
   "decrypt_out": ""
 }
