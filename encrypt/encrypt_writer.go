@@ -32,7 +32,10 @@ func (w *encryptWriter) Close() error {
 
 func newEncryptWriter(w io.Writer, name string, secret []byte) (io.WriteCloser, error) {
 	zw := zip.NewWriter(w)
-	ew, err := zw.Create(name)
+	ew, err := zw.CreateHeader(&zip.FileHeader{
+		Name:   name,
+		Method: zip.Store,
+	})
 	if err != nil {
 		return nil, err
 	}
