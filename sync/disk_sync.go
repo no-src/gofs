@@ -170,7 +170,7 @@ func (s *diskSync) write(path, dest string) error {
 	destSize := destStat.Size()
 
 	var offset int64
-	if !s.enc.Enabled() {
+	if !s.enc.NeedEncrypt(path) {
 		if s.quickCompare(sourceSize, destSize, sourceStat.ModTime(), destStat.ModTime()) {
 			log.Debug("[write] [ignored], the file size and file modification time are both unmodified => %s", path)
 			return nil
