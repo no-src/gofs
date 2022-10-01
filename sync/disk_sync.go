@@ -99,6 +99,12 @@ func (s *diskSync) Create(path string) error {
 		if err != nil {
 			return err
 		}
+
+		// only changes the times when the destination path is a directory
+		// because the file's modified time will be used to compare whether file changed
+		if err = s.chtimes(path, dest); err != nil {
+			return err
+		}
 	} else {
 		dir := filepath.Dir(dest)
 		err = os.MkdirAll(dir, os.ModePerm)
@@ -113,14 +119,7 @@ func (s *diskSync) Create(path string) error {
 			log.ErrorIf(f.Close(), "[create] close the dest file error")
 		}()
 	}
-	_, aTime, mTime, err := s.getFileTimeFn(path)
-	if err != nil {
-		return err
-	}
-	err = os.Chtimes(dest, aTime, mTime)
-	if err != nil {
-		return err
-	}
+
 	log.Info("create the dest file success [%s] -> [%s]", path, dest)
 	return nil
 }
@@ -170,13 +169,19 @@ func (s *diskSync) write(path, dest string) error {
 	destSize := destStat.Size()
 
 	var offset int64
-	if !s.enc.NeedEncrypt(path) {
+	if s.enc.NeedEncrypt(path) {
+		// ignore the size compare from encryption file because the size of encryption file may not equal to the source file
+		if s.quickCompare(0, 0, sourceStat.ModTime(), destStat.ModTime()) {
+			log.Debug("[write] [ignored], the file modification time is unmodified => %s", path)
+			return nil
+		}
+	} else {
 		if s.quickCompare(sourceSize, destSize, sourceStat.ModTime(), destStat.ModTime()) {
 			log.Debug("[write] [ignored], the file size and file modification time are both unmodified => %s", path)
 			return nil
 		}
 
-		if destSize > 0 && s.compare(sourceFile, sourceSize, dest, &offset) {
+		if s.compare(sourceFile, sourceSize, dest, destSize, &offset) {
 			log.Debug("[write] [ignored], the file is unmodified => %s", path)
 			return nil
 		}
@@ -224,7 +229,10 @@ func (s *diskSync) write(path, dest string) error {
 	return err
 }
 
-func (s *diskSync) compare(sourceFile *os.File, sourceSize int64, dest string, offset *int64) (equal bool) {
+func (s *diskSync) compare(sourceFile *os.File, sourceSize int64, dest string, destSize int64, offset *int64) (equal bool) {
+	if destSize <= 0 {
+		return false
+	}
 	hvs, _ := hashutil.CheckpointsHashFromFile(sourceFile, s.chunkSize, s.checkpointCount)
 	if len(hvs) > 0 && hvs.Last().Offset == sourceSize {
 		// if source and dest is the same file, ignore the following steps and return directly
@@ -241,14 +249,16 @@ func (s *diskSync) compare(sourceFile *os.File, sourceSize int64, dest string, o
 }
 
 // chtimes change file times
-func (s *diskSync) chtimes(source, dest string) {
-	if _, aTime, mTime, err := s.getFileTimeFn(source); err == nil {
+func (s *diskSync) chtimes(source, dest string) error {
+	_, aTime, mTime, err := s.getFileTimeFn(source)
+	if err == nil {
 		if err = os.Chtimes(dest, aTime, mTime); err != nil {
 			log.Warn("[write] change file times error => %s =>[%s]", err.Error(), dest)
 		}
 	} else {
 		log.Warn("[write] get file times error => %s =>[%s]", err.Error(), source)
 	}
+	return err
 }
 
 // Remove removes the source file or dir in dest
