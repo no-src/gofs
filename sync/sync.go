@@ -2,7 +2,7 @@ package sync
 
 import (
 	"fmt"
-	
+
 	"github.com/no-src/gofs/core"
 )
 
@@ -37,7 +37,7 @@ func NewSync(opt Option) (Sync, error) {
 	} else if opt.Dest.Is(core.RemoteDisk) {
 		return NewPushClientSync(opt.Source, opt.Dest, opt.EnableTLS, opt.TLSCertFile, opt.TLSInsecureSkipVerify, opt.Users, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum)
 	} else if opt.Source.IsDisk() && opt.Dest.Is(core.SFTP) {
-		return NewSftpPushClientSync(opt.Source, opt.Dest, opt.Users, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum, opt.Retry)
+		return NewSftpPushClientSync(opt.Source, opt.Dest, opt.Users, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum, opt.Retry, opt.EncOpt)
 	} else if opt.Source.Is(core.SFTP) && opt.Dest.IsDisk() {
 		return NewSftpPullClientSync(opt.Source, opt.Dest, opt.Users, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum, opt.Retry)
 	} else if opt.Source.IsDisk() && opt.Dest.Is(core.MinIO) {

@@ -77,7 +77,15 @@ func (s *driverPushClientSync) Write(path string) error {
 	if err != nil {
 		return err
 	}
-	err = s.client.Write(path, destPath)
+
+	encryptPath, removeTemp, err := s.enc.CreateEncryptTemp(path)
+	if err != nil {
+		return err
+	}
+	// remove the temporary file
+	defer removeTemp()
+
+	err = s.client.Write(encryptPath, destPath)
 	if err == nil {
 		log.Debug("[push] [success] => %s", path)
 		if _, aTime, mTime, err := fs.GetFileTime(path); err == nil {

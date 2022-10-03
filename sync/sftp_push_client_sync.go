@@ -19,7 +19,7 @@ type sftpPushClientSync struct {
 }
 
 // NewSftpPushClientSync create an instance of the sftpPushClientSync
-func NewSftpPushClientSync(source, dest core.VFS, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool, r retry.Retry) (Sync, error) {
+func NewSftpPushClientSync(source, dest core.VFS, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool, r retry.Retry, encOpt encrypt.Option) (Sync, error) {
 	if chunkSize <= 0 {
 		return nil, errors.New("chunk size must greater than zero")
 	}
@@ -28,7 +28,7 @@ func NewSftpPushClientSync(source, dest core.VFS, users []*auth.User, enableLogi
 		return nil, errors.New("user account is required")
 	}
 
-	ds, err := newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum, encrypt.EmptyOption())
+	ds, err := newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum, encOpt)
 	if err != nil {
 		return nil, err
 	}
