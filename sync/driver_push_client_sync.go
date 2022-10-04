@@ -49,6 +49,7 @@ func (s *driverPushClientSync) Create(path string) error {
 	} else {
 		err = s.client.Create(destPath)
 	}
+	s.removeFileInfo(path)
 	return err
 }
 
@@ -101,7 +102,6 @@ func (s *driverPushClientSync) Remove(path string) error {
 			return err
 		}
 	}
-
 	return s.remove(path, false)
 }
 
@@ -115,6 +115,7 @@ func (s *driverPushClientSync) remove(path string, forceDelete bool) (err error)
 	} else {
 		err = s.client.Remove(destPath)
 	}
+	s.removeFileInfo(path)
 	return err
 }
 
@@ -240,4 +241,11 @@ func (s *driverPushClientSync) initFileInfo() error {
 		err = nil
 	}
 	return err
+}
+
+func (s *driverPushClientSync) removeFileInfo(sourcePath string) {
+	if s.forceChecksum {
+		return
+	}
+	s.files.Delete(sourcePath)
 }
