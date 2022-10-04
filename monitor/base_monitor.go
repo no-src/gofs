@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/url"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
@@ -60,6 +61,20 @@ func newBaseMonitor(syncer nssync.Sync, retry retry.Retry, syncOnce bool, eventW
 // addWrite add or update a write message
 func (m *baseMonitor) addWrite(name string) {
 	m.mu.Lock()
+
+	// If the current path's parent directory is in the writeMap, then ignore the current path.
+	// For example
+	// WRITE /source/workspace
+	// WRITE /source/workspace/hello.txt
+	// As the above says, ignore the path /source/workspace/hello.txt
+	parent := filepath.Dir(name)
+	pwm := m.writeMap[m.key(parent)]
+	if pwm != nil {
+		log.Debug("add write ignore the file path => %s", name)
+		m.mu.Unlock()
+		return
+	}
+
 	wm := m.writeMap[m.key(name)]
 	if wm == nil {
 		wm = newDefaultWriteMessage(name)
