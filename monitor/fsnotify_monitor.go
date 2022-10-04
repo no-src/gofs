@@ -16,7 +16,6 @@ import (
 	"github.com/no-src/gofs/report"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/sync"
-	"github.com/no-src/gofs/util/osutil"
 	"github.com/no-src/log"
 )
 
@@ -188,9 +187,10 @@ func (m *fsNotifyMonitor) create(event fsnotify.Event) {
 				log.Error(err, "[create] event execute monitor error => [%s]", event.Name)
 			}
 		}
-		if err == nil && (!isDir || (isDir && !osutil.IsWindows())) {
-			// rename a file, will not trigger the Write event
-			// rename a dir, will not trigger the Write event on Linux, but it will trigger the Write event for parent dir on Windows
+		if err == nil {
+			// rename a file will not trigger the Write event
+			// rename a dir will not trigger the Write event on Linux and some Windows environments
+			// in some cases it will trigger the Write event for the parent dir on Windows
 			// send a Write event manually
 			log.Debug("prepare to send a [write] event after [create] event [%s]", event.Name)
 			m.events.PushBack(fsnotify.Event{
