@@ -41,7 +41,7 @@ func NewSync(opt Option) (Sync, error) {
 	} else if opt.Source.Is(core.SFTP) && opt.Dest.IsDisk() {
 		return NewSftpPullClientSync(opt.Source, opt.Dest, opt.Users, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum, opt.Retry)
 	} else if opt.Source.IsDisk() && opt.Dest.Is(core.MinIO) {
-		return NewMinIOPushClientSync(opt.Source, opt.Dest, opt.Users, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum, opt.Retry)
+		return NewMinIOPushClientSync(opt.Source, opt.Dest, opt.Users, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum, opt.Retry, opt.EncOpt)
 	} else if opt.Source.Is(core.MinIO) && opt.Dest.IsDisk() {
 		return NewMinIOPullClientSync(opt.Source, opt.Dest, opt.Users, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum, opt.Retry)
 	}

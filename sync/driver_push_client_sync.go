@@ -72,7 +72,6 @@ func (s *driverPushClientSync) Write(path string) error {
 		return nil
 	}
 
-	// write to sftp server
 	destPath, err := s.buildDestAbsFile(path)
 	if err != nil {
 		return err
