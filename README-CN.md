@@ -226,7 +226,7 @@ $ gofs -source="./source" -dest="sftp://127.0.0.1:22?local_sync_disabled=false&p
 启动一个MinIO推送客户端，将发生变更的文件同步到MinIO服务器
 
 ```bash
-$ gofs -source="./source" -dest="minio://127.0.0.1:9000?local_sync_disabled=false&path=./dest&remote_path=minio-bucket" -users="minio_user|minio_pwd"
+$ gofs -source="./source" -dest="minio://127.0.0.1:9000?secure=false&local_sync_disabled=false&path=./dest&remote_path=minio-bucket" -users="minio_user|minio_pwd"
 ```
 
 ### MinIO拉取客户端
@@ -234,7 +234,7 @@ $ gofs -source="./source" -dest="minio://127.0.0.1:9000?local_sync_disabled=fals
 启动一个MinIO拉取客户端，将文件从MinIO服务器拉到本地目标路径
 
 ```bash
-$ gofs -source="minio://127.0.0.1:9000?remote_path=minio-bucket" -dest="./dest" -users="minio_user|minio_pwd" -sync_once
+$ gofs -source="minio://127.0.0.1:9000?secure=false&remote_path=minio-bucket" -dest="./dest" -users="minio_user|minio_pwd" -sync_once
 ```
 
 ### 中继
