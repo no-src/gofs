@@ -98,7 +98,7 @@ func (s *driverPullClientSync) write(path, dest string) error {
 	err = writer.Flush()
 
 	if err == nil {
-		log.Info("write to the dest file success, size[%d => %d] [%s] => [%s]", sourceSize, n, path, dest)
+		log.Info("[driver-pull] [write] [success] size[%d => %d] [%s] => [%s]", sourceSize, n, path, dest)
 		s.chtimes(path, dest)
 	}
 	return err

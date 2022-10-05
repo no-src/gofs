@@ -223,7 +223,7 @@ func (s *diskSync) write(path, dest string) error {
 	err = writer.Close()
 
 	if err == nil {
-		log.Info("write to the dest file success, size[%d => %d] [%s] => [%s]", sourceSize, n, path, dest)
+		log.Info("[disk] [write] [success] size[%d => %d] [%s] => [%s]", sourceSize, n, path, dest)
 		s.chtimes(path, dest)
 	}
 	return err

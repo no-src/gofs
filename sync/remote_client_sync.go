@@ -188,7 +188,7 @@ func (rs *remoteClientSync) write(path, dest string) error {
 	err = writer.Flush()
 
 	if err == nil {
-		log.Info("write to the dest file success, size[%d => %d] [%s] => [%s]", size, n, path, dest)
+		log.Info("[remote-client] [write] [success] size[%d => %d] [%s] => [%s]", size, n, path, dest)
 		rs.chtimes(dest, aTime, mTime)
 	}
 	return err
