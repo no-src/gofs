@@ -49,7 +49,6 @@ func (s *driverPushClientSync) Create(path string) error {
 	} else {
 		err = s.client.Create(destPath)
 	}
-	s.storeFileInfo(path)
 	return err
 }
 
