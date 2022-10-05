@@ -129,7 +129,11 @@ func (c *minIOClient) MkdirAll(path string) error {
 
 func (c *minIOClient) Create(path string) (err error) {
 	err = c.reconnectIfLost(func() error {
-		_, err = c.Client.PutObject(c.ctx, c.bucketName, path, bytes.NewReader(nil), 0, minio.PutObjectOptions{})
+		_, err = c.Client.StatObject(c.ctx, c.bucketName, path, minio.StatObjectOptions{})
+		var respErr minio.ErrorResponse
+		if err != nil && errors.As(err, &respErr) && respErr.StatusCode == http.StatusNotFound {
+			_, err = c.Client.PutObject(c.ctx, c.bucketName, path, bytes.NewReader(nil), 0, minio.PutObjectOptions{})
+		}
 		return err
 	})
 	return err
