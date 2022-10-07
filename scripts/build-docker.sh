@@ -3,6 +3,9 @@
 # update git repository
 # git pull --no-rebase
 
+# update the latest golang image
+# docker pull golang
+
 # set the gofs docker image name by GOFSIMAGENAME environment variable
 export GOFSIMAGENAME=nosrc/gofs
 
