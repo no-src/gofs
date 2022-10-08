@@ -66,7 +66,7 @@ func (h *loginHandler) Handle(c *gin.Context) {
 			c.String(http.StatusInternalServerError, "save session error")
 			return
 		}
-		h.logger.Info("login success, userid=%d username=%s password=%s remote=%s", loginUser.UserId, loginUser.UserName, loginUser.Password, c.Request.RemoteAddr)
+		h.logger.Info("login success, userid=%d username=%s remote=%s", loginUser.UserId, loginUser.UserName, c.Request.RemoteAddr)
 		c.Redirect(http.StatusFound, returnUrl)
 	} else {
 		h.logger.Info("login failed, username=%s password=%s remote=%s", userName, password, c.Request.RemoteAddr)
