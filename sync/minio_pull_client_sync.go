@@ -29,7 +29,7 @@ func NewMinIOPullClientSync(source, dest core.VFS, users []*auth.User, enableLog
 		return nil, errors.New("user account is required")
 	}
 
-	ds, err := newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum, encrypt.EmptyOption())
+	ds, err := newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum, false, encrypt.EmptyOption())
 	if err != nil {
 		return nil, err
 	}

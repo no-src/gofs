@@ -42,6 +42,7 @@ func parseFlags(args []string) (config conf.Config) {
 	flag.IntVar(&config.CheckpointCount, "checkpoint_count", 10, "use the checkpoint in the file to reduce transfer unmodified file chunks")
 	flag.BoolVar(&config.ForceChecksum, "force_checksum", false, "if the file size and file modification time of the source file is equal to the destination file and -force_checksum is false, then ignore the current file transfer")
 	flag.StringVar(&config.ChecksumAlgorithm, "checksum_algorithm", hashutil.DefaultHash, "set the default hash algorithm for checksum, current supported algorithms: md5, sha1, sha256, sha512, crc32, crc64, adler32, fnv-1-32, fnv-1a-32, fnv-1-64, fnv-1a-64, fnv-1-128, fnv-1a-128")
+	flag.BoolVar(&config.Progress, "progress", false, "print the sync progress")
 
 	// file monitor
 	flag.BoolVar(&config.EnableSyncDelay, "sync_delay", false, "enable sync delay, start sync when the event count is equal or greater than -sync_delay_events, or wait for -sync_delay_time interval time since the last sync")
