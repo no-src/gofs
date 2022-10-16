@@ -20,6 +20,7 @@ type Option struct {
 	ChunkSize             int64
 	CheckpointCount       int
 	ForceChecksum         bool
+	Progress              bool
 	Users                 []*auth.User
 	Retry                 retry.Retry
 	EncOpt                encrypt.Option
@@ -38,6 +39,7 @@ func NewSyncOption(config conf.Config, users []*auth.User, r retry.Retry) Option
 		ChunkSize:             config.ChunkSize,
 		CheckpointCount:       config.CheckpointCount,
 		ForceChecksum:         config.ForceChecksum,
+		Progress:              config.Progress,
 		Users:                 users,
 		Retry:                 r,
 		EncOpt:                encrypt.NewOption(config),

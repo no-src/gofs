@@ -30,7 +30,7 @@ type remoteServerSync struct {
 
 // NewRemoteServerSync create an instance of remoteServerSync execute send file change message
 func NewRemoteServerSync(source, dest core.VFS, enableTLS bool, certFile string, keyFile string, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool) (Sync, error) {
-	ds, err := newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum, encrypt.EmptyOption())
+	ds, err := newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum, false, encrypt.EmptyOption())
 	if err != nil {
 		return nil, err
 	}

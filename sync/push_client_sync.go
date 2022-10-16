@@ -47,7 +47,7 @@ func NewPushClientSync(source, dest core.VFS, enableTLS bool, certFile string, i
 		return nil, errors.New("chunk size must greater than zero")
 	}
 
-	ds, err := newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum, encrypt.EmptyOption())
+	ds, err := newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum, false, encrypt.EmptyOption())
 	if err != nil {
 		return nil, err
 	}

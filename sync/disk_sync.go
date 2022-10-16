@@ -3,6 +3,7 @@ package sync
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"github.com/no-src/gofs/encrypt"
 	nsfs "github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/ignore"
+	"github.com/no-src/gofs/progress"
 	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/log"
 )
@@ -23,6 +25,7 @@ type diskSync struct {
 	destAbsPath     string
 	chunkSize       int64
 	checkpointCount int
+	progress        bool
 	enc             *encrypt.Encrypt
 
 	isDirFn       nsfs.IsDirFunc
@@ -33,11 +36,11 @@ type diskSync struct {
 // NewDiskSync create a diskSync instance
 // source is source path to read
 // dest is dest path to write
-func NewDiskSync(source, dest core.VFS, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool, encOpt encrypt.Option) (s Sync, err error) {
-	return newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum, encOpt)
+func NewDiskSync(source, dest core.VFS, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool, progress bool, encOpt encrypt.Option) (s Sync, err error) {
+	return newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum, progress, encOpt)
 }
 
-func newDiskSync(source, dest core.VFS, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool, encOpt encrypt.Option) (s *diskSync, err error) {
+func newDiskSync(source, dest core.VFS, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool, progress bool, encOpt encrypt.Option) (s *diskSync, err error) {
 	if source.IsEmpty() {
 		return nil, errors.New("source is not found")
 	}
@@ -66,6 +69,7 @@ func newDiskSync(source, dest core.VFS, enableLogicallyDelete bool, chunkSize in
 		baseSync:        newBaseSync(source, dest, enableLogicallyDelete, forceChecksum),
 		chunkSize:       chunkSize,
 		checkpointCount: checkpointCount,
+		progress:        progress,
 		enc:             enc,
 		isDirFn:         nsfs.IsDir,
 		statFn:          os.Stat,
@@ -215,7 +219,7 @@ func (s *diskSync) write(path, dest string) error {
 		return err
 	}
 
-	n, err := reader.WriteTo(writer)
+	n, err := reader.WriteTo(progress.NewWriterWithEnable(writer, sourceSize-offset, fmt.Sprintf("[sync] => %s", destStat.Name()), s.progress))
 	if err != nil {
 		return err
 	}
