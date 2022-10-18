@@ -4,10 +4,7 @@ import (
 	"errors"
 
 	"github.com/no-src/gofs/auth"
-	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/driver/sftp"
-	"github.com/no-src/gofs/encrypt"
-	"github.com/no-src/gofs/retry"
 )
 
 type sftpPushClientSync struct {
@@ -19,7 +16,13 @@ type sftpPushClientSync struct {
 }
 
 // NewSftpPushClientSync create an instance of the sftpPushClientSync
-func NewSftpPushClientSync(source, dest core.VFS, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool, r retry.Retry, encOpt encrypt.Option) (Sync, error) {
+func NewSftpPushClientSync(opt Option) (Sync, error) {
+	// the fields of option
+	dest := opt.Dest
+	users := opt.Users
+	chunkSize := opt.ChunkSize
+	r := opt.Retry
+
 	if chunkSize <= 0 {
 		return nil, errors.New("chunk size must greater than zero")
 	}
@@ -28,7 +31,7 @@ func NewSftpPushClientSync(source, dest core.VFS, users []*auth.User, enableLogi
 		return nil, errors.New("user account is required")
 	}
 
-	ds, err := newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum, false, encOpt)
+	ds, err := newDiskSync(opt)
 	if err != nil {
 		return nil, err
 	}

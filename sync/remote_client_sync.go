@@ -14,7 +14,6 @@ import (
 
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
-	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/server"
@@ -36,7 +35,15 @@ type remoteClientSync struct {
 }
 
 // NewRemoteClientSync create an instance of remoteClientSync to receive the file change message and execute it
-func NewRemoteClientSync(source, dest core.VFS, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, forceChecksum bool) (Sync, error) {
+func NewRemoteClientSync(opt Option) (Sync, error) {
+	// the fields of option
+	source := opt.Source
+	dest := opt.Dest
+	users := opt.Users
+	chunkSize := opt.ChunkSize
+	forceChecksum := opt.ForceChecksum
+	enableLogicallyDelete := opt.EnableLogicallyDelete
+
 	if dest.IsEmpty() {
 		return nil, errors.New("dest is not found")
 	}

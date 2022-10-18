@@ -4,10 +4,7 @@ import (
 	"errors"
 
 	"github.com/no-src/gofs/auth"
-	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/driver/minio"
-	"github.com/no-src/gofs/encrypt"
-	"github.com/no-src/gofs/retry"
 )
 
 type minIOPushClientSync struct {
@@ -20,7 +17,13 @@ type minIOPushClientSync struct {
 }
 
 // NewMinIOPushClientSync create an instance of the minIOPushClientSync
-func NewMinIOPushClientSync(source, dest core.VFS, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool, r retry.Retry, encOpt encrypt.Option) (Sync, error) {
+func NewMinIOPushClientSync(opt Option) (Sync, error) {
+	// the fields of option
+	dest := opt.Dest
+	users := opt.Users
+	chunkSize := opt.ChunkSize
+	r := opt.Retry
+	
 	if chunkSize <= 0 {
 		return nil, errors.New("chunk size must greater than zero")
 	}
@@ -29,7 +32,7 @@ func NewMinIOPushClientSync(source, dest core.VFS, users []*auth.User, enableLog
 		return nil, errors.New("user account is required")
 	}
 
-	ds, err := newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum, false, encOpt)
+	ds, err := newDiskSync(opt)
 	if err != nil {
 		return nil, err
 	}

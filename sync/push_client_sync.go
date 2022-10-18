@@ -15,8 +15,6 @@ import (
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/contract/push"
-	"github.com/no-src/gofs/core"
-	"github.com/no-src/gofs/encrypt"
 	nsfs "github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/server"
@@ -42,12 +40,20 @@ type pushClientSync struct {
 }
 
 // NewPushClientSync create an instance of the pushClientSync
-func NewPushClientSync(source, dest core.VFS, enableTLS bool, certFile string, insecureSkipVerify bool, users []*auth.User, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool) (Sync, error) {
+func NewPushClientSync(opt Option) (Sync, error) {
+	// the fields of option
+	dest := opt.Dest
+	enableTLS := opt.EnableTLS
+	certFile := opt.TLSCertFile
+	insecureSkipVerify := opt.TLSInsecureSkipVerify
+	users := opt.Users
+	chunkSize := opt.ChunkSize
+
 	if chunkSize <= 0 {
 		return nil, errors.New("chunk size must greater than zero")
 	}
 
-	ds, err := newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum, false, encrypt.EmptyOption())
+	ds, err := newDiskSync(opt)
 	if err != nil {
 		return nil, err
 	}

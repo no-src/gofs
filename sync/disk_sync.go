@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/encrypt"
 	nsfs "github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/ignore"
@@ -36,11 +35,21 @@ type diskSync struct {
 // NewDiskSync create a diskSync instance
 // source is source path to read
 // dest is dest path to write
-func NewDiskSync(source, dest core.VFS, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool, progress bool, encOpt encrypt.Option) (s Sync, err error) {
-	return newDiskSync(source, dest, enableLogicallyDelete, chunkSize, checkpointCount, forceChecksum, progress, encOpt)
+func NewDiskSync(opt Option) (s Sync, err error) {
+	return newDiskSync(opt)
 }
 
-func newDiskSync(source, dest core.VFS, enableLogicallyDelete bool, chunkSize int64, checkpointCount int, forceChecksum bool, progress bool, encOpt encrypt.Option) (s *diskSync, err error) {
+func newDiskSync(opt Option) (s *diskSync, err error) {
+	// the fields of option
+	source := opt.Source
+	dest := opt.Dest
+	encOpt := opt.EncOpt
+	chunkSize := opt.ChunkSize
+	checkpointCount := opt.CheckpointCount
+	forceChecksum := opt.ForceChecksum
+	enableLogicallyDelete := opt.EnableLogicallyDelete
+	progress := opt.Progress
+
 	if source.IsEmpty() {
 		return nil, errors.New("source is not found")
 	}

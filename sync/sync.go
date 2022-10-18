@@ -2,7 +2,7 @@ package sync
 
 import (
 	"fmt"
-
+	
 	"github.com/no-src/gofs/core"
 )
 
@@ -30,20 +30,24 @@ type Sync interface {
 
 // NewSync auto create an instance of the expected sync according to source and dest
 func NewSync(opt Option) (Sync, error) {
-	if opt.Source.IsDisk() && opt.Dest.IsDisk() {
-		return NewDiskSync(opt.Source, opt.Dest, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum, opt.Progress, opt.EncOpt)
-	} else if opt.Source.Is(core.RemoteDisk) {
-		return NewRemoteSync(opt.Source, opt.Dest, opt.EnableTLS, opt.TLSCertFile, opt.TLSKeyFile, opt.Users, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum)
-	} else if opt.Dest.Is(core.RemoteDisk) {
-		return NewPushClientSync(opt.Source, opt.Dest, opt.EnableTLS, opt.TLSCertFile, opt.TLSInsecureSkipVerify, opt.Users, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum)
-	} else if opt.Source.IsDisk() && opt.Dest.Is(core.SFTP) {
-		return NewSftpPushClientSync(opt.Source, opt.Dest, opt.Users, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum, opt.Retry, opt.EncOpt)
-	} else if opt.Source.Is(core.SFTP) && opt.Dest.IsDisk() {
-		return NewSftpPullClientSync(opt.Source, opt.Dest, opt.Users, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum, opt.Retry)
-	} else if opt.Source.IsDisk() && opt.Dest.Is(core.MinIO) {
-		return NewMinIOPushClientSync(opt.Source, opt.Dest, opt.Users, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum, opt.Retry, opt.EncOpt)
-	} else if opt.Source.Is(core.MinIO) && opt.Dest.IsDisk() {
-		return NewMinIOPullClientSync(opt.Source, opt.Dest, opt.Users, opt.EnableLogicallyDelete, opt.ChunkSize, opt.CheckpointCount, opt.ForceChecksum, opt.Retry)
+	// the fields of option
+	source := opt.Source
+	dest := opt.Dest
+
+	if source.IsDisk() && dest.IsDisk() {
+		return NewDiskSync(opt)
+	} else if source.Is(core.RemoteDisk) {
+		return NewRemoteSync(opt)
+	} else if dest.Is(core.RemoteDisk) {
+		return NewPushClientSync(opt)
+	} else if source.IsDisk() && dest.Is(core.SFTP) {
+		return NewSftpPushClientSync(opt)
+	} else if source.Is(core.SFTP) && dest.IsDisk() {
+		return NewSftpPullClientSync(opt)
+	} else if source.IsDisk() && dest.Is(core.MinIO) {
+		return NewMinIOPushClientSync(opt)
+	} else if source.Is(core.MinIO) && dest.IsDisk() {
+		return NewMinIOPullClientSync(opt)
 	}
-	return nil, fmt.Errorf("file system unsupported ! source=>%s dest=>%s", opt.Source.Type().String(), opt.Dest.Type().String())
+	return nil, fmt.Errorf("file system unsupported ! source=>%s dest=>%s", source.Type().String(), dest.Type().String())
 }

@@ -18,6 +18,9 @@ type Option struct {
 
 // NewOption create an encryption option
 func NewOption(config conf.Config) Option {
+	if !config.Encrypt && !config.Decrypt {
+		return EmptyOption()
+	}
 	return Option{
 		Encrypt:       config.Encrypt,
 		EncryptPath:   config.EncryptPath,
