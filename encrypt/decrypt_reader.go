@@ -33,7 +33,6 @@ func (r *decryptReader) WriteTo(path string) (err error) {
 
 		// path is directory
 		if file.FileInfo().IsDir() {
-
 			err = os.MkdirAll(outPath, os.ModePerm)
 			if err != nil {
 				return err
