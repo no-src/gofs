@@ -3,10 +3,12 @@ package encrypt
 import (
 	"archive/zip"
 	"bufio"
-	"io/fs"
+	"fmt"
+	iofs "io/fs"
 	"os"
 	"path/filepath"
 
+	"github.com/no-src/gofs/fs"
 	"github.com/no-src/log"
 )
 
@@ -19,8 +21,19 @@ func (r *decryptReader) WriteTo(path string) (err error) {
 	for _, file := range r.zrc.File {
 		outPath := filepath.Join(path, file.Name)
 
+		// check zip slip
+		var isSub bool
+		isSub, err = fs.IsSub(path, outPath)
+		if err != nil {
+			return err
+		}
+		if !isSub {
+			return fmt.Errorf("illegal file path => %s", file.Name)
+		}
+
 		// path is directory
 		if file.FileInfo().IsDir() {
+
 			err = os.MkdirAll(outPath, os.ModePerm)
 			if err != nil {
 				return err
@@ -29,7 +42,7 @@ func (r *decryptReader) WriteTo(path string) (err error) {
 		}
 
 		// path is a file
-		var f fs.File
+		var f iofs.File
 		f, err = r.zrc.Open(file.Name)
 		if err != nil {
 			return err
