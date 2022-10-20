@@ -254,16 +254,47 @@ func TestIsSub(t *testing.T) {
 		{"../a0", "../a0", true},
 
 		{"/a/b/c", "/a/../a/b/c/./d", true},
+
+		{"/a2", "/a2/.a", true},
+		{"/a3", "/a3/..a", true},
+		{"/a4", "/a4/...a", true},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.parent, func(t *testing.T) {
 			actual, err := IsSub(tc.parent, tc.child)
 			if err != nil {
-				t.Errorf("test IsSub error, get actual err:%s", err)
+				t.Errorf("test IsSub error, get actual err:%s parent=%s child=%s", err, tc.parent, tc.child)
 			}
 			if actual != tc.isSub {
-				t.Errorf("test IsSub error, expect get %v but get %v", tc.isSub, actual)
+				t.Errorf("test IsSub error, expect get %v but get %v parent=%s child=%s", tc.isSub, actual, tc.parent, tc.child)
+			}
+		})
+	}
+}
+
+func TestIsSub_Windows(t *testing.T) {
+	if !osutil.IsWindows() {
+		return
+	}
+	testCases := []struct {
+		parent string
+		child  string
+		isSub  bool
+	}{
+		{"C:\\a2", "C:\\a2\\.a", true},
+		{"C:\\a3", "C:\\a3\\..a", true},
+		{"C:\\a4", "C:\\a4\\...a", true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.parent, func(t *testing.T) {
+			actual, err := IsSub(tc.parent, tc.child)
+			if err != nil {
+				t.Errorf("test IsSub error, get actual err:%s parent=%s child=%s", err, tc.parent, tc.child)
+			}
+			if actual != tc.isSub {
+				t.Errorf("test IsSub error, expect get %v but get %v parent=%s child=%s", tc.isSub, actual, tc.parent, tc.child)
 			}
 		})
 	}
