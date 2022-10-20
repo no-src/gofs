@@ -29,6 +29,7 @@ type Option struct {
 	CheckpointCount          int
 	Init                     wait.WaitDone
 	Users                    []*auth.User
+	SSHKey                   string
 	Logger                   log.Logger
 	Retry                    retry.Retry
 }
@@ -54,6 +55,7 @@ func NewServerOption(config conf.Config, init wait.WaitDone, users []*auth.User,
 		CheckpointCount:          config.CheckpointCount,
 		Init:                     init,
 		Users:                    users,
+		SSHKey:                   config.SSHKey,
 		Logger:                   logger,
 		Retry:                    r,
 	}

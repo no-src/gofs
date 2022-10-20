@@ -26,6 +26,9 @@ type Config struct {
 	ChecksumAlgorithm     string   `json:"checksum_algorithm" yaml:"checksum_algorithm"`
 	Progress              bool     `json:"progress" yaml:"progress"`
 
+	// ssh
+	SSHKey string `json:"ssh_key" yaml:"ssh_key"`
+
 	// file monitor
 	EnableSyncDelay bool          `json:"sync_delay" yaml:"sync_delay"`
 	SyncDelayEvents int           `json:"sync_delay_events" yaml:"sync_delay_events"`
