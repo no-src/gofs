@@ -3,16 +3,14 @@ package sync
 import (
 	"errors"
 
-	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/driver/sftp"
 )
 
 type sftpPullClientSync struct {
 	driverPullClientSync
 
-	remoteAddr  string
-	remotePath  string
-	currentUser *auth.User
+	remoteAddr string
+	remotePath string
 }
 
 // NewSftpPullClientSync create an instance of the sftpPullClientSync
@@ -40,12 +38,11 @@ func NewSftpPullClientSync(opt Option) (Sync, error) {
 		driverPullClientSync: driverPullClientSync{
 			diskSync: *ds,
 		},
-		remoteAddr:  source.Addr(),
-		remotePath:  source.RemotePath(),
-		currentUser: users[0],
+		remoteAddr: source.Addr(),
+		remotePath: source.RemotePath(),
 	}
-
-	s.client = sftp.NewSFTPClient(s.remoteAddr, s.currentUser.UserName(), s.currentUser.Password(), true, r)
+	currentUser := users[0]
+	s.client = sftp.NewSFTPClient(s.remoteAddr, currentUser.UserName(), currentUser.Password(), opt.SSHKey, true, r)
 
 	err = s.start()
 	if err != nil {

@@ -44,6 +44,9 @@ func parseFlags(args []string) (config conf.Config) {
 	flag.StringVar(&config.ChecksumAlgorithm, "checksum_algorithm", hashutil.DefaultHash, "set the default hash algorithm for checksum, current supported algorithms: md5, sha1, sha256, sha512, crc32, crc64, adler32, fnv-1-32, fnv-1a-32, fnv-1-64, fnv-1a-64, fnv-1-128, fnv-1a-128")
 	flag.BoolVar(&config.Progress, "progress", false, "print the sync progress")
 
+	// ssh
+	flag.StringVar(&config.SSHKey, "ssh_key", "", "a cryptographic key used for authenticating computers in the SSH protocol")
+
 	// file monitor
 	flag.BoolVar(&config.EnableSyncDelay, "sync_delay", false, "enable sync delay, start sync when the event count is equal or greater than -sync_delay_events, or wait for -sync_delay_time interval time since the last sync")
 	flag.IntVar(&config.SyncDelayEvents, "sync_delay_events", 10, "the maximum event count of sync delay")

@@ -21,6 +21,7 @@ type Option struct {
 	CheckpointCount       int
 	ForceChecksum         bool
 	Progress              bool
+	SSHKey                string
 	Users                 []*auth.User
 	Retry                 retry.Retry
 	EncOpt                encrypt.Option
@@ -40,6 +41,7 @@ func NewSyncOption(config conf.Config, users []*auth.User, r retry.Retry) Option
 		CheckpointCount:       config.CheckpointCount,
 		ForceChecksum:         config.ForceChecksum,
 		Progress:              config.Progress,
+		SSHKey:                config.SSHKey,
 		Users:                 users,
 		Retry:                 r,
 		EncOpt:                encrypt.NewOption(config),

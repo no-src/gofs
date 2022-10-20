@@ -2,11 +2,13 @@ package sftp
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"net"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -25,6 +27,7 @@ type sftpClient struct {
 	remoteAddr    string
 	userName      string
 	password      string
+	sshKey        string
 	r             retry.Retry
 	mu            sync.RWMutex
 	online        bool
@@ -32,16 +35,17 @@ type sftpClient struct {
 }
 
 // NewSFTPClient get a sftp client
-func NewSFTPClient(remoteAddr string, userName string, password string, autoReconnect bool, r retry.Retry) driver.Driver {
-	return newSFTPClient(remoteAddr, userName, password, autoReconnect, r)
+func NewSFTPClient(remoteAddr string, userName string, password string, sshKey string, autoReconnect bool, r retry.Retry) driver.Driver {
+	return newSFTPClient(remoteAddr, userName, password, sshKey, autoReconnect, r)
 }
 
-func newSFTPClient(remoteAddr string, userName string, password string, autoReconnect bool, r retry.Retry) *sftpClient {
+func newSFTPClient(remoteAddr string, userName string, password string, sshKey string, autoReconnect bool, r retry.Retry) *sftpClient {
 	return &sftpClient{
 		driverName:    "sftp",
 		remoteAddr:    remoteAddr,
 		userName:      userName,
 		password:      password,
+		sshKey:        sshKey,
 		r:             r,
 		autoReconnect: autoReconnect,
 	}
@@ -61,8 +65,12 @@ func (sc *sftpClient) Connect() error {
 	if err != nil {
 		return err
 	}
+	hostKeyCallback, err := sc.getHostKeyCallback()
+	if err != nil {
+		return err
+	}
 	conf := ssh.ClientConfig{
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		HostKeyCallback: hostKeyCallback,
 		User:            sc.userName,
 	}
 	conf.Auth = append(conf.Auth, ssh.Password(sc.password))
@@ -76,6 +84,39 @@ func (sc *sftpClient) Connect() error {
 		log.Debug("connect to sftp server success => %s", sc.remoteAddr)
 	}
 	return err
+}
+
+func (sc *sftpClient) getHostKeyCallback() (ssh.HostKeyCallback, error) {
+	sc.sshKey = strings.TrimSpace(sc.sshKey)
+	if len(sc.sshKey) == 0 {
+		return ssh.InsecureIgnoreHostKey(), nil
+	}
+	keyFile, err := os.Open(sc.sshKey)
+	if err != nil {
+		return nil, err
+	}
+	defer keyFile.Close()
+	keyData, err := io.ReadAll(keyFile)
+	if err != nil {
+		return nil, err
+	}
+	keyStat, err := keyFile.Stat()
+	if err != nil {
+		return nil, err
+	}
+	keyFileName := strings.ToLower(keyStat.Name())
+	var pk ssh.PublicKey
+	// ~/.ssh/known_hosts
+	if keyFileName == "known_hosts" {
+		_, _, pk, _, _, err = ssh.ParseKnownHosts(keyData)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if pk == nil {
+		return nil, fmt.Errorf("invalid ssh key file => %s", keyFileName)
+	}
+	return ssh.FixedHostKey(pk), nil
 }
 
 func (sc *sftpClient) reconnect() error {
