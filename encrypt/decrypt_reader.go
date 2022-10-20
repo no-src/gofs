@@ -3,6 +3,7 @@ package encrypt
 import (
 	"archive/zip"
 	"bufio"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -17,6 +18,12 @@ type decryptReader struct {
 
 func (r *decryptReader) WriteTo(path string) (err error) {
 	for _, file := range r.zrc.File {
+		// check zip slip
+		isValid := fs.ValidPath(file.Name)
+		if !isValid {
+			return fmt.Errorf("illegal file path => %s", file.Name)
+		}
+
 		outPath := filepath.Join(path, file.Name)
 
 		// path is directory
