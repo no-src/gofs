@@ -4,11 +4,10 @@ import (
 	"archive/zip"
 	"bufio"
 	"fmt"
-	iofs "io/fs"
+	"io/fs"
 	"os"
 	"path/filepath"
 
-	"github.com/no-src/gofs/fs"
 	"github.com/no-src/log"
 )
 
@@ -19,17 +18,13 @@ type decryptReader struct {
 
 func (r *decryptReader) WriteTo(path string) (err error) {
 	for _, file := range r.zrc.File {
-		outPath := filepath.Join(path, file.Name)
-
 		// check zip slip
-		var isSub bool
-		isSub, err = fs.IsSub(path, outPath)
-		if err != nil {
-			return err
-		}
-		if !isSub {
+		isValid := fs.ValidPath(file.Name)
+		if !isValid {
 			return fmt.Errorf("illegal file path => %s", file.Name)
 		}
+
+		outPath := filepath.Join(path, file.Name)
 
 		// path is directory
 		if file.FileInfo().IsDir() {
@@ -41,7 +36,7 @@ func (r *decryptReader) WriteTo(path string) (err error) {
 		}
 
 		// path is a file
-		var f iofs.File
+		var f fs.File
 		f, err = r.zrc.Open(file.Name)
 		if err != nil {
 			return err
