@@ -88,5 +88,6 @@ func IsSub(parent, child string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return !strings.HasPrefix(relPath, ".."), nil
+	relPath = filepath.ToSlash(relPath)
+	return relPath != ".." && !strings.HasPrefix(relPath, "../"), nil
 }
