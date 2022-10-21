@@ -9,6 +9,12 @@ import (
 	"github.com/no-src/gofs/fs"
 )
 
+var (
+	errDecryptOutNotDir = errors.New("the decrypt output path must be directory")
+	errIllegalPath      = errors.New("illegal file path")
+	errNotSubDir        = errors.New("the encrypt path is not a subdirectory of the source path")
+)
+
 // Decrypt the decryption component
 type Decrypt struct {
 	opt Option
@@ -34,7 +40,7 @@ func (dec Decrypt) Decrypt() error {
 		isDir = true
 	}
 	if !isDir {
-		return errors.New("the decrypt output path must be directory")
+		return errDecryptOutNotDir
 	}
 	return filepath.WalkDir(dec.opt.DecryptPath, func(path string, d iofs.DirEntry, err error) error {
 		if err != nil {
