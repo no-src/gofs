@@ -28,7 +28,7 @@ func NewEncrypt(opt Option, parentPath string) (*Encrypt, error) {
 			return nil, err
 		}
 		if !isSub {
-			return nil, fmt.Errorf("the encrypt path is not a subdirectory of the source path, source=%s encrypt=%s", parentPath, opt.EncryptPath)
+			return nil, fmt.Errorf("%w, source=%s encrypt=%s", errNotSubDir, parentPath, opt.EncryptPath)
 		}
 	}
 	return enc, nil

@@ -21,7 +21,7 @@ func (r *decryptReader) WriteTo(path string) (err error) {
 		// check zip slip
 		isValid := fs.ValidPath(file.Name)
 		if !isValid {
-			return fmt.Errorf("illegal file path => %s", file.Name)
+			return fmt.Errorf("%w => %s", errIllegalPath, file.Name)
 		}
 
 		outPath := filepath.Join(path, file.Name)

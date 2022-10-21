@@ -28,6 +28,9 @@ jobs:
       - name: Test
         run: go test -v -race ./... -coverprofile=coverage.txt -covermode=atomic -timeout=10m
 
+      - name: Test Encrypt
+        run: go test -v -race -tags=encrypt_test ./encrypt
+
       - name: Codecov
         uses: codecov/codecov-action@v3
         if: matrix.os == 'ubuntu-latest'
