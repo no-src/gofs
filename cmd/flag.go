@@ -66,6 +66,7 @@ func parseFlags(args []string) (config conf.Config) {
 	flag.BoolVar(&config.EnableEventLog, "log_event", false, "enable the event log")
 	flag.Float64Var(&config.LogSampleRate, "log_sample_rate", 1, "set the sample rate for the sample logger, and the value ranges from 0 to 1")
 	flag.StringVar(&config.LogFormat, "log_format", formatter.TextFormatter, "set the log output format, current support text and json")
+	flag.BoolVar(&config.EnableFileLogger, "log_split_date", false, "split log file by date")
 
 	// daemon
 	flag.BoolVar(&config.IsDaemon, "daemon", false, "enable daemon to create and monitor a subprocess to work, you can use [go build -ldflags=\"-H windowsgui\"] to build on Windows")

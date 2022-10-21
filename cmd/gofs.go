@@ -25,6 +25,7 @@ import (
 	"github.com/no-src/log"
 	"github.com/no-src/log/formatter"
 	"github.com/no-src/log/level"
+	"github.com/no-src/log/option"
 )
 
 // Run running the gofs program
@@ -182,7 +183,7 @@ func initDefaultLogger(c conf.Config) error {
 		if c.IsDaemon {
 			filePrefix += "daemon_"
 		}
-		flogger, err := log.NewFileLoggerWithAutoFlush(level.Level(c.LogLevel), c.LogDir, filePrefix, c.LogFlush, c.LogFlushInterval.Duration())
+		flogger, err := log.NewFileLoggerWithOption(option.NewFileLoggerOption(level.Level(c.LogLevel), c.LogDir, filePrefix, c.LogFlush, c.LogFlushInterval.Duration(), c.LogSplitDate))
 		if err != nil {
 			log.Error(err, "init file logger error")
 			return err
@@ -198,7 +199,7 @@ func initDefaultLogger(c conf.Config) error {
 func initWebServerLogger(c conf.Config) (log.Logger, error) {
 	var webLogger = log.NewConsoleLogger(level.Level(c.LogLevel))
 	if c.EnableFileLogger && c.EnableFileServer {
-		webFileLogger, err := log.NewFileLoggerWithAutoFlush(level.Level(c.LogLevel), c.LogDir, "web_", c.LogFlush, c.LogFlushInterval.Duration())
+		webFileLogger, err := log.NewFileLoggerWithOption(option.NewFileLoggerOption(level.Level(c.LogLevel), c.LogDir, "web_", c.LogFlush, c.LogFlushInterval.Duration(), c.LogSplitDate))
 		if err != nil {
 			log.Error(err, "init the web server file logger error")
 			return nil, err
@@ -227,7 +228,7 @@ func startWebServer(c conf.Config, webLogger log.Logger, userList []*auth.User, 
 func initEventLogger(c conf.Config) (log.Logger, error) {
 	var eventLogger = log.NewEmptyLogger()
 	if c.EnableEventLog {
-		eventFileLogger, err := log.NewFileLoggerWithAutoFlush(level.Level(c.LogLevel), c.LogDir, "event_", c.LogFlush, c.LogFlushInterval.Duration())
+		eventFileLogger, err := log.NewFileLoggerWithOption(option.NewFileLoggerOption(level.Level(c.LogLevel), c.LogDir, "event_", c.LogFlush, c.LogFlushInterval.Duration(), c.LogSplitDate))
 		if err != nil {
 			log.Error(err, "init the event file logger error")
 			return nil, err

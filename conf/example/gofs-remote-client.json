@@ -27,6 +27,7 @@
   "log_event": false,
   "log_sample_rate": 1,
   "log_format": "text",
+  "log_split_date": false,
   "daemon": false,
   "daemon_pid": false,
   "daemon_delay": "1s",
