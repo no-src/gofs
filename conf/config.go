@@ -48,6 +48,7 @@ type Config struct {
 	EnableEventLog   bool          `json:"log_event" yaml:"log_event"`
 	LogSampleRate    float64       `json:"log_sample_rate" yaml:"log_sample_rate"`
 	LogFormat        string        `json:"log_format" yaml:"log_format"`
+	LogSplitDate     bool          `json:"log_split_date" yaml:"log_split_date"`
 
 	// daemon
 	IsDaemon           bool          `json:"daemon" yaml:"daemon"`
