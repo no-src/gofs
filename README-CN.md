@@ -339,6 +339,8 @@ https://127.0.0.1/manage/report
 
 使用`log_format`命令行参数设置日志输出格式，当前支持`text`与`json`，默认为`text`
 
+使用`log_split_date`命令行参数来根据日期拆分日志文件，默认为禁用
+
 ```bash
 # 在"本地磁盘"模式下设置日志信息
 $ gofs -source=./source -dest=./dest -log_file -log_level=0 -log_dir="./logs/" -log_flush -log_flush_interval=3s -log_event

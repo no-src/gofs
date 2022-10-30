@@ -370,6 +370,8 @@ is `1`.
 
 Use the `log_format` flag to set the log output format, current support `text` and `json`, default is `text`.
 
+Use the `log_split_date` flag to split log file by date, default is `false`.
+
 ```bash
 # set the logger config in "Local Disk" mode
 $ gofs -source=./source -dest=./dest -log_file -log_level=0 -log_dir="./logs/" -log_flush -log_flush_interval=3s -log_event
