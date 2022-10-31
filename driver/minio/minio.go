@@ -278,6 +278,10 @@ func (c *minIODriver) Write(src string, dest string) (err error) {
 	})
 }
 
+func (c *minIODriver) Client() *minio.Client {
+	return c.client
+}
+
 type statDirEntry struct {
 	info fs.FileInfo
 }
