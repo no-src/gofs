@@ -48,7 +48,7 @@ func NewMinIOPushClientSync(opt Option) (Sync, error) {
 		currentUser: users[0],
 	}
 
-	s.client = minio.NewMinIODriver(s.endpoint, s.bucketName, s.secure, s.currentUser.UserName(), s.currentUser.Password(), true, r)
+	s.driver = minio.NewMinIODriver(s.endpoint, s.bucketName, s.secure, s.currentUser.UserName(), s.currentUser.Password(), true, r)
 
 	err = s.start()
 	if err != nil {

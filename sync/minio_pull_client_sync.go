@@ -47,7 +47,7 @@ func NewMinIOPullClientSync(opt Option) (Sync, error) {
 		currentUser: users[0],
 	}
 
-	s.client = minio.NewMinIODriver(s.endpoint, s.bucketName, s.secure, s.currentUser.UserName(), s.currentUser.Password(), true, r)
+	s.driver = minio.NewMinIODriver(s.endpoint, s.bucketName, s.secure, s.currentUser.UserName(), s.currentUser.Password(), true, r)
 
 	err = s.start()
 	if err != nil {
@@ -59,8 +59,8 @@ func NewMinIOPullClientSync(opt Option) (Sync, error) {
 
 	// reset some functions for MinIO
 	s.diskSync.isDirFn = s.IsDir
-	s.diskSync.statFn = s.client.Stat
-	s.diskSync.getFileTimeFn = s.client.GetFileTime
+	s.diskSync.statFn = s.driver.Stat
+	s.diskSync.getFileTimeFn = s.driver.GetFileTime
 
 	return s, nil
 }

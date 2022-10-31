@@ -14,11 +14,11 @@ import (
 type driverPullClientSync struct {
 	diskSync
 
-	client driver.Driver
+	driver driver.Driver
 }
 
 func (s *driverPullClientSync) start() error {
-	return s.client.Connect()
+	return s.driver.Connect()
 }
 
 func (s *driverPullClientSync) Create(path string) error {
@@ -47,12 +47,12 @@ func (s *driverPullClientSync) Write(path string) error {
 
 // write try to write a file to the destination
 func (s *driverPullClientSync) write(path, dest string) error {
-	sourceFile, err := s.client.Open(path)
+	sourceFile, err := s.driver.Open(path)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		log.ErrorIf(sourceFile.Close(), "[%s pull client sync] [write] close the source file error", s.client.DriverName())
+		log.ErrorIf(sourceFile.Close(), "[%s pull client sync] [write] close the source file error", s.driver.DriverName())
 	}()
 
 	sourceStat, err := sourceFile.Stat()
@@ -69,7 +69,7 @@ func (s *driverPullClientSync) write(path, dest string) error {
 	destSize := destStat.Size()
 
 	if s.quickCompare(sourceSize, destSize, sourceStat.ModTime(), destStat.ModTime()) {
-		log.Debug("[%s pull client sync] [write] [ignored], the file size and file modification time are both unmodified => %s", s.client.DriverName(), path)
+		log.Debug("[%s pull client sync] [write] [ignored], the file size and file modification time are both unmodified => %s", s.driver.DriverName(), path)
 		return nil
 	}
 
@@ -78,7 +78,7 @@ func (s *driverPullClientSync) write(path, dest string) error {
 		return err
 	}
 	defer func() {
-		log.ErrorIf(destFile.Close(), "[%s pull client sync] [write] close the dest file error", s.client.DriverName())
+		log.ErrorIf(destFile.Close(), "[%s pull client sync] [write] close the dest file error", s.driver.DriverName())
 	}()
 
 	reader := bufio.NewReader(sourceFile)
@@ -118,7 +118,7 @@ func (s *driverPullClientSync) Chmod(path string) error {
 }
 
 func (s *driverPullClientSync) IsDir(path string) (bool, error) {
-	fi, err := s.client.Stat(path)
+	fi, err := s.driver.Stat(path)
 	if err != nil {
 		return false, err
 	}
@@ -126,11 +126,11 @@ func (s *driverPullClientSync) IsDir(path string) (bool, error) {
 }
 
 func (s *driverPullClientSync) SyncOnce(path string) error {
-	return s.client.WalkDir(path, func(currentPath string, d iofs.DirEntry, err error) error {
+	return s.driver.WalkDir(path, func(currentPath string, d iofs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if ignore.MatchPath(currentPath, s.client.DriverName()+" pull client sync", "sync once") {
+		if ignore.MatchPath(currentPath, s.driver.DriverName()+" pull client sync", "sync once") {
 			return nil
 		}
 		if d.IsDir() {
