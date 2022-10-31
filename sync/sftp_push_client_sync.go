@@ -44,7 +44,7 @@ func NewSftpPushClientSync(opt Option) (Sync, error) {
 	}
 
 	currentUser := users[0]
-	s.client = sftp.NewSFTPClient(s.remoteAddr, currentUser.UserName(), currentUser.Password(), opt.SSHKey, true, r)
+	s.client = sftp.NewSFTPDriver(s.remoteAddr, currentUser.UserName(), currentUser.Password(), opt.SSHKey, true, r)
 
 	err = s.start()
 	if err != nil {
