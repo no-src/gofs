@@ -13,7 +13,7 @@ import (
 // Dir an implementation of http.FileSystem for sftp
 type Dir struct {
 	root   string
-	client *sftpClient
+	driver *sftpDriver
 }
 
 // NewDir returns a http.FileSystem instance for sftp
@@ -30,11 +30,11 @@ func NewDir(root string, address string, userName string, password string, sshKe
 	if len(password) == 0 {
 		return nil, errors.New("invalid password for sftp")
 	}
-	client := newSFTPClient(address, userName, password, sshKey, true, r)
+	driver := newSFTPDriver(address, userName, password, sshKey, true, r)
 	return &Dir{
-		client: client,
+		driver: driver,
 		root:   root,
-	}, client.Connect()
+	}, driver.Connect()
 }
 
 // Open opens the named file for reading
@@ -43,5 +43,5 @@ func (d *Dir) Open(name string) (http.File, error) {
 		return nil, errors.New("http: invalid character in file path")
 	}
 	fullName := filepath.ToSlash(filepath.Join(d.root, filepath.FromSlash(path.Clean("/"+name))))
-	return d.client.Open(fullName)
+	return d.driver.Open(fullName)
 }

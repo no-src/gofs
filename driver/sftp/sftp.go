@@ -19,10 +19,9 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// sftpClient a sftp client component, support auto reconnect
-type sftpClient struct {
-	*sftp.Client
-
+// sftpDriver a sftp driver component, support auto reconnect
+type sftpDriver struct {
+	client        *sftp.Client
 	driverName    string
 	remoteAddr    string
 	userName      string
@@ -34,13 +33,13 @@ type sftpClient struct {
 	autoReconnect bool
 }
 
-// NewSFTPClient get a sftp client
-func NewSFTPClient(remoteAddr string, userName string, password string, sshKey string, autoReconnect bool, r retry.Retry) driver.Driver {
-	return newSFTPClient(remoteAddr, userName, password, sshKey, autoReconnect, r)
+// NewSFTPDriver get a sftp driver
+func NewSFTPDriver(remoteAddr string, userName string, password string, sshKey string, autoReconnect bool, r retry.Retry) driver.Driver {
+	return newSFTPDriver(remoteAddr, userName, password, sshKey, autoReconnect, r)
 }
 
-func newSFTPClient(remoteAddr string, userName string, password string, sshKey string, autoReconnect bool, r retry.Retry) *sftpClient {
-	return &sftpClient{
+func newSFTPDriver(remoteAddr string, userName string, password string, sshKey string, autoReconnect bool, r retry.Retry) *sftpDriver {
+	return &sftpDriver{
 		driverName:    "sftp",
 		remoteAddr:    remoteAddr,
 		userName:      userName,
@@ -51,11 +50,11 @@ func newSFTPClient(remoteAddr string, userName string, password string, sshKey s
 	}
 }
 
-func (sc *sftpClient) DriverName() string {
+func (sc *sftpDriver) DriverName() string {
 	return sc.driverName
 }
 
-func (sc *sftpClient) Connect() error {
+func (sc *sftpDriver) Connect() error {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
 	if sc.online {
@@ -78,7 +77,7 @@ func (sc *sftpClient) Connect() error {
 	if err != nil {
 		return err
 	}
-	sc.Client, err = sftp.NewClient(ssh.NewClient(cc, chans, reqs))
+	sc.client, err = sftp.NewClient(ssh.NewClient(cc, chans, reqs))
 	if err == nil {
 		sc.online = true
 		log.Debug("connect to sftp server success => %s", sc.remoteAddr)
@@ -86,7 +85,7 @@ func (sc *sftpClient) Connect() error {
 	return err
 }
 
-func (sc *sftpClient) getHostKeyCallback() (ssh.HostKeyCallback, error) {
+func (sc *sftpDriver) getHostKeyCallback() (ssh.HostKeyCallback, error) {
 	sc.sshKey = strings.TrimSpace(sc.sshKey)
 	if len(sc.sshKey) == 0 {
 		return ssh.InsecureIgnoreHostKey(), nil
@@ -119,12 +118,12 @@ func (sc *sftpClient) getHostKeyCallback() (ssh.HostKeyCallback, error) {
 	return ssh.FixedHostKey(pk), nil
 }
 
-func (sc *sftpClient) reconnect() error {
+func (sc *sftpDriver) reconnect() error {
 	log.Debug("reconnect to sftp server => %s", sc.remoteAddr)
 	return sc.r.Do(sc.Connect, "sftp reconnect").Wait()
 }
 
-func (sc *sftpClient) reconnectIfLost(f func() error) error {
+func (sc *sftpDriver) reconnectIfLost(f func() error) error {
 	if !sc.autoReconnect {
 		return f()
 	}
@@ -148,20 +147,20 @@ func (sc *sftpClient) reconnectIfLost(f func() error) error {
 	return err
 }
 
-func (sc *sftpClient) isClosed(err error) bool {
+func (sc *sftpDriver) isClosed(err error) bool {
 	return err == sftp.ErrSSHFxConnectionLost
 }
 
-func (sc *sftpClient) MkdirAll(path string) error {
+func (sc *sftpDriver) MkdirAll(path string) error {
 	return sc.reconnectIfLost(func() error {
-		return sc.Client.MkdirAll(path)
+		return sc.client.MkdirAll(path)
 	})
 }
 
-func (sc *sftpClient) Create(path string) (err error) {
+func (sc *sftpDriver) Create(path string) (err error) {
 	err = sc.reconnectIfLost(func() error {
 		var f *sftp.File
-		f, err = sc.Client.Create(path)
+		f, err = sc.client.Create(path)
 		if err == nil {
 			log.ErrorIf(f.Close(), "close sftp file err => %s", path)
 		}
@@ -170,9 +169,9 @@ func (sc *sftpClient) Create(path string) (err error) {
 	return err
 }
 
-func (sc *sftpClient) Remove(path string) error {
+func (sc *sftpDriver) Remove(path string) error {
 	return sc.reconnectIfLost(func() error {
-		f, err := sc.Client.Stat(path)
+		f, err := sc.client.Stat(path)
 		if os.IsNotExist(err) {
 			return nil
 		}
@@ -183,7 +182,7 @@ func (sc *sftpClient) Remove(path string) error {
 		var dirs []string
 
 		if f.IsDir() {
-			walker := sc.Client.Walk(path)
+			walker := sc.client.Walk(path)
 			for walker.Step() {
 				if walker.Err() != nil {
 					continue
@@ -200,7 +199,7 @@ func (sc *sftpClient) Remove(path string) error {
 
 		// remove all files
 		for _, p := range files {
-			err = sc.Client.Remove(p)
+			err = sc.client.Remove(p)
 			if err != nil && !os.IsNotExist(err) {
 				return err
 			}
@@ -208,7 +207,7 @@ func (sc *sftpClient) Remove(path string) error {
 
 		// remove all dirs
 		for i := len(dirs) - 1; i >= 0; i-- {
-			err = sc.Client.RemoveDirectory(dirs[i])
+			err = sc.client.RemoveDirectory(dirs[i])
 			if err != nil && !os.IsNotExist(err) {
 				return err
 			}
@@ -218,22 +217,22 @@ func (sc *sftpClient) Remove(path string) error {
 	})
 }
 
-func (sc *sftpClient) Rename(oldPath, newPath string) error {
+func (sc *sftpDriver) Rename(oldPath, newPath string) error {
 	return sc.reconnectIfLost(func() error {
-		return sc.Client.Rename(oldPath, newPath)
+		return sc.client.Rename(oldPath, newPath)
 	})
 }
 
-func (sc *sftpClient) Chtimes(path string, aTime time.Time, mTime time.Time) error {
+func (sc *sftpDriver) Chtimes(path string, aTime time.Time, mTime time.Time) error {
 	return sc.reconnectIfLost(func() error {
-		return sc.Client.Chtimes(path, aTime, mTime)
+		return sc.client.Chtimes(path, aTime, mTime)
 	})
 }
 
-func (sc *sftpClient) Open(path string) (f http.File, err error) {
+func (sc *sftpDriver) Open(path string) (f http.File, err error) {
 	err = sc.reconnectIfLost(func() error {
 		var sftpFile *sftp.File
-		sftpFile, err = sc.Client.Open(path)
+		sftpFile, err = sc.client.Open(path)
 		if err == nil {
 			f = newFile(sftpFile, sc, path)
 		}
@@ -242,26 +241,26 @@ func (sc *sftpClient) Open(path string) (f http.File, err error) {
 	return f, err
 }
 
-func (sc *sftpClient) ReadDir(path string) (fis []os.FileInfo, err error) {
+func (sc *sftpDriver) ReadDir(path string) (fis []os.FileInfo, err error) {
 	err = sc.reconnectIfLost(func() error {
-		fis, err = sc.Client.ReadDir(path)
+		fis, err = sc.client.ReadDir(path)
 		return err
 	})
 	return fis, err
 }
 
-func (sc *sftpClient) Stat(path string) (fi os.FileInfo, err error) {
+func (sc *sftpDriver) Stat(path string) (fi os.FileInfo, err error) {
 	err = sc.reconnectIfLost(func() error {
-		fi, err = sc.Client.Stat(path)
+		fi, err = sc.client.Stat(path)
 		return err
 	})
 	return fi, err
 }
 
-func (sc *sftpClient) GetFileTime(path string) (cTime time.Time, aTime time.Time, mTime time.Time, err error) {
+func (sc *sftpDriver) GetFileTime(path string) (cTime time.Time, aTime time.Time, mTime time.Time, err error) {
 	err = sc.reconnectIfLost(func() error {
 		var fi os.FileInfo
-		fi, err = sc.Client.Stat(path)
+		fi, err = sc.client.Stat(path)
 		if err != nil {
 			return err
 		}
@@ -273,9 +272,9 @@ func (sc *sftpClient) GetFileTime(path string) (cTime time.Time, aTime time.Time
 	return
 }
 
-func (sc *sftpClient) WalkDir(root string, fn fs.WalkDirFunc) error {
+func (sc *sftpDriver) WalkDir(root string, fn fs.WalkDirFunc) error {
 	return sc.reconnectIfLost(func() error {
-		walker := sc.Client.Walk(root)
+		walker := sc.client.Walk(root)
 		for {
 			next := walker.Step()
 			if err := walker.Err(); err != nil {
@@ -291,7 +290,7 @@ func (sc *sftpClient) WalkDir(root string, fn fs.WalkDirFunc) error {
 	})
 }
 
-func (sc *sftpClient) Write(src string, dest string) (err error) {
+func (sc *sftpDriver) Write(src string, dest string) (err error) {
 	err = sc.reconnectIfLost(func() error {
 		var srcFile *os.File
 		srcFile, err = os.Open(src)
@@ -301,7 +300,7 @@ func (sc *sftpClient) Write(src string, dest string) (err error) {
 		defer srcFile.Close()
 
 		var destFile *sftp.File
-		destFile, err = sc.Client.OpenFile(dest, os.O_WRONLY|os.O_CREATE)
+		destFile, err = sc.client.OpenFile(dest, os.O_WRONLY|os.O_CREATE)
 		if err != nil {
 			return err
 		}
