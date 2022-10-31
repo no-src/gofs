@@ -14,7 +14,7 @@ import (
 // Dir an implementation of http.FileSystem for MinIO
 type Dir struct {
 	bucketName string
-	client     *minIOClient
+	driver     *minIODriver
 }
 
 // NewDir returns a http.FileSystem instance for MinIO
@@ -31,11 +31,11 @@ func NewDir(bucketName string, endpoint string, secure bool, userName string, pa
 	if len(password) == 0 {
 		return nil, errors.New("invalid password for MinIO")
 	}
-	client := newMinIOClient(endpoint, bucketName, secure, userName, password, true, r)
+	driver := newMinIODriver(endpoint, bucketName, secure, userName, password, true, r)
 	return &Dir{
-		client:     client,
+		driver:     driver,
 		bucketName: bucketName,
-	}, client.Connect()
+	}, driver.Connect()
 }
 
 // Open opens the named file for reading
@@ -44,11 +44,11 @@ func (d *Dir) Open(name string) (http.File, error) {
 		return nil, errors.New("http: invalid character in file path")
 	}
 	fullName := filepath.ToSlash(filepath.FromSlash(path.Clean("/" + name)))
-	httpFile, err := d.client.openFileOrDir(fullName)
+	httpFile, err := d.driver.openFileOrDir(fullName)
 	if err != nil {
 		var respErr minio.ErrorResponse
 		if errors.As(err, &respErr) && len(respErr.Key) == 0 {
-			return newDirFile(d.client.Client, d.bucketName, name), nil
+			return newDirFile(d.driver.client, d.bucketName, name), nil
 		}
 		return nil, err
 	}

@@ -23,7 +23,7 @@ func NewMinIOPushClientSync(opt Option) (Sync, error) {
 	users := opt.Users
 	chunkSize := opt.ChunkSize
 	r := opt.Retry
-	
+
 	if chunkSize <= 0 {
 		return nil, errors.New("chunk size must greater than zero")
 	}
@@ -48,7 +48,7 @@ func NewMinIOPushClientSync(opt Option) (Sync, error) {
 		currentUser: users[0],
 	}
 
-	s.client = minio.NewMinIOClient(s.endpoint, s.bucketName, s.secure, s.currentUser.UserName(), s.currentUser.Password(), true, r)
+	s.client = minio.NewMinIODriver(s.endpoint, s.bucketName, s.secure, s.currentUser.UserName(), s.currentUser.Password(), true, r)
 
 	err = s.start()
 	if err != nil {
