@@ -42,7 +42,7 @@ func NewSftpPullClientSync(opt Option) (Sync, error) {
 		remotePath: source.RemotePath(),
 	}
 	currentUser := users[0]
-	s.client = sftp.NewSFTPDriver(s.remoteAddr, currentUser.UserName(), currentUser.Password(), opt.SSHKey, true, r)
+	s.driver = sftp.NewSFTPDriver(s.remoteAddr, currentUser.UserName(), currentUser.Password(), opt.SSHKey, true, r)
 
 	err = s.start()
 	if err != nil {
@@ -57,8 +57,8 @@ func NewSftpPullClientSync(opt Option) (Sync, error) {
 	}
 	// reset some functions for sftp
 	s.diskSync.isDirFn = s.IsDir
-	s.diskSync.statFn = s.client.Stat
-	s.diskSync.getFileTimeFn = s.client.GetFileTime
+	s.diskSync.statFn = s.driver.Stat
+	s.diskSync.getFileTimeFn = s.driver.GetFileTime
 
 	return s, nil
 }

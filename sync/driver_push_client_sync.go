@@ -18,7 +18,7 @@ type driverPushClientSync struct {
 	diskSync
 
 	basePath string
-	client   driver.Driver
+	driver   driver.Driver
 	files    sync.Map
 }
 
@@ -26,7 +26,7 @@ func (s *driverPushClientSync) start() error {
 	if err := s.initFileInfo(); err != nil {
 		return err
 	}
-	return s.client.Connect()
+	return s.driver.Connect()
 }
 
 func (s *driverPushClientSync) Create(path string) error {
@@ -45,9 +45,9 @@ func (s *driverPushClientSync) Create(path string) error {
 		return err
 	}
 	if isDir {
-		err = s.client.MkdirAll(destPath)
+		err = s.driver.MkdirAll(destPath)
 	} else {
-		err = s.client.Create(destPath)
+		err = s.driver.Create(destPath)
 	}
 	return err
 }
@@ -84,11 +84,11 @@ func (s *driverPushClientSync) Write(path string) error {
 	// remove the temporary file
 	defer removeTemp()
 
-	err = s.client.Write(encryptPath, destPath)
+	err = s.driver.Write(encryptPath, destPath)
 	if err == nil {
 		log.Info("[driver-push] [write] [success] => %s", path)
 		if _, aTime, mTime, err := fs.GetFileTime(path); err == nil {
-			log.ErrorIf(s.client.Chtimes(destPath, aTime, mTime), "[%s push client sync] [write] change file times error", s.client.DriverName())
+			log.ErrorIf(s.driver.Chtimes(destPath, aTime, mTime), "[%s push client sync] [write] change file times error", s.driver.DriverName())
 		}
 		s.storeFileInfo(path)
 	}
@@ -112,7 +112,7 @@ func (s *driverPushClientSync) remove(path string, forceDelete bool) (err error)
 	if !forceDelete && s.enableLogicallyDelete {
 		err = s.logicallyDelete(destPath)
 	} else {
-		err = s.client.Remove(destPath)
+		err = s.driver.Remove(destPath)
 	}
 	s.removeFileInfo(path)
 	return err
@@ -124,7 +124,7 @@ func (s *driverPushClientSync) logicallyDelete(path string) error {
 		return nil
 	}
 	deletedFile := fs.ToDeletedPath(path)
-	err := s.client.Rename(path, deletedFile)
+	err := s.driver.Rename(path, deletedFile)
 	if os.IsNotExist(err) {
 		return nil
 	}
@@ -159,7 +159,7 @@ func (s *driverPushClientSync) SyncOnce(path string) error {
 		if err != nil {
 			return err
 		}
-		if ignore.MatchPath(currentPath, s.client.DriverName()+" push client sync", "sync once") {
+		if ignore.MatchPath(currentPath, s.driver.DriverName()+" push client sync", "sync once") {
 			return nil
 		}
 		if d.IsDir() {
