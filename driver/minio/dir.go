@@ -48,7 +48,7 @@ func (d *Dir) Open(name string) (http.File, error) {
 	if err != nil {
 		var respErr minio.ErrorResponse
 		if errors.As(err, &respErr) && len(respErr.Key) == 0 {
-			return newDirFile(d.driver.client, d.bucketName, name), nil
+			return newDirFile(d.driver.Client(), d.bucketName, name), nil
 		}
 		return nil, err
 	}
