@@ -31,6 +31,9 @@ jobs:
       - name: Test Encrypt
         run: go test -v -race -tags=encrypt_test ./encrypt
 
+      - name: Test HttpUtil
+        run: go test -v -race -tags=httputil_test ./util/httputil
+
       - name: Codecov
         uses: codecov/codecov-action@v3
         if: matrix.os == 'ubuntu-latest'
