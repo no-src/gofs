@@ -43,7 +43,9 @@ func HttpGetWithCookie(url string, header http.Header, cookies ...*http.Cookie) 
 		return nil, err
 	}
 	for _, cookie := range cookies {
-		req.AddCookie(cookie)
+		if cookie != nil {
+			req.AddCookie(cookie)
+		}
 	}
 
 	if len(header) > 0 {
@@ -68,7 +70,9 @@ func HttpPostWithCookie(url string, data url.Values, cookies ...*http.Cookie) (r
 		return nil, err
 	}
 	for _, cookie := range cookies {
-		req.AddCookie(cookie)
+		if cookie != nil {
+			req.AddCookie(cookie)
+		}
 	}
 	req.Header.Set(HeaderContentType, "application/x-www-form-urlencoded")
 	return defaultClient.Do(req)
@@ -107,7 +111,9 @@ func HttpPostFileChunkWithCookie(url string, fieldName string, fileName string, 
 
 	if len(cookies) > 0 {
 		for _, cookie := range cookies {
-			req.AddCookie(cookie)
+			if cookie != nil {
+				req.AddCookie(cookie)
+			}
 		}
 	}
 	req.Header.Set(HeaderContentType, w.FormDataContentType())
