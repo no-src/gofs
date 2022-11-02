@@ -191,7 +191,7 @@ func (rs *remoteServerSync) start() error {
 			log.Warn("client conn is nil, data => %s", string(data))
 			return
 		}
-		log.Debug("receive message [%s] => %s", client.RemoteAddr().String(), string(data))
+		log.Debug("receive message [%s] => %s", client.RemoteAddrString(), string(data))
 		writer := bufio.NewWriter(client)
 		var result []byte
 		var cmd contract.Command
@@ -213,11 +213,11 @@ func (rs *remoteServerSync) start() error {
 		result = append(result, tran.LFBytes...)
 		_, err = writer.Write(result)
 		if err != nil {
-			log.Error(err, "[%s]=>[%s] write message error", client.RemoteAddr().String(), string(cmd))
+			log.Error(err, "[%s]=>[%s] write message error", client.RemoteAddrString(), string(cmd))
 		}
 		err = writer.Flush()
 		if err != nil {
-			log.Error(err, "[%s]=>[%s] flush message error", client.RemoteAddr().String(), string(cmd))
+			log.Error(err, "[%s]=>[%s] flush message error", client.RemoteAddrString(), string(cmd))
 		}
 	})
 	return nil

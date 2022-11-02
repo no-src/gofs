@@ -87,10 +87,19 @@ func (srv *tcpServer) Accept(process func(client *Conn, data []byte)) (err error
 		}
 		newConn, err := srv.listener.Accept()
 		if err != nil {
+			log.Error(err, "listener accept connection error")
 			continue
 		}
-		clientConn := NewConn(newConn)
-		srv.addClient(clientConn)
+		clientConn, err := NewConn(newConn)
+		if err != nil {
+			log.Error(err, "create connection error")
+			continue
+		}
+		_, err = srv.addClient(clientConn)
+		if err != nil {
+			log.Error(err, "add client connection error")
+			continue
+		}
 
 		go func() {
 			reader := bufio.NewReader(clientConn)
@@ -99,13 +108,12 @@ func (srv *tcpServer) Accept(process func(client *Conn, data []byte)) (err error
 				if err != nil {
 					clientConn.Close()
 					srv.removeClient(clientConn)
-					log.Error(err, "client[%s]conn closed, current client connect count:%d", clientConn.RemoteAddr().String(), srv.ClientCount())
+					log.Error(err, "client[%s]conn closed, current client connect count:%d", clientConn.RemoteAddrString(), srv.ClientCount())
 					clientConn = nil
 					return
 				}
 				process(clientConn, line)
 			}
-
 		}()
 	}
 }
@@ -115,14 +123,14 @@ func (srv *tcpServer) addClient(conn *Conn) (clientCount int, err error) {
 		return clientCount, errors.New("conn is nil")
 	}
 	conn.StartAuthCheck()
-	addr := strings.ToLower(conn.RemoteAddr().String())
+	addr := strings.ToLower(conn.RemoteAddrString())
 	_, exist := srv.conns.Load(addr)
 	srv.conns.Store(addr, conn)
 	if exist {
-		log.Debug("client[%s]conn is already exist, replace it now", conn.RemoteAddr().String())
+		log.Debug("client[%s]conn is already exist, replace it now", conn.RemoteAddrString())
 	}
 	clientCount = srv.ClientCount()
-	log.Info("client[%s]conn succeed, current client connect count:%d", conn.RemoteAddr().String(), clientCount)
+	log.Info("client[%s]conn succeed, current client connect count:%d", conn.RemoteAddrString(), clientCount)
 	report.GlobalReporter.PutConnection(addr)
 	return clientCount, err
 }
@@ -133,10 +141,10 @@ func (srv *tcpServer) removeClient(conn *Conn) (clientCount int, err error) {
 		return clientCount, errors.New("conn is nil")
 	}
 	conn.StopAuthCheck()
-	addr := strings.ToLower(conn.RemoteAddr().String())
+	addr := strings.ToLower(conn.RemoteAddrString())
 	srv.conns.Delete(addr)
 	clientCount = srv.ClientCount()
-	log.Info("client[%s]conn removed, current client connect count:%d", conn.RemoteAddr().String(), clientCount)
+	log.Info("client[%s]conn removed, current client connect count:%d", conn.RemoteAddrString(), clientCount)
 	report.GlobalReporter.DeleteConnection(addr)
 	return clientCount, err
 }
@@ -182,6 +190,9 @@ func (srv *tcpServer) Port() int {
 
 func (srv *tcpServer) Close() error {
 	srv.closed = true
+	if srv.listener == nil {
+		return nil
+	}
 	return srv.listener.Close()
 }
 
