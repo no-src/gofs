@@ -3,6 +3,7 @@ package tran
 import (
 	"errors"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/no-src/gofs/auth"
@@ -23,6 +24,7 @@ type Conn struct {
 	connTime       *time.Time
 	authTime       *time.Time
 	startAuthCheck *cbool.CBool
+	mu             sync.RWMutex
 }
 
 // NewConn create a Conn instance
@@ -47,7 +49,9 @@ func (conn *Conn) MarkAuthorized(user *auth.HashUser) {
 		return
 	}
 	conn.authorized.Set(true)
+	conn.mu.Lock()
 	conn.user = user
+	conn.mu.Unlock()
 	now := time.Now()
 	conn.authTime = &now
 	addr := conn.RemoteAddrString()
@@ -62,6 +66,8 @@ func (conn *Conn) Authorized() bool {
 
 // CheckPerm check the current connection's permission whether accord with the specified permission
 func (conn *Conn) CheckPerm(perm auth.Perm) bool {
+	conn.mu.RLock()
+	defer conn.mu.RUnlock()
 	if !conn.Authorized() || conn.user == nil {
 		return false
 	}
