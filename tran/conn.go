@@ -48,12 +48,12 @@ func (conn *Conn) MarkAuthorized(user *auth.HashUser) {
 	if user == nil {
 		return
 	}
-	conn.authorized.Set(true)
 	conn.mu.Lock()
+	conn.authorized.Set(true)
 	conn.user = user
-	conn.mu.Unlock()
 	now := time.Now()
 	conn.authTime = &now
+	conn.mu.Unlock()
 	addr := conn.RemoteAddrString()
 	log.Info("the conn authorized [local=%s][remote=%s] => [username=%s password=%s perm=%s]", conn.LocalAddrString(), addr, user.UserNameHash, user.PasswordHash, user.Perm.String())
 	report.GlobalReporter.PutAuth(addr, user)
