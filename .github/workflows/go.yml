@@ -34,6 +34,9 @@ jobs:
       - name: Test HttpUtil
         run: go test -v -race -tags=httputil_test ./util/httputil
 
+      - name: Test Tran
+        run: go test -v -race -tags=tran_test ./tran
+
       - name: Codecov
         uses: codecov/codecov-action@v3
         if: matrix.os == 'ubuntu-latest'
