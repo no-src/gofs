@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/no-src/gofs/auth"
+	"github.com/no-src/gofs/internal/cbool"
 	"github.com/no-src/gofs/report"
 	"github.com/no-src/gofs/util/stringutil"
 	"github.com/no-src/log"
@@ -22,7 +23,7 @@ type tcpServer struct {
 	port      int
 	listener  net.Listener
 	conns     sync.Map
-	closed    bool
+	closed    *cbool.CBool
 	users     []*auth.HashUser
 	certFile  string
 	keyFile   string
@@ -32,9 +33,10 @@ type tcpServer struct {
 // NewServer create an instance of tcpServer
 func NewServer(ip string, port int, enableTLS bool, certFile string, keyFile string, users []*auth.User) Server {
 	srv := &tcpServer{
+		network:   "tcp",
 		ip:        net.ParseIP(ip),
 		port:      port,
-		network:   "tcp",
+		closed:    cbool.New(true),
 		enableTLS: enableTLS,
 		certFile:  certFile,
 		keyFile:   keyFile,
@@ -75,6 +77,7 @@ func (srv *tcpServer) Listen() (err error) {
 		srv.listener, err = net.ListenTCP(srv.network, addr)
 	}
 	if err == nil {
+		srv.closed.Set(false)
 		log.Info("tcp server is listening at:%s:%d enableTLS=%v", srv.ip, srv.port, srv.enableTLS)
 	}
 	return err
@@ -82,7 +85,7 @@ func (srv *tcpServer) Listen() (err error) {
 
 func (srv *tcpServer) Accept(process func(client *Conn, data []byte)) (err error) {
 	for {
-		if srv.closed {
+		if srv.closed.Get() {
 			return errors.New("tcp server is closed")
 		}
 		newConn, err := srv.listener.Accept()
@@ -189,7 +192,7 @@ func (srv *tcpServer) Port() int {
 }
 
 func (srv *tcpServer) Close() error {
-	srv.closed = true
+	srv.closed.Set(true)
 	if srv.listener == nil {
 		return nil
 	}
