@@ -18,13 +18,14 @@ var (
 
 // Conn the component of network connection
 type Conn struct {
-	nc             net.Conn
-	authorized     *cbool.CBool
-	user           *auth.HashUser
-	connTime       *time.Time
-	authTime       *time.Time
-	startAuthCheck *cbool.CBool
-	mu             sync.RWMutex
+	nc               net.Conn
+	authorized       *cbool.CBool
+	user             *auth.HashUser
+	connTime         *time.Time
+	authTime         *time.Time
+	startAuthCheck   *cbool.CBool
+	authCheckTimeout time.Duration
+	mu               sync.RWMutex
 }
 
 // NewConn create a Conn instance
@@ -34,11 +35,12 @@ func NewConn(nc net.Conn) (*Conn, error) {
 	}
 	now := time.Now()
 	c := &Conn{
-		nc:             nc,
-		authorized:     cbool.New(false),
-		connTime:       &now,
-		authTime:       nil,
-		startAuthCheck: cbool.New(false),
+		nc:               nc,
+		authorized:       cbool.New(false),
+		connTime:         &now,
+		authTime:         nil,
+		startAuthCheck:   cbool.New(false),
+		authCheckTimeout: time.Minute,
 	}
 	return c, nil
 }
@@ -128,8 +130,8 @@ func (conn *Conn) authCheck() {
 			if authorized {
 				conn.startAuthCheck.Set(false)
 				break
-			} else if !authorized && time.Now().After(conn.connTime.Add(time.Minute)) {
-				log.Info("conn auth check ==> [%s] is unauthorized for more than one minute since connected ", conn.RemoteAddrString())
+			} else if !authorized && time.Now().After(conn.connTime.Add(conn.authCheckTimeout)) {
+				log.Info("conn auth check ==> [%s] is unauthorized for more than %s since connected ", conn.RemoteAddrString(), conn.authCheckTimeout.String())
 				conn.Close()
 				conn.startAuthCheck.Set(false)
 				break
