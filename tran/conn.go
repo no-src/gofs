@@ -13,7 +13,8 @@ import (
 )
 
 var (
-	errNilConn = errors.New("the instance of net.Conn is nil")
+	errNilNetConn  = errors.New("the instance of net.Conn is nil")
+	errNilTranConn = errors.New("the instance of tran.Conn is nil")
 )
 
 // Conn the component of network connection
@@ -31,7 +32,7 @@ type Conn struct {
 // NewConn create a Conn instance
 func NewConn(nc net.Conn) (*Conn, error) {
 	if nc == nil {
-		return nil, errNilConn
+		return nil, errNilNetConn
 	}
 	now := time.Now()
 	c := &Conn{

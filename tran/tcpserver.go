@@ -123,7 +123,7 @@ func (srv *tcpServer) Accept(process func(client *Conn, data []byte)) (err error
 
 func (srv *tcpServer) addClient(conn *Conn) (clientCount int, err error) {
 	if conn == nil {
-		return clientCount, errors.New("conn is nil")
+		return clientCount, errNilTranConn
 	}
 	conn.StartAuthCheck()
 	addr := strings.ToLower(conn.RemoteAddrString())
@@ -141,7 +141,7 @@ func (srv *tcpServer) addClient(conn *Conn) (clientCount int, err error) {
 // removeClient just remove client, not close conn
 func (srv *tcpServer) removeClient(conn *Conn) (clientCount int, err error) {
 	if conn == nil {
-		return clientCount, errors.New("conn is nil")
+		return clientCount, errNilTranConn
 	}
 	conn.StopAuthCheck()
 	addr := strings.ToLower(conn.RemoteAddrString())
