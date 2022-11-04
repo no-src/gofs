@@ -4,6 +4,8 @@ package tran
 
 import (
 	"bytes"
+	"errors"
+	"net"
 	"os"
 	"sync/atomic"
 	"testing"
@@ -22,7 +24,7 @@ var (
 )
 
 func getRandomUser(t *testing.T) []*auth.User {
-	users, err := auth.RandomUser(1, 8, 8, "rwx")
+	users, err := auth.RandomUser(1, 8, 8, auth.FullPerm)
 	if err != nil {
 		t.Fatalf("generate random user error =>%v", err)
 	}
@@ -73,12 +75,15 @@ func TestTcpServer_Listen_WithInvalidCertFile(t *testing.T) {
 	server.Close()
 }
 
-func TestTcpServer_Send(t *testing.T) {
-	users := getRandomUser(t)
+func testTcpServerSend(t *testing.T, users []*auth.User, hasClientUser bool, isExpireUser bool, forceUserPerm auth.Perm) {
 	port := getServerPort()
 
 	// server
 	server := NewServer(serverHost, port, true, certFile, certKey, users)
+	// force change the permission
+	for _, user := range server.(*tcpServer).users {
+		user.Perm = forceUserPerm
+	}
 	err := server.Listen()
 	if err != nil {
 		t.Errorf("Listen: the tcp server listen error =>%v", err)
@@ -87,13 +92,21 @@ func TestTcpServer_Send(t *testing.T) {
 	defer server.Close()
 
 	go server.Accept(func(client *Conn, data []byte) {
-		hashUser := users[0].ToHashUser()
-		hashUser.RefreshExpires()
-		authed, perm := server.Auth(hashUser)
-		if authed {
-			hashUser.Perm = perm
-			client.MarkAuthorized(hashUser)
+		var hashUser *auth.HashUser
+		if hasClientUser && len(users) > 0 {
+			hashUser = users[0].ToHashUser()
+			if isExpireUser {
+				hashUser.Expires = "20060102150405"
+			} else {
+				hashUser.RefreshExpires()
+			}
+
 		}
+		authed, perm := server.Auth(hashUser)
+		if authed && hashUser != nil {
+			hashUser.Perm = perm
+		}
+		client.MarkAuthorized(hashUser)
 		client.Write(getServerResponseMockData())
 	})
 	t.Logf("tcp server started, host=%s port=%d", server.Host(), server.Port())
@@ -112,6 +125,28 @@ func TestTcpServer_Send(t *testing.T) {
 	// wait for authorized
 	time.Sleep(time.Second * 2)
 	server.Send([]byte("hello client"))
+}
+
+func TestTcpServer_Send(t *testing.T) {
+	testCases := []struct {
+		name          string
+		serverUsers   []*auth.User
+		hasClientUser bool
+		isExpireUser  bool
+		userPerm      auth.Perm
+	}{
+		{"auth server with auth client", getRandomUser(t), true, false, auth.FullPerm},
+		{"auth server with invalid perm auth client", getRandomUser(t), true, false, "invalid"},
+		{"auth server with expired auth client", getRandomUser(t), true, true, auth.FullPerm},
+		{"no auth server", nil, false, false, auth.FullPerm},
+		{"auth server with no auth client", getRandomUser(t), false, false, auth.FullPerm},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			testTcpServerSend(t, tc.serverUsers, tc.hasClientUser, tc.isExpireUser, tc.userPerm)
+		})
+	}
 }
 
 func TestTcpServer_Listen_DisableTLS(t *testing.T) {
@@ -150,4 +185,60 @@ func TestTcpServer_Listen_DisableTLS(t *testing.T) {
 		t.Errorf("tcp client read server data expect => %s, but get => %v", serverResponse, string(data))
 		return
 	}
+}
+
+func TestTcpServer_Add_Remove_Client(t *testing.T) {
+	port := getServerPort()
+	users := getRandomUser(t)
+
+	// server
+	server := NewServer(serverHost, port, true, certFile, certKey, users)
+	err := server.Listen()
+	if err != nil {
+		t.Errorf("Listen: the tcp server listen error =>%v", err)
+		return
+	}
+	defer server.Close()
+
+	go server.Accept(func(client *Conn, data []byte) {
+		client.Write(getServerResponseMockData())
+	})
+
+	// client
+	tcpSrv := server.(*tcpServer)
+
+	// add nil client
+	_, err = tcpSrv.addClient(nil)
+	if err == nil || !errors.Is(err, errNilTranConn) {
+		t.Errorf("add a nil client error, expect get %v, but get => %v", errNilTranConn, err)
+		return
+	}
+
+	// remove nil client
+	_, err = tcpSrv.removeClient(nil)
+	if err == nil || !errors.Is(err, errNilTranConn) {
+		t.Errorf("remove a nil client error, expect get %v, but get => %v", errNilTranConn, err)
+		return
+	}
+
+	// add duplicate clients
+	c, err := NewConn(&net.TCPConn{})
+	if err != nil {
+		t.Errorf("NewConn: create the instance of Conn error => %v", err)
+		return
+	}
+
+	for i := 0; i < 3; i++ {
+		_, err = tcpSrv.addClient(c)
+		if err != nil {
+			t.Errorf("add duplicate client error => %v", err)
+			return
+		}
+	}
+
+	// force add nil client
+	tcpSrv.conns.Store("nil conn", nil)
+
+	// send data to clients
+	tcpSrv.Send([]byte("hello"))
 }

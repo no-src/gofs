@@ -17,8 +17,8 @@ func TestNewConn_WithNilConn(t *testing.T) {
 		t.Errorf("NewConn: expect get an error but get nil")
 		return
 	}
-	if !errors.Is(err, errNilConn) {
-		t.Errorf("NewConn: expect get error =>%v, but actual get error => %v", errNilConn, err)
+	if !errors.Is(err, errNilNetConn) {
+		t.Errorf("NewConn: expect get error =>%v, but actual get error => %v", errNilNetConn, err)
 	}
 }
 
