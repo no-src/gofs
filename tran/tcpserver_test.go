@@ -42,6 +42,13 @@ func getServerResponseMockData() []byte {
 	return data
 }
 
+func getServerResponseMockErrorData() []byte {
+	data := []byte(serverResponse)
+	data = append(data, ErrorEndIdentity...)
+	data = append(data, LFBytes...)
+	return data
+}
+
 func TestTcpServer_Listen_WithNilUser(t *testing.T) {
 	users := getRandomUser(t)
 	port := getServerPort()

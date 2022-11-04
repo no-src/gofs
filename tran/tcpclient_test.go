@@ -3,6 +3,9 @@
 package tran
 
 import (
+	"errors"
+	"fmt"
+	"io"
 	"os"
 	"testing"
 )
@@ -23,7 +26,10 @@ func TestTcpClient_Connect_WithInvalidCertFile(t *testing.T) {
 	}
 
 	// close
-	client.Close()
+	err = client.Close()
+	if err != nil {
+		t.Errorf("Close: close tcp client error => %v", err)
+	}
 }
 
 func TestTcpClient_Connect_WithNotStartedServer(t *testing.T) {
@@ -37,7 +43,11 @@ func TestTcpClient_Connect_WithNotStartedServer(t *testing.T) {
 		return
 	}
 	// close
-	client.Close()
+	err = client.Close()
+	if err != nil {
+		t.Errorf("Close: close tcp client error => %v", err)
+		return
+	}
 
 	err = client.Write([]byte("hello"))
 	if err == nil {
@@ -58,7 +68,8 @@ func TestTcpClient_Close(t *testing.T) {
 		return
 	}
 	go server.Accept(func(client *Conn, data []byte) {
-		client.Write(getServerResponseMockData())
+		// return error data
+		client.Write(getServerResponseMockErrorData())
 	})
 	t.Logf("tcp server started, host=%s port=%d", server.Host(), server.Port())
 
@@ -73,11 +84,68 @@ func TestTcpClient_Close(t *testing.T) {
 	t.Logf("tcp client conneted, host=%s port=%d", client.Host(), client.Port())
 
 	// close server first
-	server.Close()
+	err = server.Close()
+	if err != nil {
+		t.Errorf("Close: close tcp server error => %v", err)
+		return
+	}
 
 	// communication
-	client.Write([]byte("hello server"))
+	err = client.Write([]byte("hello server"))
+	if err != nil {
+		t.Errorf("Write: send tcp client data error => %v", err)
+		return
+	}
+
+	// read data before client closed
+	_, err = client.ReadAll()
+	if err == nil || !errors.Is(err, ErrServerExecute) {
+		t.Errorf("ReadAll: tcp client expect get error %v, but get => %v", ErrServerExecute, err)
+		return
+	}
 
 	// close client
-	client.Close()
+	err = client.Close()
+	if err != nil {
+		t.Errorf("Close: close tcp client error => %v", err)
+		return
+	}
+
+	// read data after client closed
+	_, err = client.ReadAll()
+	if err == nil || !errors.Is(err, errClientNotConnected) {
+		t.Errorf("ReadAll: tcp client expect get error %v, but get => %v", errClientNotConnected, err)
+		return
+	}
+}
+
+func TestTcpClient_CheckAndTagState(t *testing.T) {
+	port := getServerPort()
+
+	// client
+	client := NewClient(serverHost, port, true, certFile, false).(*tcpClient)
+
+	testCases := []struct {
+		name   string
+		err    error
+		expect bool
+	}{
+		{"nil error", nil, false},
+		{"errClientNotConnected", errClientNotConnected, false},
+		{"io EOF", io.EOF, true},
+		{"SyscallError wsarecv", fmt.Errorf("%w", &os.SyscallError{Syscall: "wsarecv"}), true},
+		{"SyscallError connectex", fmt.Errorf("%w", &os.SyscallError{Syscall: "connectex"}), true},
+		{"SyscallError read", fmt.Errorf("%w", &os.SyscallError{Syscall: "read"}), true},
+		{"SyscallError connect", fmt.Errorf("%w", &os.SyscallError{Syscall: "connect"}), true},
+		{"SyscallError unknown error", fmt.Errorf("%w", &os.SyscallError{Syscall: "unknown error"}), false},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := client.checkAndTagState(tc.err)
+			if actual != tc.expect {
+				t.Errorf("checkAndTagState: expect get %v, but actual get %v", tc.expect, actual)
+			}
+		})
+	}
 }
