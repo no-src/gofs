@@ -39,7 +39,7 @@ type remoteClientMonitor struct {
 }
 
 // NewRemoteClientMonitor create an instance of remoteClientMonitor to monitor the remote file change
-func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, host string, port int, enableTLS bool, certFile string, insecureSkipVerify bool, users []*auth.User, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration) (Monitor, error) {
+func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, host string, port int, enableTLS bool, certFile string, insecureSkipVerify bool, users []*auth.User, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration, syncWorkers int) (Monitor, error) {
 	if syncer == nil {
 		err := errors.New("syncer can't be nil")
 		return nil, err
@@ -47,7 +47,7 @@ func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, 
 	m := &remoteClientMonitor{
 		client:      tran.NewClient(host, port, enableTLS, certFile, insecureSkipVerify),
 		messages:    clist.New(),
-		baseMonitor: newBaseMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime),
+		baseMonitor: newBaseMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime, syncWorkers),
 		authChan:    make(chan contract.Status, 100),
 		infoChan:    make(chan contract.Message, 100),
 		closed:      cbool.New(false),
@@ -296,7 +296,7 @@ func (m *remoteClientMonitor) execSync(msg sync.Message) (err error) {
 		if err != nil && os.IsNotExist(err) {
 			err = nil
 		}
-		m.addWrite(path)
+		m.addWrite(path, msg.Size)
 	case action.RemoveAction:
 		m.removeWrite(path)
 		err = m.syncer.Remove(path)

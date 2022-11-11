@@ -51,6 +51,7 @@ func parseFlags(args []string) (config conf.Config) {
 	flag.BoolVar(&config.EnableSyncDelay, "sync_delay", false, "enable sync delay, start sync when the event count is equal or greater than -sync_delay_events, or wait for -sync_delay_time interval time since the last sync")
 	flag.IntVar(&config.SyncDelayEvents, "sync_delay_events", 10, "the maximum event count of sync delay")
 	core.DurationVar(&config.SyncDelayTime, "sync_delay_time", time.Second*30, "the maximum delay interval time after the last sync")
+	flag.IntVar(&config.SyncWorkers, "sync_workers", 1, "the number of file sync workers")
 
 	// retry
 	flag.IntVar(&config.RetryCount, "retry_count", 15, "if execute failed, then retry to work -retry_count times")

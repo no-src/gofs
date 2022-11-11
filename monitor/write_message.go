@@ -3,9 +3,11 @@ package monitor
 import "time"
 
 type writeMessage struct {
-	// name file name
+	// name the file name
 	name string
-	// count trigger count
+	// size the file size
+	size int64
+	// count the trigger count
 	count int
 	// last the last update time, unix nano
 	last int64
@@ -13,17 +15,18 @@ type writeMessage struct {
 	cancel bool
 }
 
-func newWriteMessage(name string, count int, last int64) *writeMessage {
+func newWriteMessage(name string, size int64, count int, last int64) *writeMessage {
 	return &writeMessage{
 		name:   name,
+		size:   size,
 		count:  count,
 		last:   last,
 		cancel: false,
 	}
 }
 
-func newDefaultWriteMessage(name string) *writeMessage {
-	return newWriteMessage(name, 1, time.Now().UnixNano())
+func newDefaultWriteMessage(name string, size int64) *writeMessage {
+	return newWriteMessage(name, size, 1, time.Now().UnixNano())
 }
 
 type writeMessageList []*writeMessage

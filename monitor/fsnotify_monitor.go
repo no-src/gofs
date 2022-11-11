@@ -27,7 +27,7 @@ type fsNotifyMonitor struct {
 }
 
 // NewFsNotifyMonitor create an instance of fsNotifyMonitor to monitor the disk change
-func NewFsNotifyMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration) (m Monitor, err error) {
+func NewFsNotifyMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration, syncWorkers int) (m Monitor, err error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func NewFsNotifyMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, even
 	}
 	m = &fsNotifyMonitor{
 		watcher:     watcher,
-		baseMonitor: newBaseMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime),
+		baseMonitor: newBaseMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime, syncWorkers),
 		events:      clist.New(),
 	}
 	return m, nil
@@ -174,7 +174,13 @@ func (m *fsNotifyMonitor) write(event fsnotify.Event) {
 	if err := m.syncer.Create(event.Name); err != nil && !os.IsNotExist(err) {
 		log.Error(err, "[write] event execute create error => [%s]", event.Name)
 	}
-	m.addWrite(event.Name)
+
+	var size int64
+	stat, err := os.Stat(event.Name)
+	if err == nil {
+		size = stat.Size()
+	}
+	m.addWrite(event.Name, size)
 }
 
 func (m *fsNotifyMonitor) create(event fsnotify.Event) {
