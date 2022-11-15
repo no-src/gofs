@@ -13,10 +13,10 @@ type minIOPullClientMonitor struct {
 }
 
 // NewMinIOPullClientMonitor create an instance of minIOPullClientMonitor to pull the files from MinIO server
-func NewMinIOPullClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration) (m Monitor, err error) {
+func NewMinIOPullClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration, syncWorkers int) (m Monitor, err error) {
 	m = &minIOPullClientMonitor{
 		driverPullClientMonitor: driverPullClientMonitor{
-			baseMonitor: newBaseMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime),
+			baseMonitor: newBaseMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime, syncWorkers),
 		},
 	}
 	return m, nil

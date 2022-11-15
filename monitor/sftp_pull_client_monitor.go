@@ -13,10 +13,10 @@ type sftpPullClientMonitor struct {
 }
 
 // NewSftpPullClientMonitor create an instance of sftpPullClientMonitor to pull the files from sftp server
-func NewSftpPullClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration) (m Monitor, err error) {
+func NewSftpPullClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration, syncWorkers int) (m Monitor, err error) {
 	m = &sftpPullClientMonitor{
 		driverPullClientMonitor: driverPullClientMonitor{
-			baseMonitor: newBaseMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime),
+			baseMonitor: newBaseMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime, syncWorkers),
 		},
 	}
 	return m, nil

@@ -27,18 +27,18 @@ type Monitor interface {
 // syncer a Sync component
 // retry a Retry component
 // syncOnce tag a sync once command, the sync once command will execute when call the Start
-func NewMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, enableTLS bool, certFile string, insecureSkipVerify bool, users []*auth.User, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration) (Monitor, error) {
+func NewMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, enableTLS bool, certFile string, insecureSkipVerify bool, users []*auth.User, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration, syncWorkers int) (Monitor, error) {
 	source := syncer.Source()
 	if source.IsDisk() {
-		return NewFsNotifyMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime)
+		return NewFsNotifyMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime, syncWorkers)
 	} else if source.Is(core.RemoteDisk) && source.Server() {
-		return NewRemoteServerMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime)
+		return NewRemoteServerMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime, syncWorkers)
 	} else if source.Is(core.RemoteDisk) && !source.Server() {
-		return NewRemoteClientMonitor(syncer, retry, syncOnce, source.Host(), source.Port(), enableTLS, certFile, insecureSkipVerify, users, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime)
+		return NewRemoteClientMonitor(syncer, retry, syncOnce, source.Host(), source.Port(), enableTLS, certFile, insecureSkipVerify, users, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime, syncWorkers)
 	} else if source.Is(core.SFTP) {
-		return NewSftpPullClientMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime)
+		return NewSftpPullClientMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime, syncWorkers)
 	} else if source.Is(core.MinIO) {
-		return NewMinIOPullClientMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime)
+		return NewMinIOPullClientMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime, syncWorkers)
 	}
 	return nil, fmt.Errorf("file system unsupported ! source=>%s", source.Type().String())
 }

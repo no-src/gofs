@@ -9,6 +9,6 @@ import (
 )
 
 // NewRemoteServerMonitor create an instance of the fsNotifyMonitor
-func NewRemoteServerMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration) (m Monitor, err error) {
-	return NewFsNotifyMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime)
+func NewRemoteServerMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration, syncWorkers int) (m Monitor, err error) {
+	return NewFsNotifyMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime, syncWorkers)
 }

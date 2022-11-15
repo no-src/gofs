@@ -33,6 +33,7 @@ type Config struct {
 	EnableSyncDelay bool          `json:"sync_delay" yaml:"sync_delay"`
 	SyncDelayEvents int           `json:"sync_delay_events" yaml:"sync_delay_events"`
 	SyncDelayTime   core.Duration `json:"sync_delay_time" yaml:"sync_delay_time"`
+	SyncWorkers     int           `json:"sync_workers" yaml:"sync_workers"`
 
 	// retry
 	RetryCount int           `json:"retry_count" yaml:"retry_count"`

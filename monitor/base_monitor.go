@@ -37,9 +37,17 @@ type baseMonitor struct {
 	syncDelayTime   time.Duration
 	lastSyncTime    time.Time
 	syncing         bool
+	multiWorkers    bool
+	workerChan      chan struct{}
+	workerMap       sync.Map
+	smallFileSize   int64
 }
 
-func newBaseMonitor(syncer nssync.Sync, retry retry.Retry, syncOnce bool, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration) baseMonitor {
+func newBaseMonitor(syncer nssync.Sync, retry retry.Retry, syncOnce bool, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration, syncWorkers int) baseMonitor {
+	multiWorkers := false
+	if syncWorkers > 1 {
+		multiWorkers = true
+	}
 	return baseMonitor{
 		syncer:          syncer,
 		retry:           retry,
@@ -55,11 +63,25 @@ func newBaseMonitor(syncer nssync.Sync, retry retry.Retry, syncOnce bool, eventW
 		syncDelayTime:   syncDelayTime,
 		lastSyncTime:    time.Now(),
 		syncing:         !enableSyncDelay,
+		multiWorkers:    multiWorkers,
+		workerChan:      newFullChannel(syncWorkers - 1),
+		smallFileSize:   1024 * 1024 * 10,
 	}
 }
 
+func newFullChannel(size int) chan struct{} {
+	if size < 0 {
+		return nil
+	}
+	c := make(chan struct{}, size)
+	for i := 0; i < size; i++ {
+		c <- struct{}{}
+	}
+	return c
+}
+
 // addWrite add or update a write message
-func (m *baseMonitor) addWrite(name string) {
+func (m *baseMonitor) addWrite(name string, size int64) {
 	m.mu.Lock()
 
 	// If the current path's parent directory is in the writeMap, then ignore the current path.
@@ -77,7 +99,7 @@ func (m *baseMonitor) addWrite(name string) {
 
 	wm := m.writeMap[m.key(name)]
 	if wm == nil {
-		wm = newDefaultWriteMessage(name)
+		wm = newDefaultWriteMessage(name, size)
 		m.writeMap[m.key(name)] = wm
 		m.writeList = append(m.writeList, wm)
 	} else {
@@ -144,21 +166,51 @@ func (m *baseMonitor) startSyncWrite() {
 			continue
 		}
 		name := wm.name
-		if m.retry != nil {
-			m.retry.Do(func() error {
-				err := m.syncer.Write(name)
-				// if file or directory is not exist, ignore it
-				if os.IsNotExist(err) {
-					return nil
-				}
-				if err != nil {
-					log.Error(err, "write file error => [%s]", name)
-				}
-				return err
-			}, fmt.Sprintf("write file => %s", name))
-		} else {
-			log.ErrorIf(m.syncer.Write(name), "write file error => [%s]", name)
+		if !m.multiWorkers {
+			m.write(name)
+			continue
 		}
+
+		// a small file that file size less than smallFileSize
+		if wm.size > 0 && wm.size < m.smallFileSize {
+			m.write(name)
+			continue
+		}
+
+		go func() {
+			<-m.workerChan
+			for {
+				_, ok := m.workerMap.Load(name)
+				// if the file is in processing, wait for it to finish
+				if !ok {
+					break
+				}
+				time.Sleep(time.Millisecond * 100)
+			}
+
+			m.workerMap.Store(name, struct{}{})
+			m.write(name)
+			m.workerMap.Delete(name)
+			m.workerChan <- struct{}{}
+		}()
+	}
+}
+
+func (m *baseMonitor) write(name string) {
+	if m.retry != nil {
+		m.retry.Do(func() error {
+			err := m.syncer.Write(name)
+			// if file or directory is not exist, ignore it
+			if os.IsNotExist(err) {
+				return nil
+			}
+			if err != nil {
+				log.Error(err, "write file error => [%s]", name)
+			}
+			return err
+		}, fmt.Sprintf("write file => %s", name))
+	} else {
+		log.ErrorIf(m.syncer.Write(name), "write file error => [%s]", name)
 	}
 }
 
