@@ -23,3 +23,6 @@ docker rmi -f $(docker images -q -f "dangling=true")
 
 # run a container to print the gofs version
 docker run -it --rm --name running-gofs-version $GOFSIMAGENAME:$GOFSIMAGETAG gofs -v
+
+# push the image to the DockerHub
+# docker push nosrc/gofs:$GOFSIMAGETAG
