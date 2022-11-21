@@ -2,7 +2,6 @@ package monitor
 
 import (
 	"errors"
-	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -14,8 +13,6 @@ import (
 	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/internal/clist"
 	"github.com/no-src/gofs/report"
-	"github.com/no-src/gofs/retry"
-	"github.com/no-src/gofs/sync"
 	"github.com/no-src/log"
 )
 
@@ -27,18 +24,18 @@ type fsNotifyMonitor struct {
 }
 
 // NewFsNotifyMonitor create an instance of fsNotifyMonitor to monitor the disk change
-func NewFsNotifyMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration, syncWorkers int) (m Monitor, err error) {
+func NewFsNotifyMonitor(opt Option) (m Monitor, err error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
 	}
-	if syncer == nil {
+	if opt.Syncer == nil {
 		err = errors.New("syncer can't be nil")
 		return nil, err
 	}
 	m = &fsNotifyMonitor{
 		watcher:     watcher,
-		baseMonitor: newBaseMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime, syncWorkers),
+		baseMonitor: newBaseMonitor(opt),
 		events:      clist.New(),
 	}
 	return m, nil

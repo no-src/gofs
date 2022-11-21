@@ -248,7 +248,7 @@ func initMonitor(c conf.Config, userList []*auth.User, eventLogger log.Logger, r
 	}
 
 	// create monitor
-	m, err := monitor.NewMonitor(syncer, r, c.SyncOnce, c.EnableTLS, c.TLSCertFile, c.TLSInsecureSkipVerify, userList, eventLogger, c.EnableSyncDelay, c.SyncDelayEvents, c.SyncDelayTime.Duration(), c.SyncWorkers)
+	m, err := monitor.NewMonitor(monitor.NewMonitorOption(c, syncer, r, userList, eventLogger))
 	if err != nil {
 		log.Error(err, "create the instance of Monitor error")
 		return nil, err

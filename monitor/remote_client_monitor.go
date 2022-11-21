@@ -3,7 +3,6 @@ package monitor
 import (
 	"errors"
 	"fmt"
-	"io"
 	"net/url"
 	"os"
 	"strings"
@@ -16,7 +15,6 @@ import (
 	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/internal/cbool"
 	"github.com/no-src/gofs/internal/clist"
-	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/tran"
 	"github.com/no-src/gofs/util/jsonutil"
@@ -39,7 +37,16 @@ type remoteClientMonitor struct {
 }
 
 // NewRemoteClientMonitor create an instance of remoteClientMonitor to monitor the remote file change
-func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, host string, port int, enableTLS bool, certFile string, insecureSkipVerify bool, users []*auth.User, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration, syncWorkers int) (Monitor, error) {
+func NewRemoteClientMonitor(opt Option) (Monitor, error) {
+	source := opt.Syncer.Source()
+	syncer := opt.Syncer
+	host := source.Host()
+	port := source.Port()
+	enableTLS := opt.EnableTLS
+	certFile := opt.TLSCertFile
+	insecureSkipVerify := opt.TLSInsecureSkipVerify
+	users := opt.Users
+
 	if syncer == nil {
 		err := errors.New("syncer can't be nil")
 		return nil, err
@@ -47,7 +54,7 @@ func NewRemoteClientMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, 
 	m := &remoteClientMonitor{
 		client:      tran.NewClient(host, port, enableTLS, certFile, insecureSkipVerify),
 		messages:    clist.New(),
-		baseMonitor: newBaseMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime, syncWorkers),
+		baseMonitor: newBaseMonitor(opt),
 		authChan:    make(chan contract.Status, 100),
 		infoChan:    make(chan contract.Message, 100),
 		closed:      cbool.New(false),

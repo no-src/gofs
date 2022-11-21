@@ -2,13 +2,8 @@ package monitor
 
 import (
 	"fmt"
-	"io"
-	"time"
 
-	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/core"
-	"github.com/no-src/gofs/retry"
-	"github.com/no-src/gofs/sync"
 )
 
 // Monitor file system monitor
@@ -24,21 +19,18 @@ type Monitor interface {
 }
 
 // NewMonitor create a monitor instance
-// syncer a Sync component
-// retry a Retry component
-// syncOnce tag a sync once command, the sync once command will execute when call the Start
-func NewMonitor(syncer sync.Sync, retry retry.Retry, syncOnce bool, enableTLS bool, certFile string, insecureSkipVerify bool, users []*auth.User, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration, syncWorkers int) (Monitor, error) {
-	source := syncer.Source()
+func NewMonitor(opt Option) (Monitor, error) {
+	source := opt.Syncer.Source()
 	if source.IsDisk() {
-		return NewFsNotifyMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime, syncWorkers)
+		return NewFsNotifyMonitor(opt)
 	} else if source.Is(core.RemoteDisk) && source.Server() {
-		return NewRemoteServerMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime, syncWorkers)
+		return NewRemoteServerMonitor(opt)
 	} else if source.Is(core.RemoteDisk) && !source.Server() {
-		return NewRemoteClientMonitor(syncer, retry, syncOnce, source.Host(), source.Port(), enableTLS, certFile, insecureSkipVerify, users, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime, syncWorkers)
+		return NewRemoteClientMonitor(opt)
 	} else if source.Is(core.SFTP) {
-		return NewSftpPullClientMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime, syncWorkers)
+		return NewSftpPullClientMonitor(opt)
 	} else if source.Is(core.MinIO) {
-		return NewMinIOPullClientMonitor(syncer, retry, syncOnce, eventWriter, enableSyncDelay, syncDelayEvents, syncDelayTime, syncWorkers)
+		return NewMinIOPullClientMonitor(opt)
 	}
 	return nil, fmt.Errorf("file system unsupported ! source=>%s", source.Type().String())
 }

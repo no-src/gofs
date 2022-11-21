@@ -3,7 +3,6 @@ package monitor
 import (
 	"errors"
 	"fmt"
-	"io"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -43,7 +42,16 @@ type baseMonitor struct {
 	smallFileSize   int64
 }
 
-func newBaseMonitor(syncer nssync.Sync, retry retry.Retry, syncOnce bool, eventWriter io.Writer, enableSyncDelay bool, syncDelayEvents int, syncDelayTime time.Duration, syncWorkers int) baseMonitor {
+func newBaseMonitor(opt Option) baseMonitor {
+	syncer := opt.Syncer
+	retry := opt.Retry
+	syncOnce := opt.SyncOnce
+	eventWriter := opt.EventWriter
+	enableSyncDelay := opt.EnableSyncDelay
+	syncDelayEvents := opt.SyncDelayEvents
+	syncDelayTime := opt.SyncDelayTime
+	syncWorkers := opt.SyncWorkers
+
 	multiWorkers := false
 	if syncWorkers > 1 {
 		multiWorkers = true
