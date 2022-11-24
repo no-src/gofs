@@ -38,6 +38,11 @@ func RunWithArgs(args []string) {
 	RunWithConfig(parseFlags(args))
 }
 
+// RunWithConfigFile running the gofs program with specified config file
+func RunWithConfigFile(path string) {
+	RunWithArgs([]string{os.Args[0], "-conf=" + path})
+}
+
 // RunWithConfig running the gofs program with specified config
 func RunWithConfig(c conf.Config) {
 	cp := &c
