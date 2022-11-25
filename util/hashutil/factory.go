@@ -23,18 +23,35 @@ type hashFactory func() hash.Hash
 
 // InitDefaultHash initial default hash factory
 func InitDefaultHash(algorithm string) error {
+	f, err := getFactory(algorithm)
+	if err != nil {
+		return err
+	}
+	factory = f
+	return nil
+}
+
+func getFactory(algorithm string) (hashFactory, error) {
 	algorithm = strings.ToLower(algorithm)
 	f, ok := factories[algorithm]
 	if ok {
-		factory = f
-		return nil
+		return f, nil
 	}
-	return fmt.Errorf("unsupported hash algorithm => %s", algorithm)
+	return nil, fmt.Errorf("unsupported hash algorithm => %s", algorithm)
 }
 
 // New return default hash implementation
 func New() hash.Hash {
 	return factory()
+}
+
+// NewHash return the hash implementation by the specified hash algorithm
+func NewHash(algorithm string) (hash.Hash, error) {
+	f, err := getFactory(algorithm)
+	if err != nil {
+		return nil, err
+	}
+	return f(), nil
 }
 
 const (

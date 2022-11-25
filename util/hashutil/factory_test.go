@@ -33,7 +33,18 @@ func TestAllHashAlgorithms(t *testing.T) {
 				return
 			}
 			if actual := Hash([]byte(input)); actual != tc.expect {
-				t.Errorf("calculate hash with [%s] algorithm error, expect:%s, but actual:%s", tc.algorithm, tc.expect, actual)
+				t.Errorf("calculate hash with [%s] algorithm error, expect: %s, but actual: %s", tc.algorithm, tc.expect, actual)
+				return
+			}
+
+			h, err := NewHash(tc.algorithm)
+			if err != nil {
+				t.Errorf("calculate hash with [%s] algorithm error, init custom hash failed => %v", tc.algorithm, err)
+				return
+			}
+			if actual := Hash([]byte(input), h); actual != tc.expect {
+				t.Errorf("calculate hash with [%s] algorithm error, expect: %s, but actual: %s", tc.algorithm, tc.expect, actual)
+				return
 			}
 		})
 	}
@@ -53,11 +64,28 @@ func TestInitDefaultHash_WithUnsupportedAlgorithm(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.algorithm, func(t *testing.T) {
 			if err := InitDefaultHash(tc.algorithm); err == nil {
-				t.Errorf("calculate hash with [%s] algorithm error, expect get an error, but get nil", tc.algorithm)
+				t.Errorf("calculate hash with [%s] algorithm error, expect to get an error, but get nil", tc.algorithm)
 			}
 		})
 	}
 
 	// reset default hash algorithm
 	InitDefaultHash(DefaultHash)
+}
+
+func TestNewHash_WithUnsupportedAlgorithm(t *testing.T) {
+	testCases := []struct {
+		algorithm string
+	}{
+		{""},
+		{"unknown algorithm"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.algorithm, func(t *testing.T) {
+			if _, err := NewHash(tc.algorithm); err == nil {
+				t.Errorf("calculate hash with [%s] algorithm error, expect to get an error, but get nil", tc.algorithm)
+			}
+		})
+	}
 }
