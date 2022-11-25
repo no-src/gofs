@@ -1,4 +1,4 @@
-name: Command Example
+name: command examples
 actions:
   - mkdir:
     source: ./source
@@ -39,6 +39,16 @@ actions:
     dest: ./dest/command_test.go.bak
     expect: true
     must-non-empty: true
+  - is-equal:
+    source: ./command_test.go
+    dest: ./dest/command_test.go.bak
+    expect: true
+    must-non-empty: true
+    algorithm: sha1
+  - is-equal:
+    source: ./command_test.go
+    dest: ./command.go
+    expect: false
   - is-equal:
     source: ./source/empty1
     dest: ./source/empty2

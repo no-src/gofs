@@ -17,9 +17,17 @@ type isEqual struct {
 	Dest         string `yaml:"dest"`
 	Expect       bool   `yaml:"expect"`
 	MustNonEmpty bool   `yaml:"must-non-empty"`
+	Algorithm    string `yaml:"algorithm"`
 }
 
 func (c isEqual) Exec() error {
+	if len(c.Algorithm) == 0 {
+		c.Algorithm = hashutil.MD5Hash
+	}
+	h, err := hashutil.NewHash(c.Algorithm)
+	if err != nil {
+		return err
+	}
 	srcStat, err := os.Stat(c.Source)
 	if err != nil {
 		return err
@@ -41,17 +49,17 @@ func (c isEqual) Exec() error {
 	if !c.Expect && !actual {
 		return nil
 	}
-	srcHash, err := hashutil.HashFromFileName(c.Source)
-	if err != nil {
-		return err
-	}
-	dstHash, err := hashutil.HashFromFileName(c.Dest)
-	if err != nil {
-		return err
-	}
-	actual = srcHash == dstHash
-	if actual != c.Expect {
-		err = newNotExpectedError(errIsEqualNotExpected, c.Expect, actual)
+	srcHash, err := hashutil.HashFromFileName(c.Source, h)
+	if err == nil {
+		h.Reset()
+		var dstHash string
+		dstHash, err = hashutil.HashFromFileName(c.Dest, h)
+		if err == nil {
+			actual = srcHash == dstHash
+			if actual != c.Expect {
+				err = newNotExpectedError(errIsEqualNotExpected, c.Expect, actual)
+			}
+		}
 	}
 	return err
 }
