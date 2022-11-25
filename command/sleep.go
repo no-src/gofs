@@ -7,5 +7,6 @@ type sleep struct {
 }
 
 func (c sleep) Exec() error {
+	time.Sleep(c.Sleep)
 	return nil
 }

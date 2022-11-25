@@ -6,17 +6,10 @@ import (
 	"testing"
 )
 
-func TestCommand(t *testing.T) {
-	commands, err := ParseConfigFile("./example/command.yaml")
+func TestExec(t *testing.T) {
+	err := Exec("./example/command.yaml")
 	if err != nil {
-		t.Errorf("ParseConfigFile error %v", err)
-		return
-	}
-	for _, c := range commands {
-		if err = c.Exec(); err != nil {
-			t.Errorf("execute command error, err=%v", err)
-			return
-		}
+		t.Errorf("execute commands error, err=%v", err)
 	}
 }
 
