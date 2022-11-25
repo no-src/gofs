@@ -2,6 +2,7 @@ package hashutil
 
 import (
 	"errors"
+	"hash"
 	"io"
 	"os"
 	"testing"
@@ -33,14 +34,22 @@ func TestHashFromFile_ReturnError(t *testing.T) {
 
 func TestHashFromFileName(t *testing.T) {
 	testCases := []struct {
-		path string
+		name      string
+		path      string
+		algorithm string
 	}{
-		{testFilePath},
+		{"default algorithm", testFilePath, ""},
+		{"sha1 algorithm", testFilePath, SHA1Hash},
 	}
 
 	for _, tc := range testCases {
-		t.Run(tc.path, func(t *testing.T) {
-			if _, err := HashFromFileName(tc.path); err != nil {
+		t.Run(tc.name, func(t *testing.T) {
+			var hs []hash.Hash
+			h, err := NewHash(tc.algorithm)
+			if err == nil {
+				hs = append(hs, h)
+			}
+			if _, err := HashFromFileName(tc.path, hs...); err != nil {
 				t.Errorf("test HashFromFileName error => %s", err)
 			}
 		})

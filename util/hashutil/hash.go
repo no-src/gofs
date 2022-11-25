@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/hex"
 	"errors"
+	"hash"
 	"io"
 	"os"
 )
@@ -20,29 +21,34 @@ const (
 
 // HashFromFile calculate the hash value of the file
 // If you reuse the file reader, please set its offset to start position first, like os.File.Seek
-func HashFromFile(file io.Reader) (hash string, err error) {
+func HashFromFile(file io.Reader, h ...hash.Hash) (hashString string, err error) {
 	if file == nil {
-		return hash, errNilFile
+		return hashString, errNilFile
 	}
-	h := New()
+	var hash hash.Hash
+	if len(h) > 0 {
+		hash = h[0]
+	} else {
+		hash = New()
+	}
 	reader := bufio.NewReader(file)
-	_, err = reader.WriteTo(h)
+	_, err = reader.WriteTo(hash)
 	if err != nil {
-		return hash, err
+		return hashString, err
 	}
-	sum := h.Sum(nil)
-	hash = hex.EncodeToString(sum)
-	return hash, nil
+	sum := hash.Sum(nil)
+	hashString = hex.EncodeToString(sum)
+	return hashString, nil
 }
 
 // HashFromFileName calculate the hash value of the file
-func HashFromFileName(path string) (hash string, err error) {
+func HashFromFileName(path string, h ...hash.Hash) (hash string, err error) {
 	f, err := open(path)
 	if err != nil {
 		return hash, err
 	}
 	defer f.Close()
-	return HashFromFile(f)
+	return HashFromFile(f, h...)
 }
 
 // HashFromFileChunk calculate the hash value of the file chunk
@@ -64,17 +70,22 @@ func HashFromFileChunk(path string, offset int64, chunkSize int64) (hash string,
 }
 
 // Hash calculate the hash value of the bytes
-func Hash(bytes []byte) (hash string) {
-	h := New()
-	h.Write(bytes)
-	sum := h.Sum(nil)
-	hash = hex.EncodeToString(sum)
-	return hash
+func Hash(bytes []byte, h ...hash.Hash) (hashString string) {
+	var hash hash.Hash
+	if len(h) > 0 {
+		hash = h[0]
+	} else {
+		hash = New()
+	}
+	hash.Write(bytes)
+	sum := hash.Sum(nil)
+	hashString = hex.EncodeToString(sum)
+	return hashString
 }
 
 // HashFromString calculate the hash value of the string
-func HashFromString(s string) (hash string) {
-	return Hash([]byte(s))
+func HashFromString(s string, h ...hash.Hash) (hash string) {
+	return Hash([]byte(s), h...)
 }
 
 // CheckpointsHashFromFileName calculate the hash value of the entire file and first chunk and some checkpoints
