@@ -84,7 +84,7 @@ func RunWithConfig(c conf.Config) {
 
 	// start the daemon
 	if c.IsDaemon {
-		go signal.Notify(daemon.Shutdown)
+		signal.Notify(daemon.Shutdown)
 		daemon.Daemon(c.DaemonPid, c.DaemonDelay.Duration(), c.DaemonMonitorDelay.Duration())
 		log.Info("daemon exited")
 		return
@@ -129,7 +129,7 @@ func RunWithConfig(c conf.Config) {
 	// start monitor
 	log.Info("monitor is starting...")
 	defer log.Info("gofs exited")
-	go signal.Notify(m.Shutdown)
+	signal.Notify(m.Shutdown)
 	defer m.Close()
 	log.ErrorIf(m.Start(), "start to monitor failed")
 }
