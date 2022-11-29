@@ -16,8 +16,11 @@ var (
 	errSendSignalTimeout     = errors.New("send signal timeout")
 )
 
+// NotifySignal sends a signal with timeout
+type NotifySignal func(s os.Signal, timeout ...time.Duration) error
+
 // Notify receive signal and try to shut down
-func Notify(shutdown func() error) func(s os.Signal, timeout ...time.Duration) error {
+func Notify(shutdown func() error) NotifySignal {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGABRT, syscall.SIGKILL, syscall.SIGTERM)
 	go func() {
