@@ -28,28 +28,29 @@ import (
 	"github.com/no-src/log/option"
 )
 
-// RunDefault running the gofs program with the default arguments
-func RunDefault() {
-	Run(nil, nil, nil)
-}
-
 // Run running the gofs program
-func Run(init wait.WaitDone, wd wait.WaitDone, nsc chan<- signal.NotifySignal) {
-	RunWithArgs(os.Args, init, wd, nsc)
+func Run() Result {
+	return RunWithArgs(os.Args)
 }
 
 // RunWithArgs running the gofs program with specified command-line arguments, starting with the program name
-func RunWithArgs(args []string, init wait.WaitDone, wd wait.WaitDone, nsc chan<- signal.NotifySignal) {
-	RunWithConfig(parseFlags(args), init, wd, nsc)
+func RunWithArgs(args []string) Result {
+	return RunWithConfig(parseFlags(args))
 }
 
 // RunWithConfigFile running the gofs program with specified config file
-func RunWithConfigFile(path string, init wait.WaitDone, wd wait.WaitDone, nsc chan<- signal.NotifySignal) {
-	RunWithArgs([]string{os.Args[0], "-conf=" + path}, init, wd, nsc)
+func RunWithConfigFile(path string) Result {
+	return RunWithArgs([]string{os.Args[0], "-conf=" + path})
 }
 
 // RunWithConfig running the gofs program with specified config
-func RunWithConfig(c conf.Config, init wait.WaitDone, wd wait.WaitDone, nsc chan<- signal.NotifySignal) {
+func RunWithConfig(c conf.Config) Result {
+	result := newResult()
+	go runWithConfig(c, result.init, result.wd, result.nsc)
+	return result
+}
+
+func runWithConfig(c conf.Config, init wait.WaitDone, wd wait.WaitDone, nsc chan<- signal.NotifySignal) {
 	init = orDefaultWaitDone(init)
 	wd = orDefaultWaitDone(wd)
 	nsc = orDefaultNotifySignalChan(nsc)
