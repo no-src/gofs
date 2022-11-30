@@ -30,16 +30,11 @@ func Exec(conf string) error {
 	if err != nil {
 		return err
 	}
-	for _, c := range commands {
-		if err = c.Exec(); err != nil {
-			return err
-		}
-	}
-	return nil
+	return commands.Exec()
 }
 
 // ParseConfigFile parse the config file to a command list
-func ParseConfigFile(path string) (commands []Command, err error) {
+func ParseConfigFile(path string) (commands *Commands, err error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return
@@ -53,9 +48,28 @@ func ParseConfigFile(path string) (commands []Command, err error) {
 }
 
 // ParseConfig parse the config to a command list
-func ParseConfig(conf Config) (commands []Command, err error) {
+func ParseConfig(conf Config) (commands *Commands, err error) {
+	commands = &Commands{
+		Name: conf.Name,
+	}
+	commands.Init, err = parseCommands(conf.Init)
+	if err != nil {
+		return nil, err
+	}
+	commands.Actions, err = parseCommands(conf.Actions)
+	if err != nil {
+		return nil, err
+	}
+	commands.Clear, err = parseCommands(conf.Clear)
+	if err != nil {
+		return nil, err
+	}
+	return commands, nil
+}
+
+func parseCommands(actions []Action) (commands []Command, err error) {
 	var c Command
-	for _, action := range conf.Actions {
+	for _, action := range actions {
 		if _, ok := action["cp"]; ok {
 			c, err = parse[cp](action)
 		} else if _, ok = action["mv"]; ok {

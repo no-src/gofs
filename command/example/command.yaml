@@ -1,9 +1,10 @@
 name: command examples
-actions:
+init:
   - mkdir:
     source: ./source
   - mkdir:
     source: ./dest
+actions:
   - cp:
     source: ./command_test.go
     dest: ./source/command_test.go.bak
@@ -74,6 +75,7 @@ actions:
     algorithm: sha1
     source: ./source/hello
     expect: f343874b5df87e887d85df2e790df33584463162
+clear:
   - rm:
     source: ./source
   - rm:

@@ -1,0 +1,5 @@
+name: command examples that return error
+clear:
+  - cp:
+    source: ./not_exist.go
+    dest: ./cp/not_exist.go.bak

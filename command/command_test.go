@@ -27,7 +27,9 @@ func TestExec_ReturnError(t *testing.T) {
 	testCases := []struct {
 		conf string
 	}{
-		{"./example/error.yaml"},
+		{"./example/error_init.yaml"},
+		{"./example/error_actions.yaml"},
+		{"./example/error_clear.yaml"},
 	}
 
 	for _, tc := range testCases {
@@ -62,15 +64,22 @@ func TestParseConfigFile_InvalidConfigFile(t *testing.T) {
 }
 
 func TestParseConfig_UnsupportedCommand(t *testing.T) {
-	conf := Config{
-		Name: "unsupported command",
+	testCases := []struct {
+		name string
+		conf Config
+	}{
+		{"unsupported command in init", Config{Init: []Action{{"unsupported-command": ""}}}},
+		{"unsupported command in actions", Config{Actions: []Action{{"unsupported-command": ""}}}},
+		{"unsupported command in clear", Config{Clear: []Action{{"unsupported-command": ""}}}},
 	}
-	action := make(Action)
-	action["unsupported-command"] = ""
-	conf.Actions = append(conf.Actions, action)
-	_, err := ParseConfig(conf)
-	if !errors.Is(err, errUnsupportedCommand) {
-		t.Errorf("ParseConfig expect get error => %v, but get %v", errUnsupportedCommand, err)
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := ParseConfig(tc.conf)
+			if !errors.Is(err, errUnsupportedCommand) {
+				t.Errorf("ParseConfig expect get error => %v, but get %v", errUnsupportedCommand, err)
+			}
+		})
 	}
 }
 
