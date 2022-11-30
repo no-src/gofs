@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/no-src/gofs/util/osutil"
+	"github.com/no-src/gofs/wait"
 	"github.com/no-src/log"
 )
 
@@ -16,15 +17,19 @@ const SubprocessTag = "sub"
 var shutdown = make(chan struct{}, 1)
 
 // Daemon running as a daemon process, and create a subprocess for working
-func Daemon(recordPid bool, daemonDelay time.Duration, monitorDelay time.Duration) {
+func Daemon(recordPid bool, daemonDelay time.Duration, monitorDelay time.Duration, wd wait.WaitDone) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Warn("daemon process error. %v", r)
+			err := fmt.Errorf("daemon process error. %v", r)
+			log.Error(err, "daemon exited by panic")
+			wd.DoneWithError(err)
 		}
 	}()
 
 	for {
-		if wait(daemonDelay) {
+		if waitShutdown(daemonDelay) {
+			wd.Done()
+			log.Info("daemon exited by shutdown")
 			return
 		}
 		p, err := startSubprocess()
@@ -33,6 +38,8 @@ func Daemon(recordPid bool, daemonDelay time.Duration, monitorDelay time.Duratio
 				log.ErrorIf(writePidFile(os.Getppid(), os.Getpid(), p.Pid), "write pid info to file error")
 			}
 			if monitor(p.Pid, monitorDelay) {
+				wd.Done()
+				log.Info("daemon exited by shutdown")
 				return
 			}
 		}
@@ -71,7 +78,7 @@ func startSubprocess() (*os.Process, error) {
 // monitor start to monitor the subprocess, create a new subprocess to work if subprocess is dead
 func monitor(pid int, monitorDelay time.Duration) (isShutdown bool) {
 	for {
-		if wait(monitorDelay) {
+		if waitShutdown(monitorDelay) {
 			return true
 		}
 
@@ -146,7 +153,7 @@ func Shutdown() (err error) {
 	return err
 }
 
-func wait(d time.Duration) (isShutdown bool) {
+func waitShutdown(d time.Duration) (isShutdown bool) {
 	select {
 	case <-shutdown:
 		return true

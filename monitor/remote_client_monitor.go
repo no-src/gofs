@@ -97,37 +97,37 @@ func (m *remoteClientMonitor) auth() error {
 	return nil
 }
 
-func (m *remoteClientMonitor) Start() error {
+func (m *remoteClientMonitor) Start() (wait.Wait, error) {
 	if m.client == nil {
-		return errors.New("remote sync client is nil")
+		return nil, errors.New("remote sync client is nil")
 	}
 	// connect -> auth -> info|read
 	err := m.client.Connect()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	w := m.receive()
 
 	if err = m.auth(); err != nil {
-		return err
+		return nil, err
 	}
 
 	// execute -sync_once flag
 	if m.syncOnce {
-		return m.syncAndShutdown(w)
+		return w, m.syncAndShutdown()
 	}
 
 	// execute -sync_cron flag
 	if err := m.startCron(m.sync); err != nil {
-		return err
+		return nil, err
 	}
 
 	go m.startReceiveWriteNotify()
 	go m.startSyncWrite()
 	go m.startProcessMessage()
 
-	return w.Wait()
+	return w, nil
 }
 
 // sync try to sync all the files once
@@ -154,15 +154,15 @@ func (m *remoteClientMonitor) sync() (err error) {
 	return m.syncer.SyncOnce(info.ServerAddr + info.SourcePath)
 }
 
-// syncAndShutdown execute sync and then try to shut down
-func (m *remoteClientMonitor) syncAndShutdown(w wait.Wait) (err error) {
+// syncAndShutdown execute sync and then try to shut down, the caller should wait for shutdown by wait.Wait()
+func (m *remoteClientMonitor) syncAndShutdown() (err error) {
 	if err = m.sync(); err != nil {
 		return err
 	}
 	if err = m.Shutdown(); err != nil {
 		return err
 	}
-	return w.Wait()
+	return nil
 }
 
 // receive start receiving messages and parse the message, send to consumers according to the api type.
