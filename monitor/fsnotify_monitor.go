@@ -13,6 +13,7 @@ import (
 	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/internal/clist"
 	"github.com/no-src/gofs/report"
+	"github.com/no-src/gofs/wait"
 	"github.com/no-src/log"
 )
 
@@ -70,42 +71,47 @@ func (m *fsNotifyMonitor) monitor(dir string) (err error) {
 	return err
 }
 
-func (m *fsNotifyMonitor) Start() error {
+func (m *fsNotifyMonitor) Start() (wait.Wait, error) {
 	source := m.syncer.Source()
+	wd := wait.NewWaitDone()
+
 	// execute -sync_once flag
 	if m.syncOnce {
-		return m.syncer.SyncOnce(source.Path())
+		wd.Done()
+		return wd, m.syncer.SyncOnce(source.Path())
 	}
 
 	// execute -sync_cron flag
 	if err := m.startCron(func() error {
 		return m.syncer.SyncOnce(source.Path())
 	}); err != nil {
-		return err
+		return nil, err
 	}
 
 	if !source.IsDisk() && !source.Is(core.RemoteDisk) {
-		return errors.New("the source must be a disk or remote disk")
+		return nil, errors.New("the source must be a disk or remote disk")
 	}
 	if err := m.monitor(source.Path()); err != nil {
-		return err
+		return nil, err
 	}
 
 	go m.startReceiveWriteNotify()
 	go m.startSyncWrite()
 	go m.startProcessEvents()
-
-	return m.startReceiveEvents()
+	go m.startReceiveEvents(wd)
+	return wd, nil
 }
 
 // startReceiveEvents start loop to receive file change event from the fsnotify
-func (m *fsNotifyMonitor) startReceiveEvents() error {
+func (m *fsNotifyMonitor) startReceiveEvents(wd wait.WaitDone) error {
 	for {
 		select {
 		case event, ok := <-m.watcher.Events:
 			{
 				if !ok {
-					return errors.New("get fsnotify watch event failed")
+					err := errors.New("get fsnotify watch event failed")
+					wd.DoneWithError(err)
+					return err
 				}
 				log.Debug("notify received [%s] -> [%s]", event.Op.String(), event.Name)
 				m.events.PushBack(event)
@@ -113,13 +119,16 @@ func (m *fsNotifyMonitor) startReceiveEvents() error {
 		case err, ok := <-m.watcher.Errors:
 			{
 				if !ok {
-					return errors.New("get watch error failed")
+					err = errors.New("get watch error failed")
+					wd.DoneWithError(err)
+					return err
 				}
 				log.Error(err, "watcher error")
 			}
 		case shutdown := <-m.shutdown:
 			{
 				if shutdown {
+					wd.Done()
 					return nil
 				}
 			}

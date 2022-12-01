@@ -10,33 +10,33 @@ type driverPullClientMonitor struct {
 	baseMonitor
 }
 
-func (m *driverPullClientMonitor) Start() error {
+func (m *driverPullClientMonitor) Start() (wait.Wait, error) {
 	wd := wait.NewWaitDone()
 	shutdown := cbool.New(false)
 	go m.waitShutdown(shutdown, wd)
 
 	// execute -sync_once flag
 	if m.syncOnce {
-		return m.syncAndShutdown(wd)
+		return wd, m.syncAndShutdown()
 	}
 
 	// execute -sync_cron flag
 	if err := m.startCron(m.sync); err != nil {
-		return err
+		return nil, err
 	}
 
-	return wd.Wait()
+	return wd, nil
 }
 
-// syncAndShutdown execute sync and then try to shut down
-func (m *driverPullClientMonitor) syncAndShutdown(w wait.Wait) (err error) {
+// syncAndShutdown execute sync and then try to shut down, the caller should wait for shutdown by wait.Wait()
+func (m *driverPullClientMonitor) syncAndShutdown() (err error) {
 	if err = m.sync(); err != nil {
 		return err
 	}
 	if err = m.Shutdown(); err != nil {
 		return err
 	}
-	return w.Wait()
+	return nil
 }
 
 // waitShutdown wait for the shutdown notify then mark the work done

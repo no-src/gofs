@@ -4,12 +4,13 @@ import (
 	"fmt"
 
 	"github.com/no-src/gofs/core"
+	"github.com/no-src/gofs/wait"
 )
 
 // Monitor file system monitor
 type Monitor interface {
 	// Start go to start the monitor to monitor the file change
-	Start() error
+	Start() (wait.Wait, error)
 	// Close stop the monitor
 	Close() error
 	// SyncCron register sync cron task, if spec is empty then ignore it

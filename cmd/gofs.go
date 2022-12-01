@@ -29,26 +29,38 @@ import (
 )
 
 // Run running the gofs program
-func Run() {
-	RunWithArgs(os.Args)
+func Run() Result {
+	return RunWithArgs(os.Args)
 }
 
 // RunWithArgs running the gofs program with specified command-line arguments, starting with the program name
-func RunWithArgs(args []string) {
-	RunWithConfig(parseFlags(args))
+func RunWithArgs(args []string) Result {
+	return RunWithConfig(parseFlags(args))
 }
 
 // RunWithConfigFile running the gofs program with specified config file
-func RunWithConfigFile(path string) {
-	RunWithArgs([]string{os.Args[0], "-conf=" + path})
+func RunWithConfigFile(path string) Result {
+	return RunWithArgs([]string{os.Args[0], "-conf=" + path})
 }
 
 // RunWithConfig running the gofs program with specified config
-func RunWithConfig(c conf.Config) {
+func RunWithConfig(c conf.Config) Result {
+	result := newResult()
+	go runWithConfig(c, result.init, result.wd, result.nsc)
+	return result
+}
+
+func runWithConfig(c conf.Config, init wait.WaitDone, wd wait.WaitDone, nsc chan<- signal.NotifySignal) {
+	init = orDefaultWaitDone(init)
+	wd = orDefaultWaitDone(wd)
+	nsc = orDefaultNotifySignalChan(nsc)
+
 	cp := &c
 	conf.GlobalConfig = cp
 
-	if parseConfigFile(cp) != nil {
+	if err := parseConfigFile(cp); err != nil {
+		init.DoneWithError(err)
+		wd.DoneWithError(err)
 		return
 	}
 
@@ -59,21 +71,29 @@ func RunWithConfig(c conf.Config) {
 	}
 
 	// init the default logger
-	if initDefaultLogger(c) != nil {
+	if err := initDefaultLogger(c); err != nil {
+		init.DoneWithError(err)
+		wd.DoneWithError(err)
 		return
 	}
 	defer log.Close()
 
 	// execute and exit
-	if executeOnce(c) {
+	if exit, err := executeOnce(c); exit {
+		init.DoneWithError(err)
+		wd.DoneWithError(err)
 		return
 	}
 
-	if initChecksum(c) {
+	if exit, err := initChecksum(c); exit {
+		init.DoneWithError(err)
+		wd.DoneWithError(err)
 		return
 	}
 
-	if initial(cp) {
+	if err := initial(cp); err != nil {
+		init.DoneWithError(err)
+		wd.DoneWithError(err)
 		return
 	}
 
@@ -84,9 +104,12 @@ func RunWithConfig(c conf.Config) {
 
 	// start the daemon
 	if c.IsDaemon {
-		signal.Notify(daemon.Shutdown)
-		daemon.Daemon(c.DaemonPid, c.DaemonDelay.Duration(), c.DaemonMonitorDelay.Duration())
-		log.Info("daemon exited")
+		ns := signal.Notify(daemon.Shutdown)
+		go func() {
+			nsc <- ns
+		}()
+		init.Done()
+		daemon.Daemon(c.DaemonPid, c.DaemonDelay.Duration(), c.DaemonMonitorDelay.Duration(), wd)
 		return
 	}
 
@@ -95,12 +118,16 @@ func RunWithConfig(c conf.Config) {
 	userList, err := auth.ParseUsers(c.Users)
 	if err != nil {
 		log.Error(err, "parse users error => [%s]", c.Users)
+		init.DoneWithError(err)
+		wd.DoneWithError(err)
 		return
 	}
 
 	// init the web server logger
 	webLogger, err := initWebServerLogger(c)
 	if err != nil {
+		init.DoneWithError(err)
+		wd.DoneWithError(err)
 		return
 	}
 	defer webLogger.Close()
@@ -109,13 +136,17 @@ func RunWithConfig(c conf.Config) {
 	r := retry.New(c.RetryCount, c.RetryWait.Duration(), c.RetryAsync)
 
 	// start a file web server
-	if startWebServer(c, webLogger, userList, r) {
+	if err = startWebServer(c, webLogger, userList, r); err != nil {
+		init.DoneWithError(err)
+		wd.DoneWithError(err)
 		return
 	}
 
 	// init the event log
 	eventLogger, err := initEventLogger(c)
 	if err != nil {
+		init.DoneWithError(err)
+		wd.DoneWithError(err)
 		return
 	}
 	defer eventLogger.Close()
@@ -123,15 +154,41 @@ func RunWithConfig(c conf.Config) {
 	// init the monitor
 	m, err := initMonitor(c, userList, eventLogger, r)
 	if err != nil {
+		init.DoneWithError(err)
+		wd.DoneWithError(err)
 		return
 	}
 
 	// start monitor
 	log.Info("monitor is starting...")
 	defer log.Info("gofs exited")
-	signal.Notify(m.Shutdown)
+	ns := signal.Notify(m.Shutdown)
+	go func() {
+		nsc <- ns
+	}()
 	defer m.Close()
-	log.ErrorIf(m.Start(), "start to monitor failed")
+	w, err := m.Start()
+	init.DoneWithError(err)
+	if err != nil {
+		log.Error(err, "start to monitor failed")
+		wd.DoneWithError(err)
+		return
+	}
+	wd.DoneWithError(log.ErrorIf(w.Wait(), "monitor running failed"))
+}
+
+func orDefaultWaitDone(wd wait.WaitDone) wait.WaitDone {
+	if wd == nil {
+		return wait.NewWaitDone()
+	}
+	return wd
+}
+
+func orDefaultNotifySignalChan(nsc chan<- signal.NotifySignal) chan<- signal.NotifySignal {
+	if nsc == nil {
+		return make(chan signal.NotifySignal, 1)
+	}
+	return nsc
 }
 
 func parseConfigFile(cp *conf.Config) error {
@@ -145,31 +202,29 @@ func parseConfigFile(cp *conf.Config) error {
 }
 
 // executeOnce execute the work and get ready to exit
-func executeOnce(c conf.Config) (exit bool) {
+func executeOnce(c conf.Config) (exit bool, err error) {
 	// print version info
 	if c.PrintVersion {
 		version.PrintVersion()
-		return true
+		return true, nil
 	}
 
 	// print about info
 	if c.PrintAbout {
 		about.PrintAbout()
-		return true
+		return true, nil
 	}
 
 	// clear the deleted files
 	if c.ClearDeletedPath {
-		log.ErrorIf(fs.ClearDeletedFile(c.Dest.Path()), "clear the deleted files error")
-		return true
+		return true, log.ErrorIf(fs.ClearDeletedFile(c.Dest.Path()), "clear the deleted files error")
 	}
 
 	// decrypt the specified file or directory
 	if c.Decrypt {
-		log.ErrorIf(encrypt.NewDecrypt(encrypt.NewOption(c)).Decrypt(), "decrypt error")
-		return true
+		return true, log.ErrorIf(encrypt.NewDecrypt(encrypt.NewOption(c)).Decrypt(), "decrypt error")
 	}
-	return false
+	return false, nil
 }
 
 // initDefaultLogger init the default logger
@@ -215,18 +270,16 @@ func initWebServerLogger(c conf.Config) (log.Logger, error) {
 }
 
 // startWebServer start a file web server
-func startWebServer(c conf.Config, webLogger log.Logger, userList []*auth.User, r retry.Retry) (exit bool) {
+func startWebServer(c conf.Config, webLogger log.Logger, userList []*auth.User, r retry.Retry) error {
 	if c.EnableFileServer {
 		waitInit := wait.NewWaitDone()
 		go func() {
 			httpfs.StartFileServer(server.NewServerOption(c, waitInit, userList, webLogger, r))
 		}()
 
-		if log.ErrorIf(waitInit.Wait(), "start the file server [%s] error", c.FileServerAddr) != nil {
-			return true
-		}
+		return log.ErrorIf(waitInit.Wait(), "start the file server [%s] error", c.FileServerAddr)
 	}
-	return false
+	return nil
 }
 
 // initEventLogger init the event logger
@@ -267,33 +320,31 @@ func initMonitor(c conf.Config, userList []*auth.User, eventLogger log.Logger, r
 	return m, nil
 }
 
-func initial(cp *conf.Config) (exit bool) {
+func initial(cp *conf.Config) (err error) {
 	// init ignore config
-	if log.ErrorIf(ignore.Init(cp.IgnoreConf, cp.IgnoreDeletedPath), "init ignore config error") != nil {
-		return true
+	if err = log.ErrorIf(ignore.Init(cp.IgnoreConf, cp.IgnoreDeletedPath), "init ignore config error"); err != nil {
+		return err
 	}
 
-	if log.ErrorIf(initDefaultValue(cp), "init default value of config error") != nil {
-		return true
+	if err = log.ErrorIf(initDefaultValue(cp), "init default value of config error"); err != nil {
+		return err
 	}
 
 	// init default http util
-	return log.ErrorIf(httputil.Init(cp.TLSInsecureSkipVerify, cp.TLSCertFile), "init http util error") != nil
+	return log.ErrorIf(httputil.Init(cp.TLSInsecureSkipVerify, cp.TLSCertFile), "init http util error")
 }
 
-func initChecksum(c conf.Config) (exit bool) {
+func initChecksum(c conf.Config) (exit bool, err error) {
 	// init default hash algorithm
-	if log.ErrorIf(hashutil.InitDefaultHash(c.ChecksumAlgorithm), "init default hash algorithm error") != nil {
-		return true
+	if err = log.ErrorIf(hashutil.InitDefaultHash(c.ChecksumAlgorithm), "init default hash algorithm error"); err != nil {
+		return true, err
 	}
 
 	// calculate checksum
 	if c.Checksum {
-		checksum.PrintChecksum(c.Source.Path(), c.ChunkSize, c.CheckpointCount)
-		return true
+		return true, checksum.PrintChecksum(c.Source.Path(), c.ChunkSize, c.CheckpointCount)
 	}
-
-	return false
+	return false, nil
 }
 
 // initDefaultValue init default value of config
