@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"syscall"
 
 	"github.com/no-src/gofs/internal/signal"
 	"github.com/no-src/gofs/wait"
@@ -35,4 +36,9 @@ func (r Result) Wait() error {
 // Notify send a signal to the program
 func (r Result) Notify(s os.Signal) error {
 	return (<-r.nsc)(s)
+}
+
+// Shutdown shutdown the program
+func (r Result) Shutdown() error {
+	return r.Notify(syscall.SIGQUIT)
 }
