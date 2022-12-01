@@ -2,13 +2,10 @@ package wait
 
 import "sync"
 
-// WaitDone support execute the work synchronously and mark the work done
+// WaitDone support to execute the work synchronously and mark the work as done
 type WaitDone interface {
 	Wait
-	// Done mark the work execute finished
-	Done()
-	// DoneWithError mark the work execute finished with error info
-	DoneWithError(err error)
+	Done
 }
 
 // Wait the interface that implements execute work synchronously
@@ -17,34 +14,37 @@ type Wait interface {
 	Wait() error
 }
 
-// NewWaitDone create an instance of WaitOne to support execute the work synchronously
+// Done support to mark the work as done
+type Done interface {
+	// Done mark the work execute finished
+	Done()
+	// DoneWithError mark the work execute finished with error info
+	DoneWithError(err error)
+}
+
+// NewWaitDone create an instance of WaitDone to support execute the work synchronously
 func NewWaitDone() WaitDone {
-	w := &wait{
+	w := &waitDone{
 		c: make(chan error, 1),
 	}
 	return w
 }
 
-type wait struct {
+type waitDone struct {
 	c    chan error
 	done bool
 	mu   sync.Mutex
 }
 
-func (w *wait) Wait() error {
+func (w *waitDone) Wait() error {
 	return <-w.c
 }
 
-func (w *wait) Done() {
-	w.mu.Lock()
-	defer w.mu.Unlock()
-	if !w.done {
-		w.c <- nil
-		w.done = true
-	}
+func (w *waitDone) Done() {
+	w.DoneWithError(nil)
 }
 
-func (w *wait) DoneWithError(err error) {
+func (w *waitDone) DoneWithError(err error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	if !w.done {
