@@ -55,12 +55,18 @@ func runWithConfig(c conf.Config, init wait.WaitDone, wd wait.WaitDone, nsc chan
 	wd = orDefaultWaitDone(wd)
 	nsc = orDefaultNotifySignalChan(nsc)
 
+	var err error
+
+	//  ensure all the code in this function is executed
+	defer func() {
+		wd.DoneWithError(err)
+	}()
+
 	cp := &c
 	conf.GlobalConfig = cp
 
-	if err := parseConfigFile(cp); err != nil {
+	if err = parseConfigFile(cp); err != nil {
 		init.DoneWithError(err)
-		wd.DoneWithError(err)
 		return
 	}
 
@@ -71,29 +77,26 @@ func runWithConfig(c conf.Config, init wait.WaitDone, wd wait.WaitDone, nsc chan
 	}
 
 	// init the default logger
-	if err := initDefaultLogger(c); err != nil {
+	if err = initDefaultLogger(c); err != nil {
 		init.DoneWithError(err)
-		wd.DoneWithError(err)
 		return
 	}
 	defer log.Close()
 
+	var exit bool
 	// execute and exit
-	if exit, err := executeOnce(c); exit {
+	if exit, err = executeOnce(c); exit {
 		init.DoneWithError(err)
-		wd.DoneWithError(err)
 		return
 	}
 
-	if exit, err := initChecksum(c); exit {
+	if exit, err = initChecksum(c); exit {
 		init.DoneWithError(err)
-		wd.DoneWithError(err)
 		return
 	}
 
-	if err := initial(cp); err != nil {
+	if err = initial(cp); err != nil {
 		init.DoneWithError(err)
-		wd.DoneWithError(err)
 		return
 	}
 
@@ -109,7 +112,9 @@ func runWithConfig(c conf.Config, init wait.WaitDone, wd wait.WaitDone, nsc chan
 			nsc <- ns
 		}()
 		init.Done()
-		daemon.Daemon(c.DaemonPid, c.DaemonDelay.Duration(), c.DaemonMonitorDelay.Duration(), wd)
+		w := wait.NewWaitDone()
+		go daemon.Daemon(c.DaemonPid, c.DaemonDelay.Duration(), c.DaemonMonitorDelay.Duration(), w)
+		err = w.Wait()
 		return
 	}
 
@@ -119,7 +124,6 @@ func runWithConfig(c conf.Config, init wait.WaitDone, wd wait.WaitDone, nsc chan
 	if err != nil {
 		log.Error(err, "parse users error => [%s]", c.Users)
 		init.DoneWithError(err)
-		wd.DoneWithError(err)
 		return
 	}
 
@@ -127,7 +131,6 @@ func runWithConfig(c conf.Config, init wait.WaitDone, wd wait.WaitDone, nsc chan
 	webLogger, err := initWebServerLogger(c)
 	if err != nil {
 		init.DoneWithError(err)
-		wd.DoneWithError(err)
 		return
 	}
 	defer webLogger.Close()
@@ -138,7 +141,6 @@ func runWithConfig(c conf.Config, init wait.WaitDone, wd wait.WaitDone, nsc chan
 	// start a file web server
 	if err = startWebServer(c, webLogger, userList, r); err != nil {
 		init.DoneWithError(err)
-		wd.DoneWithError(err)
 		return
 	}
 
@@ -146,7 +148,6 @@ func runWithConfig(c conf.Config, init wait.WaitDone, wd wait.WaitDone, nsc chan
 	eventLogger, err := initEventLogger(c)
 	if err != nil {
 		init.DoneWithError(err)
-		wd.DoneWithError(err)
 		return
 	}
 	defer eventLogger.Close()
@@ -155,7 +156,6 @@ func runWithConfig(c conf.Config, init wait.WaitDone, wd wait.WaitDone, nsc chan
 	m, err := initMonitor(c, userList, eventLogger, r)
 	if err != nil {
 		init.DoneWithError(err)
-		wd.DoneWithError(err)
 		return
 	}
 
@@ -171,10 +171,9 @@ func runWithConfig(c conf.Config, init wait.WaitDone, wd wait.WaitDone, nsc chan
 	init.DoneWithError(err)
 	if err != nil {
 		log.Error(err, "start to monitor failed")
-		wd.DoneWithError(err)
 		return
 	}
-	wd.DoneWithError(log.ErrorIf(w.Wait(), "monitor running failed"))
+	err = log.ErrorIf(w.Wait(), "monitor running failed")
 }
 
 func orDefaultWaitDone(wd wait.WaitDone) wait.WaitDone {
