@@ -51,13 +51,26 @@ func StartFileServer(opt server.Option) error {
 
 	log.Info("file server [%s] starting...", opt.Addr)
 	server.InitServerInfo(opt.Addr, opt.EnableTLS)
-	opt.Init.Done()
+	c := make(chan error, 1)
+	go func() {
+		select {
+		case <-time.After(time.Second):
+			opt.Init.Done()
+		case err := <-c:
+			opt.Init.DoneWithError(err)
+		}
+	}()
 
+	var err error
 	if opt.EnableTLS {
-		return engine.RunTLS(opt.Addr, opt.TLSCertFile, opt.TLSKeyFile)
+		err = log.ErrorIf(engine.RunTLS(opt.Addr, opt.TLSCertFile, opt.TLSKeyFile), "running the https server error")
+		c <- err
+		return err
 	}
 	log.Warn("file server is not a security connection, you need the https replaced maybe!")
-	return engine.Run(opt.Addr)
+	err = log.ErrorIf(engine.Run(opt.Addr), "running the http server error")
+	c <- err
+	return err
 }
 
 // initEnvGinMode change default mode is release
