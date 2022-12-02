@@ -1,0 +1,85 @@
+name: test for gofs remote disk
+init:
+  - mkdir:
+    source: ./rs/source
+  - mkdir:
+    source: ./rs/dest
+  - mkdir:
+    source: ./rc/source
+  - mkdir:
+    source: ./rc/dest
+actions:
+  - cp:
+    source: ./integration_test.go
+    dest: ./rs/source/integration_test.go.bak1
+  - cp:
+    source: ./integration_test.go
+    dest: ./rs/source/integration_test.go.bak2
+  - rm:
+    source: ./rs/source/integration_test.go.bak2
+  - touch:
+    source: ./rs/source/hello
+  - echo:
+    source: ./rs/source/hello
+    input: Hello World
+    append: false
+  - echo:
+    source: ./rs/source/hello
+    input: Bye Bye
+    append: true
+    no-newline: false
+  - echo:
+    source: ./rs/source/empty1
+    no-newline: true
+  - echo:
+    source: ./rs/source/empty2
+    no-newline: true
+  - sleep: 10s
+  - is-equal:
+    source: ./integration_test.go
+    dest: ./rc/dest/integration_test.go.bak1
+    expect: true
+    must-non-empty: true
+  - is-equal:
+    source: ./integration_test.go
+    dest: ./rc/dest/integration_test.go.bak1
+    expect: true
+    must-non-empty: true
+    algorithm: sha1
+  - is-equal:
+    source: ./integration_test.go
+    dest: ./rc/dest/empty1
+    expect: false
+  - is-equal:
+    source: ./rc/dest/empty1
+    dest: ./rc/dest/empty2
+    expect: true
+    must-non-empty: false
+  - is-empty:
+    source: ./rc/dest/integration_test.go.bak1
+    expect: false
+  - is-exist:
+    source: ./rc/dest/integration_test.go.bak1
+    expect: true
+  - is-exist:
+    source: ./rc/dest/integration_test.go.bak2
+    expect: false
+  - is-dir:
+    source: ./rc/source
+    expect: true
+  - is-dir:
+    source: ./rc/dest/integration_test.go.bak1
+    expect: false
+  - hash:
+    algorithm: md5
+    source: ./rc/dest/hello
+    expect: 856719c57653fa86008d49db895a5752
+  - hash:
+    algorithm: sha1
+    source: ./rc/dest/hello
+    expect: f343874b5df87e887d85df2e790df33584463162
+clear:
+  - rm:
+    source: ./rs
+  - rm:
+    source: ./rc
