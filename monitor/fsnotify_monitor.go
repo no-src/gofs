@@ -103,7 +103,7 @@ func (m *fsNotifyMonitor) Start() (wait.Wait, error) {
 }
 
 // startReceiveEvents start loop to receive file change event from the fsnotify
-func (m *fsNotifyMonitor) startReceiveEvents(wd wait.WaitDone) error {
+func (m *fsNotifyMonitor) startReceiveEvents(wd wait.Done) error {
 	for {
 		select {
 		case event, ok := <-m.watcher.Events:

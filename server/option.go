@@ -27,7 +27,7 @@ type Option struct {
 	SessionConnection        string
 	ChunkSize                int64
 	CheckpointCount          int
-	Init                     wait.WaitDone
+	Init                     wait.Done
 	Users                    []*auth.User
 	SSHKey                   string
 	Logger                   log.Logger
@@ -35,7 +35,7 @@ type Option struct {
 }
 
 // NewServerOption create an instance of the Option, store all the web server options
-func NewServerOption(config conf.Config, init wait.WaitDone, users []*auth.User, logger log.Logger, r retry.Retry) Option {
+func NewServerOption(config conf.Config, init wait.Done, users []*auth.User, logger log.Logger, r retry.Retry) Option {
 	opt := Option{
 		Source:                   config.Source,
 		Dest:                     config.Dest,

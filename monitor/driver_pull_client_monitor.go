@@ -40,7 +40,7 @@ func (m *driverPullClientMonitor) syncAndShutdown() (err error) {
 }
 
 // waitShutdown wait for the shutdown notify then mark the work done
-func (m *driverPullClientMonitor) waitShutdown(st *cbool.CBool, wd wait.WaitDone) {
+func (m *driverPullClientMonitor) waitShutdown(st *cbool.CBool, wd wait.Done) {
 	select {
 	case <-st.SetC(<-m.shutdown):
 		{

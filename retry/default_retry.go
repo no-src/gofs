@@ -55,7 +55,7 @@ func (r *defaultRetry) DoWithContext(ctx context.Context, f func() error, desc s
 	return wd
 }
 
-func (r *defaultRetry) retry(ctx context.Context, wd wait.WaitDone, f func() error, desc string) {
+func (r *defaultRetry) retry(ctx context.Context, wd wait.Done, f func() error, desc string) {
 	defer func() {
 		wd.Done()
 	}()
