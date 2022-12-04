@@ -50,7 +50,7 @@ func RunWithConfig(c conf.Config) Result {
 	return result
 }
 
-func runWithConfig(c conf.Config, init wait.WaitDone, wd wait.WaitDone, nsc chan<- signal.NotifySignal) {
+func runWithConfig(c conf.Config, init wait.Done, wd wait.Done, nsc chan<- signal.NotifySignal) {
 	init = orDefaultWaitDone(init)
 	wd = orDefaultWaitDone(wd)
 	nsc = orDefaultNotifySignalChan(nsc)
@@ -176,7 +176,7 @@ func runWithConfig(c conf.Config, init wait.WaitDone, wd wait.WaitDone, nsc chan
 	err = log.ErrorIf(w.Wait(), "monitor running failed")
 }
 
-func orDefaultWaitDone(wd wait.WaitDone) wait.WaitDone {
+func orDefaultWaitDone(wd wait.Done) wait.Done {
 	if wd == nil {
 		return wait.NewWaitDone()
 	}

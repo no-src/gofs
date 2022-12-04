@@ -17,7 +17,7 @@ const SubprocessTag = "sub"
 var shutdown = make(chan struct{}, 1)
 
 // Daemon running as a daemon process, and create a subprocess for working
-func Daemon(recordPid bool, daemonDelay time.Duration, monitorDelay time.Duration, wd wait.WaitDone) {
+func Daemon(recordPid bool, daemonDelay time.Duration, monitorDelay time.Duration, wd wait.Done) {
 	defer func() {
 		if r := recover(); r != nil {
 			err := fmt.Errorf("daemon process error. %v", r)

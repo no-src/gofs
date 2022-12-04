@@ -176,7 +176,7 @@ func (m *remoteClientMonitor) receive() wait.Wait {
 }
 
 // waitShutdown wait for the shutdown notify then mark the work done
-func (m *remoteClientMonitor) waitShutdown(st *cbool.CBool, wd wait.WaitDone) {
+func (m *remoteClientMonitor) waitShutdown(st *cbool.CBool, wd wait.Done) {
 	select {
 	case <-st.SetC(<-m.shutdown):
 		{
@@ -190,7 +190,7 @@ func (m *remoteClientMonitor) waitShutdown(st *cbool.CBool, wd wait.WaitDone) {
 
 // readMessage loop read the messages, if receive a message, parse the message then send to consumers according to the api type.
 // if receive a shutdown notify, then stop reading the message.
-func (m *remoteClientMonitor) readMessage(st *cbool.CBool, wd wait.WaitDone) {
+func (m *remoteClientMonitor) readMessage(st *cbool.CBool, wd wait.Done) {
 	for {
 		if m.closed.Get() {
 			wd.DoneWithError(errors.New("remote monitor is closed"))
