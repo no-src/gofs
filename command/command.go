@@ -67,6 +67,7 @@ func ParseConfig(conf Config) (commands *Commands, err error) {
 	return commands, nil
 }
 
+//gocyclo:ignore
 func parseCommands(actions []Action) (commands []Command, err error) {
 	var c Command
 	for _, action := range actions {
