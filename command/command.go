@@ -88,6 +88,8 @@ func parseCommands(actions []Action) (commands []Command, err error) {
 			c, err = parse[sleep](action)
 		} else if _, ok = action["is-equal"]; ok {
 			c, err = parse[isEqual](action)
+		} else if _, ok = action["is-equal-text"]; ok {
+			c, err = parse[isEqualText](action)
 		} else if _, ok = action["is-empty"]; ok {
 			c, err = parse[isEmpty](action)
 		} else if _, ok = action["is-exist"]; ok {
