@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	stdhash "hash"
 	"os"
 
 	"github.com/no-src/gofs/util/hashutil"
@@ -21,10 +22,7 @@ type isEqual struct {
 }
 
 func (c isEqual) Exec() error {
-	if len(c.Algorithm) == 0 {
-		c.Algorithm = hashutil.MD5Hash
-	}
-	h, err := hashutil.NewHash(c.Algorithm)
+	h, err := c.newHash()
 	if err != nil {
 		return err
 	}
@@ -62,4 +60,12 @@ func (c isEqual) Exec() error {
 		}
 	}
 	return err
+}
+
+func (c isEqual) newHash() (stdhash.Hash, error) {
+	algorithm := c.Algorithm
+	if len(algorithm) == 0 {
+		algorithm = hashutil.MD5Hash
+	}
+	return hashutil.NewHash(algorithm)
 }
