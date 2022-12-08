@@ -75,6 +75,16 @@ actions:
     algorithm: sha1
     source: ./source/hello
     expect: f343874b5df87e887d85df2e790df33584463162
+  - is-equal-text:
+    source: ./source/hello
+    dest: |
+      Hello World
+      Bye Bye
+    expect: true
+  - is-equal-text:
+    source: ./source/empty1
+    dest: hello
+    expect: false
 clear:
   - rm:
     source: ./source
