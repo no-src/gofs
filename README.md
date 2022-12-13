@@ -97,8 +97,27 @@ If you want to reduce the frequency of synchronization, you can use the `sync_de
 sync when the event count is equal or greater than `sync_delay_events`, or wait for `sync_delay_time` interval time
 since the last sync.
 
+And you can use the `progress` flag to print the file sync progress bar.
+
 ```bash
 $ gofs -source=./source -dest=./dest
+```
+
+### Encryption
+
+You can use `encrypt` flag to enable encryption and specify a directory as an encryption workspace by `encrypt_path`
+flag. All files in the directory will be encrypted then sync to the destination path.
+
+```bash
+$ gofs -source=./source -dest=./dest -encrypt -encrypt_path=./source/encrypt -encrypt_secret=mysecret
+```
+
+### Decryption
+
+You can use the `decrypt` flag to decrypt the encryption files to a specified path.
+
+```bash
+$ gofs -decrypt -decrypt_path=./dest/encrypt -decrypt_secret=mysecret -decrypt_out=./decrypt_out
 ```
 
 ### Sync Once

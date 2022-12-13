@@ -89,8 +89,26 @@ cert.pem  key.pem  source  dest
 
 如果你想要降低同步的频率，你可以使用`sync_delay`命令行参数来启用同步延迟，当事件数量大于等于`sync_delay_events`或者距离上次同步已经等待超过`sync_delay_time`时开始同步
 
+另外你可以使用`progress`命令行参数来打印文件同步的进度条
+
 ```bash
 $ gofs -source=./source -dest=./dest
+```
+
+### 加密
+
+你可以使用`encrypt`命令行参数来启用加密功能，并通过`encrypt_path`命令行参数指定一个目录作为加密工作区。所有在这个目录中的文件都会被加密之后再同步到目标路径中
+
+```bash
+$ gofs -source=./source -dest=./dest -encrypt -encrypt_path=./source/encrypt -encrypt_secret=mysecret
+```
+
+### 解密
+
+你可以使用`decrypt`命令行参数来将加密文件解密到指定的路径中
+
+```bash
+$ gofs -decrypt -decrypt_path=./dest/encrypt -decrypt_secret=mysecret -decrypt_out=./decrypt_out
 ```
 
 ### 全量同步
