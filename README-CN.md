@@ -159,6 +159,11 @@ Web文件服务器默认使用HTTPS协议，使用`tls_cert_file`和`tls_key_fil
 
 如果你需要启用gzip压缩响应结果，则添加`server_compress`命令行参数，但是目前gzip压缩不是很快，在局域网中可能会影响传输效率
 
+你可以使用`session_mode`命令行参数来切换Web文件服务器的会话存储模式，
+当前支持memory与redis，默认为memory，(`memory=1` `redis=2`)。
+如果你使用redis作为会话存储，请使用`session_connection`命令行参数来设置redis连接字符串。
+这里是一个redis会话连接字符串的示例：`redis://127.0.0.1:6379?password=redis_password&db=10&max_idle=10&secret=redis_secret`
+
 ```bash
 # 启动一个Web文件服务器并随机创建3个用户
 # 在生产环境中请将`tls_cert_file`和`tls_key_file`命令行参数替换为正式的证书和密钥文件
