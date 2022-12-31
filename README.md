@@ -168,10 +168,9 @@ The server users will output to log if you set the `rand_user_count` flag greate
 If you need to compress the files, add the `server_compress` flag to enable gzip compression for response, but it is not
 fast now, and may reduce transmission efficiency in the LAN.
 
-You can switch the session store mode for the file server by `session_mode` flag,
-currently supports memory and redis, default is memory, (`memory=1` `redis=2`).
-If you use the redis as the session store, please use the `session_connection` flag to set the redis connection string.
-Here is an example for redis session connection string:
+You can switch the session store mode for the file server by `session_connection` flag,
+currently supports memory and redis, default is memory.
+If you want to use the redis as the session store, here is an example for redis session connection string:
 `redis://127.0.0.1:6379?password=redis_password&db=10&max_idle=10&secret=redis_secret`.
 
 ```bash

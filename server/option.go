@@ -23,7 +23,6 @@ type Option struct {
 	EnableLogicallyDelete    bool
 	EnablePushServer         bool
 	EnableReport             bool
-	SessionMode              int
 	SessionConnection        string
 	ChunkSize                int64
 	CheckpointCount          int
@@ -49,7 +48,6 @@ func NewServerOption(config conf.Config, init wait.Done, users []*auth.User, log
 		EnableLogicallyDelete:    config.EnableLogicallyDelete,
 		EnablePushServer:         config.EnablePushServer,
 		EnableReport:             config.EnableReport,
-		SessionMode:              config.SessionMode,
 		SessionConnection:        config.SessionConnection,
 		ChunkSize:                config.ChunkSize,
 		CheckpointCount:          config.CheckpointCount,
