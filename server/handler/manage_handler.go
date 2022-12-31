@@ -26,11 +26,18 @@ func (h *manageHandler) Handle(c *gin.Context) {
 	format := strings.ToLower(c.Query(server.ParamFormat))
 	// copy the config and mask the user info for security
 	config := *conf.GlobalConfig
+	mask := "******"
 	if len(config.Users) > 0 {
-		config.Users = "******"
+		config.Users = mask
 	}
 	if len(config.SessionConnection) > 0 {
-		config.SessionConnection = "******"
+		config.SessionConnection = mask
+	}
+	if len(config.EncryptSecret) > 0 {
+		config.EncryptSecret = mask
+	}
+	if len(config.DecryptSecret) > 0 {
+		config.DecryptSecret = mask
 	}
 	if format == conf.YamlFormat.Name() {
 		c.YAML(http.StatusOK, server.NewApiResult(contract.Success, contract.SuccessDesc, config))
