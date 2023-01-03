@@ -85,8 +85,7 @@ func parseFlags(args []string) (config conf.Config) {
 	flag.BoolVar(&config.ManagePrivate, "manage_private", true, "allow to access manage api route by private address and loopback address only")
 	flag.BoolVar(&config.EnablePushServer, "push_server", false, "whether to enable the push server")
 	flag.BoolVar(&config.EnableReport, "report", false, "enable the report api route and start to collect the report data, need to enable -manage flag first")
-	flag.IntVar(&config.SessionMode, "session_mode", server.MemorySession, "the session store mode for the file server, currently supports memory[1] and redis[2], default is memory[1]")
-	flag.StringVar(&config.SessionConnection, "session_connection", "", "the session connection string, an example for redis session: redis://127.0.0.1:6379?password=redis_password&db=10&max_idle=10&secret=redis_secret")
+	flag.StringVar(&config.SessionConnection, "session_connection", "memory:", "the session connection string, an example for redis session: redis://127.0.0.1:6379?password=redis_password&db=10&max_idle=10&secret=redis_secret")
 
 	// tls transfer
 	flag.BoolVar(&config.EnableTLS, "tls", true, fmt.Sprintf("enable the tls connections, if disable it, server_addr is \"%s\" default", server.DefaultAddrHttp))

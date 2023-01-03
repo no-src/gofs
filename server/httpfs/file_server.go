@@ -40,7 +40,7 @@ func StartFileServer(opt server.Option) error {
 		opt.Init.DoneWithError(err)
 		return err
 	}
-	if err := initSession(engine, opt.SessionMode, opt.SessionConnection); err != nil {
+	if err := initSession(engine, opt.SessionConnection); err != nil {
 		opt.Init.DoneWithError(err)
 		return err
 	}
@@ -82,8 +82,8 @@ func initEnvGinMode() {
 	gin.SetMode(mode)
 }
 
-func initSession(engine *gin.Engine, sessionMode int, sessionConnection string) error {
-	store, err := server.NewSessionStore(sessionMode, sessionConnection)
+func initSession(engine *gin.Engine, sessionConnection string) error {
+	store, err := server.NewSessionStore(sessionConnection)
 	if err != nil {
 		return err
 	}

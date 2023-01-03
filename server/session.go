@@ -5,33 +5,31 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/memstore"
 	"github.com/gin-contrib/sessions/redis"
 )
 
-const (
-	// MemorySession represent a memory session store
-	MemorySession = iota + 1
-	// RedisSession represent a redis session store
-	RedisSession
-)
-
-// NewSessionStore create a session store, stored in memory or redis, default is memory
-func NewSessionStore(sessionMode int, sessionConnection string) (sessions.Store, error) {
+// NewSessionStore create a session store, stored in memory or redis
+func NewSessionStore(sessionConnection string) (sessions.Store, error) {
 	secret := make([]byte, 64)
 	_, err := rand.Reader.Read(secret)
 	if err != nil {
 		return nil, err
 	}
-	switch sessionMode {
-	case MemorySession:
+	connUrl, err := url.Parse(sessionConnection)
+	if err != nil {
+		return nil, fmt.Errorf("invalid session connection, %w", err)
+	}
+	switch strings.ToLower(connUrl.Scheme) {
+	case "memory":
 		return memstore.NewStore(secret), nil
-	case RedisSession:
+	case "redis":
 		return redisSessionStore(sessionConnection, secret)
 	default:
-		return memstore.NewStore(secret), nil
+		return nil, fmt.Errorf("unsupported session connection => %s", sessionConnection)
 	}
 }
 
