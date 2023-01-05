@@ -14,6 +14,7 @@ import (
 	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/internal/signal"
 	"github.com/no-src/gofs/monitor"
+	"github.com/no-src/gofs/result"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/httpfs"
@@ -29,44 +30,40 @@ import (
 )
 
 // Run running the gofs program
-func Run() Result {
+func Run() result.Result {
 	return RunWithArgs(os.Args)
 }
 
 // RunWithArgs running the gofs program with specified command-line arguments, starting with the program name
-func RunWithArgs(args []string) Result {
+func RunWithArgs(args []string) result.Result {
 	return RunWithConfig(parseFlags(args))
 }
 
 // RunWithConfigFile running the gofs program with specified config file
-func RunWithConfigFile(path string) Result {
+func RunWithConfigFile(path string) result.Result {
 	return RunWithArgs([]string{os.Args[0], "-conf=" + path})
 }
 
 // RunWithConfig running the gofs program with specified config
-func RunWithConfig(c conf.Config) Result {
-	result := newResult()
-	go runWithConfig(c, result.init, result.wd, result.nsc)
+func RunWithConfig(c conf.Config) result.Result {
+	result := result.New()
+	go runWithConfig(c, result)
 	return result
 }
 
-func runWithConfig(c conf.Config, init wait.Done, wd wait.Done, nsc chan<- signal.NotifySignal) {
-	init = orDefaultWaitDone(init)
-	wd = orDefaultWaitDone(wd)
-	nsc = orDefaultNotifySignalChan(nsc)
-
+func runWithConfig(c conf.Config, result result.Result) {
 	var err error
 
 	//  ensure all the code in this function is executed
 	defer func() {
-		wd.DoneWithError(err)
+		result.DoneWithError(err)
 	}()
 
 	cp := &c
 	conf.GlobalConfig = cp
 
 	if err = parseConfigFile(cp); err != nil {
-		init.DoneWithError(err)
+		result.InitDoneWithError(err)
 		return
 	}
 
@@ -78,7 +75,7 @@ func runWithConfig(c conf.Config, init wait.Done, wd wait.Done, nsc chan<- signa
 
 	// init the default logger
 	if err = initDefaultLogger(c); err != nil {
-		init.DoneWithError(err)
+		result.InitDoneWithError(err)
 		return
 	}
 	defer log.Close()
@@ -86,17 +83,17 @@ func runWithConfig(c conf.Config, init wait.Done, wd wait.Done, nsc chan<- signa
 	var exit bool
 	// execute and exit
 	if exit, err = executeOnce(c); exit {
-		init.DoneWithError(err)
+		result.InitDoneWithError(err)
 		return
 	}
 
 	if exit, err = initChecksum(c); exit {
-		init.DoneWithError(err)
+		result.InitDoneWithError(err)
 		return
 	}
 
 	if err = initial(cp); err != nil {
-		init.DoneWithError(err)
+		result.InitDoneWithError(err)
 		return
 	}
 
@@ -109,9 +106,9 @@ func runWithConfig(c conf.Config, init wait.Done, wd wait.Done, nsc chan<- signa
 	if c.IsDaemon {
 		ns := signal.Notify(daemon.Shutdown)
 		go func() {
-			nsc <- ns
+			result.RegisterNotifyHandler(ns)
 		}()
-		init.Done()
+		result.InitDone()
 		w := wait.NewWaitDone()
 		go daemon.Daemon(c.DaemonPid, c.DaemonDelay.Duration(), c.DaemonMonitorDelay.Duration(), w)
 		err = w.Wait()
@@ -123,14 +120,14 @@ func runWithConfig(c conf.Config, init wait.Done, wd wait.Done, nsc chan<- signa
 	userList, err := auth.ParseUsers(c.Users)
 	if err != nil {
 		log.Error(err, "parse users error => [%s]", c.Users)
-		init.DoneWithError(err)
+		result.InitDoneWithError(err)
 		return
 	}
 
 	// init the web server logger
 	webLogger, err := initWebServerLogger(c)
 	if err != nil {
-		init.DoneWithError(err)
+		result.InitDoneWithError(err)
 		return
 	}
 	defer webLogger.Close()
@@ -140,14 +137,14 @@ func runWithConfig(c conf.Config, init wait.Done, wd wait.Done, nsc chan<- signa
 
 	// start a file web server
 	if err = startWebServer(c, webLogger, userList, r); err != nil {
-		init.DoneWithError(err)
+		result.InitDoneWithError(err)
 		return
 	}
 
 	// init the event log
 	eventLogger, err := initEventLogger(c)
 	if err != nil {
-		init.DoneWithError(err)
+		result.InitDoneWithError(err)
 		return
 	}
 	defer eventLogger.Close()
@@ -155,7 +152,7 @@ func runWithConfig(c conf.Config, init wait.Done, wd wait.Done, nsc chan<- signa
 	// init the monitor
 	m, err := initMonitor(c, userList, eventLogger, r)
 	if err != nil {
-		init.DoneWithError(err)
+		result.InitDoneWithError(err)
 		return
 	}
 
@@ -164,30 +161,16 @@ func runWithConfig(c conf.Config, init wait.Done, wd wait.Done, nsc chan<- signa
 	defer log.Info("gofs exited")
 	ns := signal.Notify(m.Shutdown)
 	go func() {
-		nsc <- ns
+		result.RegisterNotifyHandler(ns)
 	}()
 	defer m.Close()
 	w, err := m.Start()
-	init.DoneWithError(err)
+	result.InitDoneWithError(err)
 	if err != nil {
 		log.Error(err, "start to monitor failed")
 		return
 	}
 	err = log.ErrorIf(w.Wait(), "monitor running failed")
-}
-
-func orDefaultWaitDone(wd wait.Done) wait.Done {
-	if wd == nil {
-		return wait.NewWaitDone()
-	}
-	return wd
-}
-
-func orDefaultNotifySignalChan(nsc chan<- signal.NotifySignal) chan<- signal.NotifySignal {
-	if nsc == nil {
-		return make(chan signal.NotifySignal, 1)
-	}
-	return nsc
 }
 
 func parseConfigFile(cp *conf.Config) error {
