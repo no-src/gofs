@@ -12,8 +12,8 @@ import (
 const VERSION = "v0.5.2"
 
 // PrintVersion print the current version info, and append the commit info if the commit file is not empty
-func PrintVersion() {
-	v := fmt.Sprintf("gofs version %s", VERSION)
+func PrintVersion(name string) {
+	v := fmt.Sprintf("%s version %s", name, VERSION)
 	if commit := strings.TrimSpace(gofs.Commit); len(commit) > 0 {
 		v += fmt.Sprintf("\ngit commit %s", commit)
 	}

@@ -204,7 +204,7 @@ func parseConfigFile(cp *conf.Config) error {
 func executeOnce(c conf.Config) (exit bool, err error) {
 	// print version info
 	if c.PrintVersion {
-		version.PrintVersion()
+		version.PrintVersion("gofs")
 		return true, nil
 	}
 
