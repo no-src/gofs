@@ -9,3 +9,13 @@ type rm struct {
 func (c rm) Exec() error {
 	return os.RemoveAll(c.Source)
 }
+
+func (c rm) Name() string {
+	return "rm"
+}
+
+func init() {
+	registerCommand("rm", func(a Action) (Command, error) {
+		return parse[rm](a)
+	})
+}
