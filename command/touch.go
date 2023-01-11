@@ -16,3 +16,13 @@ func (c touch) Exec() error {
 	defer f.Close()
 	return nil
 }
+
+func (c touch) Name() string {
+	return "touch"
+}
+
+func init() {
+	registerCommand("touch", func(a Action) (Command, error) {
+		return parse[touch](a)
+	})
+}

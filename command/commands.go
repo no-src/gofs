@@ -1,6 +1,14 @@
 package command
 
-import "github.com/no-src/log"
+import (
+	"github.com/no-src/log"
+)
+
+var (
+	allCommands = make(map[string]newFn)
+)
+
+type newFn func(a Action) (Command, error)
 
 // Commands the commands that contain the init, actions and clear stages
 type Commands struct {
@@ -37,11 +45,18 @@ func (cs *Commands) ExecClear() (err error) {
 }
 
 func (cs *Commands) exec(stage string, commands []Command) (err error) {
+	log.Debug("[%s] start executing", stage)
 	for i, c := range commands {
+		step := i + 1
 		if err = c.Exec(); err != nil {
-			log.Error(err, "[%s] [%d] execute failed", stage, i+1)
+			log.Error(err, "[%d] [%s] [%s] [failed]", step, stage, c.Name())
 			return err
 		}
+		log.Debug("[%d] [%s] [%s] [ok]", step, stage, c.Name())
 	}
 	return nil
+}
+
+func registerCommand(name string, fn newFn) {
+	allCommands[name] = fn
 }

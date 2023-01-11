@@ -23,3 +23,13 @@ func (c isDir) Exec() error {
 	}
 	return err
 }
+
+func (c isDir) Name() string {
+	return "is-dir"
+}
+
+func init() {
+	registerCommand("is-dir", func(a Action) (Command, error) {
+		return parse[isDir](a)
+	})
+}

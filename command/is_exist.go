@@ -20,3 +20,13 @@ func (c isExist) Exec() error {
 	}
 	return err
 }
+
+func (c isExist) Name() string {
+	return "is-exist"
+}
+
+func init() {
+	registerCommand("is-exist", func(a Action) (Command, error) {
+		return parse[isExist](a)
+	})
+}

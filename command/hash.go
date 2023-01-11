@@ -28,3 +28,13 @@ func (c hash) Exec() error {
 	}
 	return err
 }
+
+func (c hash) Name() string {
+	return "hash"
+}
+
+func init() {
+	registerCommand("hash", func(a Action) (Command, error) {
+		return parse[hash](a)
+	})
+}

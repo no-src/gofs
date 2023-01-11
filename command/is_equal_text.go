@@ -36,3 +36,13 @@ func (c isEqualText) Exec() error {
 	}
 	return err
 }
+
+func (c isEqualText) Name() string {
+	return "is-equal-text"
+}
+
+func init() {
+	registerCommand("is-equal-text", func(a Action) (Command, error) {
+		return parse[isEqualText](a)
+	})
+}

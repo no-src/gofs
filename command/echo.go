@@ -28,3 +28,13 @@ func (c echo) Exec() (err error) {
 	_, err = f.WriteString(c.Input)
 	return err
 }
+
+func (c echo) Name() string {
+	return "echo"
+}
+
+func init() {
+	registerCommand("echo", func(a Action) (Command, error) {
+		return parse[echo](a)
+	})
+}

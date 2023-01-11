@@ -62,10 +62,20 @@ func (c isEqual) Exec() error {
 	return err
 }
 
+func (c isEqual) Name() string {
+	return "is-equal"
+}
+
 func (c isEqual) newHash() (stdhash.Hash, error) {
 	algorithm := c.Algorithm
 	if len(algorithm) == 0 {
 		algorithm = hashutil.MD5Hash
 	}
 	return hashutil.NewHash(algorithm)
+}
+
+func init() {
+	registerCommand("is-equal", func(a Action) (Command, error) {
+		return parse[isEqual](a)
+	})
 }

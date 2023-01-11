@@ -23,3 +23,13 @@ func (c isEmpty) Exec() error {
 	}
 	return err
 }
+
+func (c isEmpty) Name() string {
+	return "is-empty"
+}
+
+func init() {
+	registerCommand("is-empty", func(a Action) (Command, error) {
+		return parse[isEmpty](a)
+	})
+}

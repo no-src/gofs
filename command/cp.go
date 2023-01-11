@@ -24,3 +24,13 @@ func (c cp) Exec() error {
 	_, err = io.Copy(dst, src)
 	return err
 }
+
+func (c cp) Name() string {
+	return "cp"
+}
+
+func init() {
+	registerCommand("cp", func(a Action) (Command, error) {
+		return parse[cp](a)
+	})
+}
