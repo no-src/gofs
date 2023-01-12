@@ -18,6 +18,8 @@ type Report struct {
 	Pid int `json:"pid"`
 	// PPid returns the process id of the caller's parent
 	PPid int `json:"ppid"`
+	// Hostname returns the host name reported by the kernel
+	Hostname string `json:"hostname"`
 	// GOOS is the running program's operating system target
 	GOOS string `json:"go_os"`
 	// GOARCH is the running program's architecture target
