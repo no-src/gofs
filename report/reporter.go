@@ -163,6 +163,7 @@ func initGlobalReporter() {
 		},
 	}
 	report.Events, _ = toplist.New(100)
+	report.Hostname, _ = os.Hostname()
 	GlobalReporter = &Reporter{
 		report: report,
 	}
