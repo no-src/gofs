@@ -59,7 +59,7 @@ func newBaseMonitor(opt Option) baseMonitor {
 	return baseMonitor{
 		syncer:          syncer,
 		retry:           retry,
-		writeMap:        make(map[string]*writeMessage),
+		writeMap:        make(map[string]*writeMessage, 100),
 		writeChan:       make(chan *writeMessage, 100),
 		writeNotify:     make(chan struct{}, 100),
 		cronChan:        make(chan struct{}, 1),
