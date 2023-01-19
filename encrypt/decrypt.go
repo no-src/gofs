@@ -22,8 +22,10 @@ type Decrypt struct {
 
 // NewDecrypt create a decryption component
 func NewDecrypt(opt Option) (*Decrypt, error) {
-	if err := checkAESKey(opt.DecryptSecret); err != nil {
-		return nil, err
+	if opt.Decrypt {
+		if err := checkAESKey(opt.DecryptSecret); err != nil {
+			return nil, err
+		}
 	}
 	return &Decrypt{
 		opt: opt,
@@ -31,7 +33,10 @@ func NewDecrypt(opt Option) (*Decrypt, error) {
 }
 
 // Decrypt uses the decryption option to decrypt the files
-func (dec Decrypt) Decrypt() error {
+func (dec *Decrypt) Decrypt() error {
+	if !dec.opt.Decrypt {
+		return nil
+	}
 	isDir, err := fs.IsDir(dec.opt.DecryptOut)
 	if err != nil {
 		if os.IsNotExist(err) {
