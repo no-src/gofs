@@ -204,7 +204,12 @@ func executeOnce(c conf.Config) (exit bool, err error) {
 
 	// decrypt the specified file or directory
 	if c.Decrypt {
-		return true, log.ErrorIf(encrypt.NewDecrypt(encrypt.NewOption(c)).Decrypt(), "decrypt error")
+		dec, err := encrypt.NewDecrypt(encrypt.NewOption(c))
+		if err != nil {
+			log.Error(err, "init decrypt component error")
+			return true, err
+		}
+		return true, log.ErrorIf(dec.Decrypt(), "decrypt error")
 	}
 	return false, nil
 }

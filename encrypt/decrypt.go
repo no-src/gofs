@@ -21,10 +21,13 @@ type Decrypt struct {
 }
 
 // NewDecrypt create a decryption component
-func NewDecrypt(opt Option) Decrypt {
-	return Decrypt{
-		opt: opt,
+func NewDecrypt(opt Option) (*Decrypt, error) {
+	if err := checkAESKey(opt.DecryptSecret); err != nil {
+		return nil, err
 	}
+	return &Decrypt{
+		opt: opt,
+	}, nil
 }
 
 // Decrypt uses the decryption option to decrypt the files

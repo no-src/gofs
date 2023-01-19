@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bufio"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -53,8 +54,15 @@ func (r *decryptReader) WriteTo(path string) (err error) {
 			return err
 		}
 
+		var dw io.Writer
+		dw, err = newDecryptWriter(out, r.secret, aesIV)
+		if err != nil {
+			out.Close()
+			return err
+		}
+
 		br := bufio.NewReader(f)
-		_, err = br.WriteTo(newDecryptWriter(out, r.secret))
+		_, err = br.WriteTo(dw)
 		if err != nil {
 			out.Close()
 			return err

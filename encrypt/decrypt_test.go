@@ -19,8 +19,12 @@ func TestDecrypt_DecryptOutNotDir(t *testing.T) {
 		DecryptSecret: secret,
 		DecryptOut:    "./encrypt_test.go",
 	})
-	dec := NewDecrypt(decryptOpt)
-	err := dec.Decrypt()
+	dec, err := NewDecrypt(decryptOpt)
+	if err != nil {
+		t.Errorf("init decrypt component error => %v", err)
+		return
+	}
+	err = dec.Decrypt()
 	if !errors.Is(err, errDecryptOutNotDir) {
 		t.Errorf("expect get error => [%v] but get [%v]", errDecryptOutNotDir, err)
 	}
@@ -69,7 +73,11 @@ func TestDecrypt_EvilFile(t *testing.T) {
 		DecryptSecret: secret,
 		DecryptOut:    decryptOut,
 	})
-	dec := NewDecrypt(decryptOpt)
+	dec, err := NewDecrypt(decryptOpt)
+	if err != nil {
+		t.Errorf("init decrypt component error => %v", err)
+		return
+	}
 	err = dec.Decrypt()
 	if !errors.Is(err, errIllegalPath) {
 		t.Errorf("expect get error => [%v] but get [%v]", errIllegalPath, err)

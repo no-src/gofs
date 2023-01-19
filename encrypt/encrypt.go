@@ -30,6 +30,9 @@ func NewEncrypt(opt Option, parentPath string) (*Encrypt, error) {
 		if !isSub {
 			return nil, fmt.Errorf("%w, source=%s encrypt=%s", errNotSubDir, parentPath, opt.EncryptPath)
 		}
+		if err = checkAESKey(opt.EncryptSecret); err != nil {
+			return nil, err
+		}
 	}
 	return enc, nil
 }
@@ -37,7 +40,7 @@ func NewEncrypt(opt Option, parentPath string) (*Encrypt, error) {
 // NewWriter create an encryption writer
 func (e *Encrypt) NewWriter(w io.Writer, source string, name string) (io.WriteCloser, error) {
 	if e.NeedEncrypt(source) {
-		return newEncryptWriter(w, name, e.opt.EncryptSecret)
+		return newEncryptWriter(w, name, e.opt.EncryptSecret, aesIV)
 	}
 	return newBufferWriter(w), nil
 }

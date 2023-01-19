@@ -3,24 +3,23 @@ package encrypt
 import (
 	"archive/zip"
 	"bufio"
+	"crypto/aes"
+	"crypto/cipher"
 	"io"
 )
 
 type encryptWriter struct {
 	bw     *bufio.Writer
 	zw     *zip.Writer
-	secret []byte
-	index  int
+	key    []byte
+	iv     []byte
+	stream cipher.Stream
 }
 
 func (w *encryptWriter) Write(p []byte) (nn int, err error) {
-	pLen := len(p)
-	secretLen := len(w.secret)
-	for i := 0; i < pLen; i++ {
-		p[i] = p[i] ^ w.secret[w.index%secretLen]
-		w.index++
-	}
-	return w.bw.Write(p)
+	dst := make([]byte, len(p))
+	w.stream.XORKeyStream(dst, p)
+	return w.bw.Write(dst)
 }
 
 func (w *encryptWriter) Close() error {
@@ -30,7 +29,7 @@ func (w *encryptWriter) Close() error {
 	return w.zw.Close()
 }
 
-func newEncryptWriter(w io.Writer, name string, secret []byte) (io.WriteCloser, error) {
+func newEncryptWriter(w io.Writer, name string, key []byte, iv []byte) (io.WriteCloser, error) {
 	zw := zip.NewWriter(w)
 	ew, err := zw.CreateHeader(&zip.FileHeader{
 		Name:   name,
@@ -39,10 +38,20 @@ func newEncryptWriter(w io.Writer, name string, secret []byte) (io.WriteCloser, 
 	if err != nil {
 		return nil, err
 	}
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	if err = checkAESIV(iv); err != nil {
+		return nil, err
+	}
+	stream := cipher.NewCFBEncrypter(block, iv)
 	bw := bufio.NewWriter(ew)
 	return &encryptWriter{
 		bw:     bw,
 		zw:     zw,
-		secret: secret,
+		key:    key,
+		iv:     iv,
+		stream: stream,
 	}, err
 }
