@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	secret          = "encrypt_secure"
+	secret          = "encrypt_secure_encrypt_secure_01"
 	sourcePath      = "./"
 	encryptPath     = "./"
 	decryptPath     = "./testdata/encrypt"
@@ -140,7 +140,10 @@ func testEncrypt(encryptOpt Option, decryptOpt Option, sourcePath string, origin
 	}
 
 	// decrypt
-	dec := NewDecrypt(decryptOpt)
+	dec, err := NewDecrypt(decryptOpt)
+	if err != nil {
+		return err
+	}
 	err = dec.Decrypt()
 	if err != nil {
 		return err
