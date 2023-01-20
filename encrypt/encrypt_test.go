@@ -4,6 +4,7 @@ package encrypt
 
 import (
 	"bytes"
+	"crypto/aes"
 	"errors"
 	"fmt"
 	"io"
@@ -37,6 +38,30 @@ func TestEncrypt(t *testing.T) {
 		DecryptSecret: secret,
 		DecryptOut:    decryptOut,
 	})
+
+	err := testEncrypt(encryptOpt, decryptOpt, sourcePath, originPath, encryptFilePath)
+	if err != nil {
+		t.Errorf("test encrypt and decrypt error err=%v", err)
+	}
+}
+
+func TestEncrypt_Disabled(t *testing.T) {
+	encryptOpt := NewOption(conf.Config{
+		Encrypt:       true,
+		EncryptPath:   encryptPath,
+		EncryptSecret: secret,
+	})
+
+	decryptOpt := NewOption(conf.Config{
+		Decrypt:       true,
+		DecryptPath:   decryptPath,
+		DecryptSecret: secret,
+		DecryptOut:    decryptOut,
+	})
+
+	// disable encryption and decryption
+	encryptOpt.Encrypt = false
+	decryptOpt.Decrypt = false
 
 	err := testEncrypt(encryptOpt, decryptOpt, sourcePath, originPath, encryptFilePath)
 	if err != nil {
@@ -86,6 +111,28 @@ func TestEncrypt_EmptyOption(t *testing.T) {
 	if len(decryptOpt.EncryptPath) != 0 || len(decryptOpt.EncryptSecret) != 0 || len(decryptOpt.DecryptOut) != 0 {
 		t.Errorf("expect to get an empty option but not")
 		return
+	}
+}
+
+func TestNewEncrypt_CheckKey(t *testing.T) {
+	for _, tc := range aesKeyTestCases {
+		t.Run(tc.key, func(t *testing.T) {
+			encryptOpt := NewOption(conf.Config{
+				Encrypt:       true,
+				EncryptPath:   encryptPath,
+				EncryptSecret: tc.key,
+			})
+
+			_, err := NewEncrypt(encryptOpt, sourcePath)
+			if tc.valid && err != nil {
+				t.Errorf("init encrypt component error, err=%v", err)
+				return
+			}
+			expect := aes.KeySizeError(len(tc.key))
+			if !tc.valid && !errors.As(err, &expect) {
+				t.Errorf("init encrypt expect get error %v, but get err %v", expect, err)
+			}
+		})
 	}
 }
 
@@ -150,6 +197,9 @@ func testEncrypt(encryptOpt Option, decryptOpt Option, sourcePath string, origin
 	}
 
 	// check result
+	if !encryptOpt.Encrypt || !decryptOpt.Decrypt {
+		return nil
+	}
 	originFile.Seek(0, 0)
 	originContent, err := io.ReadAll(originFile)
 	if err != nil {

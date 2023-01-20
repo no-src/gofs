@@ -4,6 +4,7 @@ package encrypt
 
 import (
 	"archive/zip"
+	"crypto/aes"
 	"errors"
 	"os"
 	"path/filepath"
@@ -81,5 +82,28 @@ func TestDecrypt_EvilFile(t *testing.T) {
 	err = dec.Decrypt()
 	if !errors.Is(err, errIllegalPath) {
 		t.Errorf("expect get error => [%v] but get [%v]", errIllegalPath, err)
+	}
+}
+
+func TestNewDecrypt_CheckKey(t *testing.T) {
+	for _, tc := range aesKeyTestCases {
+		t.Run(tc.key, func(t *testing.T) {
+			decryptOpt := NewOption(conf.Config{
+				Decrypt:       true,
+				DecryptPath:   decryptPath,
+				DecryptSecret: tc.key,
+				DecryptOut:    decryptOut,
+			})
+
+			_, err := NewDecrypt(decryptOpt)
+			if tc.valid && err != nil {
+				t.Errorf("init decrypt component error, err=%v", err)
+				return
+			}
+			expect := aes.KeySizeError(len(tc.key))
+			if !tc.valid && !errors.As(err, &expect) {
+				t.Errorf("init decrypt expect get error %v, but get err %v", expect, err)
+			}
+		})
 	}
 }
