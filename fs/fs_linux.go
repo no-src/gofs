@@ -1,7 +1,6 @@
 package fs
 
 import (
-	"errors"
 	"syscall"
 	"time"
 )
@@ -17,7 +16,7 @@ func GetFileTimeBySys(sys any) (cTime time.Time, aTime time.Time, mTime time.Tim
 			mTime = time.Unix(int64(attr.Mtim.Sec), int64(attr.Mtim.Nsec))
 		}
 	} else {
-		err = errors.New("file sys info is nil")
+		err = errFileSysInfoIsNil
 	}
 	return
 }

@@ -13,6 +13,8 @@ var (
 	isNotExist = os.IsNotExist
 	abs        = filepath.Abs
 	rel        = filepath.Rel
+
+	errFileSysInfoIsNil = errors.New("file sys info is nil")
 )
 
 // StatFunc the function prototype of os.Stat
