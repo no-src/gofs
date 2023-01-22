@@ -8,11 +8,11 @@ import (
 // GetFileTimeBySys get the creation time, last access time, last modify time of the FileInfo.Sys()
 func GetFileTimeBySys(sys any) (cTime time.Time, aTime time.Time, mTime time.Time, err error) {
 	if sys != nil {
-		attr := sys.(*syscall.Win32FileAttributeData)
+		attr := sys.(*syscall.Stat_t)
 		if attr != nil {
-			cTime = time.Unix(0, attr.CreationTime.Nanoseconds())
-			aTime = time.Unix(0, attr.LastAccessTime.Nanoseconds())
-			mTime = time.Unix(0, attr.LastWriteTime.Nanoseconds())
+			cTime = time.Unix(attr.Ctimespec.Sec, attr.Ctimespec.Nsec)
+			aTime = time.Unix(attr.Atimespec.Sec, attr.Atimespec.Nsec)
+			mTime = time.Unix(attr.Mtimespec.Sec, attr.Mtimespec.Nsec)
 		}
 	} else {
 		err = errFileSysInfoIsNil
