@@ -12,6 +12,4 @@ Please do not commit the `commit` file after it changes, and keep it empty in th
 
 ## GoVersion
 
-The `go_version` file records the go version info of release, it is used for release build.
-
-Please do not commit the `go_version` file after it changes, and keep it empty in the git repository.
+Print the version of Go being used, as well as the operating system and architecture targets of the running program.
