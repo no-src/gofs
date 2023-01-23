@@ -6,9 +6,6 @@
 # update the last git commit
 echo -e "$(git rev-parse main)\c" >version/commit
 
-# update the go version info
-echo -e "$(go version | awk '{print $3 " " $4}')\c" >version/go_version
-
 # set GOPROXY environment variable
 # export GOPROXY=https://goproxy.cn
 
@@ -65,6 +62,3 @@ rm -rf "$GOFS_RELEASE"
 
 # reset commit file
 echo -e "\c" >version/commit
-
-# reset go_version file
-echo -e "\c" >version/go_version
