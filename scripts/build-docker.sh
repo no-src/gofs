@@ -1,28 +1,39 @@
 #!/usr/bin/env bash
 
+# usage
+# build the latest image
+# ./scripts/build-docker.sh
+# build the image with a specified tag
+# ./scripts/build-docker.sh v0.6.0
+
 # update git repository
 # git pull --no-rebase
 
 # update the latest golang image
 # docker pull golang
 
-# set the gofs docker image name by GOFSIMAGENAME environment variable
-export GOFSIMAGENAME=nosrc/gofs
+# set the gofs docker image name by GOFS_IMAGE_NAME variable
+GOFS_IMAGE_NAME=nosrc/gofs
 
-# set the gofs docker image tag by GOFSIMAGETAG environment variable
-export GOFSIMAGETAG=latest
+# set the gofs docker image tag by GOFS_IMAGE_TAG variable
+GOFS_IMAGE_TAG=latest
+
+# reset GOFS_IMAGE_TAG to the value of the first parameter provided by the user
+if [ -n "$1" ]; then
+  GOFS_IMAGE_TAG=$1
+fi
 
 # remove the existing old image
-docker rmi -f $GOFSIMAGENAME:$GOFSIMAGETAG
+docker rmi -f $GOFS_IMAGE_NAME:$GOFS_IMAGE_TAG
 
 # build Dockerfile
-docker build --build-arg GOPROXY=$GOPROXY -t $GOFSIMAGENAME:$GOFSIMAGETAG .
+docker build --build-arg GOPROXY=$GOPROXY -t $GOFS_IMAGE_NAME:$GOFS_IMAGE_TAG .
 
 # remove dangling images
 docker rmi -f $(docker images -q -f "dangling=true")
 
 # run a container to print the gofs version
-docker run -it --rm --name running-gofs-version $GOFSIMAGENAME:$GOFSIMAGETAG gofs -v
+docker run -it --rm --name running-gofs-version $GOFS_IMAGE_NAME:$GOFS_IMAGE_TAG gofs -v
 
 # push the image to the DockerHub
-# docker push nosrc/gofs:$GOFSIMAGETAG
+# docker push nosrc/gofs:$GOFS_IMAGE_TAG
