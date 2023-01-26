@@ -1,36 +1,41 @@
-//go:build go1.19
+//go:build !go1.19
 
 package cbool
 
-import (
-	"sync/atomic"
-)
+import "sync"
 
 // CBool a concurrent safe bool
 type CBool struct {
-	v atomic.Bool
+	v  bool
+	mu sync.RWMutex
 }
 
 // New create an instance of CBool
 func New(v bool) *CBool {
-	cb := &CBool{}
-	cb.v.Store(v)
-	return cb
+	return &CBool{
+		v: v,
+	}
 }
 
 // Get return the bool value
 func (cb *CBool) Get() bool {
-	return cb.v.Load()
+	cb.mu.RLock()
+	defer cb.mu.RUnlock()
+	return cb.v
 }
 
 // Set to set the bool value
 func (cb *CBool) Set(v bool) {
-	cb.v.Store(v)
+	cb.mu.Lock()
+	defer cb.mu.Unlock()
+	cb.v = v
 }
 
 // SetC to set the bool value and return a closed channel
 func (cb *CBool) SetC(v bool) <-chan struct{} {
-	cb.Set(v)
+	cb.mu.Lock()
+	defer cb.mu.Unlock()
+	cb.v = v
 	c := make(chan struct{})
 	close(c)
 	return c

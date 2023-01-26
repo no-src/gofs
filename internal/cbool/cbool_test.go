@@ -1,6 +1,9 @@
 package cbool
 
-import "testing"
+import (
+	"sync"
+	"testing"
+)
 
 func TestCBool(t *testing.T) {
 	expect := true
@@ -26,5 +29,42 @@ func TestCBool(t *testing.T) {
 	_, ok := <-c
 	if ok {
 		t.Errorf("test CBoll SetC value failed, channel should be closed")
+	}
+}
+
+func TestCBool_Concurrent(t *testing.T) {
+	cb := New(false)
+	wg := sync.WaitGroup{}
+	count := 10
+	wg.Add(count * 3)
+	for i := 0; i < count; i++ {
+		go func() {
+			cb.Get()
+			wg.Done()
+		}()
+
+	}
+	for i := 0; i < count; i++ {
+		go func() {
+			cb.Set(true)
+			wg.Done()
+		}()
+	}
+	for i := 0; i < count; i++ {
+		go func() {
+			<-cb.SetC(true)
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+}
+
+func BenchmarkCBool(b *testing.B) {
+	b.ReportAllocs()
+	b.ResetTimer()
+	cb := New(false)
+	for i := 0; i < b.N; i++ {
+		cb.Set(true)
+		cb.Get()
 	}
 }
