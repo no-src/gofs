@@ -43,14 +43,11 @@ func TestCBool_Concurrent(t *testing.T) {
 			wg.Done()
 		}()
 
-	}
-	for i := 0; i < count; i++ {
 		go func() {
 			cb.Set(true)
 			wg.Done()
 		}()
-	}
-	for i := 0; i < count; i++ {
+
 		go func() {
 			<-cb.SetC(true)
 			wg.Done()
