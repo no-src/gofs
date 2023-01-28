@@ -87,18 +87,10 @@ const (
 
 func register() {
 	factories = map[string]hashFactory{
-		MD5Hash: func() hash.Hash {
-			return md5.New()
-		},
-		SHA1Hash: func() hash.Hash {
-			return sha1.New()
-		},
-		SHA256Hash: func() hash.Hash {
-			return sha256.New()
-		},
-		SHA512Hash: func() hash.Hash {
-			return sha512.New()
-		},
+		MD5Hash:    md5.New,
+		SHA1Hash:   sha1.New,
+		SHA256Hash: sha256.New,
+		SHA512Hash: sha512.New,
 		CRC32Hash: func() hash.Hash {
 			return crc32.NewIEEE()
 		},
@@ -120,12 +112,8 @@ func register() {
 		FNV1A64Hash: func() hash.Hash {
 			return fnv.New64a()
 		},
-		FNV1128Hash: func() hash.Hash {
-			return fnv.New128()
-		},
-		FNV1A128Hash: func() hash.Hash {
-			return fnv.New128a()
-		},
+		FNV1128Hash:  fnv.New128,
+		FNV1A128Hash: fnv.New128a,
 	}
 }
 
