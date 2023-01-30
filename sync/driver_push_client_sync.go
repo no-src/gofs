@@ -86,7 +86,7 @@ func (s *driverPushClientSync) Write(path string) error {
 
 	err = s.driver.Write(encryptPath, destPath)
 	if err == nil {
-		log.Info("[driver-push] [write] [success] => %s", path)
+		log.Info("[%s-driver-push] [write] [success] => %s", s.driver.DriverName(), path)
 		if _, aTime, mTime, err := fs.GetFileTime(path); err == nil {
 			log.ErrorIf(s.driver.Chtimes(destPath, aTime, mTime), "[%s push client sync] [write] change file times error", s.driver.DriverName())
 		}

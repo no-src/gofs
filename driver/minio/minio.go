@@ -42,7 +42,7 @@ func NewMinIODriver(endpoint string, bucketName string, secure bool, userName st
 
 func newMinIODriver(endpoint string, bucketName string, secure bool, userName string, password string, autoReconnect bool, r retry.Retry) *minIODriver {
 	return &minIODriver{
-		driverName:    "MinIO",
+		driverName:    "minio",
 		endpoint:      endpoint,
 		bucketName:    bucketName,
 		secure:        secure,
