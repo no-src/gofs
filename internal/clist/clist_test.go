@@ -1,6 +1,9 @@
 package clist
 
-import "testing"
+import (
+	"sync"
+	"testing"
+)
 
 func TestCList(t *testing.T) {
 	cl := New()
@@ -40,4 +43,32 @@ func TestCList(t *testing.T) {
 	if expectLen != actualLen {
 		t.Errorf("test CList Len failed, expect:%d, actual:%d", expectLen, actualLen)
 	}
+}
+
+func TestCList_Concurrent(t *testing.T) {
+	cl := New()
+	wg := sync.WaitGroup{}
+	count := 10
+	wg.Add(count * 4)
+	for i := 0; i < count; i++ {
+		go func(data int) {
+			cl.PushBack(data)
+			wg.Done()
+		}(i)
+
+		go func() {
+			elem := cl.Front()
+			wg.Done()
+			if elem != nil {
+				cl.Remove(elem)
+			}
+			wg.Done()
+		}()
+
+		go func() {
+			cl.Len()
+			wg.Done()
+		}()
+	}
+	wg.Wait()
 }
