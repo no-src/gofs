@@ -247,6 +247,10 @@ $ gofs -source="./source" -dest="sftp://127.0.0.1:22?local_sync_disabled=false&p
 
 启动一个SFTP拉取客户端，将文件从SFTP服务器拉到本地目标路径
 
+```bash
+$ gofs -source="sftp://127.0.0.1:22?remote_path=/gofs_sftp_server" -dest="./dest" -users="sftp_user|sftp_pwd" -sync_once
+```
+
 ### MinIO推送客户端
 
 启动一个MinIO推送客户端，将发生变更的文件同步到MinIO服务器
