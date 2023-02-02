@@ -73,6 +73,130 @@ $ ls
 cert.pem  key.pem  source  dest
 ```
 
+### Usage
+
+#### Between Disks
+
+Synchronize files between disks by [Local Disk](#local-disk).
+
+```text
++----------+                             +----------+                          +----------+
+|          |<---(A)-- monitor disk   ----+          |                          |          |
+|  DiskA   |                             |  Client  |                          |  DiskB   |
+|          |----(B)--- notify change --->|          |                          |          |
+|          |                             |          |                          |          |
+|          |<---(C)--- read file     ----|          |                          |          |
+|          |                             |          |                          |          |
+|          |----(D)--- return file   --->|          |----(E)--- write file --->|          |
+|          |                             |          |                          |          |
++----------+                             +----------+                          +----------+
+```
+
+#### From Server
+
+Synchronize files from server by [Remote Disk Server](#remote-disk-server)
+and [Remote Disk Client](#remote-disk-client).
+
+```text
++----------+                             +----------+                           +----------+                          +----------+
+|          |<---(A)-- monitor disk   ----+          |                           |          |                          |          |
+|  Server  |                             |  Server  |                           |  Client  |                          |  Client  |
+|  Disk    |----(B)--- notify change --->|          |----(C)--notify change --->|          |                          |  Disk    |
+|          |                             |          |                           |          |                          |          |
+|          |<---(E)--- read file     ----|          |<---(D)-- pull file    ----|          |                          |          |
+|          |                             |          |                           |          |                          |          |
+|          |----(F)--- return file   --->|          |----(G)--- send file   --->|          |----(H)--- write file --->|          |
+|          |                             |          |                           |          |                          |          |
++----------+                             +----------+                           +----------+                          +----------+
+```
+
+#### To Server
+
+Synchronize files to server by [Remote Push Server](#remote-push-server) and [Remote Push Client](#remote-push-client).
+
+```text
++----------+                             +----------+                         +----------+                          +----------+
+|          |<---(A)--- monitor disk  ----+          |                         |          |                          |          |
+|  Client  |                             |  Client  |                         |  Server  |                          |  Server  |
+|  Disk    |----(B)--- notify change --->|          |                         |          |                          |  Disk    |
+|          |                             |          |                         |          |                          |          |
+|          |<---(C)--- read file     ----|          |                         |          |                          |          |
+|          |                             |          |                         |          |                          |          |
+|          |----(D)--- return file   --->|          |----(E)--- push file --->|          |----(F)--- write file --->|          |
+|          |                             |          |                         |          |                          |          |
++----------+                             +----------+                         +----------+                          +----------+
+```
+
+#### From SFTP Server
+
+Synchronize files from SFTP server by [SFTP Pull Client](#sftp-pull-client).
+
+```text
++----------+                             +----------+                         +----------+                          +----------+
+|          |<---(A)--- monitor disk  ----+          |                         |          |                          |          |
+|  Client  |                             |  Client  |                         |  SFTP    |                          |  SFTP    |
+|  Disk    |----(B)--- notify change --->|          |                         |  Server  |                          |  Server  |
+|          |                             |          |                         |          |                          |  Disk    |
+|          |<---(C)--- read file     ----|          |                         |          |                          |          |
+|          |                             |          |                         |          |                          |          |
+|          |----(D)--- return file   --->|          |----(E)--- push file --->|          |----(F)--- write file --->|          |
+|          |                             |          |                         |          |                          |          |
++----------+                             +----------+                         +----------+                          +----------+
+```
+
+#### To SFTP Server
+
+Synchronize files to SFTP server by [SFTP Push Client](#sftp-push-client).
+
+```text
++----------+                          +----------+                         +----------+                           +----------+
+|          |                          |          +----(A)--- pull file --->|          |----(B)--- read file   --->|          |
+|  Client  |                          |  Client  |                         |  SFTP    |                           |  SFTP    |
+|  Disk    |<---(E)--- write file ----|          |<---(D)--- send file ----|  Server  |<---(C)--- return file ----|  Server  |
+|          |                          |          |                         |          |                           |  Disk    |
+|          |                          |          |                         |          |                           |          |
+|          |                          |          |                         |          |                           |          |
+|          |                          |          |                         |          |                           |          |
+|          |                          |          |                         |          |                           |          |
++----------+                          +----------+                         +----------+                           +----------+
+```
+
+#### From MinIO Server
+
+Synchronize files from MinIO server by [MinIO Pull Client](#minio-pull-client).
+
+```text
++----------+                             +----------+                         +----------+                          +----------+
+|          |<---(A)--- monitor disk  ----+          |                         |          |                          |          |
+|  Client  |                             |  Client  |                         |  MinIO   |                          |  MinIO   |
+|  Disk    |----(B)--- notify change --->|          |                         |  Server  |                          |  Server  |
+|          |                             |          |                         |          |                          |  Disk    |
+|          |<---(C)--- read file     ----|          |                         |          |                          |          |
+|          |                             |          |                         |          |                          |          |
+|          |----(D)--- return file   --->|          |----(E)--- push file --->|          |----(F)--- write file --->|          |
+|          |                             |          |                         |          |                          |          |
++----------+                             +----------+                         +----------+                          +----------+
+```
+
+#### To MinIO Server
+
+Synchronize files to MinIO server by [MinIO Push Client](#minio-push-client).
+
+```text
++----------+                          +----------+                         +----------+                           +----------+
+|          |                          |          +----(A)--- pull file --->|          |----(B)--- read file   --->|          |
+|  Client  |                          |  Client  |                         |  MinIO   |                           |  MinIO   |
+|  Disk    |<---(E)--- write file ----|          |<---(D)--- send file ----|  Server  |<---(C)--- return file ----|  Server  |
+|          |                          |          |                         |          |                           |  Disk    |
+|          |                          |          |                         |          |                           |          |
+|          |                          |          |                         |          |                           |          |
+|          |                          |          |                         |          |                           |          |
+|          |                          |          |                         |          |                           |          |
++----------+                          +----------+                         +----------+                           +----------+
+```
+
+## Features
+
 ### Local Disk
 
 Monitor source directory and sync change files to dest directory.
