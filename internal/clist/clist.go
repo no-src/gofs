@@ -8,7 +8,7 @@ import (
 // CList a concurrent safe list
 type CList struct {
 	v  *list.List
-	mu sync.Mutex
+	mu sync.RWMutex
 }
 
 // New create an instance of CList
@@ -27,8 +27,8 @@ func (cl *CList) PushBack(v any) *list.Element {
 
 // Front returns the first element of list l or nil if the list is empty.
 func (cl *CList) Front() *list.Element {
-	cl.mu.Lock()
-	defer cl.mu.Unlock()
+	cl.mu.RLock()
+	defer cl.mu.RUnlock()
 	return cl.v.Front()
 }
 
@@ -44,7 +44,7 @@ func (cl *CList) Remove(e *list.Element) any {
 // Len returns the number of elements of list l.
 // The complexity is O(1).
 func (cl *CList) Len() int {
-	cl.mu.Lock()
-	defer cl.mu.Unlock()
+	cl.mu.RLock()
+	defer cl.mu.RUnlock()
 	return cl.v.Len()
 }
