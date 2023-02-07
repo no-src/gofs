@@ -2,6 +2,7 @@ package toplist
 
 import (
 	"bytes"
+	"sync"
 	"testing"
 
 	"github.com/no-src/gofs/util/jsonutil"
@@ -239,4 +240,47 @@ func topListTop(t *testing.T, tl *TopList, top int, expect ...any) {
 			return
 		}
 	}
+}
+
+func TestTopList_Concurrent(t *testing.T) {
+	tl, err := New(10)
+	if err != nil {
+		t.Errorf("create toplist error => %v", err)
+		return
+	}
+	wg := sync.WaitGroup{}
+	count := 10
+	wg.Add(count * 6)
+	for i := 0; i < count; i++ {
+		go func(data int) {
+			tl.Add(data)
+			wg.Done()
+		}(i)
+
+		go func() {
+			tl.Len()
+			wg.Done()
+		}()
+
+		go func() {
+			tl.Cap()
+			wg.Done()
+		}()
+
+		go func() {
+			tl.Last()
+			wg.Done()
+		}()
+
+		go func() {
+			tl.Top(3)
+			wg.Done()
+		}()
+
+		go func() {
+			tl.Get(1)
+			wg.Done()
+		}()
+	}
+	wg.Wait()
 }
