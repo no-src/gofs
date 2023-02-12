@@ -87,6 +87,9 @@ func parseFlags(args []string) (config conf.Config) {
 	flag.BoolVar(&config.EnableReport, "report", false, "enable the report api route and start to collect the report data, need to enable -manage flag first")
 	flag.StringVar(&config.SessionConnection, "session_connection", "memory:", "the session connection string, an example for redis session: redis://127.0.0.1:6379?password=redis_password&db=10&max_idle=10&secret=redis_secret")
 
+	// http protocol
+	flag.BoolVar(&config.EnableHTTP3, "http3", false, "enable the HTTP3 protocol, pay attention to what you enable the TLS first")
+
 	// tls transfer
 	flag.BoolVar(&config.EnableTLS, "tls", true, fmt.Sprintf("enable the tls connections, if disable it, server_addr is \"%s\" default", server.DefaultAddrHttp))
 	flag.StringVar(&config.TLSCertFile, "tls_cert_file", "gofs.pem", "cert file for tls connections")

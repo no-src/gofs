@@ -14,6 +14,7 @@ type Option struct {
 	Source                   core.VFS
 	Dest                     core.VFS
 	Addr                     string
+	EnableHTTP3              bool
 	EnableTLS                bool
 	TLSCertFile              string
 	TLSKeyFile               string
@@ -39,6 +40,7 @@ func NewServerOption(config conf.Config, init wait.Done, users []*auth.User, log
 		Source:                   config.Source,
 		Dest:                     config.Dest,
 		Addr:                     config.FileServerAddr,
+		EnableHTTP3:              config.EnableHTTP3,
 		EnableTLS:                config.EnableTLS,
 		TLSCertFile:              config.TLSCertFile,
 		TLSKeyFile:               config.TLSKeyFile,
