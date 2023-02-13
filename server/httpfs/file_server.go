@@ -72,6 +72,9 @@ func StartFileServer(opt server.Option) error {
 		c <- err
 		return err
 	}
+	if opt.EnableHTTP3 && !opt.EnableTLS {
+		log.Warn("please enable the TLS first if you want to enable the HTTP3 protocol, currently downgraded to HTTP2!")
+	}
 	log.Warn("file server is not a security connection, you need the https replaced maybe!")
 	err = log.ErrorIf(engine.Run(opt.Addr), "running the http server error")
 	c <- err
