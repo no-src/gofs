@@ -14,7 +14,7 @@
 
 ## 安装
 
-首先需要确保已经安装了[Go](https://golang.google.cn/doc/install) (**版本必须是1.18+**)，
+首先需要确保已经安装了[Go](https://golang.google.cn/doc/install) (**版本必须是1.19+**)，
 然后你就可以使用下面的命令来安装`gofs`了
 
 ```bash
