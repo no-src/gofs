@@ -1,9 +1,27 @@
 package sync
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/no-src/gofs/core"
+)
+
+var (
+	errUserIsRequired         = errors.New("user account is required")
+	errInvalidChunkSize       = errors.New("chunk size must greater than zero")
+	errSourceNotFound         = errors.New("source is not found")
+	errDestNotFound           = errors.New("dest is not found")
+	errFileServerUnauthorized = errors.New("file server is unauthorized")
+	errAuthResponse           = errors.New("receive auth command response error")
+	errInfoResponse           = errors.New("receive info command response error")
+	errAuthTimeout            = errors.New("auth timeout")
+	errInfoTimeout            = errors.New("info timeout")
+	errFileSystemUnsupported  = errors.New("file system unsupported")
+	errPushServerUnsupported  = errors.New("the push server is unsupported")
+	errSendToPushServer       = errors.New("send a request to the push server error")
+	errCallQueryAPI           = errors.New("call the query api error")
+	errNilRemoteSyncServer    = errors.New("remote sync server is nil")
 )
 
 // Sync a file sync interface
@@ -49,5 +67,5 @@ func NewSync(opt Option) (Sync, error) {
 	} else if source.Is(core.MinIO) && dest.IsDisk() {
 		return NewMinIOPullClientSync(opt)
 	}
-	return nil, fmt.Errorf("file system unsupported ! source=>%s dest=>%s", source.Type().String(), dest.Type().String())
+	return nil, fmt.Errorf("%w source=>%s dest=>%s", errFileSystemUnsupported, source.Type().String(), dest.Type().String())
 }

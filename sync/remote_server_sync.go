@@ -3,7 +3,6 @@ package sync
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"path/filepath"
 	"strings"
 	"time"
@@ -122,7 +121,7 @@ func (rs *remoteServerSync) send(act action.Action, path string) (err error) {
 	aTime := time.Now()
 	mTime := time.Now()
 	if !isDir && act == action.WriteAction {
-		size, hash, hvs, err = rs.getFileSizeAndHashCheckpoints(path, rs.chunkSize, rs.checkpointCount)
+		size, hash, hvs, err = hashutil.GetFileSizeAndHashCheckpoints(path, rs.chunkSize, rs.checkpointCount)
 		if err != nil {
 			return err
 		}
@@ -176,7 +175,7 @@ func (rs *remoteServerSync) SyncOnce(path string) error {
 
 func (rs *remoteServerSync) start() error {
 	if rs.server == nil {
-		return errors.New("remote sync server is nil")
+		return errNilRemoteSyncServer
 	}
 
 	err := rs.server.Listen()

@@ -2,7 +2,6 @@ package sync
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -20,12 +19,14 @@ import (
 type diskSync struct {
 	baseSync
 
-	sourceAbsPath   string
-	destAbsPath     string
-	chunkSize       int64
-	checkpointCount int
-	progress        bool
-	enc             *encrypt.Encrypt
+	sourceAbsPath         string
+	destAbsPath           string
+	chunkSize             int64
+	checkpointCount       int
+	enableLogicallyDelete bool
+	forceChecksum         bool
+	progress              bool
+	enc                   *encrypt.Encrypt
 
 	isDirFn       nsfs.IsDirFunc
 	statFn        nsfs.StatFunc
@@ -51,10 +52,10 @@ func newDiskSync(opt Option) (s *diskSync, err error) {
 	progress := opt.Progress
 
 	if source.IsEmpty() {
-		return nil, errors.New("source is not found")
+		return nil, errSourceNotFound
 	}
 	if dest.IsEmpty() {
-		return nil, errors.New("dest is not found")
+		return nil, errDestNotFound
 	}
 
 	sourceAbsPath, err := source.Abs()
@@ -73,16 +74,18 @@ func newDiskSync(opt Option) (s *diskSync, err error) {
 	}
 
 	s = &diskSync{
-		sourceAbsPath:   sourceAbsPath,
-		destAbsPath:     destAbsPath,
-		baseSync:        newBaseSync(source, dest, enableLogicallyDelete, forceChecksum),
-		chunkSize:       chunkSize,
-		checkpointCount: checkpointCount,
-		progress:        progress,
-		enc:             enc,
-		isDirFn:         nsfs.IsDir,
-		statFn:          os.Stat,
-		getFileTimeFn:   nsfs.GetFileTime,
+		sourceAbsPath:         sourceAbsPath,
+		destAbsPath:           destAbsPath,
+		baseSync:              newBaseSync(source, dest),
+		chunkSize:             chunkSize,
+		checkpointCount:       checkpointCount,
+		enableLogicallyDelete: enableLogicallyDelete,
+		forceChecksum:         forceChecksum,
+		progress:              progress,
+		enc:                   enc,
+		isDirFn:               nsfs.IsDir,
+		statFn:                os.Stat,
+		getFileTimeFn:         nsfs.GetFileTime,
 	}
 	return s, nil
 }
@@ -184,17 +187,17 @@ func (s *diskSync) write(path, dest string) error {
 	var offset int64
 	if s.enc.NeedEncrypt(path) {
 		// ignore the size compare from encryption file because the size of encryption file may not equal to the source file
-		if s.quickCompare(0, 0, sourceStat.ModTime(), destStat.ModTime()) {
+		if hashutil.QuickCompare(s.forceChecksum, 0, 0, sourceStat.ModTime(), destStat.ModTime()) {
 			log.Debug("[write] [ignored], the file modification time is unmodified => %s", path)
 			return nil
 		}
 	} else {
-		if s.quickCompare(sourceSize, destSize, sourceStat.ModTime(), destStat.ModTime()) {
+		if hashutil.QuickCompare(s.forceChecksum, sourceSize, destSize, sourceStat.ModTime(), destStat.ModTime()) {
 			log.Debug("[write] [ignored], the file size and file modification time are both unmodified => %s", path)
 			return nil
 		}
 
-		if s.compare(sourceFile, sourceSize, dest, destSize, &offset) {
+		if hashutil.Compare(s.chunkSize, s.checkpointCount, sourceFile, sourceSize, dest, destSize, &offset) {
 			log.Debug("[write] [ignored], the file is unmodified => %s", path)
 			return nil
 		}
@@ -242,25 +245,6 @@ func (s *diskSync) write(path, dest string) error {
 	return err
 }
 
-func (s *diskSync) compare(sourceFile *os.File, sourceSize int64, dest string, destSize int64, offset *int64) (equal bool) {
-	if destSize <= 0 {
-		return false
-	}
-	hvs, _ := hashutil.CheckpointsHashFromFile(sourceFile, s.chunkSize, s.checkpointCount)
-	if len(hvs) > 0 && hvs.Last().Offset == sourceSize {
-		// if source and dest is the same file, ignore the following steps and return directly
-		equal, hv := s.compareHashValues(dest, sourceSize, hvs.Last().Hash, s.chunkSize, hvs)
-		if equal {
-			return equal
-		}
-
-		if hv != nil {
-			*offset = hv.Offset
-		}
-	}
-	return false
-}
-
 // chtimes change file times
 func (s *diskSync) chtimes(source, dest string) error {
 	_, aTime, mTime, err := s.getFileTimeFn(source)
@@ -285,7 +269,7 @@ func (s *diskSync) remove(path string, forceDelete bool) error {
 		return err
 	}
 	if !forceDelete && s.enableLogicallyDelete {
-		err = s.logicallyDelete(dest)
+		err = nsfs.LogicallyDelete(dest)
 	} else {
 		err = os.RemoveAll(dest)
 	}
@@ -344,25 +328,4 @@ func (s *diskSync) SyncOnce(path string) error {
 		}
 		return err
 	})
-}
-
-func (s *diskSync) getFileSizeAndHashCheckpoints(path string, chunkSize int64, checkpointCount int) (size int64, hash string, hvs hashutil.HashValues, err error) {
-	fileInfo, err := os.Stat(path)
-	if err != nil {
-		return size, hash, hvs, err
-	}
-	if fileInfo.IsDir() {
-		return size, hash, hvs, nil
-	}
-	size = fileInfo.Size()
-	if size > 0 {
-		hvs, err = hashutil.CheckpointsHashFromFileName(path, chunkSize, checkpointCount)
-		if err != nil {
-			return size, hash, hvs, err
-		}
-		if len(hvs) > 0 {
-			hash = hvs.Last().Hash
-		}
-	}
-	return size, hash, hvs, nil
 }
