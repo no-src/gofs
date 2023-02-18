@@ -69,6 +69,9 @@ type Config struct {
 	EnableReport             bool   `json:"report" yaml:"report"`
 	SessionConnection        string `json:"session_connection" yaml:"session_connection"`
 
+	// http protocol
+	EnableHTTP3 bool `json:"http3" yaml:"http3"`
+
 	// tls transfer
 	EnableTLS             bool   `json:"tls" yaml:"tls"`
 	TLSCertFile           string `json:"tls_cert_file" yaml:"tls_cert_file"`

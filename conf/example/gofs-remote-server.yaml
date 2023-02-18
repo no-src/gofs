@@ -42,6 +42,7 @@ manage_private: true
 push_server: false
 report: false
 session_connection: "memory:"
+http3: false
 tls: true
 tls_cert_file: cert.pem
 tls_key_file: key.pem

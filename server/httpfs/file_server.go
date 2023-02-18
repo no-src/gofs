@@ -23,6 +23,7 @@ import (
 	"github.com/no-src/gofs/server/handler"
 	"github.com/no-src/gofs/server/middleware"
 	"github.com/no-src/log"
+	"github.com/quic-go/quic-go/http3"
 )
 
 // StartFileServer start a file server by gin
@@ -63,9 +64,16 @@ func StartFileServer(opt server.Option) error {
 
 	var err error
 	if opt.EnableTLS {
-		err = log.ErrorIf(engine.RunTLS(opt.Addr, opt.TLSCertFile, opt.TLSKeyFile), "running the https server error")
+		if opt.EnableHTTP3 {
+			err = log.ErrorIf(http3.ListenAndServe(opt.Addr, opt.TLSCertFile, opt.TLSKeyFile, engine.Handler()), "running the http3 server error")
+		} else {
+			err = log.ErrorIf(engine.RunTLS(opt.Addr, opt.TLSCertFile, opt.TLSKeyFile), "running the https server error")
+		}
 		c <- err
 		return err
+	}
+	if opt.EnableHTTP3 && !opt.EnableTLS {
+		log.Warn("please enable the TLS first if you want to enable the HTTP3 protocol, currently downgraded to HTTP2!")
 	}
 	log.Warn("file server is not a security connection, you need the https replaced maybe!")
 	err = log.ErrorIf(engine.Run(opt.Addr), "running the http server error")
