@@ -8,7 +8,7 @@ require (
 	github.com/gin-contrib/pprof v1.4.0
 	github.com/gin-contrib/sessions v0.0.5
 	github.com/gin-gonic/gin v1.8.2
-	github.com/minio/minio-go/v7 v7.0.46
+	github.com/minio/minio-go/v7 v7.0.48
 	github.com/no-src/log v0.1.9
 	github.com/pkg/sftp v1.13.5
 	github.com/quic-go/quic-go v0.32.0
@@ -59,7 +59,7 @@ require (
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	golang.org/x/exp v0.0.0-20230210204819-062eb4c674ab // indirect
 	golang.org/x/mod v0.8.0 // indirect
-	golang.org/x/net v0.6.0 // indirect
+	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/term v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
