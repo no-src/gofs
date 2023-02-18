@@ -1,6 +1,7 @@
 package sync
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -23,6 +24,15 @@ import (
 	"github.com/no-src/gofs/util/httputil"
 	"github.com/no-src/gofs/util/jsonutil"
 	"github.com/no-src/log"
+)
+
+var (
+	errAuthResponse          = errors.New("receive auth command response error")
+	errInfoResponse          = errors.New("receive info command response error")
+	errAuthTimeout           = errors.New("auth timeout")
+	errInfoTimeout           = errors.New("info timeout")
+	errPushServerUnsupported = errors.New("the push server is unsupported")
+	errSendToPushServer      = errors.New("send a request to the push server error")
 )
 
 type pushClientSync struct {

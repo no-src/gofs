@@ -8,20 +8,12 @@ import (
 )
 
 var (
+	errFileSystemUnsupported  = errors.New("file system unsupported")
 	errUserIsRequired         = errors.New("user account is required")
 	errInvalidChunkSize       = errors.New("chunk size must greater than zero")
 	errSourceNotFound         = errors.New("source is not found")
 	errDestNotFound           = errors.New("dest is not found")
 	errFileServerUnauthorized = errors.New("file server is unauthorized")
-	errAuthResponse           = errors.New("receive auth command response error")
-	errInfoResponse           = errors.New("receive info command response error")
-	errAuthTimeout            = errors.New("auth timeout")
-	errInfoTimeout            = errors.New("info timeout")
-	errFileSystemUnsupported  = errors.New("file system unsupported")
-	errPushServerUnsupported  = errors.New("the push server is unsupported")
-	errSendToPushServer       = errors.New("send a request to the push server error")
-	errCallQueryAPI           = errors.New("call the query api error")
-	errNilRemoteSyncServer    = errors.New("remote sync server is nil")
 )
 
 // Sync a file sync interface

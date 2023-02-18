@@ -3,6 +3,7 @@ package sync
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"path/filepath"
 	"strings"
 	"time"
@@ -16,6 +17,10 @@ import (
 	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/gofs/util/jsonutil"
 	"github.com/no-src/log"
+)
+
+var (
+	errNilRemoteSyncServer = errors.New("remote sync server is nil")
 )
 
 type remoteServerSync struct {

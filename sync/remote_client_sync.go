@@ -2,6 +2,7 @@ package sync
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -22,6 +23,10 @@ import (
 	"github.com/no-src/gofs/util/jsonutil"
 	"github.com/no-src/gofs/util/stringutil"
 	"github.com/no-src/log"
+)
+
+var (
+	errCallQueryAPI = errors.New("call the query api error")
 )
 
 type remoteClientSync struct {
