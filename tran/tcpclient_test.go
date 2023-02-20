@@ -124,7 +124,7 @@ func TestTcpClient_CheckAndTagState(t *testing.T) {
 
 	// client
 	client := NewClient(serverHost, port, true, certFile, false).(*tcpClient)
-
+	err := errors.New("syscall error")
 	testCases := []struct {
 		name   string
 		err    error
@@ -133,11 +133,11 @@ func TestTcpClient_CheckAndTagState(t *testing.T) {
 		{"nil error", nil, false},
 		{"errClientNotConnected", errClientNotConnected, false},
 		{"io EOF", io.EOF, true},
-		{"SyscallError wsarecv", fmt.Errorf("%w", &os.SyscallError{Syscall: "wsarecv"}), true},
-		{"SyscallError connectex", fmt.Errorf("%w", &os.SyscallError{Syscall: "connectex"}), true},
-		{"SyscallError read", fmt.Errorf("%w", &os.SyscallError{Syscall: "read"}), true},
-		{"SyscallError connect", fmt.Errorf("%w", &os.SyscallError{Syscall: "connect"}), true},
-		{"SyscallError unknown error", fmt.Errorf("%w", &os.SyscallError{Syscall: "unknown error"}), false},
+		{"SyscallError wsarecv", fmt.Errorf("%w", os.NewSyscallError("wsarecv", err)), true},
+		{"SyscallError connectex", fmt.Errorf("%w", os.NewSyscallError("connectex", err)), true},
+		{"SyscallError read", fmt.Errorf("%w", os.NewSyscallError("read", err)), true},
+		{"SyscallError connect", fmt.Errorf("%w", os.NewSyscallError("connect", err)), true},
+		{"SyscallError unknown error", fmt.Errorf("%w", os.NewSyscallError("unknown error", err)), false},
 	}
 
 	for _, tc := range testCases {
