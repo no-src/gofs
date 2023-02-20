@@ -318,7 +318,7 @@ func initial(cp *conf.Config) (err error) {
 	}
 
 	// init default http util
-	return log.ErrorIf(httputil.Init(cp.TLSInsecureSkipVerify, cp.TLSCertFile), "init http util error")
+	return log.ErrorIf(httputil.Init(cp.TLSInsecureSkipVerify, cp.TLSCertFile, cp.EnableHTTP3), "init http util error")
 }
 
 func initChecksum(c conf.Config) (exit bool, err error) {

@@ -13,6 +13,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/quic-go/quic-go/http3"
 )
 
 const (
@@ -145,24 +147,32 @@ func NewTLSConfig(insecureSkipVerify bool, certFile string) (*tls.Config, error)
 }
 
 // Init init default http util
-func Init(insecureSkipVerify bool, certFile string) error {
+func Init(insecureSkipVerify bool, certFile string, enableHTTP3 bool) error {
 	tlsConfig, err := NewTLSConfig(insecureSkipVerify, certFile)
 	if err != nil {
 		return err
 	}
-	defaultTransport = &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).DialContext,
-		ForceAttemptHTTP2:     true,
-		MaxIdleConns:          100,
-		IdleConnTimeout:       90 * time.Second,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
-		TLSClientConfig:       tlsConfig,
+
+	if enableHTTP3 {
+		defaultTransport = &http3.RoundTripper{
+			TLSClientConfig: tlsConfig,
+		}
+	} else {
+		defaultTransport = &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			DialContext: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).DialContext,
+			ForceAttemptHTTP2:     true,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+			TLSClientConfig:       tlsConfig,
+		}
 	}
+
 	defaultClient.Transport = defaultTransport
 	noRedirectClient.Transport = defaultTransport
 	noRedirectClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {

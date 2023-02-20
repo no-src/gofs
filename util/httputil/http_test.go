@@ -361,18 +361,25 @@ func TestInitHttpClient(t *testing.T) {
 		name               string
 		insecureSkipVerify bool
 		certFile           string
+		enableHTTP3        bool
 		expectErr          bool
 	}{
-		{"disable verify and no cert file", true, "", false},
-		{"enable verify and no cert file", false, "", true}, // return not exist error
-		{"disable verify and use cert file", true, "./testdata/cert.pem", false},
-		{"enable verify and use cert file", false, "./testdata/cert.pem", false},
-		{"enable verify and use invalid cert file", false, "./testdata/key.pem", true}, // return errAppendCertsFromPemFailed error
+		{"disable verify and no cert file", true, "", false, false},
+		{"enable verify and no cert file", false, "", false, true}, // return not exist error
+		{"disable verify and use cert file", true, "./testdata/cert.pem", false, false},
+		{"enable verify and use cert file", false, "./testdata/cert.pem", false, false},
+		{"enable verify and use invalid cert file", false, "./testdata/key.pem", false, true}, // return errAppendCertsFromPemFailed error
+
+		{"disable verify and no cert file with HTTP3", true, "", true, false},
+		{"enable verify and no cert file with HTTP3", false, "", true, true}, // return not exist error
+		{"disable verify and use cert file with HTTP3", true, "./testdata/cert.pem", true, false},
+		{"enable verify and use cert file with HTTP3", false, "./testdata/cert.pem", true, false},
+		{"enable verify and use invalid cert file with HTTP3", false, "./testdata/key.pem", true, true}, // return errAppendCertsFromPemFailed error
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := Init(tc.insecureSkipVerify, tc.certFile)
+			err := Init(tc.insecureSkipVerify, tc.certFile, tc.enableHTTP3)
 			if !tc.expectErr && err != nil {
 				t.Errorf("Init: init http client error, err => %v", err)
 				return
@@ -385,5 +392,5 @@ func TestInitHttpClient(t *testing.T) {
 }
 
 func initDefaultClient() {
-	Init(true, "")
+	Init(true, "", false)
 }
