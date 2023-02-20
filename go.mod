@@ -9,7 +9,7 @@ require (
 	github.com/gin-contrib/sessions v0.0.5
 	github.com/gin-gonic/gin v1.8.2
 	github.com/minio/minio-go/v7 v7.0.48
-	github.com/no-src/log v0.1.9
+	github.com/no-src/log v0.1.10
 	github.com/pkg/sftp v1.13.5
 	github.com/quic-go/quic-go v0.32.0
 	github.com/robfig/cron/v3 v3.0.1
