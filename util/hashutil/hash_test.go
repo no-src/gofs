@@ -339,6 +339,51 @@ func testCompareHashValuesWithFileName(t *testing.T, path string, chunkSize int6
 	}
 }
 
+func TestGetFileSizeAndHashCheckpoints(t *testing.T) {
+	var chunkSize int64 = 20
+	checkpointCount := 10
+	testCases := []struct {
+		name            string
+		path            string
+		chunkSize       int64
+		checkpointCount int
+	}{
+		{"multiple checkpoints", testFilePath, chunkSize, checkpointCount},
+		{"with dir path", testDirPath, chunkSize, checkpointCount},
+		{"one checkpoint", testFilePath, 1024 * 1024 * 10, 10},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if _, _, _, err := GetFileSizeAndHashCheckpoints(tc.path, tc.chunkSize, tc.checkpointCount); err != nil {
+				t.Errorf("test GetFileSizeAndHashCheckpoints error => %s", err)
+			}
+		})
+	}
+}
+
+func TestGetFileSizeAndHashCheckpoints_ReturnError(t *testing.T) {
+	var chunkSize int64 = 20
+	checkpointCount := 10
+	testCases := []struct {
+		name            string
+		path            string
+		chunkSize       int64
+		checkpointCount int
+	}{
+		{"with empty path", "", chunkSize, checkpointCount},
+		{"with not exist file path", notExistFilePath, chunkSize, checkpointCount},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if _, _, _, err := GetFileSizeAndHashCheckpoints(tc.path, tc.chunkSize, tc.checkpointCount); err == nil {
+				t.Errorf("expect to get an error but get nil")
+			}
+		})
+	}
+}
+
 type readwrite struct {
 	*os.File
 }

@@ -1,8 +1,6 @@
 package sync
 
 import (
-	"errors"
-
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/driver/minio"
 )
@@ -25,11 +23,11 @@ func NewMinIOPushClientSync(opt Option) (Sync, error) {
 	r := opt.Retry
 
 	if chunkSize <= 0 {
-		return nil, errors.New("chunk size must greater than zero")
+		return nil, errInvalidChunkSize
 	}
 
 	if len(users) == 0 {
-		return nil, errors.New("user account is required")
+		return nil, errUserIsRequired
 	}
 
 	ds, err := newDiskSync(opt)

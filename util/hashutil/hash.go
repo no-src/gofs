@@ -197,61 +197,28 @@ func calcHashValuesWithFile(f *os.File, chunkSize int64, hvs HashValues) error {
 	return nil
 }
 
-// CompareHashValuesWithFileName calculate the file hashes and return the last continuous hit HashValue.
-// The offset in the HashValues must equal chunkSize * N, and N greater than zero
-func CompareHashValuesWithFileName(path string, chunkSize int64, hvs HashValues) (eq *HashValue, err error) {
-	f, err := open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	if chunkSize <= 0 {
-		return nil, errChunkSizeInvalid
-	}
-	if len(hvs) == 0 {
-		return nil, nil
-	}
-	h := New()
-	var writeLen int64
-	hvi := 0
-	hv := hvs[0]
-	isEOF := false
-	chunk := make([]byte, chunkSize)
-	// calculate hash
-	for {
-		n, err := f.Read(chunk)
-		if err == io.EOF {
-			isEOF = true
-			err = nil
-		}
-		if err != nil {
-			return nil, err
-		}
-
-		writeLen += int64(n)
-		h.Write(chunk[:n])
-		if writeLen >= hv.Offset {
-			if writeLen != hv.Offset || hv.Hash != hex.EncodeToString(h.Sum(nil)) {
-				return eq, nil
-			}
-			eq = hv
-			hvi++
-			if hvi < len(hvs) {
-				hv = hvs[hvi]
-			}
-		}
-		// read to end or all tasks finished
-		if isEOF || hvi >= len(hvs) {
-			break
-		}
-	}
-	return eq, nil
-}
-
 func open(path string) (*os.File, error) {
 	if len(path) == 0 {
 		return nil, errEmptyPath
 	}
 	return os.Open(path)
+}
+
+// GetFileSizeAndHashCheckpoints get the file size and hash checkpoints from the specified file
+func GetFileSizeAndHashCheckpoints(path string, chunkSize int64, checkpointCount int) (size int64, hash string, hvs HashValues, err error) {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return size, hash, hvs, err
+	}
+	if fileInfo.IsDir() {
+		return size, hash, hvs, nil
+	}
+	size = fileInfo.Size()
+	if size > 0 {
+		hvs, err = CheckpointsHashFromFileName(path, chunkSize, checkpointCount)
+		if err == nil && len(hvs) > 0 {
+			hash = hvs.Last().Hash
+		}
+	}
+	return size, hash, hvs, err
 }

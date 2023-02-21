@@ -25,13 +25,19 @@ import (
 	"github.com/no-src/log"
 )
 
+var (
+	errCallQueryAPI = errors.New("call the query api error")
+)
+
 type remoteClientSync struct {
 	baseSync
 
-	destAbsPath string
-	currentUser *auth.User
-	cookies     []*http.Cookie
-	chunkSize   int64
+	destAbsPath           string
+	currentUser           *auth.User
+	cookies               []*http.Cookie
+	chunkSize             int64
+	enableLogicallyDelete bool
+	forceChecksum         bool
 }
 
 // NewRemoteClientSync create an instance of remoteClientSync to receive the file change message and execute it
@@ -45,7 +51,7 @@ func NewRemoteClientSync(opt Option) (Sync, error) {
 	enableLogicallyDelete := opt.EnableLogicallyDelete
 
 	if dest.IsEmpty() {
-		return nil, errors.New("dest is not found")
+		return nil, errDestNotFound
 	}
 
 	destAbsPath, err := dest.Abs()
@@ -54,9 +60,11 @@ func NewRemoteClientSync(opt Option) (Sync, error) {
 	}
 
 	rs := &remoteClientSync{
-		destAbsPath: destAbsPath,
-		baseSync:    newBaseSync(source, dest, enableLogicallyDelete, forceChecksum),
-		chunkSize:   chunkSize,
+		destAbsPath:           destAbsPath,
+		baseSync:              newBaseSync(source, dest),
+		chunkSize:             chunkSize,
+		enableLogicallyDelete: enableLogicallyDelete,
+		forceChecksum:         forceChecksum,
 	}
 	if len(users) > 0 {
 		rs.currentUser = users[0]
@@ -141,13 +149,13 @@ func (rs *remoteClientSync) write(path, dest string) error {
 	}
 
 	destStat, err := os.Stat(dest)
-	if err == nil && rs.quickCompare(size, destStat.Size(), mTime, destStat.ModTime()) {
+	if err == nil && hashutil.QuickCompare(rs.forceChecksum, size, destStat.Size(), mTime, destStat.ModTime()) {
 		log.Debug("[remote client sync] [write] [ignored], the file size and file modification time are both unmodified => %s", path)
 		return nil
 	}
 
 	// if source and dest is the same file, ignore the following steps and return directly
-	equal, hv := rs.compareHashValues(dest, size, hash, rs.chunkSize, hvs)
+	equal, hv := hashutil.CompareHashValues(dest, size, hash, rs.chunkSize, hvs)
 	if equal {
 		log.Debug("[remote client sync] [write] [ignored], the file is unmodified => %s", path)
 		return nil
@@ -218,7 +226,7 @@ func (rs *remoteClientSync) remove(path string, forceDelete bool) error {
 		return err
 	}
 	if !forceDelete && rs.enableLogicallyDelete {
-		err = rs.logicallyDelete(dest)
+		err = fs.LogicallyDelete(dest)
 	} else {
 		err = os.RemoveAll(dest)
 	}
@@ -321,7 +329,7 @@ func (rs *remoteClientSync) sync(serverAddr, path string) error {
 		// cancel retry to write when the file does not exist
 		return os.ErrNotExist
 	} else if apiResult.Code != contract.Success {
-		return fmt.Errorf("query error:%s", apiResult.Message)
+		return fmt.Errorf("%w => %s", errCallQueryAPI, apiResult.Message)
 	}
 	if apiResult.Data == nil {
 		return nil
@@ -400,7 +408,7 @@ func (rs *remoteClientSync) httpGetWithAuth(rawURL string, header http.Header) (
 			log.Debug("try to auto login file server success maybe, retry to get resource => %s", rawURL)
 			return httputil.HttpGetWithCookie(rawURL, header, rs.cookies...)
 		}
-		return nil, errors.New("file server is unauthorized")
+		return nil, errFileServerUnauthorized
 	}
 	return resp, err
 }

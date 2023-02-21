@@ -26,6 +26,15 @@ import (
 	"github.com/no-src/log"
 )
 
+var (
+	errAuthResponse          = errors.New("receive auth command response error")
+	errInfoResponse          = errors.New("receive info command response error")
+	errAuthTimeout           = errors.New("auth timeout")
+	errInfoTimeout           = errors.New("info timeout")
+	errPushServerUnsupported = errors.New("the push server is unsupported")
+	errSendToPushServer      = errors.New("send a request to the push server error")
+)
+
 type pushClientSync struct {
 	diskSync
 
@@ -50,7 +59,7 @@ func NewPushClientSync(opt Option) (Sync, error) {
 	chunkSize := opt.ChunkSize
 
 	if chunkSize <= 0 {
-		return nil, errors.New("chunk size must greater than zero")
+		return nil, errInvalidChunkSize
 	}
 
 	ds, err := newDiskSync(opt)
@@ -112,10 +121,10 @@ func (pcs *pushClientSync) auth() error {
 	select {
 	case status = <-pcs.authChan:
 	case <-time.After(pcs.timeout):
-		return fmt.Errorf("auth timeout for %s", pcs.timeout.String())
+		return fmt.Errorf("%w for %s", errAuthTimeout, pcs.timeout.String())
 	}
 	if status.Code != contract.Success {
-		return errors.New("receive auth command response error => " + status.Message)
+		return fmt.Errorf("%w => %s", errAuthResponse, status.Message)
 	}
 
 	log.Info("auth success, current client is authorized => [%s] ", status.Message)
@@ -131,7 +140,7 @@ func (pcs *pushClientSync) info() error {
 	select {
 	case infoMsg = <-pcs.infoChan:
 	case <-time.After(pcs.timeout):
-		return fmt.Errorf("info timeout for %s", pcs.timeout.String())
+		return fmt.Errorf("%w for %s", errInfoTimeout, pcs.timeout.String())
 	}
 	err := jsonutil.Unmarshal(infoMsg.Data, &info)
 	if err != nil {
@@ -139,7 +148,7 @@ func (pcs *pushClientSync) info() error {
 	}
 
 	if info.Code != contract.Success {
-		return errors.New("receive info command response error => " + info.Message)
+		return fmt.Errorf("%w => %s", errInfoResponse, info.Message)
 	}
 	pcs.pushAddr = info.ServerAddr + info.PushAddr
 	return nil
@@ -270,7 +279,7 @@ func (pcs *pushClientSync) send(act action.Action, path string) (err error) {
 	aTime := time.Now()
 	mTime := time.Now()
 	if pcs.needGetFileSizeAndHash(isDir, act) {
-		size, hash, hvs, err = pcs.getFileSizeAndHashCheckpoints(path, pcs.chunkSize, pcs.checkpointCount)
+		size, hash, hvs, err = hashutil.GetFileSizeAndHashCheckpoints(path, pcs.chunkSize, pcs.checkpointCount)
 		if err != nil {
 			return err
 		}
@@ -496,7 +505,7 @@ func (pcs *pushClientSync) checkApiResult(resp *http.Response) (code contract.Co
 	}
 
 	if code != contract.Success {
-		err = fmt.Errorf("send a request to the push server error => %s", apiResult.Message)
+		err = fmt.Errorf("%w => %s", errSendToPushServer, apiResult.Message)
 	}
 	return code, hv, err
 }
@@ -541,9 +550,9 @@ func (pcs *pushClientSync) httpPostWithAuth(rawURL string, act action.Action, fi
 			}
 			return httputil.HttpPostWithCookie(rawURL, data, pcs.cookies...)
 		}
-		return nil, errors.New("file server is unauthorized")
+		return nil, errFileServerUnauthorized
 	} else if resp.StatusCode == http.StatusNotFound {
-		return nil, fmt.Errorf("the push server is unsupported => %s", rawURL)
+		return nil, fmt.Errorf("%w => %s", errPushServerUnsupported, rawURL)
 	}
 	return resp, err
 }

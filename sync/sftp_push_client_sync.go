@@ -1,8 +1,6 @@
 package sync
 
 import (
-	"errors"
-
 	"github.com/no-src/gofs/driver/sftp"
 )
 
@@ -10,7 +8,6 @@ type sftpPushClientSync struct {
 	driverPushClientSync
 
 	remoteAddr string
-	remotePath string
 }
 
 // NewSftpPushClientSync create an instance of the sftpPushClientSync
@@ -22,11 +19,11 @@ func NewSftpPushClientSync(opt Option) (Sync, error) {
 	r := opt.Retry
 
 	if chunkSize <= 0 {
-		return nil, errors.New("chunk size must greater than zero")
+		return nil, errInvalidChunkSize
 	}
 
 	if len(users) == 0 {
-		return nil, errors.New("user account is required")
+		return nil, errUserIsRequired
 	}
 
 	ds, err := newDiskSync(opt)
@@ -40,7 +37,6 @@ func NewSftpPushClientSync(opt Option) (Sync, error) {
 			basePath: dest.RemotePath(),
 		},
 		remoteAddr: dest.Addr(),
-		remotePath: dest.RemotePath(),
 	}
 
 	currentUser := users[0]
