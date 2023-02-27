@@ -7,7 +7,7 @@ require (
 	github.com/gin-contrib/gzip v0.0.6
 	github.com/gin-contrib/pprof v1.4.0
 	github.com/gin-contrib/sessions v0.0.5
-	github.com/gin-gonic/gin v1.8.2
+	github.com/gin-gonic/gin v1.9.0
 	github.com/minio/minio-go/v7 v7.0.48
 	github.com/no-src/log v0.1.10
 	github.com/pkg/sftp v1.13.5
@@ -20,13 +20,15 @@ require (
 
 require (
 	github.com/boj/redistore v0.0.0-20180917114910-cd5dcc76aeff // indirect
+	github.com/bytedance/sonic v1.8.0 // indirect
+	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
-	github.com/go-playground/locales v0.14.0 // indirect
-	github.com/go-playground/universal-translator v0.18.0 // indirect
-	github.com/go-playground/validator/v10 v10.11.1 // indirect
+	github.com/go-playground/locales v0.14.1 // indirect
+	github.com/go-playground/universal-translator v0.18.1 // indirect
+	github.com/go-playground/validator/v10 v10.11.2 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
-	github.com/goccy/go-json v0.9.11 // indirect
+	github.com/goccy/go-json v0.10.0 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
 	github.com/google/pprof v0.0.0-20230207041349-798e818bf904 // indirect
@@ -39,7 +41,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.1.0 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
-	github.com/mattn/go-isatty v0.0.16 // indirect
+	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
 	github.com/minio/sha256-simd v1.0.0 // indirect
@@ -56,7 +58,9 @@ require (
 	github.com/rivo/uniseg v0.4.3 // indirect
 	github.com/rs/xid v1.4.0 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
-	github.com/ugorji/go/codec v1.2.7 // indirect
+	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
+	github.com/ugorji/go/codec v1.2.9 // indirect
+	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
 	golang.org/x/exp v0.0.0-20230210204819-062eb4c674ab // indirect
 	golang.org/x/mod v0.8.0 // indirect
 	golang.org/x/net v0.7.0 // indirect
@@ -66,5 +70,4 @@ require (
 	golang.org/x/tools v0.6.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/ini.v1 v1.66.6 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
