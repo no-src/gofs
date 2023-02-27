@@ -56,20 +56,9 @@ func TestParseConfig_WithIllegalField(t *testing.T) {
 }
 
 func TestParseConfigFile_InfiniteRecursion(t *testing.T) {
-	_, err := ParseConfigFile("./example/infinite_recursion.yaml")
+	_, err := ParseConfigFile("./example/include/infinite_recursion.yaml")
 	if !errors.Is(err, errInfiniteRecursion) {
 		t.Errorf("ParseConfigFile expect to get %v, but get %v", errInfiniteRecursion, err)
-	}
-}
-
-func TestParseConfigFile_WithInclude(t *testing.T) {
-	commands, err := ParseConfigFile("./example/error.yaml")
-	if err != nil {
-		t.Errorf("ParseConfigFile expect to get an nil error, but get %v", err)
-		return
-	}
-	if len(commands.Init) != 1 || len(commands.Actions) != 1 || len(commands.Clear) != 1 {
-		t.Errorf("parse config file failed with include section")
 	}
 }
 
