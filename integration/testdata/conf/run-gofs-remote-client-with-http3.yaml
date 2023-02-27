@@ -1,0 +1,5 @@
+source: rs://127.0.0.1:8106
+dest: ./rc/dest
+log_dir: ./rc-logs/
+users: gofs|password|rwx
+http3: true
