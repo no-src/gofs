@@ -4,6 +4,8 @@ init:
     source: ./source
   - mkdir:
     source: ./dest
+  - print:
+    input: init done
 actions:
   - cp:
     source: ./command_test.go
