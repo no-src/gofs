@@ -34,8 +34,8 @@ func (p *parser) ParseConfigFile(path string) (commands *Commands, err error) {
 	if err != nil {
 		return
 	}
-	if len(c.Root) == 0 {
-		c.Root = filepath.Dir(path)
+	if len(c.IncludePath) == 0 {
+		c.IncludePath = filepath.Dir(path)
 	}
 	return p.ParseConfig(c)
 }
@@ -52,7 +52,7 @@ func (p *parser) ParseConfig(conf Config) (commands *Commands, err error) {
 		clear   []Command
 	)
 	for _, f := range conf.Include {
-		baseCommands, err := p.ParseConfigFile(filepath.Join(conf.Root, f))
+		baseCommands, err := p.ParseConfigFile(filepath.Join(conf.IncludePath, f))
 		if err != nil {
 			return nil, err
 		}
