@@ -1,0 +1,13 @@
+name: actions step
+include:
+  - actions_step1.yaml
+  - actions_step2.yaml
+init:
+  - print:
+    input: call init from actions.yaml
+actions:
+  - print:
+    input: call actions from actions.yaml
+clear:
+  - print:
+    input: call clear from actions.yaml

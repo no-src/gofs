@@ -1,0 +1,10 @@
+name: clear step 1
+init:
+  - print:
+    input: call init from clear_step1.yaml
+actions:
+  - print:
+    input: call actions from clear_step1.yaml
+clear:
+  - print:
+    input: call clear from clear_step1.yaml

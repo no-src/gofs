@@ -36,60 +36,6 @@ func Exec(conf string) error {
 	return commands.Exec()
 }
 
-// ParseConfigFile parse the config file to a command list
-func ParseConfigFile(path string) (commands *Commands, err error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return
-	}
-	var c Config
-	err = yaml.Unmarshal(data, &c)
-	if err != nil {
-		return
-	}
-	return ParseConfig(c)
-}
-
-// ParseConfig parse the config to a command list
-func ParseConfig(conf Config) (commands *Commands, err error) {
-	commands = &Commands{
-		Name: conf.Name,
-	}
-	commands.Init, err = parseCommands(conf.Init)
-	if err != nil {
-		return nil, err
-	}
-	commands.Actions, err = parseCommands(conf.Actions)
-	if err != nil {
-		return nil, err
-	}
-	commands.Clear, err = parseCommands(conf.Clear)
-	if err != nil {
-		return nil, err
-	}
-	return commands, nil
-}
-
-func parseCommands(actions []Action) (commands []Command, err error) {
-	for _, action := range actions {
-		var c Command
-		for name, fn := range allCommands {
-			if _, ok := action[name]; ok {
-				c, err = fn(action)
-				break
-			}
-		}
-		if err != nil {
-			return nil, err
-		}
-		if c == nil {
-			return nil, errUnsupportedCommand
-		}
-		commands = append(commands, c)
-	}
-	return commands, nil
-}
-
 func parse[T Command](a Action) (c T, err error) {
 	out, err := yaml.Marshal(a)
 	if err != nil {

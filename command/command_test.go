@@ -49,54 +49,6 @@ func TestExec_ConfigFileNotExist(t *testing.T) {
 	}
 }
 
-func TestParseConfigFile_ConfigFileNotExist(t *testing.T) {
-	_, err := ParseConfigFile("./example/notexist.yaml")
-	if !os.IsNotExist(err) {
-		t.Errorf("ParseConfigFile expect to get a not exist error, but get %v", err)
-	}
-}
-
-func TestParseConfigFile_InvalidConfigFile(t *testing.T) {
-	_, err := ParseConfigFile("./command_test.go")
-	if err == nil {
-		t.Errorf("ParseConfigFile expect get an error, but get nil")
-	}
-}
-
-func TestParseConfig_UnsupportedCommand(t *testing.T) {
-	testCases := []struct {
-		name string
-		conf Config
-	}{
-		{"unsupported command in init", Config{Init: []Action{{"unsupported-command": ""}}}},
-		{"unsupported command in actions", Config{Actions: []Action{{"unsupported-command": ""}}}},
-		{"unsupported command in clear", Config{Clear: []Action{{"unsupported-command": ""}}}},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			_, err := ParseConfig(tc.conf)
-			if !errors.Is(err, errUnsupportedCommand) {
-				t.Errorf("ParseConfig expect get error => %v, but get %v", errUnsupportedCommand, err)
-			}
-		})
-	}
-}
-
-func TestParseConfig_WithIllegalField(t *testing.T) {
-	conf := Config{
-		Name: "invalid command",
-	}
-	action := make(Action)
-	action["cp"] = ""
-	action["source"] = errMarshaler{}
-	conf.Actions = append(conf.Actions, action)
-	_, err := ParseConfig(conf)
-	if !errors.Is(err, errMarshalYamlMock) {
-		t.Errorf("ParseConfig expect get error => %v, but get %v", errMarshalYamlMock, err)
-	}
-}
-
 var (
 	errMarshalYamlMock = errors.New("marshal yaml error mock")
 

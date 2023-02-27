@@ -1,0 +1,3 @@
+name: command examples of infinite recursion
+include:
+  - infinite_recursion.yaml

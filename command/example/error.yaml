@@ -1,0 +1,5 @@
+name: command examples that return error
+include:
+  - error_init.yaml
+  - error_actions.yaml
+  - error_clear.yaml
