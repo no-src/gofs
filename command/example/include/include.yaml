@@ -1,0 +1,15 @@
+name: command examples with include
+include:
+  - init_source.yaml
+  - init_dest.yaml
+  - actions.yaml
+  - clear.yaml
+init:
+  - print:
+    input: call init from include.yaml
+actions:
+  - print:
+    input: call actions from include.yaml
+clear:
+  - print:
+    input: call clear from include.yaml
