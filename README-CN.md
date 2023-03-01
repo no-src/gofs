@@ -127,7 +127,7 @@ cert.pem  key.pem  source  dest
 
 #### 从SFTP服务器上同步
 
-使用[SFTP拉取客户端](#SFTP拉取客户端)从SFTP服务器上同步文件
+使用[SFTP拉取客户端](#sftp拉取客户端)从SFTP服务器上同步文件
 
 ```text
 +----------+                             +----------+                         +----------+                          +----------+
@@ -144,7 +144,7 @@ cert.pem  key.pem  source  dest
 
 #### 同步到SFTP服务器
 
-使用[SFTP推送客户端](#SFTP推送客户端)同步文件到SFTP服务器
+使用[SFTP推送客户端](#sftp推送客户端)同步文件到SFTP服务器
 
 ```text
 +----------+                          +----------+                         +----------+                           +----------+
@@ -161,7 +161,7 @@ cert.pem  key.pem  source  dest
 
 #### 从MinIO服务器上同步
 
-使用[MinIO拉取客户端](#MinIO拉取客户端)从MinIO服务器上同步文件
+使用[MinIO拉取客户端](#minio拉取客户端)从MinIO服务器上同步文件
 
 ```text
 +----------+                             +----------+                         +----------+                          +----------+
@@ -178,7 +178,7 @@ cert.pem  key.pem  source  dest
 
 #### 同步到MinIO服务器
 
-使用[MinIO推送客户端](#MinIO推送客户端)同步文件到MinIO服务器
+使用[MinIO推送客户端](#minio推送客户端)同步文件到MinIO服务器
 
 ```text
 +----------+                          +----------+                         +----------+                           +----------+
