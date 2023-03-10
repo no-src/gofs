@@ -196,6 +196,12 @@ func getExpectCost(dataSize, bytesPerSecond int64) (expectCost time.Duration, ma
 	if expectCost-min < time.Second {
 		min = expectCost - time.Second
 	}
+	if min < 0 {
+		min = 0
+	}
+	if max <= 0 {
+		max = time.Second * deviation / 100
+	}
 	return expectCost, max, min
 }
 

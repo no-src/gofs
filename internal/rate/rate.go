@@ -19,7 +19,7 @@ type reader struct {
 }
 
 // NewReader create a limit io.Reader that wrap the real io.Reader.
-// The bytesPerSecond must be more than defaultBufSize of io.Reader.
+// The bytesPerSecond must be greater than defaultBufSize of io.Reader.
 func NewReader(r io.Reader, bytesPerSecond int64) io.Reader {
 	if bytesPerSecond <= 0 {
 		return r
@@ -28,7 +28,7 @@ func NewReader(r io.Reader, bytesPerSecond int64) io.Reader {
 }
 
 // NewReaderAt create a limit io.ReaderAt that wrap the real io.ReaderAt.
-// The bytesPerSecond must be more than defaultBufSize of io.ReaderAt.
+// The bytesPerSecond must be greater than defaultBufSize of io.ReaderAt.
 func NewReaderAt(ra io.ReaderAt, bytesPerSecond int64) io.ReaderAt {
 	if bytesPerSecond <= 0 {
 		return ra
