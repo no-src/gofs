@@ -18,6 +18,7 @@ import (
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/driver/minio"
 	"github.com/no-src/gofs/driver/sftp"
+	"github.com/no-src/gofs/internal/rate"
 	"github.com/no-src/gofs/report"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/handler"
@@ -146,7 +147,7 @@ func initRoute(engine *gin.Engine, opt server.Option, logger log.Logger) error {
 	initManageRoute(opt, logger, manageGroup)
 
 	if source.IsDisk() || source.Is(core.RemoteDisk) {
-		rootGroup.StaticFS(server.SourceRoutePrefix, http.Dir(source.Path()))
+		rootGroup.StaticFS(server.SourceRoutePrefix, rate.NewHTTPDir(source.Path(), opt.MaxTranRate))
 		enableFileApi = true
 
 		if opt.EnablePushServer {
@@ -155,14 +156,14 @@ func initRoute(engine *gin.Engine, opt server.Option, logger log.Logger) error {
 	}
 
 	if dest.IsDisk() {
-		rootGroup.StaticFS(server.DestRoutePrefix, http.Dir(dest.Path()))
+		rootGroup.StaticFS(server.DestRoutePrefix, rate.NewHTTPDir(dest.Path(), opt.MaxTranRate))
 		enableFileApi = true
 	} else if dest.Is(core.SFTP) {
 		if len(opt.Users) == 0 {
 			return errors.New("a user is required for sftp server")
 		}
 		user := opt.Users[0]
-		sftpDir, err := sftp.NewDir(dest.RemotePath(), dest.Addr(), user.UserName(), user.Password(), opt.SSHKey, opt.Retry)
+		sftpDir, err := sftp.NewDir(dest.RemotePath(), dest.Addr(), user.UserName(), user.Password(), opt.SSHKey, opt.Retry, opt.MaxTranRate)
 		if err != nil {
 			return err
 		}
@@ -173,18 +174,17 @@ func initRoute(engine *gin.Engine, opt server.Option, logger log.Logger) error {
 			return errors.New("a user is required for MinIO server")
 		}
 		user := opt.Users[0]
-		sftpDir, err := minio.NewDir(dest.RemotePath(), dest.Addr(), dest.Secure(), user.UserName(), user.Password(), opt.Retry)
+		minioDir, err := minio.NewDir(dest.RemotePath(), dest.Addr(), dest.Secure(), user.UserName(), user.Password(), opt.Retry, opt.MaxTranRate)
 		if err != nil {
 			return err
 		}
-		rootGroup.StaticFS(server.DestRoutePrefix, sftpDir)
+		rootGroup.StaticFS(server.DestRoutePrefix, minioDir)
 		enableFileApi = true
 	}
 
 	if enableFileApi {
 		rootGroup.GET(server.QueryRoute, handler.NewFileApiHandlerFunc(logger, http.Dir(source.Path()), opt.ChunkSize, opt.CheckpointCount))
 	}
-
 	return nil
 }
 

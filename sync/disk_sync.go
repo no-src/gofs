@@ -11,6 +11,7 @@ import (
 	"github.com/no-src/gofs/encrypt"
 	nsfs "github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/ignore"
+	"github.com/no-src/gofs/internal/rate"
 	"github.com/no-src/gofs/progress"
 	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/log"
@@ -26,6 +27,7 @@ type diskSync struct {
 	enableLogicallyDelete bool
 	forceChecksum         bool
 	progress              bool
+	maxTranRate           int64
 	enc                   *encrypt.Encrypt
 
 	isDirFn       nsfs.IsDirFunc
@@ -50,6 +52,7 @@ func newDiskSync(opt Option) (s *diskSync, err error) {
 	forceChecksum := opt.ForceChecksum
 	enableLogicallyDelete := opt.EnableLogicallyDelete
 	progress := opt.Progress
+	maxTranRate := opt.MaxTranRate
 
 	if source.IsEmpty() {
 		return nil, errSourceNotFound
@@ -82,6 +85,7 @@ func newDiskSync(opt Option) (s *diskSync, err error) {
 		enableLogicallyDelete: enableLogicallyDelete,
 		forceChecksum:         forceChecksum,
 		progress:              progress,
+		maxTranRate:           maxTranRate,
 		enc:                   enc,
 		isDirFn:               nsfs.IsDir,
 		statFn:                os.Stat,
@@ -219,7 +223,7 @@ func (s *diskSync) write(path, dest string) error {
 		return err
 	}
 
-	reader := bufio.NewReader(sourceFile)
+	reader := bufio.NewReader(rate.NewReader(sourceFile, s.maxTranRate))
 	writer, err := s.enc.NewWriter(destFile, path, destStat.Name())
 	if err != nil {
 		return err

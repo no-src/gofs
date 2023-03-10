@@ -16,6 +16,7 @@ import (
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/ignore"
+	"github.com/no-src/gofs/internal/rate"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/client"
 	"github.com/no-src/gofs/util/hashutil"
@@ -38,6 +39,7 @@ type remoteClientSync struct {
 	chunkSize             int64
 	enableLogicallyDelete bool
 	forceChecksum         bool
+	maxTranRate           int64
 }
 
 // NewRemoteClientSync create an instance of remoteClientSync to receive the file change message and execute it
@@ -49,6 +51,7 @@ func NewRemoteClientSync(opt Option) (Sync, error) {
 	chunkSize := opt.ChunkSize
 	forceChecksum := opt.ForceChecksum
 	enableLogicallyDelete := opt.EnableLogicallyDelete
+	maxTranRate := opt.MaxTranRate
 
 	if dest.IsEmpty() {
 		return nil, errDestNotFound
@@ -65,6 +68,7 @@ func NewRemoteClientSync(opt Option) (Sync, error) {
 		chunkSize:             chunkSize,
 		enableLogicallyDelete: enableLogicallyDelete,
 		forceChecksum:         forceChecksum,
+		maxTranRate:           maxTranRate,
 	}
 	if len(users) > 0 {
 		rs.currentUser = users[0]
@@ -186,7 +190,7 @@ func (rs *remoteClientSync) write(path, dest string) error {
 		return err
 	}
 
-	reader := bufio.NewReader(resp.Body)
+	reader := bufio.NewReader(rate.NewReader(resp.Body, rs.maxTranRate))
 	writer := bufio.NewWriter(destFile)
 
 	// truncate first before write to file
@@ -316,7 +320,7 @@ func (rs *remoteClientSync) sync(serverAddr, path string) error {
 		return err
 	}
 	defer resp.Body.Close()
-	data, err := io.ReadAll(resp.Body)
+	data, err := io.ReadAll(rate.NewReader(resp.Body, rs.maxTranRate))
 	if err != nil {
 		return err
 	}

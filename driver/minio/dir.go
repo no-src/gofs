@@ -18,7 +18,7 @@ type Dir struct {
 }
 
 // NewDir returns a http.FileSystem instance for MinIO
-func NewDir(bucketName string, endpoint string, secure bool, userName string, password string, r retry.Retry) (http.FileSystem, error) {
+func NewDir(bucketName string, endpoint string, secure bool, userName string, password string, r retry.Retry, maxTranRate int64) (http.FileSystem, error) {
 	bucketName = strings.TrimSpace(bucketName)
 	if len(bucketName) == 0 {
 		return nil, errors.New("the bucket can't be empty")
@@ -31,7 +31,7 @@ func NewDir(bucketName string, endpoint string, secure bool, userName string, pa
 	if len(password) == 0 {
 		return nil, errors.New("invalid password for MinIO")
 	}
-	driver := newMinIODriver(endpoint, bucketName, secure, userName, password, true, r)
+	driver := newMinIODriver(endpoint, bucketName, secure, userName, password, true, r, maxTranRate)
 	return &Dir{
 		driver:     driver,
 		bucketName: bucketName,

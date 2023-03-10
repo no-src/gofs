@@ -25,6 +25,7 @@ type Config struct {
 	ForceChecksum         bool     `json:"force_checksum" yaml:"force_checksum"`
 	ChecksumAlgorithm     string   `json:"checksum_algorithm" yaml:"checksum_algorithm"`
 	Progress              bool     `json:"progress" yaml:"progress"`
+	MaxTranRate           int64    `json:"max_tran_rate" yaml:"max_tran_rate"`
 
 	// ssh
 	SSHKey string `json:"ssh_key" yaml:"ssh_key"`

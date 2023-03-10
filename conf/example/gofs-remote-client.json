@@ -12,6 +12,7 @@
   "force_checksum": false,
   "checksum_algorithm": "md5",
   "progress": false,
+  "max_tran_rate": 0,
   "ssh_key": "",
   "sync_delay": false,
   "sync_delay_events": 10,

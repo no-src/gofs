@@ -17,6 +17,7 @@ import (
 	"github.com/no-src/gofs/contract/push"
 	nsfs "github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/ignore"
+	"github.com/no-src/gofs/internal/rate"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/client"
 	"github.com/no-src/gofs/tran"
@@ -365,9 +366,10 @@ func (pcs *pushClientSync) sendFileChunk(path string, pd push.PushData) error {
 	// if loopCount == 1 means read an empty file maybe, send it
 	loopCount := -1
 	checkChunkHash := false
+	ra := rate.NewReaderAt(f, pcs.maxTranRate)
 	for {
 		loopCount++
-		n, err := f.ReadAt(chunk, offset)
+		n, err := ra.ReadAt(chunk, offset)
 		if nsfs.IsNonEOF(err) {
 			return err
 		}
