@@ -24,7 +24,8 @@ func TestReadAt(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			f, err := os.Open("./rate_test.go")
+			// the size of the test file should be greater than defaultBufSize
+			f, err := os.Open("../../README.md")
 			if err != nil {
 				t.Errorf("open file error, %v", err)
 				return
