@@ -9,7 +9,7 @@ const (
 	KB int64 = B * 1024
 	M  int64 = KB * 1024
 
-	deviation      time.Duration = 5
+	deviation      time.Duration = 8
 	defaultBufSize               = 4096
 )
 
