@@ -6,15 +6,19 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"mime"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+	"github.com/minio/minio-go/v7/pkg/s3utils"
 	"github.com/no-src/gofs/driver"
+	"github.com/no-src/gofs/internal/rate"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/log"
 )
@@ -33,14 +37,15 @@ type minIODriver struct {
 	online        bool
 	autoReconnect bool
 	ctx           context.Context
+	maxTranRate   int64
 }
 
 // NewMinIODriver get a MinIO driver
-func NewMinIODriver(endpoint string, bucketName string, secure bool, userName string, password string, autoReconnect bool, r retry.Retry) driver.Driver {
-	return newMinIODriver(endpoint, bucketName, secure, userName, password, autoReconnect, r)
+func NewMinIODriver(endpoint string, bucketName string, secure bool, userName string, password string, autoReconnect bool, r retry.Retry, maxTranRate int64) driver.Driver {
+	return newMinIODriver(endpoint, bucketName, secure, userName, password, autoReconnect, r, maxTranRate)
 }
 
-func newMinIODriver(endpoint string, bucketName string, secure bool, userName string, password string, autoReconnect bool, r retry.Retry) *minIODriver {
+func newMinIODriver(endpoint string, bucketName string, secure bool, userName string, password string, autoReconnect bool, r retry.Retry, maxTranRate int64) *minIODriver {
 	return &minIODriver{
 		driverName:    "minio",
 		endpoint:      endpoint,
@@ -51,6 +56,7 @@ func newMinIODriver(endpoint string, bucketName string, secure bool, userName st
 		r:             r,
 		autoReconnect: autoReconnect,
 		ctx:           context.Background(),
+		maxTranRate:   maxTranRate,
 	}
 }
 
@@ -180,7 +186,7 @@ func (c *minIODriver) Open(path string) (f http.File, err error) {
 		var obj *minio.Object
 		obj, err = c.client.GetObject(c.ctx, c.bucketName, path, minio.GetObjectOptions{})
 		if err == nil {
-			f = newFile(obj, c.client, c.bucketName, path)
+			f = rate.NewFile(newFile(obj, c.client, c.bucketName, path), c.maxTranRate)
 		}
 		return err
 	})
@@ -273,13 +279,51 @@ func (c *minIODriver) WalkDir(root string, fn fs.WalkDirFunc) error {
 
 func (c *minIODriver) Write(src string, dest string) (err error) {
 	return c.reconnectIfLost(func() error {
-		_, err = c.client.FPutObject(c.ctx, c.bucketName, dest, src, minio.PutObjectOptions{})
+		_, err = c.fPutObject(c.ctx, c.bucketName, dest, src, minio.PutObjectOptions{})
 		return err
 	})
 }
 
 func (c *minIODriver) Client() *minio.Client {
 	return c.client
+}
+
+// fPutObject - Create an object in a bucket, with contents from file at filePath. Allows request cancellation.
+// Keep up to date with the minio.Client.FPutObject.
+func (c *minIODriver) fPutObject(ctx context.Context, bucketName, objectName, filePath string, opts minio.PutObjectOptions) (info minio.UploadInfo, err error) {
+	// Input validation.
+	if err := s3utils.CheckValidBucketName(bucketName); err != nil {
+		return minio.UploadInfo{}, err
+	}
+	if err := s3utils.CheckValidObjectName(objectName); err != nil {
+		return minio.UploadInfo{}, err
+	}
+
+	// Open the referenced file.
+	fileReader, err := os.Open(filePath)
+	// If any error fail quickly here.
+	if err != nil {
+		return minio.UploadInfo{}, err
+	}
+	defer fileReader.Close()
+
+	// Save the file stat.
+	fileStat, err := fileReader.Stat()
+	if err != nil {
+		return minio.UploadInfo{}, err
+	}
+
+	// Save the file size.
+	fileSize := fileStat.Size()
+
+	// Set contentType based on filepath extension if not given or default
+	// value of "application/octet-stream" if the extension has no associated type.
+	if opts.ContentType == "" {
+		if opts.ContentType = mime.TypeByExtension(filepath.Ext(filePath)); opts.ContentType == "" {
+			opts.ContentType = "application/octet-stream"
+		}
+	}
+	return c.client.PutObject(ctx, bucketName, objectName, rate.NewReader(fileReader, c.maxTranRate), fileSize, opts)
 }
 
 type statDirEntry struct {

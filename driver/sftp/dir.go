@@ -17,7 +17,7 @@ type Dir struct {
 }
 
 // NewDir returns a http.FileSystem instance for sftp
-func NewDir(root string, address string, userName string, password string, sshKey string, r retry.Retry) (http.FileSystem, error) {
+func NewDir(root string, address string, userName string, password string, sshKey string, r retry.Retry, maxTranRate int64) (http.FileSystem, error) {
 	root = strings.TrimSpace(root)
 	if len(root) == 0 {
 		root = "."
@@ -30,7 +30,7 @@ func NewDir(root string, address string, userName string, password string, sshKe
 	if len(password) == 0 {
 		return nil, errors.New("invalid password for sftp")
 	}
-	driver := newSFTPDriver(address, userName, password, sshKey, true, r)
+	driver := newSFTPDriver(address, userName, password, sshKey, true, r, maxTranRate)
 	return &Dir{
 		driver: driver,
 		root:   root,

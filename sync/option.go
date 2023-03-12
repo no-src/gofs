@@ -21,6 +21,7 @@ type Option struct {
 	CheckpointCount       int
 	ForceChecksum         bool
 	Progress              bool
+	MaxTranRate           int64
 	SSHKey                string
 	Users                 []*auth.User
 	Retry                 retry.Retry
@@ -41,6 +42,7 @@ func NewSyncOption(config conf.Config, users []*auth.User, r retry.Retry) Option
 		CheckpointCount:       config.CheckpointCount,
 		ForceChecksum:         config.ForceChecksum,
 		Progress:              config.Progress,
+		MaxTranRate:           config.MaxTranRate,
 		SSHKey:                config.SSHKey,
 		Users:                 users,
 		Retry:                 r,

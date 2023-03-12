@@ -27,6 +27,7 @@ type Option struct {
 	SessionConnection        string
 	ChunkSize                int64
 	CheckpointCount          int
+	MaxTranRate              int64
 	Init                     wait.Done
 	Users                    []*auth.User
 	SSHKey                   string
@@ -53,6 +54,7 @@ func NewServerOption(config conf.Config, init wait.Done, users []*auth.User, log
 		SessionConnection:        config.SessionConnection,
 		ChunkSize:                config.ChunkSize,
 		CheckpointCount:          config.CheckpointCount,
+		MaxTranRate:              config.MaxTranRate,
 		Init:                     init,
 		Users:                    users,
 		SSHKey:                   config.SSHKey,

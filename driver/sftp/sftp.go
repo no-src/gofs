@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/no-src/gofs/driver"
+	"github.com/no-src/gofs/internal/rate"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/log"
 	"github.com/pkg/sftp"
@@ -31,14 +32,15 @@ type sftpDriver struct {
 	mu            sync.RWMutex
 	online        bool
 	autoReconnect bool
+	maxTranRate   int64
 }
 
 // NewSFTPDriver get a sftp driver
-func NewSFTPDriver(remoteAddr string, userName string, password string, sshKey string, autoReconnect bool, r retry.Retry) driver.Driver {
-	return newSFTPDriver(remoteAddr, userName, password, sshKey, autoReconnect, r)
+func NewSFTPDriver(remoteAddr string, userName string, password string, sshKey string, autoReconnect bool, r retry.Retry, maxTranRate int64) driver.Driver {
+	return newSFTPDriver(remoteAddr, userName, password, sshKey, autoReconnect, r, maxTranRate)
 }
 
-func newSFTPDriver(remoteAddr string, userName string, password string, sshKey string, autoReconnect bool, r retry.Retry) *sftpDriver {
+func newSFTPDriver(remoteAddr string, userName string, password string, sshKey string, autoReconnect bool, r retry.Retry, maxTranRate int64) *sftpDriver {
 	return &sftpDriver{
 		driverName:    "sftp",
 		remoteAddr:    remoteAddr,
@@ -47,6 +49,7 @@ func newSFTPDriver(remoteAddr string, userName string, password string, sshKey s
 		sshKey:        sshKey,
 		r:             r,
 		autoReconnect: autoReconnect,
+		maxTranRate:   maxTranRate,
 	}
 }
 
@@ -234,7 +237,7 @@ func (sc *sftpDriver) Open(path string) (f http.File, err error) {
 		var sftpFile *sftp.File
 		sftpFile, err = sc.client.Open(path)
 		if err == nil {
-			f = newFile(sftpFile, sc, path)
+			f = rate.NewFile(newFile(sftpFile, sc, path), sc.maxTranRate)
 		}
 		return err
 	})
@@ -306,7 +309,7 @@ func (sc *sftpDriver) Write(src string, dest string) (err error) {
 		}
 		defer destFile.Close()
 
-		_, err = io.Copy(destFile, srcFile)
+		_, err = io.Copy(destFile, rate.NewReader(srcFile, sc.maxTranRate))
 		return err
 	})
 	return err

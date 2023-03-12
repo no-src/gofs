@@ -43,6 +43,7 @@ func parseFlags(args []string) (config conf.Config) {
 	flag.BoolVar(&config.ForceChecksum, "force_checksum", false, "if the file size and file modification time of the source file is equal to the destination file and -force_checksum is false, then ignore the current file transfer")
 	flag.StringVar(&config.ChecksumAlgorithm, "checksum_algorithm", hashutil.DefaultHash, "set the default hash algorithm for checksum, current supported algorithms: md5, sha1, sha256, sha512, crc32, crc64, adler32, fnv-1-32, fnv-1a-32, fnv-1-64, fnv-1a-64, fnv-1-128, fnv-1a-128")
 	flag.BoolVar(&config.Progress, "progress", false, "print the sync progress")
+	flag.Int64Var(&config.MaxTranRate, "max_tran_rate", 0, "limit the max transmission rate in the server and client sides, and this is an expected value, not an absolute one")
 
 	// ssh
 	flag.StringVar(&config.SSHKey, "ssh_key", "", "a cryptographic key used for authenticating computers in the SSH protocol")
