@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"os"
 
 	"github.com/no-src/gofs/command"
 	"github.com/no-src/gofs/version"
@@ -9,10 +10,14 @@ import (
 )
 
 func main() {
-	run()
+	if c := run(); c != 0 {
+		os.Exit(c)
+	}
 }
 
-func run() {
+const errCode = 1
+
+func run() (code int) {
 	defer log.Close()
 
 	var printVersion bool
@@ -28,12 +33,15 @@ func run() {
 
 	if len(conf) == 0 {
 		log.Info("please specify the config file by -conf flag")
+		code = errCode
 		return
 	}
 
 	if err := command.Exec(conf); err != nil {
+		code = errCode
 		log.Error(err, "execute commands failed")
 	} else {
 		log.Info("execute commands successfully")
 	}
+	return
 }
