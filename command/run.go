@@ -10,7 +10,5 @@ func (c run) Name() string {
 }
 
 func init() {
-	registerCommand("run", func(a Action) (Command, error) {
-		return parse[run](a)
-	})
+	registerCommand[run]()
 }

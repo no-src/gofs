@@ -1,11 +1,8 @@
 package command
 
 import (
-	"fmt"
 	"os"
 )
-
-var errIsEmptyNotExpected = fmt.Errorf("[is-empty] %w", errNotExpected)
 
 type isEmpty struct {
 	Source string `yaml:"source"`
@@ -17,9 +14,9 @@ func (c isEmpty) Exec() error {
 	if err != nil {
 		return err
 	}
-	isEmpty := stat.Size() == 0
-	if isEmpty != c.Expect {
-		err = newNotExpectedError(errIsEmptyNotExpected, c.Expect, isEmpty)
+	empty := stat.Size() == 0
+	if empty != c.Expect {
+		err = newNotExpectedError(c, empty)
 	}
 	return err
 }
@@ -29,7 +26,5 @@ func (c isEmpty) Name() string {
 }
 
 func init() {
-	registerCommand("is-empty", func(a Action) (Command, error) {
-		return parse[isEmpty](a)
-	})
+	registerCommand[isEmpty]()
 }

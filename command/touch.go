@@ -22,7 +22,5 @@ func (c touch) Name() string {
 }
 
 func init() {
-	registerCommand("touch", func(a Action) (Command, error) {
-		return parse[touch](a)
-	})
+	registerCommand[touch]()
 }

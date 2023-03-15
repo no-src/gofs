@@ -30,7 +30,5 @@ func (c cp) Name() string {
 }
 
 func init() {
-	registerCommand("cp", func(a Action) (Command, error) {
-		return parse[cp](a)
-	})
+	registerCommand[cp]()
 }

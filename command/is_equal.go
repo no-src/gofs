@@ -1,16 +1,10 @@
 package command
 
 import (
-	"fmt"
 	stdhash "hash"
 	"os"
 
 	"github.com/no-src/gofs/util/hashutil"
-)
-
-var (
-	errIsEqualNotExpected  = fmt.Errorf("[is-equal] %w", errNotExpected)
-	errIsEqualMustNonEmpty = fmt.Errorf("[is-equal] %w, must be non-empty", errNotExpected)
 )
 
 type isEqual struct {
@@ -31,18 +25,18 @@ func (c isEqual) Exec() error {
 		return err
 	}
 	if c.MustNonEmpty && srcStat.Size() == 0 {
-		return errIsEqualMustNonEmpty
+		return newNotExpectedError(c, "empty source file")
 	}
 	dstStat, err := os.Stat(c.Dest)
 	if err != nil {
 		return err
 	}
 	if c.MustNonEmpty && dstStat.Size() == 0 {
-		return errIsEqualMustNonEmpty
+		return newNotExpectedError(c, "empty dest file")
 	}
 	actual := srcStat.Size() == dstStat.Size()
 	if c.Expect && !actual {
-		return newNotExpectedError(errIsEqualNotExpected, c.Expect, actual)
+		return newNotExpectedError(c, actual)
 	}
 	if !c.Expect && !actual {
 		return nil
@@ -55,7 +49,7 @@ func (c isEqual) Exec() error {
 		if err == nil {
 			actual = srcHash == dstHash
 			if actual != c.Expect {
-				err = newNotExpectedError(errIsEqualNotExpected, c.Expect, actual)
+				err = newNotExpectedError(c, actual)
 			}
 		}
 	}
@@ -75,7 +69,5 @@ func (c isEqual) newHash() (stdhash.Hash, error) {
 }
 
 func init() {
-	registerCommand("is-equal", func(a Action) (Command, error) {
-		return parse[isEqual](a)
-	})
+	registerCommand[isEqual]()
 }

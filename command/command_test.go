@@ -49,6 +49,16 @@ func TestExec_ConfigFileNotExist(t *testing.T) {
 	}
 }
 
+func TestNewNotExpectedError_MarshalError(t *testing.T) {
+	err := newNotExpectedError(struct {
+		Command
+		errMarshaler
+	}{}, "")
+	if !errors.Is(err, errMarshalYamlMock) {
+		t.Errorf("expect get error => %v, but get %v", errMarshalYamlMock, err)
+	}
+}
+
 var (
 	errMarshalYamlMock = errors.New("marshal yaml error mock")
 

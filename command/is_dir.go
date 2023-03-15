@@ -1,12 +1,8 @@
 package command
 
 import (
-	"fmt"
-
 	"github.com/no-src/gofs/fs"
 )
-
-var errIsDirNotExpected = fmt.Errorf("[is-dir] %w", errNotExpected)
 
 type isDir struct {
 	Source string `yaml:"source"`
@@ -14,12 +10,12 @@ type isDir struct {
 }
 
 func (c isDir) Exec() error {
-	isDir, err := fs.IsDir(c.Source)
+	dir, err := fs.IsDir(c.Source)
 	if err != nil {
 		return err
 	}
-	if isDir != c.Expect {
-		err = newNotExpectedError(errIsDirNotExpected, c.Expect, isDir)
+	if dir != c.Expect {
+		err = newNotExpectedError(c, dir)
 	}
 	return err
 }
@@ -29,7 +25,5 @@ func (c isDir) Name() string {
 }
 
 func init() {
-	registerCommand("is-dir", func(a Action) (Command, error) {
-		return parse[isDir](a)
-	})
+	registerCommand[isDir]()
 }
