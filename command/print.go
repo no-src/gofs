@@ -18,7 +18,5 @@ func (c print) Name() string {
 }
 
 func init() {
-	registerCommand("print", func(a Action) (Command, error) {
-		return parse[print](a)
-	})
+	registerCommand[print]()
 }

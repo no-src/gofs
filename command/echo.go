@@ -34,7 +34,5 @@ func (c echo) Name() string {
 }
 
 func init() {
-	registerCommand("echo", func(a Action) (Command, error) {
-		return parse[echo](a)
-	})
+	registerCommand[echo]()
 }

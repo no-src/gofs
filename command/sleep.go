@@ -16,7 +16,5 @@ func (c sleep) Name() string {
 }
 
 func init() {
-	registerCommand("sleep", func(a Action) (Command, error) {
-		return parse[sleep](a)
-	})
+	registerCommand[sleep]()
 }

@@ -15,7 +15,5 @@ func (c mkdir) Name() string {
 }
 
 func init() {
-	registerCommand("mkdir", func(a Action) (Command, error) {
-		return parse[mkdir](a)
-	})
+	registerCommand[mkdir]()
 }

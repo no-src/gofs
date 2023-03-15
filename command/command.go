@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -45,6 +46,11 @@ func parse[T Command](a Action) (c T, err error) {
 	return
 }
 
-func newNotExpectedError(err error, expect any, actual any) error {
-	return fmt.Errorf("%w, expect to get %v, but get %v", err, expect, actual)
+func newNotExpectedError(c Command, actual any) error {
+	b, err := yaml.Marshal(c)
+	if err != nil {
+		return err
+	}
+	expect := strings.Join(strings.Split(strings.TrimSpace(string(b)), "\n"), ", ")
+	return fmt.Errorf("%w, get result => [%v], expect => [%s]", errNotExpected, actual, expect)
 }

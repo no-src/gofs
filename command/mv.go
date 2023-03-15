@@ -16,7 +16,5 @@ func (c mv) Name() string {
 }
 
 func init() {
-	registerCommand("mv", func(a Action) (Command, error) {
-		return parse[mv](a)
-	})
+	registerCommand[mv]()
 }

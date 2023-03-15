@@ -1,12 +1,8 @@
 package command
 
 import (
-	"fmt"
-
 	"github.com/no-src/gofs/fs"
 )
-
-var errIsExistNotExpected = fmt.Errorf("[is-exist] %w", errNotExpected)
 
 type isExist struct {
 	Source string `yaml:"source"`
@@ -16,7 +12,7 @@ type isExist struct {
 func (c isExist) Exec() error {
 	exist, err := fs.FileExist(c.Source)
 	if err == nil && exist != c.Expect {
-		err = newNotExpectedError(errIsExistNotExpected, c.Expect, exist)
+		err = newNotExpectedError(c, exist)
 	}
 	return err
 }
@@ -26,7 +22,5 @@ func (c isExist) Name() string {
 }
 
 func init() {
-	registerCommand("is-exist", func(a Action) (Command, error) {
-		return parse[isExist](a)
-	})
+	registerCommand[isExist]()
 }

@@ -1,12 +1,8 @@
 package command
 
 import (
-	"fmt"
-
 	"github.com/no-src/gofs/util/hashutil"
 )
-
-var errHashNotExpected = fmt.Errorf("[hash] %w", errNotExpected)
 
 type hash struct {
 	Algorithm string `yaml:"algorithm"`
@@ -19,12 +15,12 @@ func (c hash) Exec() error {
 	if err != nil {
 		return err
 	}
-	hash, err := hashutil.HashFromFileName(c.Source, h)
+	hf, err := hashutil.HashFromFileName(c.Source, h)
 	if err != nil {
 		return err
 	}
-	if hash != c.Expect {
-		err = newNotExpectedError(errHashNotExpected, c.Expect, hash)
+	if hf != c.Expect {
+		err = newNotExpectedError(c, hf)
 	}
 	return err
 }
@@ -34,7 +30,5 @@ func (c hash) Name() string {
 }
 
 func init() {
-	registerCommand("hash", func(a Action) (Command, error) {
-		return parse[hash](a)
-	})
+	registerCommand[hash]()
 }
