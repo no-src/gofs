@@ -4,7 +4,7 @@
 #git pull --no-rebase
 
 # update the last git commit
-echo -e "$(git rev-parse main)\c" >version/commit
+echo -e "$(git rev-parse main)\c" >internal/version/commit
 
 # set GOPROXY environment variable
 # export GOPROXY=https://goproxy.cn
@@ -84,4 +84,4 @@ rm -rf "$GOFS_RELEASE"
 ############################## macOS-release ##############################
 
 # reset commit file
-echo -e "\c" >version/commit
+echo -e "\c" >internal/version/commit

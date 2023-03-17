@@ -1,7 +1,7 @@
 package about
 
 import (
-	"github.com/no-src/gofs/version"
+	"github.com/no-src/gofs/internal/version"
 	"github.com/no-src/log"
 )
 

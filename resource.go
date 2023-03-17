@@ -9,5 +9,5 @@ var Templates embed.FS
 
 // Commit the commit file records the last commit hash value, used by release
 //
-//go:embed version/commit
+//go:embed internal/version/commit
 var Commit string

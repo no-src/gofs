@@ -11,8 +11,8 @@ import (
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/eventlog"
 	"github.com/no-src/gofs/internal/toplist"
+	"github.com/no-src/gofs/internal/version"
 	"github.com/no-src/gofs/util/timeutil"
-	"github.com/no-src/gofs/version"
 )
 
 var (
