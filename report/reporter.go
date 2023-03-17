@@ -6,7 +6,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/no-src/gofs"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/eventlog"
@@ -155,7 +154,7 @@ func initGlobalReporter() {
 		GOARCH:    runtime.GOARCH,
 		GOVersion: runtime.Version(),
 		Version:   version.VERSION,
-		Commit:    gofs.Commit,
+		Commit:    version.Commit,
 		Online:    make(map[string]*ConnStat),
 		EventStat: make(map[string]uint64),
 		ApiStat: ApiStat{
