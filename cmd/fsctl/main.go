@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/no-src/gofs/command"
-	"github.com/no-src/gofs/version"
+	"github.com/no-src/gofs/internal/version"
 	"github.com/no-src/log"
 )
 

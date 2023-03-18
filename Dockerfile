@@ -7,7 +7,7 @@ ARG CGO_ENABLED=0
 
 COPY . .
 
-RUN echo $(git rev-parse main) >version/commit
+RUN echo $(git rev-parse main) >internal/version/commit
 
 RUN go build -v -o . ./...
 
