@@ -5,7 +5,7 @@ package integration
 import (
 	"testing"
 
-	"github.com/no-src/gofs/command"
+	"github.com/no-src/fsctl/command"
 )
 
 func TestIntegration_RemoteDisk(t *testing.T) {

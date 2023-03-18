@@ -1,6 +1,0 @@
-name: init dest path
-init:
-  - print:
-    input: call init from init_dest.yaml
-  - mkdir:
-    source: ./dest
