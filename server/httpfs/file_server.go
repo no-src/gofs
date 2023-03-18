@@ -13,7 +13,6 @@ import (
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/no-src/gofs"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/driver/minio"
@@ -109,7 +108,7 @@ func initDefaultMiddleware(engine *gin.Engine, logger io.Writer) {
 }
 
 func initHTMLTemplate(engine *gin.Engine) error {
-	tmpl, err := template.ParseFS(gofs.Templates, server.ResourceTemplatePath)
+	tmpl, err := template.ParseFS(server.Templates, server.ResourceTemplatePath)
 	if err != nil {
 		log.Error(err, "parse template fs error")
 		return err

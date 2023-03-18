@@ -1,8 +1,8 @@
-package gofs
+package server
 
 import "embed"
 
 // Templates the web server templates
 //
-//go:embed server/template/*
+//go:embed template/*
 var Templates embed.FS

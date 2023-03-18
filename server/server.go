@@ -74,7 +74,7 @@ const (
 
 const (
 	// ResourceTemplatePath the web server template resource path
-	ResourceTemplatePath = "server/template/*"
+	ResourceTemplatePath = "template/*"
 )
 
 // InitServerInfo int the file web server
