@@ -1,6 +1,0 @@
-name: init source path
-init:
-  - print:
-    input: call init from init_source.yaml
-  - mkdir:
-    source: ./source
