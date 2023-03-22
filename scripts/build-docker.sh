@@ -10,7 +10,10 @@
 # git pull --no-rebase
 
 # update the latest golang image
-# docker pull golang
+docker pull golang:alpine
+
+# set GOPROXY environment variable
+# GOPROXY=https://goproxy.cn
 
 # set the gofs docker image name by GOFS_IMAGE_NAME variable
 GOFS_IMAGE_NAME=nosrc/gofs
@@ -30,7 +33,7 @@ docker rmi -f $GOFS_IMAGE_NAME:$GOFS_IMAGE_TAG
 docker build --build-arg GOPROXY=$GOPROXY -t $GOFS_IMAGE_NAME:$GOFS_IMAGE_TAG .
 
 # remove dangling images
-docker rmi -f $(docker images -q -f "dangling=true")
+docker image prune -f
 
 # run a container to print the gofs version
 docker run -it --rm --name running-gofs-version $GOFS_IMAGE_NAME:$GOFS_IMAGE_TAG gofs -v
