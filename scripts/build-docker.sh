@@ -39,4 +39,4 @@ docker image prune -f
 docker run -it --rm --name running-gofs-version $GOFS_IMAGE_NAME:$GOFS_IMAGE_TAG gofs -v
 
 # push the image to the DockerHub
-# docker push nosrc/gofs:$GOFS_IMAGE_TAG
+# docker push $GOFS_IMAGE_NAME:$GOFS_IMAGE_TAG
