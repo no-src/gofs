@@ -1,4 +1,4 @@
-FROM golang:latest AS build
+FROM golang:alpine AS build
 
 WORKDIR /gowork
 
@@ -11,7 +11,7 @@ RUN echo $(git rev-parse main) >internal/version/commit
 
 RUN go build -v -o . ./...
 
-FROM alpine:3.15.4
+FROM alpine:latest
 
 WORKDIR /app
 
