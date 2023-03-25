@@ -1,7 +1,6 @@
 package core
 
 import (
-	"flag"
 	"fmt"
 	"testing"
 	"time"
@@ -117,7 +116,7 @@ func TestDurationVar_WithDefaultValue(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.s, func(t *testing.T) {
 			actual := Duration(time.Second)
-			DurationVar(&actual, "core_test_duration_default"+tc.s, tc.defaultValue, "test duration")
+			testCommandLine.DurationVar(&actual, "core_test_duration_default"+tc.s, tc.defaultValue, "test duration")
 			parseFlag()
 			if actual.Duration() != tc.defaultValue {
 				t.Errorf("test DurationVar with default value error, expect:%s, actual:%s", tc.defaultValue.String(), actual.Duration().String())
@@ -147,7 +146,7 @@ func TestDurationVar(t *testing.T) {
 			actual := Duration(time.Second)
 			defaultValue := time.Minute * 2
 			flagName := "core_test_duration" + tc.s
-			DurationVar(&actual, flagName, defaultValue, "test duration")
+			testCommandLine.DurationVar(&actual, flagName, defaultValue, "test duration")
 			parseFlag(fmt.Sprintf("-%s=%s", flagName, tc.s))
 			if actual.Duration() != tc.expect {
 				t.Errorf("test DurationVar error, expect:%s, actual:%s", tc.expect.String(), actual.Duration().String())
@@ -158,5 +157,5 @@ func TestDurationVar(t *testing.T) {
 
 // parseFlag parse the flags with specified arguments
 func parseFlag(args ...string) {
-	flag.CommandLine.Parse(args)
+	testCommandLine.Parse(args)
 }
