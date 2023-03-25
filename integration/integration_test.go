@@ -3,9 +3,6 @@
 package integration
 
 import (
-	"flag"
-	"os"
-
 	"github.com/no-src/gofs/cmd"
 	"github.com/no-src/gofs/result"
 )
@@ -19,6 +16,5 @@ func getTestConf(conf string) string {
 }
 
 func runWithConfigFile(path string) result.Result {
-	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	return cmd.RunWithConfigFile(path)
 }
