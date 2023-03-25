@@ -17,7 +17,7 @@ const SubprocessTag = "sub"
 var shutdown = make(chan struct{}, 1)
 
 // Daemon running as a daemon process, and create a subprocess for working
-func Daemon(recordPid bool, daemonDelay time.Duration, monitorDelay time.Duration, wd wait.Done) {
+func Daemon(args []string, recordPid bool, daemonDelay time.Duration, monitorDelay time.Duration, wd wait.Done) {
 	defer func() {
 		if r := recover(); r != nil {
 			err := fmt.Errorf("daemon process error. %v", r)
@@ -32,7 +32,7 @@ func Daemon(recordPid bool, daemonDelay time.Duration, monitorDelay time.Duratio
 			log.Info("daemon exited by shutdown")
 			return
 		}
-		p, err := startSubprocess()
+		p, err := startSubprocess(args)
 		if err == nil && p != nil {
 			if recordPid {
 				log.ErrorIf(writePidFile(os.Getppid(), os.Getpid(), p.Pid), "write pid info to file error")
@@ -47,7 +47,7 @@ func Daemon(recordPid bool, daemonDelay time.Duration, monitorDelay time.Duratio
 }
 
 // startSubprocess start a subprocess for working
-func startSubprocess() (*os.Process, error) {
+func startSubprocess(args []string) (*os.Process, error) {
 	attr := &os.ProcAttr{Files: []*os.File{os.Stdin, os.Stdout, os.Stderr}}
 	// try to check stdin
 	// if compile with [-ldflags="-H windowsgui"] on Windows system, stdin will get error
@@ -57,7 +57,6 @@ func startSubprocess() (*os.Process, error) {
 			attr = &os.ProcAttr{Files: []*os.File{nil, nil, nil}}
 		}
 	}
-	args := os.Args
 	// use "-sub" to tag sub process
 	args = append(args, "-"+SubprocessTag)
 	exeFile, err := os.Executable()

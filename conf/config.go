@@ -1,7 +1,11 @@
 package conf
 
 import (
+	"bytes"
+	"strings"
+
 	"github.com/no-src/gofs/core"
+	"github.com/no-src/gofs/util/yamlutil"
 )
 
 // Config store all the flag info
@@ -99,4 +103,22 @@ type Config struct {
 	DecryptPath   string `json:"decrypt_path" yaml:"decrypt_path"`
 	DecryptSecret string `json:"decrypt_secret" yaml:"decrypt_secret"`
 	DecryptOut    string `json:"decrypt_out" yaml:"decrypt_out"`
+}
+
+// ToArgs parse the Config to program arguments
+func (c Config) ToArgs() (args []string, err error) {
+	data, err := yamlutil.Marshal(c)
+	if err != nil {
+		return nil, err
+	}
+	buf := bytes.NewBuffer(data)
+	for {
+		line, err := buf.ReadString('\n')
+		if err != nil {
+			break
+		}
+		line = strings.TrimSpace(line)
+		args = append(args, strings.Replace(line, ": ", "=", 1))
+	}
+	return args, nil
 }
