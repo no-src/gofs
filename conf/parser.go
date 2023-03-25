@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/no-src/gofs/util/jsonutil"
-	"gopkg.in/yaml.v3"
+	"github.com/no-src/gofs/util/yamlutil"
 )
 
 var (
@@ -28,7 +28,7 @@ func Parse(path string, config *Config) error {
 	if JsonFormat.MatchExt(ext) {
 		err = jsonutil.Unmarshal(confBytes, &config)
 	} else if YamlFormat.MatchExt(ext) {
-		err = yaml.Unmarshal(confBytes, &config)
+		err = yamlutil.Unmarshal(confBytes, &config)
 	} else {
 		err = errUnSupportedConfigFormat
 	}
