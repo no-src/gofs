@@ -2,6 +2,7 @@ package conf
 
 import (
 	"bytes"
+	"os"
 	"strings"
 
 	"github.com/no-src/gofs/core"
@@ -105,20 +106,24 @@ type Config struct {
 	DecryptOut    string `json:"decrypt_out" yaml:"decrypt_out"`
 }
 
-// ToArgs parse the Config to program arguments
+// ToArgs parse the Config to program arguments and the first argument is the current program name
 func (c Config) ToArgs() (args []string, err error) {
 	data, err := yamlutil.Marshal(c)
 	if err != nil {
 		return nil, err
 	}
-	buf := bytes.NewBuffer(data)
-	for {
-		line, err := buf.ReadString('\n')
-		if err != nil {
-			break
+	exeFile, err := os.Executable()
+	if err == nil {
+		args = append(args, exeFile)
+		buf := bytes.NewBuffer(data)
+		for {
+			line, readErr := buf.ReadString('\n')
+			if readErr != nil {
+				break
+			}
+			line = "-" + strings.TrimSpace(line)
+			args = append(args, strings.Replace(line, ": ", "=", 1))
 		}
-		line = strings.TrimSpace(line)
-		args = append(args, strings.Replace(line, ": ", "=", 1))
 	}
-	return args, nil
+	return args, err
 }

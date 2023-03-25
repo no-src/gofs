@@ -16,7 +16,7 @@ const SubprocessTag = "sub"
 
 var shutdown = make(chan struct{}, 1)
 
-// Daemon running as a daemon process, and create a subprocess for working
+// Daemon running as a daemon process, and create a subprocess for working, the first argument must be an absolute path of the program name
 func Daemon(args []string, recordPid bool, daemonDelay time.Duration, monitorDelay time.Duration, wd wait.Done) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -59,12 +59,6 @@ func startSubprocess(args []string) (*os.Process, error) {
 	}
 	// use "-sub" to tag sub process
 	args = append(args, "-"+SubprocessTag)
-	exeFile, err := os.Executable()
-	if err == nil {
-		args[0] = exeFile
-	} else {
-		log.Error(err, "get current executable error")
-	}
 	p, err := os.StartProcess(args[0], args, attr)
 	if err == nil && p != nil {
 		log.Info("[%d] start subprocess success", p.Pid)

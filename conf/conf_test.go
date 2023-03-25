@@ -2,6 +2,7 @@ package conf
 
 import (
 	"errors"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -22,6 +23,20 @@ func TestConfig_ToArgs(t *testing.T) {
 		t.Errorf("parse config to arguments error, %v", err)
 		return
 	}
+	if len(args) == 0 {
+		t.Errorf("parse config to arguments error, invalid argument length")
+		return
+	}
+	exeFile, err := os.Executable()
+	if err != nil {
+		t.Errorf("get executable file name error, %v", err)
+		return
+	}
+	if args[0] != exeFile {
+		t.Errorf("parse config to arguments error, expect to get pragram name %s, but get %s", exeFile, args[0])
+		return
+	}
+
 	testCases := []struct {
 		k string
 		v string
@@ -35,7 +50,7 @@ func TestConfig_ToArgs(t *testing.T) {
 		{"retry_wait", "0s"},
 		{"dest", "\"\""},
 	}
-	for _, arg := range args {
+	for _, arg := range args[1:] {
 		kv := strings.SplitN(arg, "=", 2)
 		k := kv[0]
 		v := kv[1]
