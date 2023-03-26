@@ -121,8 +121,15 @@ func (c Config) ToArgs() (args []string, err error) {
 			if readErr != nil {
 				break
 			}
-			line = "-" + strings.TrimSpace(line)
-			args = append(args, strings.Replace(line, ": ", "=", 1))
+			kv := strings.SplitN(line, ": ", 2)
+			k := strings.TrimSpace(kv[0])
+			v := strings.TrimSpace(kv[1])
+			v = strings.Trim(v, "'")
+			if v == "\"\"" {
+				v = ""
+			}
+			line = "-" + k + "=" + v
+			args = append(args, line)
 		}
 	}
 	return args, err

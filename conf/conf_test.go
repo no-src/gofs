@@ -13,10 +13,11 @@ import (
 
 func TestConfig_ToArgs(t *testing.T) {
 	c := Config{
-		SyncOnce:      true,
-		ChunkSize:     1024,
-		SyncDelayTime: core.Duration(time.Second * 3),
-		Source:        core.NewVFS("rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1"),
+		SyncOnce:          true,
+		ChunkSize:         1024,
+		SyncDelayTime:     core.Duration(time.Second * 3),
+		Source:            core.NewVFS("rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1"),
+		SessionConnection: "memory:",
 	}
 	args, err := c.ToArgs()
 	if err != nil {
@@ -41,14 +42,15 @@ func TestConfig_ToArgs(t *testing.T) {
 		k string
 		v string
 	}{
-		{"sync_once", "true"},
-		{"chunk_size", "1024"},
-		{"sync_delay_time", "3s"},
-		{"source", "rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1"},
-		{"retry_async", "false"},
-		{"retry_count", "0"},
-		{"retry_wait", "0s"},
-		{"dest", "\"\""},
+		{"-sync_once", "true"},
+		{"-chunk_size", "1024"},
+		{"-sync_delay_time", "3s"},
+		{"-source", "rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1"},
+		{"-session_connection", "memory:"},
+		{"-retry_async", "false"},
+		{"-retry_count", "0"},
+		{"-retry_wait", "0s"},
+		{"-dest", ""},
 	}
 	for _, arg := range args[1:] {
 		kv := strings.SplitN(arg, "=", 2)
