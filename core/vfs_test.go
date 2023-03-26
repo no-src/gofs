@@ -145,7 +145,7 @@ func TestVFSVar_DefaultValue(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			var actual VFS
-			VFSVar(&actual, "core_test_vfs_var_default"+tc.name, tc.defaultValue, "test vfs var")
+			testCommandLine.VFSVar(&actual, "core_test_vfs_var_default"+tc.name, tc.defaultValue, "test vfs var")
 			parseFlag()
 			compareVFS(t, tc.defaultValue, actual)
 		})
@@ -174,7 +174,7 @@ func TestVFSVar(t *testing.T) {
 			var actual VFS
 			expect := NewVFS(tc.path)
 			flagName := "core_test_vfs_var" + tc.name
-			VFSVar(&actual, flagName, tc.defaultValue, "test vfs var")
+			testCommandLine.VFSVar(&actual, flagName, tc.defaultValue, "test vfs var")
 			parseFlag(fmt.Sprintf("-%s=%s", flagName, tc.path))
 			compareVFS(t, expect, actual)
 		})
@@ -194,7 +194,7 @@ func TestVFSFlag_DefaultValue(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			var actual *VFS
 			flagName := "core_test_vfs_flag_default" + tc.name
-			actual = VFSFlag(flagName, tc.defaultValue, "test vfs flag")
+			actual = testCommandLine.VFSFlag(flagName, tc.defaultValue, "test vfs flag")
 			parseFlag()
 			compareVFS(t, tc.defaultValue, *actual)
 		})
@@ -219,7 +219,7 @@ func TestVFSFlag(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			expect := NewVFS(tc.path)
 			flagName := "core_test_vfs_flag" + tc.name
-			actual := VFSFlag(flagName, tc.defaultValue, "test vfs flag")
+			actual := testCommandLine.VFSFlag(flagName, tc.defaultValue, "test vfs flag")
 			parseFlag(fmt.Sprintf("-%s=%s", flagName, tc.path))
 			compareVFS(t, expect, *actual)
 		})
