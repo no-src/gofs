@@ -1,4 +1,4 @@
-FROM golang:alpine AS build
+FROM golang:latest AS build
 
 WORKDIR /gowork
 
