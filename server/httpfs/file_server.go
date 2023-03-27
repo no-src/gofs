@@ -51,7 +51,6 @@ func StartFileServer(opt server.Option) error {
 	}
 
 	log.Info("file server [%s] starting...", opt.Addr)
-	server.InitServerInfo(opt.Addr, opt.EnableTLS)
 	c := make(chan error, 1)
 	go func() {
 		select {
