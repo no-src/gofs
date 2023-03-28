@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
+	"net"
 	"path/filepath"
 	"strings"
 	"time"
@@ -21,6 +23,7 @@ import (
 
 var (
 	errNilRemoteSyncServer = errors.New("remote sync server is nil")
+	errInvalidServerPort   = errors.New("invalid server port")
 )
 
 type remoteServerSync struct {
@@ -34,6 +37,7 @@ type remoteServerSync struct {
 func NewRemoteServerSync(opt Option) (Sync, error) {
 	// the fields of option
 	source := opt.Source
+	fileServerAddr := opt.FileServerAddr
 	enableTLS := opt.EnableTLS
 	certFile := opt.TLSCertFile
 	keyFile := opt.TLSKeyFile
@@ -49,18 +53,30 @@ func NewRemoteServerSync(opt Option) (Sync, error) {
 	}
 	rs.server = tran.NewServer(source.Host(), source.Port(), enableTLS, certFile, keyFile, users)
 
+	invalidPort := false
+	fsAddr, errAddr := net.ResolveTCPAddr("tcp", fileServerAddr)
+	if errAddr != nil || fsAddr.Port <= 0 {
+		invalidPort = true
+	}
 	if len(source.FsServer()) == 0 {
 		scheme := server.SchemeHttps
-		if !server.EnableTLS() {
+		if !enableTLS {
 			scheme = server.SchemeHttp
 		}
-		rs.serverAddr = server.GenerateAddr(scheme, rs.server.Host(), server.Port())
+		if errAddr != nil {
+			return nil, errAddr
+		}
+		if invalidPort {
+			return nil, fmt.Errorf("%w => %d", errInvalidServerPort, fsAddr.Port)
+		}
+		rs.serverAddr = server.GenerateAddr(scheme, rs.server.Host(), fsAddr.Port)
 	} else {
 		rs.serverAddr = source.FsServer()
 	}
 	rs.serverAddr = strings.TrimRight(rs.serverAddr, "/")
-	if server.Port() <= 0 {
-		log.Warn("create remote server sync warning, you should enable the file server with -server flag")
+
+	if invalidPort {
+		log.Warn("create remote server sync warning, you should enable the file server with -server and -server_addr flags")
 	}
 	return rs, rs.start()
 }
