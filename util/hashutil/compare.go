@@ -7,15 +7,14 @@ import (
 	"time"
 )
 
-// Compare whether the source file is equal to the destination file
-func Compare(chunkSize int64, checkpointCount int, sourceFile *os.File, sourceSize int64, dest string, destSize int64, offset *int64) (equal bool) {
+func (dh *defaultHash) Compare(chunkSize int64, checkpointCount int, sourceFile *os.File, sourceSize int64, dest string, destSize int64, offset *int64) (equal bool) {
 	if destSize <= 0 {
 		return false
 	}
-	hvs, _ := CheckpointsHashFromFile(sourceFile, chunkSize, checkpointCount)
+	hvs, _ := dh.CheckpointsHashFromFile(sourceFile, chunkSize, checkpointCount)
 	if len(hvs) > 0 && hvs.Last().Offset == sourceSize {
 		// if source and dest is the same file, ignore the following steps and return directly
-		equal, hv := CompareHashValues(dest, sourceSize, hvs.Last().Hash, chunkSize, hvs)
+		equal, hv := dh.CompareHashValues(dest, sourceSize, hvs.Last().Hash, chunkSize, hvs)
 		if equal {
 			return equal
 		}
@@ -27,22 +26,20 @@ func Compare(chunkSize int64, checkpointCount int, sourceFile *os.File, sourceSi
 	return false
 }
 
-// QuickCompare if the forceChecksum is false, check whether the size and time are both equal, otherwise return false
-func QuickCompare(forceChecksum bool, sourceSize, destSize int64, sourceModTime, destModTime time.Time) (equal bool) {
+func (dh *defaultHash) QuickCompare(forceChecksum bool, sourceSize, destSize int64, sourceModTime, destModTime time.Time) (equal bool) {
 	if !forceChecksum && sourceSize == destSize && sourceModTime == destModTime {
 		return true
 	}
 	return false
 }
 
-// CompareHashValues compare the HashValues from source file with the destination file
-func CompareHashValues(dstPath string, sourceSize int64, sourceHash string, chunkSize int64, hvs HashValues) (equal bool, hv *HashValue) {
+func (dh *defaultHash) CompareHashValues(dstPath string, sourceSize int64, sourceHash string, chunkSize int64, hvs HashValues) (equal bool, hv *HashValue) {
 	if sourceSize > 0 {
 		// calculate the entire file hash value
 		if len(hvs) == 0 || hvs.Last().Offset < sourceSize {
 			hvs = append(hvs, NewHashValue(sourceSize, sourceHash))
 		}
-		hv, err := CompareHashValuesWithFileName(dstPath, chunkSize, hvs)
+		hv, err := dh.CompareHashValuesWithFileName(dstPath, chunkSize, hvs)
 		if err == nil && hv != nil {
 			return hv.Offset == sourceSize && hv.Hash == sourceHash && len(sourceHash) > 0, hv
 		}
@@ -50,10 +47,8 @@ func CompareHashValues(dstPath string, sourceSize int64, sourceHash string, chun
 	return false, nil
 }
 
-// CompareHashValuesWithFileName calculate the file hashes and return the last continuous hit HashValue.
-// The offset in the HashValues must equal chunkSize * N, and N greater than zero
-func CompareHashValuesWithFileName(path string, chunkSize int64, hvs HashValues) (eq *HashValue, err error) {
-	f, err := open(path)
+func (dh *defaultHash) CompareHashValuesWithFileName(path string, chunkSize int64, hvs HashValues) (eq *HashValue, err error) {
+	f, err := dh.open(path)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +60,7 @@ func CompareHashValuesWithFileName(path string, chunkSize int64, hvs HashValues)
 	if len(hvs) == 0 {
 		return nil, nil
 	}
-	h := New()
+	h := dh.new()
 	var writeLen int64
 	hvi := 0
 	hv := hvs[0]

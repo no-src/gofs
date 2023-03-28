@@ -20,6 +20,7 @@ type Option struct {
 	ChunkSize             int64
 	CheckpointCount       int
 	ForceChecksum         bool
+	ChecksumAlgorithm     string
 	Progress              bool
 	MaxTranRate           int64
 	SSHKey                string
@@ -41,6 +42,7 @@ func NewSyncOption(config conf.Config, users []*auth.User, r retry.Retry) Option
 		ChunkSize:             config.ChunkSize,
 		CheckpointCount:       config.CheckpointCount,
 		ForceChecksum:         config.ForceChecksum,
+		ChecksumAlgorithm:     config.ChecksumAlgorithm,
 		Progress:              config.Progress,
 		MaxTranRate:           config.MaxTranRate,
 		SSHKey:                config.SSHKey,

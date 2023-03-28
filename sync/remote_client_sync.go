@@ -39,6 +39,7 @@ type remoteClientSync struct {
 	chunkSize             int64
 	enableLogicallyDelete bool
 	forceChecksum         bool
+	hash                  hashutil.Hash
 	maxTranRate           int64
 }
 
@@ -50,6 +51,7 @@ func NewRemoteClientSync(opt Option) (Sync, error) {
 	users := opt.Users
 	chunkSize := opt.ChunkSize
 	forceChecksum := opt.ForceChecksum
+	checksumAlgorithm := opt.ChecksumAlgorithm
 	enableLogicallyDelete := opt.EnableLogicallyDelete
 	maxTranRate := opt.MaxTranRate
 
@@ -62,12 +64,18 @@ func NewRemoteClientSync(opt Option) (Sync, error) {
 		return nil, err
 	}
 
+	hash, err := hashutil.NewHash(checksumAlgorithm)
+	if err != nil {
+		return nil, err
+	}
+
 	rs := &remoteClientSync{
 		destAbsPath:           destAbsPath,
 		baseSync:              newBaseSync(source, dest),
 		chunkSize:             chunkSize,
 		enableLogicallyDelete: enableLogicallyDelete,
 		forceChecksum:         forceChecksum,
+		hash:                  hash,
 		maxTranRate:           maxTranRate,
 	}
 	if len(users) > 0 {
@@ -153,13 +161,13 @@ func (rs *remoteClientSync) write(path, dest string) error {
 	}
 
 	destStat, err := os.Stat(dest)
-	if err == nil && hashutil.QuickCompare(rs.forceChecksum, size, destStat.Size(), mTime, destStat.ModTime()) {
+	if err == nil && rs.hash.QuickCompare(rs.forceChecksum, size, destStat.Size(), mTime, destStat.ModTime()) {
 		log.Debug("[remote client sync] [write] [ignored], the file size and file modification time are both unmodified => %s", path)
 		return nil
 	}
 
 	// if source and dest is the same file, ignore the following steps and return directly
-	equal, hv := hashutil.CompareHashValues(dest, size, hash, rs.chunkSize, hvs)
+	equal, hv := rs.hash.CompareHashValues(dest, size, hash, rs.chunkSize, hvs)
 	if equal {
 		log.Debug("[remote client sync] [write] [ignored], the file is unmodified => %s", path)
 		return nil

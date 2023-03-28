@@ -280,7 +280,7 @@ func (pcs *pushClientSync) send(act action.Action, path string) (err error) {
 	aTime := time.Now()
 	mTime := time.Now()
 	if pcs.needGetFileSizeAndHash(isDir, act) {
-		size, hash, hvs, err = hashutil.GetFileSizeAndHashCheckpoints(path, pcs.chunkSize, pcs.checkpointCount)
+		size, hash, hvs, err = pcs.hash.GetFileSizeAndHashCheckpoints(path, pcs.chunkSize, pcs.checkpointCount)
 		if err != nil {
 			return err
 		}
@@ -415,7 +415,7 @@ func (pcs *pushClientSync) sendChunkRequest(path string, pd *push.PushData, offs
 	pd.Chunk.Offset = *offset
 	pd.Chunk.Size = int64(chunkSize)
 	if *checkChunkHash {
-		pd.Chunk.Hash = hashutil.Hash(chunk[:chunkSize])
+		pd.Chunk.Hash = pcs.hash.Hash(chunk[:chunkSize])
 	}
 
 	resp, err := pcs.httpPostWithAuth(pcs.pushAddr, action.WriteAction, push.ParamUpFile, path, *pd, chunk[:n])

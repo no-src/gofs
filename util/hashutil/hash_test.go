@@ -2,7 +2,6 @@ package hashutil
 
 import (
 	"errors"
-	"hash"
 	"io"
 	"os"
 	"testing"
@@ -25,7 +24,7 @@ func TestHashFromFile_ReturnError(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if _, err := HashFromFile(tc.reader); err == nil {
+			if _, err := testHash.HashFromFile(tc.reader); err == nil {
 				t.Errorf("test HashFromFile error, expect to get an error but get nil")
 			}
 		})
@@ -38,18 +37,18 @@ func TestHashFromFileName(t *testing.T) {
 		path      string
 		algorithm string
 	}{
-		{"default algorithm", testFilePath, ""},
+		{"default algorithm", testFilePath, DefaultHash},
 		{"sha1 algorithm", testFilePath, SHA1Hash},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			var hs []hash.Hash
 			h, err := NewHash(tc.algorithm)
-			if err == nil {
-				hs = append(hs, h)
+			if err != nil {
+				t.Errorf("init hash component error => %s", err)
+				return
 			}
-			if _, err := HashFromFileName(tc.path, hs...); err != nil {
+			if _, err := h.HashFromFileName(tc.path); err != nil {
 				t.Errorf("test HashFromFileName error => %s", err)
 			}
 		})
@@ -67,7 +66,7 @@ func TestHashFromFileName_ReturnError(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if _, err := HashFromFileName(tc.path); err == nil {
+			if _, err := testHash.HashFromFileName(tc.path); err == nil {
 				t.Errorf("test HashFromFileName error, expect to get an error but get nil")
 			}
 		})
@@ -86,7 +85,7 @@ func TestHashFromString(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run("["+tc.str+"]", func(t *testing.T) {
-			actual := HashFromString(tc.str)
+			actual := testHash.HashFromString(tc.str)
 			if actual != tc.expect {
 				t.Errorf("test HashFromString error, expect:%s, actual:%s", tc.expect, actual)
 			}
@@ -107,7 +106,7 @@ func TestHashFromFileChunk(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if _, err := HashFromFileChunk(tc.path, tc.offset, tc.chunkSize); err != nil {
+			if _, err := testHash.HashFromFileChunk(tc.path, tc.offset, tc.chunkSize); err != nil {
 				t.Errorf("test HashFromFileChunk error => %s", err)
 			}
 		})
@@ -128,7 +127,7 @@ func TestHashFromFileChunk_ReturnError(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if _, err := HashFromFileChunk(tc.path, tc.offset, tc.chunkSize); err == nil {
+			if _, err := testHash.HashFromFileChunk(tc.path, tc.offset, tc.chunkSize); err == nil {
 				t.Errorf("test HashFromFileChunk error, expect to get an error but get nil")
 			}
 		})
@@ -152,7 +151,7 @@ func TestCheckpointsHashFromFileName_ReturnError(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if _, err := CheckpointsHashFromFileName(tc.path, tc.chunkSize, tc.checkpointCount); err == nil {
+			if _, err := testHash.CheckpointsHashFromFileName(tc.path, tc.chunkSize, tc.checkpointCount); err == nil {
 				t.Errorf("test CheckpointsHashFromFileName error, expect to get an error but get nil")
 			}
 		})
@@ -174,7 +173,7 @@ func TestCheckpointsHashFromFile_ReturnError(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if _, err := CheckpointsHashFromFile(tc.f, tc.chunkSize, tc.checkpointCount); err == nil {
+			if _, err := testHash.CheckpointsHashFromFile(tc.f, tc.chunkSize, tc.checkpointCount); err == nil {
 				t.Errorf("test checkpointsHashFromFile error, expect to get an error but get nil")
 			}
 		})
@@ -184,7 +183,7 @@ func TestCheckpointsHashFromFile_ReturnError(t *testing.T) {
 func TestCheckpointsHashFromFileName(t *testing.T) {
 	checkpointCount := 10
 	path := testFilePath
-	hash, err := HashFromFileName(path)
+	hash, err := testHash.HashFromFileName(path)
 	if err != nil {
 		t.Errorf("test HashFromFileName error => %s", err)
 		return
@@ -213,7 +212,7 @@ func TestCheckpointsHashFromFileName(t *testing.T) {
 }
 
 func testCheckpointsHashFromFileName(t *testing.T, path string, chunkSize int64, checkpointCount int, expect string) {
-	hvs, err := CheckpointsHashFromFileName(path, chunkSize, checkpointCount)
+	hvs, err := testHash.CheckpointsHashFromFileName(path, chunkSize, checkpointCount)
 	if err != nil {
 		t.Errorf("test TestCheckpointsHashFromFileName error chunkSize=%d checkpointCount=%d => %s", chunkSize, checkpointCount, err)
 	}
@@ -238,7 +237,7 @@ func TestCalcHashValuesWithFile(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if err := calcHashValuesWithFile(tc.f, tc.chunkSize, tc.hvs); err != nil {
+			if err := testHash.calcHashValuesWithFile(tc.f, tc.chunkSize, tc.hvs); err != nil {
 				t.Errorf("test calcHashValuesWithFile error => %v", err)
 			}
 		})
@@ -258,7 +257,7 @@ func TestCalcHashValuesWithFile_ReturnError(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if err := calcHashValuesWithFile(tc.f, tc.chunkSize, tc.hvs); err == nil {
+			if err := testHash.calcHashValuesWithFile(tc.f, tc.chunkSize, tc.hvs); err == nil {
 				t.Errorf("test calcHashValuesWithFile error, expect to get an error but get nil")
 			}
 		})
@@ -281,7 +280,7 @@ func TestCompareHashValuesWithFileName_ReturnError(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if _, err := CompareHashValuesWithFileName(tc.path, tc.chunkSize, tc.hvs); err == nil {
+			if _, err := testHash.CompareHashValuesWithFileName(tc.path, tc.chunkSize, tc.hvs); err == nil {
 				t.Errorf("test CompareHashValuesWithFileName error, expect to get an error but get nil")
 			}
 		})
@@ -316,7 +315,7 @@ func TestCompareHashValuesWithFileName(t *testing.T) {
 }
 
 func testCompareHashValuesWithFileName(t *testing.T, path string, chunkSize int64, hvs HashValues, expect *HashValue) {
-	hv, err := CompareHashValuesWithFileName(path, chunkSize, hvs)
+	hv, err := testHash.CompareHashValuesWithFileName(path, chunkSize, hvs)
 	if err != nil {
 		t.Errorf("test CompareHashValuesWithFileName error %v", err)
 		return
@@ -355,7 +354,7 @@ func TestGetFileSizeAndHashCheckpoints(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if _, _, _, err := GetFileSizeAndHashCheckpoints(tc.path, tc.chunkSize, tc.checkpointCount); err != nil {
+			if _, _, _, err := testHash.GetFileSizeAndHashCheckpoints(tc.path, tc.chunkSize, tc.checkpointCount); err != nil {
 				t.Errorf("test GetFileSizeAndHashCheckpoints error => %s", err)
 			}
 		})
@@ -377,7 +376,7 @@ func TestGetFileSizeAndHashCheckpoints_ReturnError(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if _, _, _, err := GetFileSizeAndHashCheckpoints(tc.path, tc.chunkSize, tc.checkpointCount); err == nil {
+			if _, _, _, err := testHash.GetFileSizeAndHashCheckpoints(tc.path, tc.chunkSize, tc.checkpointCount); err == nil {
 				t.Errorf("expect to get an error but get nil")
 			}
 		})

@@ -4,6 +4,10 @@ import (
 	"testing"
 )
 
+var (
+	testHash *defaultHash
+)
+
 func TestAllHashAlgorithms(t *testing.T) {
 	input := "hello gopher"
 	testCases := []struct {
@@ -28,49 +32,17 @@ func TestAllHashAlgorithms(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.algorithm, func(t *testing.T) {
-			if err := InitDefaultHash(tc.algorithm); err != nil {
-				t.Errorf("calculate hash with [%s] algorithm error, init default hash failed => %v", tc.algorithm, err)
-				return
-			}
-			if actual := Hash([]byte(input)); actual != tc.expect {
-				t.Errorf("calculate hash with [%s] algorithm error, expect: %s, but actual: %s", tc.algorithm, tc.expect, actual)
-				return
-			}
-
-			h, err := NewHash(tc.algorithm)
+			hash, err := NewHash(tc.algorithm)
 			if err != nil {
-				t.Errorf("calculate hash with [%s] algorithm error, init custom hash failed => %v", tc.algorithm, err)
+				t.Errorf("calculate hash with [%s] algorithm error, init hash failed => %v", tc.algorithm, err)
 				return
 			}
-			if actual := Hash([]byte(input), h); actual != tc.expect {
+			if actual := hash.Hash([]byte(input)); actual != tc.expect {
 				t.Errorf("calculate hash with [%s] algorithm error, expect: %s, but actual: %s", tc.algorithm, tc.expect, actual)
 				return
 			}
 		})
 	}
-
-	// reset default hash algorithm
-	InitDefaultHash(DefaultHash)
-}
-
-func TestInitDefaultHash_WithUnsupportedAlgorithm(t *testing.T) {
-	testCases := []struct {
-		algorithm string
-	}{
-		{""},
-		{"unknown algorithm"},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.algorithm, func(t *testing.T) {
-			if err := InitDefaultHash(tc.algorithm); err == nil {
-				t.Errorf("calculate hash with [%s] algorithm error, expect to get an error, but get nil", tc.algorithm)
-			}
-		})
-	}
-
-	// reset default hash algorithm
-	InitDefaultHash(DefaultHash)
 }
 
 func TestNewHash_WithUnsupportedAlgorithm(t *testing.T) {
@@ -88,4 +60,9 @@ func TestNewHash_WithUnsupportedAlgorithm(t *testing.T) {
 			}
 		})
 	}
+}
+
+func init() {
+	hash, _ := NewHash(DefaultHash)
+	testHash = hash.(*defaultHash)
 }
