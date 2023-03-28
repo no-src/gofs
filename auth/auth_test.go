@@ -8,13 +8,14 @@ import (
 )
 
 func TestParseAuthCommandData(t *testing.T) {
+	hash, _ := hashutil.NewHash(hashutil.MD5Hash)
 	testCases := []struct {
 		name     string
 		authData []byte
 		expect   string
 	}{
-		{"username 111", append(append([]byte("auth"), authVersion...), []byte("698d51a19d8a121cbcbe3365e6ac95ea20220222072118")...), hashutil.HashFromString("111")[:userNameHashLength]},
-		{"username root", append(append([]byte("auth"), authVersion...), []byte("63a9f0ea7bb980507b24afc8bc80e54820220222072947")...), hashutil.HashFromString("root")[:userNameHashLength]},
+		{"username 111", append(append([]byte("auth"), authVersion...), []byte("698d51a19d8a121cbcbe3365e6ac95ea20220222072118")...), hash.HashFromString("111")[:userNameHashLength]},
+		{"username root", append(append([]byte("auth"), authVersion...), []byte("63a9f0ea7bb980507b24afc8bc80e54820220222072947")...), hash.HashFromString("root")[:userNameHashLength]},
 	}
 
 	for _, tc := range testCases {

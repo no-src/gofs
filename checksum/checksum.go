@@ -7,8 +7,13 @@ import (
 )
 
 // PrintChecksum calculate and print the checksum for file
-func PrintChecksum(path string, chunkSize int64, checkpointCount int) error {
-	hvs, err := hashutil.CheckpointsHashFromFileName(path, chunkSize, checkpointCount)
+func PrintChecksum(path string, chunkSize int64, checkpointCount int, algorithm string) error {
+	hash, err := hashutil.NewHash(algorithm)
+	if err != nil {
+		log.Error(err, "init hash component error")
+		return err
+	}
+	hvs, err := hash.CheckpointsHashFromFileName(path, chunkSize, checkpointCount)
 	if err != nil {
 		log.Error(err, "calculate file checksum error")
 		return err

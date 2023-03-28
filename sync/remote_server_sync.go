@@ -126,7 +126,7 @@ func (rs *remoteServerSync) send(act action.Action, path string) (err error) {
 	aTime := time.Now()
 	mTime := time.Now()
 	if !isDir && act == action.WriteAction {
-		size, hash, hvs, err = hashutil.GetFileSizeAndHashCheckpoints(path, rs.chunkSize, rs.checkpointCount)
+		size, hash, hvs, err = rs.hash.GetFileSizeAndHashCheckpoints(path, rs.chunkSize, rs.checkpointCount)
 		if err != nil {
 			return err
 		}

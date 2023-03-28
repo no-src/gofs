@@ -8,7 +8,6 @@ import (
 	"github.com/no-src/gofs/driver"
 	nsfs "github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/ignore"
-	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/log"
 )
 
@@ -69,7 +68,7 @@ func (s *driverPullClientSync) write(path, dest string) error {
 	sourceSize := sourceStat.Size()
 	destSize := destStat.Size()
 
-	if hashutil.QuickCompare(s.forceChecksum, sourceSize, destSize, sourceStat.ModTime(), destStat.ModTime()) {
+	if s.hash.QuickCompare(s.forceChecksum, sourceSize, destSize, sourceStat.ModTime(), destStat.ModTime()) {
 		log.Debug("[%s pull client sync] [write] [ignored], the file size and file modification time are both unmodified => %s", s.driver.DriverName(), path)
 		return nil
 	}

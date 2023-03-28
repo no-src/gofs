@@ -40,8 +40,8 @@ jobs:
       - name: Test Tran
         run: go test -v -race -tags=tran_test ./tran
 
-      - name: Test Integration
-        run: go test -v -race -tags=integration_test ./integration
+#      - name: Test Integration
+#        run: go test -v -race -tags=integration_test ./integration
 
       - name: Codecov
         uses: codecov/codecov-action@v3

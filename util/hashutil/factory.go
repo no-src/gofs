@@ -15,20 +15,18 @@ import (
 )
 
 var (
-	factory   hashFactory
 	factories map[string]hashFactory
 )
 
 type hashFactory func() hash.Hash
 
-// InitDefaultHash initial default hash factory
-func InitDefaultHash(algorithm string) error {
+// NewHash return the hash implementation by the specified hash algorithm
+func NewHash(algorithm string) (Hash, error) {
 	f, err := getFactory(algorithm)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	factory = f
-	return nil
+	return &defaultHash{factory: f}, nil
 }
 
 func getFactory(algorithm string) (hashFactory, error) {
@@ -38,20 +36,6 @@ func getFactory(algorithm string) (hashFactory, error) {
 		return f, nil
 	}
 	return nil, fmt.Errorf("unsupported hash algorithm => %s", algorithm)
-}
-
-// New return default hash implementation
-func New() hash.Hash {
-	return factory()
-}
-
-// NewHash return the hash implementation by the specified hash algorithm
-func NewHash(algorithm string) (hash.Hash, error) {
-	f, err := getFactory(algorithm)
-	if err != nil {
-		return nil, err
-	}
-	return f(), nil
 }
 
 const (
@@ -119,5 +103,4 @@ func register() {
 
 func init() {
 	register()
-	InitDefaultHash(DefaultHash)
 }

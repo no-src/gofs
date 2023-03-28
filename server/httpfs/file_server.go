@@ -22,6 +22,7 @@ import (
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/handler"
 	"github.com/no-src/gofs/server/middleware"
+	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/log"
 	"github.com/quic-go/quic-go/http3"
 )
@@ -145,12 +146,17 @@ func initRoute(engine *gin.Engine, opt server.Option, logger log.Logger) error {
 
 	initManageRoute(opt, logger, manageGroup)
 
+	hash, errHash := hashutil.NewHash(opt.ChecksumAlgorithm)
+	if errHash != nil {
+		return errHash
+	}
+
 	if source.IsDisk() || source.Is(core.RemoteDisk) {
 		rootGroup.StaticFS(server.SourceRoutePrefix, rate.NewHTTPDir(source.Path(), opt.MaxTranRate))
 		enableFileApi = true
 
 		if opt.EnablePushServer {
-			wGroup.POST(server.PushRoute, handler.NewPushHandlerFunc(logger, source, opt.EnableLogicallyDelete))
+			wGroup.POST(server.PushRoute, handler.NewPushHandlerFunc(logger, source, opt.EnableLogicallyDelete, hash))
 		}
 	}
 
@@ -182,7 +188,7 @@ func initRoute(engine *gin.Engine, opt server.Option, logger log.Logger) error {
 	}
 
 	if enableFileApi {
-		rootGroup.GET(server.QueryRoute, handler.NewFileApiHandlerFunc(logger, http.Dir(source.Path()), opt.ChunkSize, opt.CheckpointCount))
+		rootGroup.GET(server.QueryRoute, handler.NewFileApiHandlerFunc(logger, http.Dir(source.Path()), opt.ChunkSize, opt.CheckpointCount, hash))
 	}
 	return nil
 }
