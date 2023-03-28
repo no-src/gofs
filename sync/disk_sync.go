@@ -29,6 +29,7 @@ type diskSync struct {
 	progress              bool
 	maxTranRate           int64
 	enc                   *encrypt.Encrypt
+	hash                  hashutil.Hash
 
 	isDirFn       nsfs.IsDirFunc
 	statFn        nsfs.StatFunc
@@ -50,6 +51,7 @@ func newDiskSync(opt Option) (s *diskSync, err error) {
 	chunkSize := opt.ChunkSize
 	checkpointCount := opt.CheckpointCount
 	forceChecksum := opt.ForceChecksum
+	checksumAlgorithm := opt.ChecksumAlgorithm
 	enableLogicallyDelete := opt.EnableLogicallyDelete
 	progress := opt.Progress
 	maxTranRate := opt.MaxTranRate
@@ -76,6 +78,11 @@ func newDiskSync(opt Option) (s *diskSync, err error) {
 		return nil, err
 	}
 
+	hash, err := hashutil.NewHash(checksumAlgorithm)
+	if err != nil {
+		return nil, err
+	}
+
 	s = &diskSync{
 		sourceAbsPath:         sourceAbsPath,
 		destAbsPath:           destAbsPath,
@@ -87,6 +94,7 @@ func newDiskSync(opt Option) (s *diskSync, err error) {
 		progress:              progress,
 		maxTranRate:           maxTranRate,
 		enc:                   enc,
+		hash:                  hash,
 		isDirFn:               nsfs.IsDir,
 		statFn:                os.Stat,
 		getFileTimeFn:         nsfs.GetFileTime,
@@ -191,17 +199,17 @@ func (s *diskSync) write(path, dest string) error {
 	var offset int64
 	if s.enc.NeedEncrypt(path) {
 		// ignore the size compare from encryption file because the size of encryption file may not equal to the source file
-		if hashutil.QuickCompare(s.forceChecksum, 0, 0, sourceStat.ModTime(), destStat.ModTime()) {
+		if s.hash.QuickCompare(s.forceChecksum, 0, 0, sourceStat.ModTime(), destStat.ModTime()) {
 			log.Debug("[write] [ignored], the file modification time is unmodified => %s", path)
 			return nil
 		}
 	} else {
-		if hashutil.QuickCompare(s.forceChecksum, sourceSize, destSize, sourceStat.ModTime(), destStat.ModTime()) {
+		if s.hash.QuickCompare(s.forceChecksum, sourceSize, destSize, sourceStat.ModTime(), destStat.ModTime()) {
 			log.Debug("[write] [ignored], the file size and file modification time are both unmodified => %s", path)
 			return nil
 		}
 
-		if hashutil.Compare(s.chunkSize, s.checkpointCount, sourceFile, sourceSize, dest, destSize, &offset) {
+		if s.hash.Compare(s.chunkSize, s.checkpointCount, sourceFile, sourceSize, dest, destSize, &offset) {
 			log.Debug("[write] [ignored], the file is unmodified => %s", path)
 			return nil
 		}

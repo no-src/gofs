@@ -20,7 +20,6 @@ import (
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/httpfs"
 	"github.com/no-src/gofs/sync"
-	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/gofs/wait"
 	"github.com/no-src/log"
 	"github.com/no-src/log/formatter"
@@ -82,11 +81,6 @@ func runWithConfig(c conf.Config, result result.Result) {
 	var exit bool
 	// execute and exit
 	if exit, err = executeOnce(c); exit {
-		result.InitDoneWithError(err)
-		return
-	}
-
-	if exit, err = initChecksum(c); exit {
 		result.InitDoneWithError(err)
 		return
 	}
@@ -210,6 +204,11 @@ func executeOnce(c conf.Config) (exit bool, err error) {
 		}
 		return true, log.ErrorIf(dec.Decrypt(), "decrypt error")
 	}
+
+	// calculate checksum
+	if c.Checksum {
+		return true, checksum.PrintChecksum(c.Source.Path(), c.ChunkSize, c.CheckpointCount, c.ChecksumAlgorithm)
+	}
 	return false, nil
 }
 
@@ -313,19 +312,6 @@ func initial(cp *conf.Config) (err error) {
 	}
 
 	return log.ErrorIf(initDefaultValue(cp), "init default value of config error")
-}
-
-func initChecksum(c conf.Config) (exit bool, err error) {
-	// init default hash algorithm
-	if err = log.ErrorIf(hashutil.InitDefaultHash(c.ChecksumAlgorithm), "init default hash algorithm error"); err != nil {
-		return true, err
-	}
-
-	// calculate checksum
-	if c.Checksum {
-		return true, checksum.PrintChecksum(c.Source.Path(), c.ChunkSize, c.CheckpointCount)
-	}
-	return false, nil
 }
 
 // initDefaultValue init default value of config

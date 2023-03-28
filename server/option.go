@@ -27,6 +27,7 @@ type Option struct {
 	SessionConnection        string
 	ChunkSize                int64
 	CheckpointCount          int
+	ChecksumAlgorithm        string
 	MaxTranRate              int64
 	Init                     wait.Done
 	Users                    []*auth.User
@@ -54,6 +55,7 @@ func NewServerOption(config conf.Config, init wait.Done, users []*auth.User, log
 		SessionConnection:        config.SessionConnection,
 		ChunkSize:                config.ChunkSize,
 		CheckpointCount:          config.CheckpointCount,
+		ChecksumAlgorithm:        config.ChecksumAlgorithm,
 		MaxTranRate:              config.MaxTranRate,
 		Init:                     init,
 		Users:                    users,

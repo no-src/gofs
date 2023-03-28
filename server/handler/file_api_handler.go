@@ -20,15 +20,17 @@ type fileApiHandler struct {
 	root            http.FileSystem
 	chunkSize       int64
 	checkpointCount int
+	hash            hashutil.Hash
 }
 
 // NewFileApiHandlerFunc returns a gin.HandlerFunc that queries the file info
-func NewFileApiHandlerFunc(logger log.Logger, root http.FileSystem, chunkSize int64, checkpointCount int) gin.HandlerFunc {
+func NewFileApiHandlerFunc(logger log.Logger, root http.FileSystem, chunkSize int64, checkpointCount int, hash hashutil.Hash) gin.HandlerFunc {
 	return (&fileApiHandler{
 		logger:          logger,
 		root:            root,
 		chunkSize:       chunkSize,
 		checkpointCount: checkpointCount,
+		hash:            hash,
 	}).Handle
 }
 
@@ -111,13 +113,13 @@ func (h *fileApiHandler) readDir(f http.File, needHash bool, needCheckpoint bool
 		if !file.IsDir() && (needHash || needCheckpoint) {
 			if cf, err := h.root.Open(filepath.ToSlash(filepath.Join(path, file.Name()))); err == nil {
 				if needCheckpoint {
-					hvs, _ = hashutil.CheckpointsHashFromFile(cf.(*os.File), h.chunkSize, h.checkpointCount)
+					hvs, _ = h.hash.CheckpointsHashFromFile(cf.(*os.File), h.chunkSize, h.checkpointCount)
 				}
 				if needHash {
 					if len(hvs) > 0 {
 						hash = hvs.Last().Hash
 					} else {
-						hash, _ = hashutil.HashFromFile(cf)
+						hash, _ = h.hash.HashFromFile(cf)
 					}
 				}
 				cf.Close()

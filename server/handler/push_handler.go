@@ -26,14 +26,16 @@ type pushHandler struct {
 	logger                log.Logger
 	storagePath           string
 	enableLogicallyDelete bool
+	hash                  hashutil.Hash
 }
 
 // NewPushHandlerFunc returns a gin.HandlerFunc that to manage the files
-func NewPushHandlerFunc(logger log.Logger, source core.VFS, enableLogicallyDelete bool) gin.HandlerFunc {
+func NewPushHandlerFunc(logger log.Logger, source core.VFS, enableLogicallyDelete bool, hash hashutil.Hash) gin.HandlerFunc {
 	return (&pushHandler{
 		logger:                logger,
 		storagePath:           source.Path(),
 		enableLogicallyDelete: enableLogicallyDelete,
+		hash:                  hash,
 	}).Handle
 }
 
@@ -283,7 +285,7 @@ func (h *pushHandler) compareFile(dstPath string, sourceHash string, sourceSize 
 	if sourceSize > 0 && len(sourceHash) > 0 {
 		destStat, err := os.Stat(dstPath)
 		if err == nil && destStat.Size() == sourceSize {
-			destHash, err := hashutil.HashFromFileName(dstPath)
+			destHash, err := h.hash.HashFromFileName(dstPath)
 			if err == nil && destHash == sourceHash {
 				return true
 			}
@@ -297,7 +299,7 @@ func (h *pushHandler) compareChunk(dstPath string, offset int64, chunkHash strin
 	if chunkSize > 0 && len(chunkHash) > 0 {
 		destStat, err := os.Stat(dstPath)
 		if err == nil && destStat.Size() >= offset+chunkSize {
-			destHash, err := hashutil.HashFromFileChunk(dstPath, offset, chunkSize)
+			destHash, err := h.hash.HashFromFileChunk(dstPath, offset, chunkSize)
 			if err == nil && destHash == chunkHash {
 				return true
 			}
@@ -308,7 +310,7 @@ func (h *pushHandler) compareChunk(dstPath string, offset int64, chunkHash strin
 
 func (h *pushHandler) compareHashValues(dstPath string, sourceSize int64, chunkSize int64, hvs hashutil.HashValues) *hashutil.HashValue {
 	if sourceSize > 0 {
-		hv, err := hashutil.CompareHashValuesWithFileName(dstPath, chunkSize, hvs)
+		hv, err := h.hash.CompareHashValuesWithFileName(dstPath, chunkSize, hvs)
 		if err == nil && hv != nil {
 			return hv
 		}

@@ -6,7 +6,7 @@ func BenchmarkHashFromFileName(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := HashFromFileName(testFilePath)
+		_, err := testHash.HashFromFileName(testFilePath)
 		if err != nil {
 			b.Errorf("test HashFromFileName error =>%v", err)
 		}
@@ -29,7 +29,7 @@ func benchmarkCheckpointsHashFromFileName(b *testing.B, chunkSize int64, checkpo
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := CheckpointsHashFromFileName(testFilePath, chunkSize, checkpointCount)
+		_, err := testHash.CheckpointsHashFromFileName(testFilePath, chunkSize, checkpointCount)
 		if err != nil {
 			b.Errorf("benchmark test CheckpointsHashFromFileName error chunkSize=%d checkpointCount=%d =>%v", chunkSize, checkpointCount, err)
 		}

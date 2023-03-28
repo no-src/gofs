@@ -57,7 +57,7 @@ func TestCompare(t *testing.T) {
 				return
 			}
 			var offset int64
-			actual := Compare(100, 10, src, srcStat.Size(), tc.dest, tc.destSize, &offset)
+			actual := testHash.Compare(100, 10, src, srcStat.Size(), tc.dest, tc.destSize, &offset)
 			if actual != tc.equal {
 				t.Errorf("expect get %v but actual get %v", tc.equal, actual)
 			}
@@ -85,7 +85,7 @@ func TestQuickCompare(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := QuickCompare(tc.forceChecksum, tc.sourceSize, tc.destSize, tc.sourceModTime, tc.destModTime)
+			actual := testHash.QuickCompare(tc.forceChecksum, tc.sourceSize, tc.destSize, tc.sourceModTime, tc.destModTime)
 			if actual != tc.equal {
 				t.Errorf("expect get %v but actual get %v", tc.equal, actual)
 			}
@@ -107,7 +107,7 @@ func TestCompareHashValues(t *testing.T) {
 		return
 	}
 
-	currentTestFileHash, err := HashFromFile(f)
+	currentTestFileHash, err := testHash.HashFromFile(f)
 	if err != nil {
 		t.Errorf("get file hash error => %v", err)
 		return
@@ -129,7 +129,7 @@ func TestCompareHashValues(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			actual, _ := CompareHashValues(tc.dstPath, tc.sourceSize, tc.sourceHash, tc.chunkSize, tc.hvs)
+			actual, _ := testHash.CompareHashValues(tc.dstPath, tc.sourceSize, tc.sourceHash, tc.chunkSize, tc.hvs)
 			if actual != tc.equal {
 				t.Errorf("expect get %v but actual get %v", tc.equal, actual)
 			}
