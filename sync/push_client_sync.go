@@ -47,12 +47,14 @@ type pushClientSync struct {
 	authChan        chan contract.Status
 	infoChan        chan contract.Message
 	timeout         time.Duration
+	httpClient      httputil.HttpClient
 }
 
 // NewPushClientSync create an instance of the pushClientSync
 func NewPushClientSync(opt Option) (Sync, error) {
 	// the fields of option
 	dest := opt.Dest
+	enableHTTP3 := opt.EnableHTTP3
 	enableTLS := opt.EnableTLS
 	certFile := opt.TLSCertFile
 	insecureSkipVerify := opt.TLSInsecureSkipVerify
@@ -68,12 +70,18 @@ func NewPushClientSync(opt Option) (Sync, error) {
 		return nil, err
 	}
 
+	httpClient, err := httputil.NewHttpClient(insecureSkipVerify, certFile, enableHTTP3)
+	if err != nil {
+		return nil, err
+	}
+
 	s := &pushClientSync{
-		diskSync: *ds,
-		client:   tran.NewClient(dest.Host(), dest.Port(), enableTLS, certFile, insecureSkipVerify),
-		authChan: make(chan contract.Status, 100),
-		infoChan: make(chan contract.Message, 100),
-		timeout:  time.Minute * 3,
+		diskSync:   *ds,
+		client:     tran.NewClient(dest.Host(), dest.Port(), enableTLS, certFile, insecureSkipVerify),
+		authChan:   make(chan contract.Status, 100),
+		infoChan:   make(chan contract.Message, 100),
+		timeout:    time.Minute * 3,
+		httpClient: httpClient,
 	}
 
 	if len(users) > 0 {
@@ -525,9 +533,9 @@ func (pcs *pushClientSync) httpPostWithAuth(rawURL string, act action.Action, fi
 		sendFile = true
 	}
 	if sendFile {
-		resp, err = httputil.HttpPostFileChunkWithCookie(rawURL, fieldName, fileName, data, chunk, pcs.cookies...)
+		resp, err = pcs.httpClient.HttpPostFileChunkWithCookie(rawURL, fieldName, fileName, data, chunk, pcs.cookies...)
 	} else {
-		resp, err = httputil.HttpPostWithCookie(rawURL, data, pcs.cookies...)
+		resp, err = pcs.httpClient.HttpPostWithCookie(rawURL, data, pcs.cookies...)
 	}
 
 	if err != nil {
@@ -540,7 +548,7 @@ func (pcs *pushClientSync) httpPostWithAuth(rawURL string, act action.Action, fi
 			return nil, err
 		}
 		user := pcs.currentUser
-		cookies, err := client.SignIn(parseUrl.Scheme, parseUrl.Host, user.UserName(), user.Password())
+		cookies, err := client.SignIn(pcs.httpClient, parseUrl.Scheme, parseUrl.Host, user.UserName(), user.Password())
 		if err != nil {
 			return nil, err
 		}
@@ -548,9 +556,9 @@ func (pcs *pushClientSync) httpPostWithAuth(rawURL string, act action.Action, fi
 			pcs.cookies = cookies
 			log.Debug("try to auto login file server success maybe, retry to get resource => %s", rawURL)
 			if sendFile {
-				return httputil.HttpPostFileChunkWithCookie(rawURL, fieldName, fileName, data, chunk, pcs.cookies...)
+				return pcs.httpClient.HttpPostFileChunkWithCookie(rawURL, fieldName, fileName, data, chunk, pcs.cookies...)
 			}
-			return httputil.HttpPostWithCookie(rawURL, data, pcs.cookies...)
+			return pcs.httpClient.HttpPostWithCookie(rawURL, data, pcs.cookies...)
 		}
 		return nil, errFileServerUnauthorized
 	} else if resp.StatusCode == http.StatusNotFound {

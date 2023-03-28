@@ -15,13 +15,13 @@ import (
 var ErrSignIn = errors.New("file server sign in failed")
 
 // SignIn sign in the file server
-func SignIn(scheme, host, userName, password string) ([]*http.Cookie, error) {
+func SignIn(httpClient httputil.HttpClient, scheme, host, userName, password string) ([]*http.Cookie, error) {
 	loginUrl := fmt.Sprintf("%s://%s%s", scheme, host, server.LoginSignInFullRoute)
 	form := url.Values{}
 	form.Set(server.ParamUserName, userName)
 	form.Set(server.ParamPassword, password)
 	log.Debug("try to auto login file server %s=%s %s=%s", server.ParamUserName, userName, server.ParamPassword, password)
-	loginResp, err := httputil.HttpPostWithoutRedirect(loginUrl, form)
+	loginResp, err := httpClient.HttpPostWithoutRedirect(loginUrl, form)
 	if err != nil {
 		return nil, err
 	}

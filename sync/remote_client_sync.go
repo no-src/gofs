@@ -41,6 +41,7 @@ type remoteClientSync struct {
 	forceChecksum         bool
 	hash                  hashutil.Hash
 	maxTranRate           int64
+	httpClient            httputil.HttpClient
 }
 
 // NewRemoteClientSync create an instance of remoteClientSync to receive the file change message and execute it
@@ -48,6 +49,9 @@ func NewRemoteClientSync(opt Option) (Sync, error) {
 	// the fields of option
 	source := opt.Source
 	dest := opt.Dest
+	enableHTTP3 := opt.EnableHTTP3
+	certFile := opt.TLSCertFile
+	insecureSkipVerify := opt.TLSInsecureSkipVerify
 	users := opt.Users
 	chunkSize := opt.ChunkSize
 	forceChecksum := opt.ForceChecksum
@@ -64,6 +68,11 @@ func NewRemoteClientSync(opt Option) (Sync, error) {
 		return nil, err
 	}
 
+	httpClient, err := httputil.NewHttpClient(insecureSkipVerify, certFile, enableHTTP3)
+	if err != nil {
+		return nil, err
+	}
+  
 	hash, err := hashutil.NewHash(checksumAlgorithm)
 	if err != nil {
 		return nil, err
@@ -77,6 +86,7 @@ func NewRemoteClientSync(opt Option) (Sync, error) {
 		forceChecksum:         forceChecksum,
 		hash:                  hash,
 		maxTranRate:           maxTranRate,
+		httpClient:            httpClient,
 	}
 	if len(users) > 0 {
 		rs.currentUser = users[0]
@@ -397,7 +407,7 @@ func (rs *remoteClientSync) buildDestAbsFile(sourceFileAbs string) (string, erro
 }
 
 func (rs *remoteClientSync) httpGetWithAuth(rawURL string, header http.Header) (resp *http.Response, err error) {
-	resp, err = httputil.HttpGetWithCookie(rawURL, header, rs.cookies...)
+	resp, err = rs.httpClient.HttpGetWithCookie(rawURL, header, rs.cookies...)
 	if err != nil {
 		return nil, err
 	}
@@ -411,14 +421,14 @@ func (rs *remoteClientSync) httpGetWithAuth(rawURL string, header http.Header) (
 			return nil, err
 		}
 		user := rs.currentUser
-		cookies, err := client.SignIn(parseUrl.Scheme, parseUrl.Host, user.UserName(), user.Password())
+		cookies, err := client.SignIn(rs.httpClient, parseUrl.Scheme, parseUrl.Host, user.UserName(), user.Password())
 		if err != nil {
 			return nil, err
 		}
 		if len(cookies) > 0 {
 			rs.cookies = cookies
 			log.Debug("try to auto login file server success maybe, retry to get resource => %s", rawURL)
-			return httputil.HttpGetWithCookie(rawURL, header, rs.cookies...)
+			return rs.httpClient.HttpGetWithCookie(rawURL, header, rs.cookies...)
 		}
 		return nil, errFileServerUnauthorized
 	}

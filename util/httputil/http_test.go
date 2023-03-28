@@ -15,6 +15,8 @@ import (
 )
 
 var (
+	testHttpClient HttpClient
+
 	errInvalidControlCharacterInURL = errors.New("net/url: invalid control character in URL")
 )
 
@@ -41,7 +43,7 @@ func TestHttpGet(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.path, func(t *testing.T) {
 			reqUrl := server.URL + tc.path
-			resp, err := HttpGet(reqUrl)
+			resp, err := testHttpClient.HttpGet(reqUrl)
 			if err != nil {
 				t.Errorf("HttpGet: request error, url=%s err=%v", reqUrl, err)
 				return
@@ -99,7 +101,7 @@ func TestHttpGetWithCookie(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			reqUrl := server.URL + tc.path
-			resp, err := HttpGetWithCookie(reqUrl, tc.header, tc.cookie)
+			resp, err := testHttpClient.HttpGetWithCookie(reqUrl, tc.header, tc.cookie)
 			if tc.expectErr == nil && err != nil {
 				t.Errorf("HttpGetWithCookie: request error, url=%s err=%v", reqUrl, err)
 				return
@@ -150,7 +152,7 @@ func TestHttpPost(t *testing.T) {
 			reqUrl := server.URL + tc.path
 			reqData := url.Values{}
 			reqData.Add(key, tc.expectBody)
-			resp, err := HttpPost(reqUrl, reqData)
+			resp, err := testHttpClient.HttpPost(reqUrl, reqData)
 			if err != nil {
 				t.Errorf("HttpPost: request error, url=%s err=%v", reqUrl, err)
 				return
@@ -205,7 +207,7 @@ func TestHttpPostWithCookie(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			reqUrl := server.URL + tc.path
-			resp, err := HttpPostWithCookie(reqUrl, reqData, tc.cookie)
+			resp, err := testHttpClient.HttpPostWithCookie(reqUrl, reqData, tc.cookie)
 			if tc.expectErr == nil && err != nil {
 				t.Errorf("HttpPostWithCookie: request error, url=%s err=%v", reqUrl, err)
 				return
@@ -280,7 +282,7 @@ func TestHttpPostFileChunkWithCookie(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			reqUrl := server.URL + tc.path
-			resp, err := HttpPostFileChunkWithCookie(reqUrl, fieldName, fileName, reqData, tc.chunk, tc.cookie)
+			resp, err := testHttpClient.HttpPostFileChunkWithCookie(reqUrl, fieldName, fileName, reqData, tc.chunk, tc.cookie)
 			if tc.expectErr == nil && err != nil {
 				t.Errorf("HttpPostFileChunkWithCookie: request error, url=%s err=%v", reqUrl, err)
 				return
@@ -338,7 +340,7 @@ func TestHttpPostWithoutRedirect(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			reqUrl := server.URL + tc.path
-			resp, err := HttpPostWithoutRedirect(reqUrl, reqData)
+			resp, err := testHttpClient.HttpPostWithoutRedirect(reqUrl, reqData)
 			if err != nil {
 				t.Errorf("HttpPostWithoutRedirect: request error, url=%s err=%v", reqUrl, err)
 				return
@@ -356,7 +358,7 @@ func TestHttpPostWithoutRedirect(t *testing.T) {
 	}
 }
 
-func TestInitHttpClient(t *testing.T) {
+func TestNewHttpClient(t *testing.T) {
 	testCases := []struct {
 		name               string
 		insecureSkipVerify bool
@@ -379,7 +381,7 @@ func TestInitHttpClient(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := Init(tc.insecureSkipVerify, tc.certFile, tc.enableHTTP3)
+			_, err := NewHttpClient(tc.insecureSkipVerify, tc.certFile, tc.enableHTTP3)
 			if !tc.expectErr && err != nil {
 				t.Errorf("Init: init http client error, err => %v", err)
 				return
@@ -392,5 +394,5 @@ func TestInitHttpClient(t *testing.T) {
 }
 
 func initDefaultClient() {
-	Init(true, "", false)
+	testHttpClient, _ = NewHttpClient(true, "", false)
 }

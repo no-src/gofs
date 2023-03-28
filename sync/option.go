@@ -12,6 +12,7 @@ import (
 type Option struct {
 	Source                core.VFS
 	Dest                  core.VFS
+	EnableHTTP3           bool
 	FileServerAddr        string
 	EnableTLS             bool
 	TLSCertFile           string
@@ -35,6 +36,7 @@ func NewSyncOption(config conf.Config, users []*auth.User, r retry.Retry) Option
 	opt := Option{
 		Source:                config.Source,
 		Dest:                  config.Dest,
+		EnableHTTP3:           config.EnableHTTP3,
 		FileServerAddr:        config.FileServerAddr,
 		EnableTLS:             config.EnableTLS,
 		TLSCertFile:           config.TLSCertFile,
