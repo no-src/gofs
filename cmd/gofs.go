@@ -50,6 +50,7 @@ func RunWithConfig(c conf.Config) result.Result {
 	return result
 }
 
+//gocyclo:ignore
 func runWithConfig(c conf.Config, result result.Result) {
 	var err error
 
@@ -98,13 +99,20 @@ func runWithConfig(c conf.Config, result result.Result) {
 
 	// start the daemon
 	if c.IsDaemon {
+		var args []string
+		args, err = c.ToArgs()
+		if err != nil {
+			result.InitDoneWithError(err)
+			return
+		}
+
 		ns := signal.Notify(daemon.Shutdown)
 		go func() {
 			result.RegisterNotifyHandler(ns)
 		}()
 		result.InitDone()
 		w := wait.NewWaitDone()
-		go daemon.Daemon(c.DaemonPid, c.DaemonDelay.Duration(), c.DaemonMonitorDelay.Duration(), w)
+		go daemon.Daemon(args, c.DaemonPid, c.DaemonDelay.Duration(), c.DaemonMonitorDelay.Duration(), w)
 		err = w.Wait()
 		return
 	}
