@@ -19,6 +19,7 @@ var (
 	errAppendCertsFromPemFailed = errors.New("append certs from pem failed")
 )
 
+// HttpClient a http client component that supports post file chunks
 type HttpClient interface {
 	// HttpGet get http resource
 	HttpGet(url string) (resp *http.Response, err error)
