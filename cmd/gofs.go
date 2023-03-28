@@ -21,7 +21,6 @@ import (
 	"github.com/no-src/gofs/server/httpfs"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/util/hashutil"
-	"github.com/no-src/gofs/util/httputil"
 	"github.com/no-src/gofs/wait"
 	"github.com/no-src/log"
 	"github.com/no-src/log/formatter"
@@ -313,12 +312,7 @@ func initial(cp *conf.Config) (err error) {
 		return err
 	}
 
-	if err = log.ErrorIf(initDefaultValue(cp), "init default value of config error"); err != nil {
-		return err
-	}
-
-	// init default http util
-	return log.ErrorIf(httputil.Init(cp.TLSInsecureSkipVerify, cp.TLSCertFile, cp.EnableHTTP3), "init http util error")
+	return log.ErrorIf(initDefaultValue(cp), "init default value of config error")
 }
 
 func initChecksum(c conf.Config) (exit bool, err error) {
