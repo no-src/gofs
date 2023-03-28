@@ -2,15 +2,9 @@ package server
 
 import (
 	"fmt"
-	"net"
 	"strings"
 
 	"github.com/no-src/log"
-)
-
-var (
-	serverAddr *net.TCPAddr
-	enableTLS  bool
 )
 
 const (
@@ -76,35 +70,6 @@ const (
 	// ResourceTemplatePath the web server template resource path
 	ResourceTemplatePath = "template/*"
 )
-
-// InitServerInfo int the file web server
-func InitServerInfo(addr string, tls bool) {
-	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
-	if err == nil {
-		serverAddr = tcpAddr
-	} else {
-		log.Error(err, "invalid server addr => %s", addr)
-	}
-	enableTLS = tls
-}
-
-// Addr the addr of file server running
-func Addr() *net.TCPAddr {
-	return serverAddr
-}
-
-// Port the port of file server running
-func Port() int {
-	if serverAddr != nil {
-		return serverAddr.Port
-	}
-	return 0
-}
-
-// EnableTLS is using https on the file server
-func EnableTLS() bool {
-	return enableTLS
-}
 
 // GenerateAddr generate http or https address
 func GenerateAddr(scheme, host string, port int) string {
