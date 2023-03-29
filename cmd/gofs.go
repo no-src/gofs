@@ -90,10 +90,10 @@ func runWithConfig(c conf.Config, result result.Result) {
 		result.InitDoneWithError(err)
 		return
 	}
-
 	log.ErrorIf(conf.SetGlobalConfig(cp), "set global config error => %s", cp.FileServerAddr)
 
 	// kill parent process
+	daemon := daemon.New()
 	if c.KillPPid {
 		daemon.KillPPid()
 	}
@@ -113,7 +113,7 @@ func runWithConfig(c conf.Config, result result.Result) {
 		}()
 		result.InitDone()
 		w := wait.NewWaitDone()
-		go daemon.Daemon(args, c.DaemonPid, c.DaemonDelay.Duration(), c.DaemonMonitorDelay.Duration(), w)
+		go daemon.Run(args, c.DaemonPid, c.DaemonDelay.Duration(), c.DaemonMonitorDelay.Duration(), w)
 		err = w.Wait()
 		return
 	}
