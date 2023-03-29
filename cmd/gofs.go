@@ -59,7 +59,6 @@ func runWithConfig(c conf.Config, result result.Result) {
 	}()
 
 	cp := &c
-	conf.GlobalConfig = cp
 
 	if err = parseConfigFile(cp); err != nil {
 		result.InitDoneWithError(err)
@@ -90,10 +89,10 @@ func runWithConfig(c conf.Config, result result.Result) {
 		result.InitDoneWithError(err)
 		return
 	}
-
-	daemon := daemon.New()
+	log.ErrorIf(conf.SetGlobalConfig(cp), "set global config error => %s", cp.FileServerAddr)
 
 	// kill parent process
+	daemon := daemon.New()
 	if c.KillPPid {
 		daemon.KillPPid()
 	}
