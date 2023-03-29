@@ -14,10 +14,20 @@ import (
 // SubprocessTag mark the current process is subprocess
 const SubprocessTag = "sub"
 
-var shutdown = make(chan struct{}, 1)
+// Daemon support to running daemon process and create subprocess for working
+type Daemon struct {
+	shutdown chan struct{}
+}
 
-// Daemon running as a daemon process, and create a subprocess for working, the first argument must be an absolute path of the program name
-func Daemon(args []string, recordPid bool, daemonDelay time.Duration, monitorDelay time.Duration, wd wait.Done) {
+// New create an instance of Daemon
+func New() *Daemon {
+	return &Daemon{
+		shutdown: make(chan struct{}, 1),
+	}
+}
+
+// Run running as a daemon process, and create a subprocess for working, the first argument must be an absolute path of the program name
+func (d *Daemon) Run(args []string, recordPid bool, daemonDelay time.Duration, monitorDelay time.Duration, wd wait.Done) {
 	defer func() {
 		if r := recover(); r != nil {
 			err := fmt.Errorf("daemon process error. %v", r)
@@ -27,17 +37,17 @@ func Daemon(args []string, recordPid bool, daemonDelay time.Duration, monitorDel
 	}()
 
 	for {
-		if waitShutdown(daemonDelay) {
+		if d.waitShutdown(daemonDelay) {
 			wd.Done()
 			log.Info("daemon exited by shutdown")
 			return
 		}
-		p, err := startSubprocess(args)
+		p, err := d.startSubprocess(args)
 		if err == nil && p != nil {
 			if recordPid {
-				log.ErrorIf(writePidFile(os.Getppid(), os.Getpid(), p.Pid), "write pid info to file error")
+				log.ErrorIf(d.writePidFile(os.Getppid(), os.Getpid(), p.Pid), "write pid info to file error")
 			}
-			if monitor(p.Pid, monitorDelay) {
+			if d.monitor(p.Pid, monitorDelay) {
 				wd.Done()
 				log.Info("daemon exited by shutdown")
 				return
@@ -47,7 +57,7 @@ func Daemon(args []string, recordPid bool, daemonDelay time.Duration, monitorDel
 }
 
 // startSubprocess start a subprocess for working
-func startSubprocess(args []string) (*os.Process, error) {
+func (d *Daemon) startSubprocess(args []string) (*os.Process, error) {
 	attr := &os.ProcAttr{Files: []*os.File{os.Stdin, os.Stdout, os.Stderr}}
 	// try to check stdin
 	// if compile with [-ldflags="-H windowsgui"] on Windows system, stdin will get error
@@ -69,9 +79,9 @@ func startSubprocess(args []string) (*os.Process, error) {
 }
 
 // monitor start to monitor the subprocess, create a new subprocess to work if subprocess is dead
-func monitor(pid int, monitorDelay time.Duration) (isShutdown bool) {
+func (d *Daemon) monitor(pid int, monitorDelay time.Duration) (isShutdown bool) {
 	for {
-		if waitShutdown(monitorDelay) {
+		if d.waitShutdown(monitorDelay) {
 			return true
 		}
 
@@ -103,7 +113,7 @@ func monitor(pid int, monitorDelay time.Duration) (isShutdown bool) {
 // row 1: record parent process pid (bash,cmd,explorer etc.)
 // row 2: record current process pid (daemon)
 // row 3: record subprocess pid (worker)
-func writePidFile(ppid, pid, subPid int) error {
+func (d *Daemon) writePidFile(ppid, pid, subPid int) error {
 	fName := "pid"
 	f, err := os.Create(fName)
 	if err == nil {
@@ -120,7 +130,7 @@ func writePidFile(ppid, pid, subPid int) error {
 }
 
 // KillPPid kill parent process
-func KillPPid() {
+func (d *Daemon) KillPPid() {
 	ppid := os.Getppid()
 	if ppid > 0 {
 		p, err := os.FindProcess(ppid)
@@ -136,21 +146,21 @@ func KillPPid() {
 }
 
 // Shutdown send a shutdown notify to the current daemon
-func Shutdown() (err error) {
+func (d *Daemon) Shutdown() (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("%v", r)
 		}
 	}()
-	close(shutdown)
+	close(d.shutdown)
 	return err
 }
 
-func waitShutdown(d time.Duration) (isShutdown bool) {
+func (d *Daemon) waitShutdown(du time.Duration) (isShutdown bool) {
 	select {
-	case <-shutdown:
+	case <-d.shutdown:
 		return true
-	case <-time.After(d):
+	case <-time.After(du):
 
 	}
 	return false

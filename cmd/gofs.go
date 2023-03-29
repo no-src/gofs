@@ -91,6 +91,8 @@ func runWithConfig(c conf.Config, result result.Result) {
 		return
 	}
 
+	daemon := daemon.New()
+
 	// kill parent process
 	if c.KillPPid {
 		daemon.KillPPid()
@@ -111,7 +113,7 @@ func runWithConfig(c conf.Config, result result.Result) {
 		}()
 		result.InitDone()
 		w := wait.NewWaitDone()
-		go daemon.Daemon(args, c.DaemonPid, c.DaemonDelay.Duration(), c.DaemonMonitorDelay.Duration(), w)
+		go daemon.Run(args, c.DaemonPid, c.DaemonDelay.Duration(), c.DaemonMonitorDelay.Duration(), w)
 		err = w.Wait()
 		return
 	}
