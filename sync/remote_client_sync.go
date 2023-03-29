@@ -42,6 +42,7 @@ type remoteClientSync struct {
 	hash                  hashutil.Hash
 	maxTranRate           int64
 	httpClient            httputil.HttpClient
+	pi                    ignore.PathIgnore
 }
 
 // NewRemoteClientSync create an instance of remoteClientSync to receive the file change message and execute it
@@ -49,6 +50,7 @@ func NewRemoteClientSync(opt Option) (Sync, error) {
 	// the fields of option
 	source := opt.Source
 	dest := opt.Dest
+	pi := opt.PathIgnore
 	enableHTTP3 := opt.EnableHTTP3
 	certFile := opt.TLSCertFile
 	insecureSkipVerify := opt.TLSInsecureSkipVerify
@@ -72,7 +74,7 @@ func NewRemoteClientSync(opt Option) (Sync, error) {
 	if err != nil {
 		return nil, err
 	}
-  
+
 	hash, err := hashutil.NewHash(checksumAlgorithm)
 	if err != nil {
 		return nil, err
@@ -87,6 +89,7 @@ func NewRemoteClientSync(opt Option) (Sync, error) {
 		hash:                  hash,
 		maxTranRate:           maxTranRate,
 		httpClient:            httpClient,
+		pi:                    pi,
 	}
 	if len(users) > 0 {
 		rs.currentUser = users[0]
@@ -371,7 +374,7 @@ func (rs *remoteClientSync) sync(serverAddr, path string) error {
 
 func (rs *remoteClientSync) syncFiles(files []contract.FileInfo, serverAddr, path string) {
 	for _, file := range files {
-		if ignore.MatchPath(file.Path, "remote client sync", "sync once") {
+		if rs.pi.MatchPath(file.Path, "remote client sync", "sync once") {
 			continue
 		}
 		currentPath := path + "/" + file.Path

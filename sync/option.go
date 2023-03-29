@@ -5,6 +5,7 @@ import (
 	"github.com/no-src/gofs/conf"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/encrypt"
+	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/retry"
 )
 
@@ -29,10 +30,11 @@ type Option struct {
 	Users                 []*auth.User
 	Retry                 retry.Retry
 	EncOpt                encrypt.Option
+	PathIgnore            ignore.PathIgnore
 }
 
 // NewSyncOption create an instance of the Option, store all the sync component options
-func NewSyncOption(config conf.Config, users []*auth.User, r retry.Retry) Option {
+func NewSyncOption(config conf.Config, users []*auth.User, r retry.Retry, pi ignore.PathIgnore) Option {
 	opt := Option{
 		Source:                config.Source,
 		Dest:                  config.Dest,
@@ -53,6 +55,7 @@ func NewSyncOption(config conf.Config, users []*auth.User, r retry.Retry) Option
 		Users:                 users,
 		Retry:                 r,
 		EncOpt:                encrypt.NewOption(config),
+		PathIgnore:            pi,
 	}
 	return opt
 }

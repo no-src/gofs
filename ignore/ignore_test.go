@@ -11,8 +11,7 @@ const (
 )
 
 func TestMatch(t *testing.T) {
-	resetDefaultIgnore()
-	err := Init(testIgnoreFile, true)
+	pi, err := NewPathIgnore(testIgnoreFile, true)
 	if err != nil {
 		t.Errorf("init default ignore component error => %v", err)
 		return
@@ -58,14 +57,13 @@ func TestMatch(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.path, func(t *testing.T) {
-			testMatch(t, tc.expect, tc.path)
+			testMatch(t, pi, tc.expect, tc.path)
 		})
 	}
 }
 
 func TestMatch_Windows(t *testing.T) {
-	resetDefaultIgnore()
-	err := Init(testIgnoreFile, true)
+	pi, err := NewPathIgnore(testIgnoreFile, true)
 	if err != nil {
 		t.Errorf("init default ignore component error => %v", err)
 		return
@@ -99,15 +97,14 @@ func TestMatch_Windows(t *testing.T) {
 	if osutil.IsWindows() {
 		for _, tc := range testCases {
 			t.Run(tc.path, func(t *testing.T) {
-				testMatch(t, tc.expect, tc.path)
+				testMatch(t, pi, tc.expect, tc.path)
 			})
 		}
 	}
 }
 
 func TestMatchPath_WithIgnoreDeletedPath_True(t *testing.T) {
-	resetDefaultIgnore()
-	err := Init(testIgnoreFile, true)
+	pi, err := NewPathIgnore(testIgnoreFile, true)
 	if err != nil {
 		t.Errorf("init default ignore component error => %v", err)
 		return
@@ -123,14 +120,13 @@ func TestMatchPath_WithIgnoreDeletedPath_True(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.path, func(t *testing.T) {
-			testMatchPath(t, tc.expect, tc.path)
+			testMatchPath(t, pi, tc.expect, tc.path)
 		})
 	}
 }
 
 func TestMatchPath_WithIgnoreDeletedPath_False(t *testing.T) {
-	resetDefaultIgnore()
-	err := Init(testIgnoreFile, false)
+	pi, err := NewPathIgnore(testIgnoreFile, false)
 	if err != nil {
 		t.Errorf("init default ignore component error => %v", err)
 		return
@@ -147,7 +143,7 @@ func TestMatchPath_WithIgnoreDeletedPath_False(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.path, func(t *testing.T) {
-			testMatchPath(t, tc.expect, tc.path)
+			testMatchPath(t, pi, tc.expect, tc.path)
 		})
 	}
 }
@@ -171,9 +167,8 @@ func TestParse_ReturnError(t *testing.T) {
 }
 
 func TestInit_ReturnError(t *testing.T) {
-	resetDefaultIgnore()
 	c := "./testdata/notfound.ignore"
-	err := Init(c, true)
+	_, err := NewPathIgnore(c, true)
 	if err == nil {
 		t.Errorf("init default ignore component should be return error => %s", c)
 		return
@@ -181,30 +176,24 @@ func TestInit_ReturnError(t *testing.T) {
 }
 
 func TestInit_WithNoConfig(t *testing.T) {
-	resetDefaultIgnore()
-	err := Init("", true)
+	pi, err := NewPathIgnore("", true)
 	if err != nil {
 		t.Errorf("init default ignore component error => %v", err)
 		return
 	}
-	testMatch(t, false, "bin")
+	testMatch(t, pi, false, "bin")
 }
 
-func testMatch(t *testing.T, expect bool, path string) {
-	actual := Match(path)
+func testMatch(t *testing.T, pi PathIgnore, expect bool, path string) {
+	actual := pi.(*pathIgnore).match(path)
 	if actual != expect {
 		t.Errorf("[%s] => expect: %v, but actual: %v", path, expect, actual)
 	}
 }
 
-func testMatchPath(t *testing.T, expect bool, path string) {
-	actual := MatchPath(path, "test suit", "test")
+func testMatchPath(t *testing.T, pi PathIgnore, expect bool, path string) {
+	actual := pi.MatchPath(path, "test suit", "test")
 	if actual != expect {
 		t.Errorf("[%s] => expect: %v, but actual: %v", path, expect, actual)
 	}
-}
-
-func resetDefaultIgnore() {
-	defaultIgnore = nil
-	matchIgnoreDeletedPath = false
 }

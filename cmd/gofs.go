@@ -85,7 +85,8 @@ func runWithConfig(c conf.Config, result result.Result) {
 		return
 	}
 
-	if err = initial(cp); err != nil {
+	if err = initDefaultValue(cp); err != nil {
+		log.Error(err, "init default value of config error")
 		result.InitDoneWithError(err)
 		return
 	}
@@ -151,8 +152,15 @@ func runWithConfig(c conf.Config, result result.Result) {
 	}
 	defer eventLogger.Close()
 
+	pi, err := ignore.NewPathIgnore(c.IgnoreConf, c.IgnoreDeletedPath)
+	if err != nil {
+		log.Error(err, "init ignore config error")
+		result.InitDoneWithError(err)
+		return
+	}
+
 	// init the monitor
-	m, err := initMonitor(c, userList, eventLogger, r)
+	m, err := initMonitor(c, userList, eventLogger, r, pi)
 	if err != nil {
 		result.InitDoneWithError(err)
 		return
@@ -291,16 +299,16 @@ func initEventLogger(c conf.Config) (log.Logger, error) {
 }
 
 // initMonitor init the monitor
-func initMonitor(c conf.Config, userList []*auth.User, eventLogger log.Logger, r retry.Retry) (monitor.Monitor, error) {
+func initMonitor(c conf.Config, userList []*auth.User, eventLogger log.Logger, r retry.Retry, pi ignore.PathIgnore) (monitor.Monitor, error) {
 	// create syncer
-	syncer, err := sync.NewSync(sync.NewSyncOption(c, userList, r))
+	syncer, err := sync.NewSync(sync.NewSyncOption(c, userList, r, pi))
 	if err != nil {
 		log.Error(err, "create the instance of Sync error")
 		return nil, err
 	}
 
 	// create monitor
-	m, err := monitor.NewMonitor(monitor.NewMonitorOption(c, syncer, r, userList, eventLogger))
+	m, err := monitor.NewMonitor(monitor.NewMonitorOption(c, syncer, r, userList, eventLogger, pi))
 	if err != nil {
 		log.Error(err, "create the instance of Monitor error")
 		return nil, err
@@ -312,15 +320,6 @@ func initMonitor(c conf.Config, userList []*auth.User, eventLogger log.Logger, r
 		return nil, err
 	}
 	return m, nil
-}
-
-func initial(cp *conf.Config) (err error) {
-	// init ignore config
-	if err = log.ErrorIf(ignore.Init(cp.IgnoreConf, cp.IgnoreDeletedPath), "init ignore config error"); err != nil {
-		return err
-	}
-
-	return log.ErrorIf(initDefaultValue(cp), "init default value of config error")
 }
 
 // initDefaultValue init default value of config
