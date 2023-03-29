@@ -208,7 +208,7 @@ func initManageRoute(opt server.Option, logger log.Logger, manageGroup *gin.Rout
 			manageGroup.Use(middleware.NewPrivateAccessHandlerFunc(logger))
 		}
 		pprof.RouteRegister(manageGroup, server.PProfRoutePrefix)
-		manageGroup.GET(server.ManageConfigRoute, handler.NewManageHandlerFunc(logger))
+		manageGroup.GET(server.ManageConfigRoute, handler.NewManageHandlerFunc(logger, opt.Addr))
 		if opt.EnableReport {
 			manageGroup.GET(server.ManageReportRoute, handler.NewReportHandlerFunc(logger))
 			report.GlobalReporter.Enable(true)
