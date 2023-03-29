@@ -34,6 +34,7 @@ type remoteClientMonitor struct {
 	authChan    chan contract.Status
 	infoChan    chan contract.Message
 	timeout     time.Duration
+	pi          ignore.PathIgnore
 }
 
 // NewRemoteClientMonitor create an instance of remoteClientMonitor to monitor the remote file change
@@ -46,11 +47,13 @@ func NewRemoteClientMonitor(opt Option) (Monitor, error) {
 	certFile := opt.TLSCertFile
 	insecureSkipVerify := opt.TLSInsecureSkipVerify
 	users := opt.Users
+	pi := opt.PathIgnore
 
 	if syncer == nil {
 		err := errors.New("syncer can't be nil")
 		return nil, err
 	}
+
 	m := &remoteClientMonitor{
 		client:      tran.NewClient(host, port, enableTLS, certFile, insecureSkipVerify),
 		messages:    clist.New(),
@@ -59,6 +62,7 @@ func NewRemoteClientMonitor(opt Option) (Monitor, error) {
 		infoChan:    make(chan contract.Message, 100),
 		closed:      cbool.New(false),
 		timeout:     time.Minute * 3,
+		pi:          pi,
 	}
 	if len(users) > 0 {
 		user := users[0]
@@ -269,7 +273,7 @@ func (m *remoteClientMonitor) startProcessMessage() {
 			log.Error(err, "client unmarshal data error")
 		} else if msg.Code != contract.Success {
 			log.Error(errors.New(msg.Message), "remote monitor received the error message")
-		} else if ignore.MatchPath(msg.Path, "remote client monitor", msg.Action.String()) {
+		} else if m.pi.MatchPath(msg.Path, "remote client monitor", msg.Action.String()) {
 			// ignore match
 		} else {
 			m.execSync(msg)

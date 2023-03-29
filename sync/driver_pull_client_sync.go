@@ -7,7 +7,6 @@ import (
 
 	"github.com/no-src/gofs/driver"
 	nsfs "github.com/no-src/gofs/fs"
-	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/log"
 )
 
@@ -130,7 +129,7 @@ func (s *driverPullClientSync) SyncOnce(path string) error {
 		if err != nil {
 			return err
 		}
-		if ignore.MatchPath(currentPath, s.driver.DriverName()+" pull client sync", "sync once") {
+		if s.pi.MatchPath(currentPath, s.driver.DriverName()+" pull client sync", "sync once") {
 			return nil
 		}
 		if d.IsDir() {

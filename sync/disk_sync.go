@@ -30,6 +30,7 @@ type diskSync struct {
 	maxTranRate           int64
 	enc                   *encrypt.Encrypt
 	hash                  hashutil.Hash
+	pi                    ignore.PathIgnore
 
 	isDirFn       nsfs.IsDirFunc
 	statFn        nsfs.StatFunc
@@ -47,6 +48,7 @@ func newDiskSync(opt Option) (s *diskSync, err error) {
 	// the fields of option
 	source := opt.Source
 	dest := opt.Dest
+	pi := opt.PathIgnore
 	encOpt := opt.EncOpt
 	chunkSize := opt.ChunkSize
 	checkpointCount := opt.CheckpointCount
@@ -95,6 +97,7 @@ func newDiskSync(opt Option) (s *diskSync, err error) {
 		maxTranRate:           maxTranRate,
 		enc:                   enc,
 		hash:                  hash,
+		pi:                    pi,
 		isDirFn:               nsfs.IsDir,
 		statFn:                os.Stat,
 		getFileTimeFn:         nsfs.GetFileTime,
@@ -327,7 +330,7 @@ func (s *diskSync) SyncOnce(path string) error {
 		if err != nil {
 			return err
 		}
-		if ignore.MatchPath(currentPath, "disk sync", "sync once") {
+		if s.pi.MatchPath(currentPath, "disk sync", "sync once") {
 			return nil
 		}
 		if d.IsDir() {

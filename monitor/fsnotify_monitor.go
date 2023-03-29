@@ -22,10 +22,13 @@ type fsNotifyMonitor struct {
 
 	watcher *fsnotify.Watcher
 	events  *clist.CList
+	pi      ignore.PathIgnore
 }
 
 // NewFsNotifyMonitor create an instance of fsNotifyMonitor to monitor the disk change
 func NewFsNotifyMonitor(opt Option) (m Monitor, err error) {
+	pi := opt.PathIgnore
+
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
@@ -34,10 +37,12 @@ func NewFsNotifyMonitor(opt Option) (m Monitor, err error) {
 		err = errors.New("syncer can't be nil")
 		return nil, err
 	}
+
 	m = &fsNotifyMonitor{
 		watcher:     watcher,
 		baseMonitor: newBaseMonitor(opt),
 		events:      clist.New(),
+		pi:          pi,
 	}
 	return m, nil
 }
@@ -151,7 +156,7 @@ func (m *fsNotifyMonitor) startProcessEvents() error {
 			continue
 		}
 		event := element.Value.(fsnotify.Event)
-		if ignore.MatchPath(event.Name, "monitor", event.Op.String()) {
+		if m.pi.MatchPath(event.Name, "monitor", event.Op.String()) {
 			// if the rule is matched, then ignore the event except create a directory, because of the subdirectory maybe not match the ignore rule.
 			// so we should monitor the current directory here, otherwise we will lose some data.
 			// for example, we define an ignore rule "/home/logs/*" and create a directory "/home/logs" to trigger Create event, then create a file "/home/logs/2022/info.log".

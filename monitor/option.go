@@ -6,6 +6,7 @@ import (
 
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/conf"
+	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/sync"
 )
@@ -24,10 +25,11 @@ type Option struct {
 	EventWriter           io.Writer
 	Syncer                sync.Sync
 	Retry                 retry.Retry
+	PathIgnore            ignore.PathIgnore
 }
 
 // NewMonitorOption create an instance of the Option, store all the monitor component options
-func NewMonitorOption(config conf.Config, syncer sync.Sync, retry retry.Retry, users []*auth.User, eventWriter io.Writer) Option {
+func NewMonitorOption(config conf.Config, syncer sync.Sync, retry retry.Retry, users []*auth.User, eventWriter io.Writer, pi ignore.PathIgnore) Option {
 	opt := Option{
 		SyncOnce:              config.SyncOnce,
 		EnableTLS:             config.EnableTLS,
@@ -41,6 +43,7 @@ func NewMonitorOption(config conf.Config, syncer sync.Sync, retry retry.Retry, u
 		Retry:                 retry,
 		Users:                 users,
 		EventWriter:           eventWriter,
+		PathIgnore:            pi,
 	}
 	return opt
 }

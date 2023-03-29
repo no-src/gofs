@@ -16,7 +16,6 @@ import (
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/contract/push"
 	nsfs "github.com/no-src/gofs/fs"
-	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/internal/rate"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/client"
@@ -257,7 +256,7 @@ func (pcs *pushClientSync) SyncOnce(path string) error {
 		if err != nil {
 			return err
 		}
-		if ignore.MatchPath(currentPath, "push client sync", "sync once") {
+		if pcs.pi.MatchPath(currentPath, "push client sync", "sync once") {
 			return nil
 		}
 		if d.IsDir() {
