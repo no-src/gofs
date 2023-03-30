@@ -37,7 +37,7 @@ func StartFileServer(opt server.Option) error {
 	engine.NoRoute(middleware.NoRoute)
 
 	initCompress(engine, opt.EnableFileServerCompress)
-	initDefaultMiddleware(engine, logger)
+	initDefaultMiddleware(engine, logger, opt.Reporter)
 	if err := initHTMLTemplate(engine); err != nil {
 		opt.Init.DoneWithError(err)
 		return err
@@ -99,12 +99,12 @@ func initSession(engine *gin.Engine, sessionConnection string) error {
 	return nil
 }
 
-func initDefaultMiddleware(engine *gin.Engine, logger io.Writer) {
+func initDefaultMiddleware(engine *gin.Engine, logger io.Writer, reporter *report.Reporter) {
 	engine.Use(gin.LoggerWithConfig(gin.LoggerConfig{
 		Formatter: defaultLogFormatter,
 		Output:    logger,
 		SkipPaths: []string{"/favicon.ico"},
-	}), gin.Recovery(), middleware.ApiStat())
+	}), gin.Recovery(), middleware.ApiStat(reporter))
 }
 
 func initHTMLTemplate(engine *gin.Engine) error {
@@ -128,6 +128,7 @@ func initRoute(engine *gin.Engine, opt server.Option, logger log.Logger) error {
 	enableFileApi := false
 	source := opt.Source
 	dest := opt.Dest
+	reporter := opt.Reporter
 
 	loginGroup := engine.Group(server.LoginGroupRoute)
 	loginGroup.GET(server.LoginIndexRoute, func(context *gin.Context) {
@@ -143,7 +144,7 @@ func initRoute(engine *gin.Engine, opt server.Option, logger log.Logger) error {
 
 	rootGroup.GET(server.DefaultRoute, handler.NewDefaultHandlerFunc(logger))
 
-	initManageRoute(opt, logger, manageGroup)
+	initManageRoute(opt, logger, manageGroup, reporter)
 
 	hash, errHash := hashutil.NewHash(opt.ChecksumAlgorithm)
 	if errHash != nil {
@@ -202,7 +203,7 @@ func initRouteAuth(opt server.Option, logger log.Logger, rootGroup, wGroup, mana
 	}
 }
 
-func initManageRoute(opt server.Option, logger log.Logger, manageGroup *gin.RouterGroup) {
+func initManageRoute(opt server.Option, logger log.Logger, manageGroup *gin.RouterGroup, reporter *report.Reporter) {
 	if opt.EnableManage {
 		if opt.ManagePrivate {
 			manageGroup.Use(middleware.NewPrivateAccessHandlerFunc(logger))
@@ -210,8 +211,8 @@ func initManageRoute(opt server.Option, logger log.Logger, manageGroup *gin.Rout
 		pprof.RouteRegister(manageGroup, server.PProfRoutePrefix)
 		manageGroup.GET(server.ManageConfigRoute, handler.NewManageHandlerFunc(logger, opt.Addr))
 		if opt.EnableReport {
-			manageGroup.GET(server.ManageReportRoute, handler.NewReportHandlerFunc(logger))
-			report.GlobalReporter.Enable(true)
+			manageGroup.GET(server.ManageReportRoute, handler.NewReportHandlerFunc(logger, reporter))
+			reporter.Enable(true)
 		}
 	}
 }

@@ -20,14 +20,16 @@ import (
 type fsNotifyMonitor struct {
 	baseMonitor
 
-	watcher *fsnotify.Watcher
-	events  *clist.CList
-	pi      ignore.PathIgnore
+	watcher  *fsnotify.Watcher
+	events   *clist.CList
+	pi       ignore.PathIgnore
+	reporter *report.Reporter
 }
 
 // NewFsNotifyMonitor create an instance of fsNotifyMonitor to monitor the disk change
 func NewFsNotifyMonitor(opt Option) (m Monitor, err error) {
 	pi := opt.PathIgnore
+	reporter := opt.Reporter
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -43,6 +45,7 @@ func NewFsNotifyMonitor(opt Option) (m Monitor, err error) {
 		baseMonitor: newBaseMonitor(opt),
 		events:      clist.New(),
 		pi:          pi,
+		reporter:    reporter,
 	}
 	return m, nil
 }
@@ -176,7 +179,7 @@ func (m *fsNotifyMonitor) startProcessEvents() error {
 		m.events.Remove(element)
 		e := eventlog.NewEvent(event.Name, event.Op.String())
 		m.el.Write(e)
-		report.GlobalReporter.PutEvent(e)
+		m.reporter.PutEvent(e)
 	}
 }
 

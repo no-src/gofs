@@ -9,10 +9,11 @@ import (
 	"time"
 
 	"github.com/no-src/gofs/auth"
+	"github.com/no-src/gofs/report"
 )
 
 func TestNewConn_WithNilConn(t *testing.T) {
-	_, err := NewConn(nil)
+	_, err := NewConn(nil, report.NewReporter())
 	if err == nil {
 		t.Errorf("NewConn: expect get an error but get nil")
 		return
@@ -23,7 +24,7 @@ func TestNewConn_WithNilConn(t *testing.T) {
 }
 
 func TestConn_StartAuthCheck_Timeout(t *testing.T) {
-	c, err := NewConn(&net.TCPConn{})
+	c, err := NewConn(&net.TCPConn{}, report.NewReporter())
 	if err != nil {
 		t.Errorf("NewConn: create the instance of Conn error => %v", err)
 		return
@@ -35,7 +36,7 @@ func TestConn_StartAuthCheck_Timeout(t *testing.T) {
 }
 
 func TestConn_DataRace_MarkAuthorizedWhenCheckPerm(t *testing.T) {
-	c, err := NewConn(&net.TCPConn{})
+	c, err := NewConn(&net.TCPConn{}, report.NewReporter())
 	if err != nil {
 		t.Errorf("NewConn: create the instance of Conn error => %v", err)
 		return

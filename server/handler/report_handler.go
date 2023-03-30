@@ -11,17 +11,19 @@ import (
 )
 
 type reportHandler struct {
-	logger log.Logger
+	logger   log.Logger
+	reporter *report.Reporter
 }
 
 // NewReportHandlerFunc returns a gin.HandlerFunc that providers a report api to show the application status
-func NewReportHandlerFunc(logger log.Logger) gin.HandlerFunc {
+func NewReportHandlerFunc(logger log.Logger, reporter *report.Reporter) gin.HandlerFunc {
 	return (&reportHandler{
-		logger: logger,
+		logger:   logger,
+		reporter: reporter,
 	}).Handle
 }
 
 func (h *reportHandler) Handle(c *gin.Context) {
-	r := report.GlobalReporter.GetReport()
+	r := h.reporter.GetReport()
 	c.JSON(http.StatusOK, server.NewApiResult(contract.Success, contract.SuccessDesc, r))
 }

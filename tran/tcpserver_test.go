@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/no-src/gofs/auth"
+	"github.com/no-src/gofs/report"
 )
 
 var (
@@ -55,7 +56,7 @@ func TestTcpServer_Listen_WithNilUser(t *testing.T) {
 	users = append(users, nil)
 
 	// server
-	server := NewServer(serverHost, port, true, certFile, certKey, users)
+	server := NewServer(serverHost, port, true, certFile, certKey, users, report.NewReporter())
 	err := server.Listen()
 	if err != nil {
 		t.Errorf("Listen: the tcp server listen error =>%v", err)
@@ -69,7 +70,7 @@ func TestTcpServer_Listen_WithInvalidCertFile(t *testing.T) {
 	port := getServerPort()
 
 	// server
-	server := NewServer(serverHost, port, true, notExistCertFile, certKey, users)
+	server := NewServer(serverHost, port, true, notExistCertFile, certKey, users, report.NewReporter())
 	err := server.Listen()
 	if err == nil {
 		t.Errorf("Listen: expect get file not exist error but get nil")
@@ -86,7 +87,7 @@ func testTcpServerSend(t *testing.T, users []*auth.User, hasClientUser bool, isE
 	port := getServerPort()
 
 	// server
-	server := NewServer(serverHost, port, true, certFile, certKey, users)
+	server := NewServer(serverHost, port, true, certFile, certKey, users, report.NewReporter())
 	// force change the permission
 	for _, user := range server.(*tcpServer).users {
 		user.Perm = forceUserPerm
@@ -160,7 +161,7 @@ func TestTcpServer_Listen_DisableTLS(t *testing.T) {
 	port := getServerPort()
 
 	// server
-	server := NewServer(serverHost, port, false, "", "", nil)
+	server := NewServer(serverHost, port, false, "", "", nil, report.NewReporter())
 	err := server.Listen()
 	if err != nil {
 		t.Errorf("Listen: the tcp server listen error =>%v", err)
@@ -197,9 +198,10 @@ func TestTcpServer_Listen_DisableTLS(t *testing.T) {
 func TestTcpServer_Add_Remove_Client(t *testing.T) {
 	port := getServerPort()
 	users := getRandomUser(t)
+	reporter := report.NewReporter()
 
 	// server
-	server := NewServer(serverHost, port, true, certFile, certKey, users)
+	server := NewServer(serverHost, port, true, certFile, certKey, users, reporter)
 	err := server.Listen()
 	if err != nil {
 		t.Errorf("Listen: the tcp server listen error =>%v", err)
@@ -229,7 +231,7 @@ func TestTcpServer_Add_Remove_Client(t *testing.T) {
 	}
 
 	// add duplicate clients
-	c, err := NewConn(&net.TCPConn{})
+	c, err := NewConn(&net.TCPConn{}, reporter)
 	if err != nil {
 		t.Errorf("NewConn: create the instance of Conn error => %v", err)
 		return

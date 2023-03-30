@@ -28,10 +28,11 @@ type tcpServer struct {
 	certFile  string
 	keyFile   string
 	enableTLS bool
+	reporter  *report.Reporter
 }
 
 // NewServer create an instance of tcpServer
-func NewServer(ip string, port int, enableTLS bool, certFile string, keyFile string, users []*auth.User) Server {
+func NewServer(ip string, port int, enableTLS bool, certFile string, keyFile string, users []*auth.User, reporter *report.Reporter) Server {
 	srv := &tcpServer{
 		network:   "tcp",
 		ip:        net.ParseIP(ip),
@@ -40,6 +41,7 @@ func NewServer(ip string, port int, enableTLS bool, certFile string, keyFile str
 		enableTLS: enableTLS,
 		certFile:  certFile,
 		keyFile:   keyFile,
+		reporter:  reporter,
 	}
 	if !enableTLS {
 		log.Warn("the tcp server is not enable enableTLS, it is not a security connection")
@@ -93,7 +95,7 @@ func (srv *tcpServer) Accept(process func(client *Conn, data []byte)) (err error
 			log.Error(err, "listener accept connection error")
 			continue
 		}
-		clientConn, err := NewConn(newConn)
+		clientConn, err := NewConn(newConn, srv.reporter)
 		if err != nil {
 			log.Error(err, "create connection error")
 			continue
@@ -134,7 +136,7 @@ func (srv *tcpServer) addClient(conn *Conn) (clientCount int, err error) {
 	}
 	clientCount = srv.ClientCount()
 	log.Info("client[%s]conn succeed, current client connect count:%d", conn.RemoteAddrString(), clientCount)
-	report.GlobalReporter.PutConnection(addr)
+	srv.reporter.PutConnection(addr)
 	return clientCount, err
 }
 
@@ -148,7 +150,7 @@ func (srv *tcpServer) removeClient(conn *Conn) (clientCount int, err error) {
 	srv.conns.Delete(addr)
 	clientCount = srv.ClientCount()
 	log.Info("client[%s]conn removed, current client connect count:%d", conn.RemoteAddrString(), clientCount)
-	report.GlobalReporter.DeleteConnection(addr)
+	srv.reporter.DeleteConnection(addr)
 	return clientCount, err
 }
 
