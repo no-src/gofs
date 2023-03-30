@@ -60,6 +60,7 @@ func testReporterConcurrent(t *testing.T, enabled bool) {
 			} else {
 				testGetReporterWithDisable(t, reporter, addrOnline)
 			}
+			reporter.Enable(enabled)
 			wg.Done()
 		}()
 	}

@@ -71,9 +71,6 @@ func (r *reporter) GetReport() Report {
 }
 
 func (r *reporter) PutConnection(addr string) {
-	if !r.enabled {
-		return
-	}
 	go r.putConnection(addr)
 }
 
@@ -81,6 +78,9 @@ func (r *reporter) putConnection(addr string) {
 	now := timeutil.Now()
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	if !r.enabled {
+		return
+	}
 	addr = r.connAddr(addr)
 	stat := &ConnStat{
 		Addr:        addr,
@@ -94,9 +94,6 @@ func (r *reporter) connAddr(addr string) string {
 }
 
 func (r *reporter) DeleteConnection(addr string) {
-	if !r.enabled {
-		return
-	}
 	go r.deleteConnection(addr)
 }
 
@@ -104,6 +101,9 @@ func (r *reporter) deleteConnection(addr string) {
 	now := timeutil.Now()
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	if !r.enabled {
+		return
+	}
 	addr = r.connAddr(addr)
 	stat := r.report.Online[addr]
 	if stat != nil {
@@ -115,9 +115,6 @@ func (r *reporter) deleteConnection(addr string) {
 }
 
 func (r *reporter) PutAuth(addr string, user *auth.HashUser) {
-	if !r.enabled {
-		return
-	}
 	go r.putAuth(addr, user)
 }
 
@@ -128,6 +125,9 @@ func (r *reporter) putAuth(addr string, user *auth.HashUser) {
 	now := timeutil.Now()
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	if !r.enabled {
+		return
+	}
 	addr = r.connAddr(addr)
 	stat := r.report.Online[addr]
 	if stat != nil {
@@ -139,33 +139,35 @@ func (r *reporter) putAuth(addr string, user *auth.HashUser) {
 }
 
 func (r *reporter) PutEvent(event eventlog.Event) {
-	if !r.enabled {
-		return
-	}
 	go r.putEvent(event)
 }
 
 func (r *reporter) putEvent(event eventlog.Event) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	if !r.enabled {
+		return
+	}
 	r.report.Events.Add(event)
 	r.report.EventStat[event.Op]++
 }
 
 func (r *reporter) PutApiStat(ip string) {
-	if !r.enabled {
-		return
-	}
 	go r.putApiStat(ip)
 }
 
 func (r *reporter) putApiStat(ip string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	if !r.enabled {
+		return
+	}
 	r.report.ApiStat.AccessCount++
 	r.report.ApiStat.VisitorStat[ip]++
 }
 
 func (r *reporter) Enable(enabled bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.enabled = enabled
 }
