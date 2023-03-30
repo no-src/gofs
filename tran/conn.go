@@ -27,10 +27,11 @@ type Conn struct {
 	startAuthCheck   *cbool.CBool
 	authCheckTimeout time.Duration
 	mu               sync.RWMutex
+	reporter         *report.Reporter
 }
 
 // NewConn create a Conn instance
-func NewConn(nc net.Conn) (*Conn, error) {
+func NewConn(nc net.Conn, reporter *report.Reporter) (*Conn, error) {
 	if nc == nil {
 		return nil, errNilNetConn
 	}
@@ -42,6 +43,7 @@ func NewConn(nc net.Conn) (*Conn, error) {
 		authTime:         nil,
 		startAuthCheck:   cbool.New(false),
 		authCheckTimeout: time.Minute,
+		reporter:         reporter,
 	}
 	return c, nil
 }
@@ -59,7 +61,7 @@ func (conn *Conn) MarkAuthorized(user *auth.HashUser) {
 	conn.mu.Unlock()
 	addr := conn.RemoteAddrString()
 	log.Info("the conn authorized [local=%s][remote=%s] => [username=%s password=%s perm=%s]", conn.LocalAddrString(), addr, user.UserNameHash, user.PasswordHash, user.Perm.String())
-	report.GlobalReporter.PutAuth(addr, user)
+	conn.reporter.PutAuth(addr, user)
 }
 
 // Authorized check the current connection is authorized or not

@@ -51,7 +51,7 @@ func NewRemoteServerSync(opt Option) (Sync, error) {
 	rs := &remoteServerSync{
 		diskSync: *ds,
 	}
-	rs.server = tran.NewServer(source.Host(), source.Port(), enableTLS, certFile, keyFile, users)
+	rs.server = tran.NewServer(source.Host(), source.Port(), enableTLS, certFile, keyFile, users, opt.Reporter)
 
 	invalidPort := false
 	fsAddr, errAddr := net.ResolveTCPAddr("tcp", fileServerAddr)

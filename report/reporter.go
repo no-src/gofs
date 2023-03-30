@@ -14,22 +14,41 @@ import (
 	"github.com/no-src/gofs/util/timeutil"
 )
 
-var (
-	// GlobalReporter the global reporter
-	GlobalReporter *Reporter
-)
-
 // Reporter collect the report data
 type Reporter struct {
 	enabled bool
 	report  Report
-	mu      sync.RWMutex
+	mu      sync.Mutex
+}
+
+// NewReporter create an instance of the Reporter component
+func NewReporter() *Reporter {
+	report := Report{
+		StartTime: timeutil.Now(),
+		Pid:       os.Getpid(),
+		PPid:      os.Getppid(),
+		GOOS:      runtime.GOOS,
+		GOARCH:    runtime.GOARCH,
+		GOVersion: runtime.Version(),
+		Version:   version.VERSION,
+		Commit:    version.Commit,
+		Online:    make(map[string]*ConnStat),
+		EventStat: make(map[string]uint64),
+		ApiStat: ApiStat{
+			VisitorStat: make(map[string]uint64),
+		},
+	}
+	report.Events, _ = toplist.New(100)
+	report.Hostname, _ = os.Hostname()
+	return &Reporter{
+		report: report,
+	}
 }
 
 // GetReport get current report data
 func (r *Reporter) GetReport() Report {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.report.CurrentTime = timeutil.Now()
 	r.report.UpTime = core.Duration(r.report.CurrentTime.Sub(r.report.StartTime))
 	return r.report
@@ -139,31 +158,4 @@ func (r *Reporter) putApiStat(ip string) {
 // Enable enable or disable the Reporter
 func (r *Reporter) Enable(enabled bool) {
 	r.enabled = enabled
-}
-
-func init() {
-	initGlobalReporter()
-}
-
-func initGlobalReporter() {
-	report := Report{
-		StartTime: timeutil.Now(),
-		Pid:       os.Getpid(),
-		PPid:      os.Getppid(),
-		GOOS:      runtime.GOOS,
-		GOARCH:    runtime.GOARCH,
-		GOVersion: runtime.Version(),
-		Version:   version.VERSION,
-		Commit:    version.Commit,
-		Online:    make(map[string]*ConnStat),
-		EventStat: make(map[string]uint64),
-		ApiStat: ApiStat{
-			VisitorStat: make(map[string]uint64),
-		},
-	}
-	report.Events, _ = toplist.New(100)
-	report.Hostname, _ = os.Hostname()
-	GlobalReporter = &Reporter{
-		report: report,
-	}
 }

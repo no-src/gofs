@@ -15,6 +15,7 @@ import (
 	"github.com/no-src/gofs/internal/signal"
 	"github.com/no-src/gofs/internal/version"
 	"github.com/no-src/gofs/monitor"
+	"github.com/no-src/gofs/report"
 	"github.com/no-src/gofs/result"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/server"
@@ -138,8 +139,10 @@ func runWithConfig(c conf.Config, result result.Result) {
 	// create retry
 	r := retry.New(c.RetryCount, c.RetryWait.Duration(), c.RetryAsync)
 
+	reporter := report.NewReporter()
+
 	// start a file web server
-	if err = startWebServer(c, webLogger, userList, r); err != nil {
+	if err = startWebServer(c, webLogger, userList, r, reporter); err != nil {
 		result.InitDoneWithError(err)
 		return
 	}
@@ -160,7 +163,7 @@ func runWithConfig(c conf.Config, result result.Result) {
 	}
 
 	// init the monitor
-	m, err := initMonitor(c, userList, eventLogger, r, pi)
+	m, err := initMonitor(c, userList, eventLogger, r, pi, reporter)
 	if err != nil {
 		result.InitDoneWithError(err)
 		return
@@ -272,11 +275,11 @@ func initWebServerLogger(c conf.Config) (log.Logger, error) {
 }
 
 // startWebServer start a file web server
-func startWebServer(c conf.Config, webLogger log.Logger, userList []*auth.User, r retry.Retry) error {
+func startWebServer(c conf.Config, webLogger log.Logger, userList []*auth.User, r retry.Retry, reporter *report.Reporter) error {
 	if c.EnableFileServer {
 		waitInit := wait.NewWaitDone()
 		go func() {
-			httpfs.StartFileServer(server.NewServerOption(c, waitInit, userList, webLogger, r))
+			httpfs.StartFileServer(server.NewServerOption(c, waitInit, userList, webLogger, r, reporter))
 		}()
 
 		return log.ErrorIf(waitInit.Wait(), "start the file server [%s] error", c.FileServerAddr)
@@ -299,16 +302,16 @@ func initEventLogger(c conf.Config) (log.Logger, error) {
 }
 
 // initMonitor init the monitor
-func initMonitor(c conf.Config, userList []*auth.User, eventLogger log.Logger, r retry.Retry, pi ignore.PathIgnore) (monitor.Monitor, error) {
+func initMonitor(c conf.Config, userList []*auth.User, eventLogger log.Logger, r retry.Retry, pi ignore.PathIgnore, reporter *report.Reporter) (monitor.Monitor, error) {
 	// create syncer
-	syncer, err := sync.NewSync(sync.NewSyncOption(c, userList, r, pi))
+	syncer, err := sync.NewSync(sync.NewSyncOption(c, userList, r, pi, reporter))
 	if err != nil {
 		log.Error(err, "create the instance of Sync error")
 		return nil, err
 	}
 
 	// create monitor
-	m, err := monitor.NewMonitor(monitor.NewMonitorOption(c, syncer, r, userList, eventLogger, pi))
+	m, err := monitor.NewMonitor(monitor.NewMonitorOption(c, syncer, r, userList, eventLogger, pi, reporter))
 	if err != nil {
 		log.Error(err, "create the instance of Monitor error")
 		return nil, err
