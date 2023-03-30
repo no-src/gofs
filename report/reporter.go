@@ -15,14 +15,31 @@ import (
 )
 
 // Reporter collect the report data
-type Reporter struct {
+type Reporter interface {
+	// GetReport get current report data
+	GetReport() Report
+	// PutConnection put a new connection
+	PutConnection(addr string)
+	// DeleteConnection delete a closed connection
+	DeleteConnection(addr string)
+	// PutAuth put an auth info to update connection status
+	PutAuth(addr string, user *auth.HashUser)
+	// PutEvent put a file change event
+	PutEvent(event eventlog.Event)
+	// PutApiStat put an access log of api
+	PutApiStat(ip string)
+	// Enable enable or disable the Reporter
+	Enable(enabled bool)
+}
+
+type reporter struct {
 	enabled bool
 	report  Report
 	mu      sync.Mutex
 }
 
 // NewReporter create an instance of the Reporter component
-func NewReporter() *Reporter {
+func NewReporter() Reporter {
 	report := Report{
 		StartTime: timeutil.Now(),
 		Pid:       os.Getpid(),
@@ -40,13 +57,12 @@ func NewReporter() *Reporter {
 	}
 	report.Events, _ = toplist.New(100)
 	report.Hostname, _ = os.Hostname()
-	return &Reporter{
+	return &reporter{
 		report: report,
 	}
 }
 
-// GetReport get current report data
-func (r *Reporter) GetReport() Report {
+func (r *reporter) GetReport() Report {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.report.CurrentTime = timeutil.Now()
@@ -54,15 +70,14 @@ func (r *Reporter) GetReport() Report {
 	return r.report
 }
 
-// PutConnection put a new connection
-func (r *Reporter) PutConnection(addr string) {
+func (r *reporter) PutConnection(addr string) {
 	if !r.enabled {
 		return
 	}
 	go r.putConnection(addr)
 }
 
-func (r *Reporter) putConnection(addr string) {
+func (r *reporter) putConnection(addr string) {
 	now := timeutil.Now()
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -74,19 +89,18 @@ func (r *Reporter) putConnection(addr string) {
 	r.report.Online[addr] = stat
 }
 
-func (r *Reporter) connAddr(addr string) string {
+func (r *reporter) connAddr(addr string) string {
 	return strings.ToLower(addr)
 }
 
-// DeleteConnection delete a closed connection
-func (r *Reporter) DeleteConnection(addr string) {
+func (r *reporter) DeleteConnection(addr string) {
 	if !r.enabled {
 		return
 	}
 	go r.deleteConnection(addr)
 }
 
-func (r *Reporter) deleteConnection(addr string) {
+func (r *reporter) deleteConnection(addr string) {
 	now := timeutil.Now()
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -100,15 +114,14 @@ func (r *Reporter) deleteConnection(addr string) {
 	}
 }
 
-// PutAuth put an auth info to update connection status
-func (r *Reporter) PutAuth(addr string, user *auth.HashUser) {
+func (r *reporter) PutAuth(addr string, user *auth.HashUser) {
 	if !r.enabled {
 		return
 	}
 	go r.putAuth(addr, user)
 }
 
-func (r *Reporter) putAuth(addr string, user *auth.HashUser) {
+func (r *reporter) putAuth(addr string, user *auth.HashUser) {
 	if len(addr) == 0 || user == nil {
 		return
 	}
@@ -125,37 +138,34 @@ func (r *Reporter) putAuth(addr string, user *auth.HashUser) {
 	}
 }
 
-// PutEvent put a file change event
-func (r *Reporter) PutEvent(event eventlog.Event) {
+func (r *reporter) PutEvent(event eventlog.Event) {
 	if !r.enabled {
 		return
 	}
 	go r.putEvent(event)
 }
 
-func (r *Reporter) putEvent(event eventlog.Event) {
+func (r *reporter) putEvent(event eventlog.Event) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.report.Events.Add(event)
 	r.report.EventStat[event.Op]++
 }
 
-// PutApiStat put an access log of api
-func (r *Reporter) PutApiStat(ip string) {
+func (r *reporter) PutApiStat(ip string) {
 	if !r.enabled {
 		return
 	}
 	go r.putApiStat(ip)
 }
 
-func (r *Reporter) putApiStat(ip string) {
+func (r *reporter) putApiStat(ip string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.report.ApiStat.AccessCount++
 	r.report.ApiStat.VisitorStat[ip]++
 }
 
-// Enable enable or disable the Reporter
-func (r *Reporter) Enable(enabled bool) {
+func (r *reporter) Enable(enabled bool) {
 	r.enabled = enabled
 }

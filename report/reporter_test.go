@@ -25,7 +25,7 @@ func TestReporter_WithDisable_Concurrent(t *testing.T) {
 	testReporterConcurrent(t, false)
 }
 
-func getTestReporter(enabled bool) (reporter *Reporter, addrOnline, addrOffline string) {
+func getTestReporter(enabled bool) (reporter Reporter, addrOnline, addrOffline string) {
 	user := &auth.HashUser{
 		UserNameHash: "698d51a19d8a121c",
 		Perm:         "rwx",
@@ -75,7 +75,7 @@ func testReporter(t *testing.T, enabled bool) {
 	}
 }
 
-func testGetReporterWithDisable(t *testing.T, reporter *Reporter, addrOnline string) {
+func testGetReporterWithDisable(t *testing.T, reporter Reporter, addrOnline string) {
 
 	r := reporter.GetReport()
 	online := r.Online[addrOnline]
@@ -113,7 +113,7 @@ func testGetReporterWithDisable(t *testing.T, reporter *Reporter, addrOnline str
 	}
 }
 
-func testGetReporterWithEnable(t *testing.T, reporter *Reporter, addrOnline, addrOffline string) {
+func testGetReporterWithEnable(t *testing.T, reporter Reporter, addrOnline, addrOffline string) {
 	r := reporter.GetReport()
 	online := r.Online[addrOnline]
 	if online == nil {

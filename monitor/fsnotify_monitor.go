@@ -23,7 +23,7 @@ type fsNotifyMonitor struct {
 	watcher  *fsnotify.Watcher
 	events   *clist.CList
 	pi       ignore.PathIgnore
-	reporter *report.Reporter
+	reporter report.Reporter
 }
 
 // NewFsNotifyMonitor create an instance of fsNotifyMonitor to monitor the disk change

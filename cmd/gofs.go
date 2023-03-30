@@ -275,7 +275,7 @@ func initWebServerLogger(c conf.Config) (log.Logger, error) {
 }
 
 // startWebServer start a file web server
-func startWebServer(c conf.Config, webLogger log.Logger, userList []*auth.User, r retry.Retry, reporter *report.Reporter) error {
+func startWebServer(c conf.Config, webLogger log.Logger, userList []*auth.User, r retry.Retry, reporter report.Reporter) error {
 	if c.EnableFileServer {
 		waitInit := wait.NewWaitDone()
 		go func() {
@@ -302,7 +302,7 @@ func initEventLogger(c conf.Config) (log.Logger, error) {
 }
 
 // initMonitor init the monitor
-func initMonitor(c conf.Config, userList []*auth.User, eventLogger log.Logger, r retry.Retry, pi ignore.PathIgnore, reporter *report.Reporter) (monitor.Monitor, error) {
+func initMonitor(c conf.Config, userList []*auth.User, eventLogger log.Logger, r retry.Retry, pi ignore.PathIgnore, reporter report.Reporter) (monitor.Monitor, error) {
 	// create syncer
 	syncer, err := sync.NewSync(sync.NewSyncOption(c, userList, r, pi, reporter))
 	if err != nil {

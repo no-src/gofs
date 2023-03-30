@@ -35,11 +35,11 @@ type Option struct {
 	SSHKey                   string
 	Logger                   log.Logger
 	Retry                    retry.Retry
-	Reporter                 *report.Reporter
+	Reporter                 report.Reporter
 }
 
 // NewServerOption create an instance of the Option, store all the web server options
-func NewServerOption(config conf.Config, init wait.Done, users []*auth.User, logger log.Logger, r retry.Retry, reporter *report.Reporter) Option {
+func NewServerOption(config conf.Config, init wait.Done, users []*auth.User, logger log.Logger, r retry.Retry, reporter report.Reporter) Option {
 	opt := Option{
 		Source:                   config.Source,
 		Dest:                     config.Dest,
