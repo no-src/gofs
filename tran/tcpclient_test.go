@@ -8,6 +8,8 @@ import (
 	"io"
 	"os"
 	"testing"
+
+	"github.com/no-src/gofs/report"
 )
 
 func TestTcpClient_Connect_WithInvalidCertFile(t *testing.T) {
@@ -61,7 +63,7 @@ func TestTcpClient_Close(t *testing.T) {
 	port := getServerPort()
 
 	// server
-	server := NewServer(serverHost, port, true, certFile, certKey, users)
+	server := NewServer(serverHost, port, true, certFile, certKey, users, report.NewReporter())
 	err := server.Listen()
 	if err != nil {
 		t.Errorf("Listen: the tcp server listen error =>%v", err)
