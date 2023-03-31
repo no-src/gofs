@@ -91,7 +91,6 @@ func runWithConfig(c conf.Config, result result.Result) {
 		result.InitDoneWithError(err)
 		return
 	}
-	log.ErrorIf(conf.SetGlobalConfig(cp), "set global config error => %s", cp.FileServerAddr)
 
 	// kill parent process
 	daemon := daemon.New()
@@ -140,7 +139,6 @@ func runWithConfig(c conf.Config, result result.Result) {
 	r := retry.New(c.RetryCount, c.RetryWait.Duration(), c.RetryAsync)
 
 	reporter := report.NewReporter()
-
 	// start a file web server
 	if err = startWebServer(c, webLogger, userList, r, reporter); err != nil {
 		result.InitDoneWithError(err)
