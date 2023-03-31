@@ -12,11 +12,11 @@ import (
 
 type reportHandler struct {
 	logger   log.Logger
-	reporter *report.Reporter
+	reporter report.Reporter
 }
 
 // NewReportHandlerFunc returns a gin.HandlerFunc that providers a report api to show the application status
-func NewReportHandlerFunc(logger log.Logger, reporter *report.Reporter) gin.HandlerFunc {
+func NewReportHandlerFunc(logger log.Logger, reporter report.Reporter) gin.HandlerFunc {
 	return (&reportHandler{
 		logger:   logger,
 		reporter: reporter,

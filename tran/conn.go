@@ -27,11 +27,11 @@ type Conn struct {
 	startAuthCheck   *cbool.CBool
 	authCheckTimeout time.Duration
 	mu               sync.RWMutex
-	reporter         *report.Reporter
+	reporter         report.Reporter
 }
 
 // NewConn create a Conn instance
-func NewConn(nc net.Conn, reporter *report.Reporter) (*Conn, error) {
+func NewConn(nc net.Conn, reporter report.Reporter) (*Conn, error) {
 	if nc == nil {
 		return nil, errNilNetConn
 	}

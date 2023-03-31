@@ -6,11 +6,11 @@ import (
 )
 
 type apiStatHandler struct {
-	reporter *report.Reporter
+	reporter report.Reporter
 }
 
 // ApiStat returns a middleware that records user access statistics data
-func ApiStat(reporter *report.Reporter) gin.HandlerFunc {
+func ApiStat(reporter report.Reporter) gin.HandlerFunc {
 	return (&apiStatHandler{
 		reporter: reporter,
 	}).Handle

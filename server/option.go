@@ -17,11 +17,11 @@ type Option struct {
 	Users    []*auth.User
 	Logger   log.Logger
 	Retry    retry.Retry
-	Reporter *report.Reporter
+	Reporter report.Reporter
 }
 
 // NewServerOption create an instance of the Option, store all the web server options
-func NewServerOption(c conf.Config, init wait.Done, users []*auth.User, logger log.Logger, r retry.Retry, reporter *report.Reporter) Option {
+func NewServerOption(c conf.Config, init wait.Done, users []*auth.User, logger log.Logger, r retry.Retry, reporter report.Reporter) Option {
 	opt := Option{
 		Config:   c,
 		Init:     init,

@@ -99,7 +99,7 @@ func initSession(engine *gin.Engine, sessionConnection string) error {
 	return nil
 }
 
-func initDefaultMiddleware(engine *gin.Engine, logger io.Writer, reporter *report.Reporter) {
+func initDefaultMiddleware(engine *gin.Engine, logger io.Writer, reporter report.Reporter) {
 	engine.Use(gin.LoggerWithConfig(gin.LoggerConfig{
 		Formatter: defaultLogFormatter,
 		Output:    logger,
@@ -203,7 +203,7 @@ func initRouteAuth(opt server.Option, logger log.Logger, rootGroup, wGroup, mana
 	}
 }
 
-func initManageRoute(opt server.Option, logger log.Logger, manageGroup *gin.RouterGroup, reporter *report.Reporter) {
+func initManageRoute(opt server.Option, logger log.Logger, manageGroup *gin.RouterGroup, reporter report.Reporter) {
 	if opt.EnableManage {
 		if opt.ManagePrivate {
 			manageGroup.Use(middleware.NewPrivateAccessHandlerFunc(logger))

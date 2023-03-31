@@ -28,11 +28,11 @@ type tcpServer struct {
 	certFile  string
 	keyFile   string
 	enableTLS bool
-	reporter  *report.Reporter
+	reporter  report.Reporter
 }
 
 // NewServer create an instance of tcpServer
-func NewServer(ip string, port int, enableTLS bool, certFile string, keyFile string, users []*auth.User, reporter *report.Reporter) Server {
+func NewServer(ip string, port int, enableTLS bool, certFile string, keyFile string, users []*auth.User, reporter report.Reporter) Server {
 	srv := &tcpServer{
 		network:   "tcp",
 		ip:        net.ParseIP(ip),

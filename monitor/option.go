@@ -27,11 +27,11 @@ type Option struct {
 	Syncer                sync.Sync
 	Retry                 retry.Retry
 	PathIgnore            ignore.PathIgnore
-	Reporter              *report.Reporter
+	Reporter              report.Reporter
 }
 
 // NewMonitorOption create an instance of the Option, store all the monitor component options
-func NewMonitorOption(config conf.Config, syncer sync.Sync, retry retry.Retry, users []*auth.User, eventWriter io.Writer, pi ignore.PathIgnore, reporter *report.Reporter) Option {
+func NewMonitorOption(config conf.Config, syncer sync.Sync, retry retry.Retry, users []*auth.User, eventWriter io.Writer, pi ignore.PathIgnore, reporter report.Reporter) Option {
 	opt := Option{
 		SyncOnce:              config.SyncOnce,
 		EnableTLS:             config.EnableTLS,
