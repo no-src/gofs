@@ -51,7 +51,7 @@ func StartFileServer(opt server.Option) error {
 		return err
 	}
 
-	log.Info("file server [%s] starting...", opt.Addr)
+	log.Info("file server [%s] starting...", opt.FileServerAddr)
 	c := make(chan error, 1)
 	go func() {
 		select {
@@ -65,9 +65,9 @@ func StartFileServer(opt server.Option) error {
 	var err error
 	if opt.EnableTLS {
 		if opt.EnableHTTP3 {
-			err = log.ErrorIf(http3.ListenAndServe(opt.Addr, opt.TLSCertFile, opt.TLSKeyFile, engine.Handler()), "running the http3 server error")
+			err = log.ErrorIf(http3.ListenAndServe(opt.FileServerAddr, opt.TLSCertFile, opt.TLSKeyFile, engine.Handler()), "running the http3 server error")
 		} else {
-			err = log.ErrorIf(engine.RunTLS(opt.Addr, opt.TLSCertFile, opt.TLSKeyFile), "running the https server error")
+			err = log.ErrorIf(engine.RunTLS(opt.FileServerAddr, opt.TLSCertFile, opt.TLSKeyFile), "running the https server error")
 		}
 		c <- err
 		return err
@@ -76,7 +76,7 @@ func StartFileServer(opt server.Option) error {
 		log.Warn("please enable the TLS first if you want to enable the HTTP3 protocol, currently downgraded to HTTP2!")
 	}
 	log.Warn("file server is not a security connection, you need the https replaced maybe!")
-	err = log.ErrorIf(engine.Run(opt.Addr), "running the http server error")
+	err = log.ErrorIf(engine.Run(opt.FileServerAddr), "running the http server error")
 	c <- err
 	return err
 }
@@ -209,7 +209,7 @@ func initManageRoute(opt server.Option, logger log.Logger, manageGroup *gin.Rout
 			manageGroup.Use(middleware.NewPrivateAccessHandlerFunc(logger))
 		}
 		pprof.RouteRegister(manageGroup, server.PProfRoutePrefix)
-		manageGroup.GET(server.ManageConfigRoute, handler.NewManageHandlerFunc(logger, opt.Addr))
+		manageGroup.GET(server.ManageConfigRoute, handler.NewManageHandlerFunc(logger, opt.Config))
 		if opt.EnableReport {
 			manageGroup.GET(server.ManageReportRoute, handler.NewReportHandlerFunc(logger, reporter))
 			reporter.Enable(true)
