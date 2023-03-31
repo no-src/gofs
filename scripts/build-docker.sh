@@ -10,7 +10,7 @@
 # git pull --no-rebase
 
 # update the latest golang image
-docker pull golang:alpine
+docker pull golang:latest
 
 # set GOPROXY environment variable
 # GOPROXY=https://goproxy.cn
