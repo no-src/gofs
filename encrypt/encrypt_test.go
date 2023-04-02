@@ -136,6 +136,7 @@ func TestNewEncrypt_CheckKey(t *testing.T) {
 	}
 }
 
+//gocyclo:ignore
 func testEncrypt(encryptOpt Option, decryptOpt Option, sourcePath string, originPath string, encryptFilePath string) error {
 	// encrypt
 	enc, err := NewEncrypt(encryptOpt, sourcePath)
