@@ -181,14 +181,10 @@ func (m *remoteClientMonitor) receive() wait.Wait {
 
 // waitShutdown wait for the shutdown notify then mark the work done
 func (m *remoteClientMonitor) waitShutdown(st *cbool.CBool, wd wait.Done) {
-	select {
-	case <-st.SetC(<-m.shutdown):
-		{
-			if st.Get() {
-				log.ErrorIf(m.Close(), "close remote client monitor error")
-				wd.Done()
-			}
-		}
+	<-st.SetC(<-m.shutdown)
+	if st.Get() {
+		log.ErrorIf(m.Close(), "close remote client monitor error")
+		wd.Done()
 	}
 }
 
