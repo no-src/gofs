@@ -32,6 +32,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: v1.52
+          args: --verbose
 
       - name: Test
         run: go test -v -race ./... -coverprofile=coverage.txt -covermode=atomic -timeout=10m
