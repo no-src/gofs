@@ -21,7 +21,6 @@ func TestNotify(t *testing.T) {
 		{"SIGINT", syscall.SIGINT},
 		{"SIGQUIT", syscall.SIGQUIT},
 		{"SIGABRT", syscall.SIGABRT},
-		{"SIGKILL", syscall.SIGKILL},
 		{"SIGTERM", syscall.SIGTERM},
 	}
 	for _, tc := range testCases {
@@ -44,7 +43,6 @@ func TestNotify_ShutdownError(t *testing.T) {
 		{"SIGINT", syscall.SIGINT},
 		{"SIGQUIT", syscall.SIGQUIT},
 		{"SIGABRT", syscall.SIGABRT},
-		{"SIGKILL", syscall.SIGKILL},
 		{"SIGTERM", syscall.SIGTERM},
 
 		{"SIGALRM", syscall.SIGALRM},

@@ -22,12 +22,12 @@ type NotifySignal func(s os.Signal, timeout ...time.Duration) error
 // Notify receive signal and try to shut down
 func Notify(shutdown func() error) NotifySignal {
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGABRT, syscall.SIGKILL, syscall.SIGTERM)
+	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGABRT, syscall.SIGTERM)
 	go func() {
 		for {
 			s := <-c
 			switch s {
-			case syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGABRT, syscall.SIGKILL, syscall.SIGTERM:
+			case syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGABRT, syscall.SIGTERM:
 				log.Debug("received a signal [%s], waiting to exit", s.String())
 				err := shutdown()
 				if err != nil {
