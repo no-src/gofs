@@ -162,6 +162,9 @@ func (rs *remoteServerSync) send(act action.Action, path string) (err error) {
 	}
 
 	path, err = filepath.Rel(rs.sourceAbsPath, path)
+	if err != nil {
+		return err
+	}
 	path = filepath.ToSlash(path)
 	req := Message{
 		Status:  contract.SuccessStatus(contract.SyncMessageApi),
@@ -204,9 +207,7 @@ func (rs *remoteServerSync) start() error {
 		return err
 	}
 	go rs.server.Accept(func(client *tran.Conn, data []byte) {
-		if bytes.HasSuffix(data, tran.EndIdentity) {
-			data = data[:len(data)-len(tran.EndIdentity)]
-		}
+		data = bytes.TrimSuffix(data, tran.EndIdentity)
 		if client == nil {
 			log.Warn("client conn is nil, data => %s", string(data))
 			return
