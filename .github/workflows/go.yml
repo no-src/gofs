@@ -28,6 +28,11 @@ jobs:
       - name: Build
         run: go build -v ./...
 
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.52
+
       - name: Test
         run: go test -v -race ./... -coverprofile=coverage.txt -covermode=atomic -timeout=10m
 
