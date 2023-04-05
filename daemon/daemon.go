@@ -17,12 +17,17 @@ const SubprocessTag = "sub"
 // Daemon support to running daemon process and create subprocess for working
 type Daemon struct {
 	shutdown chan struct{}
+	logger   log.Logger
 }
 
 // New create an instance of Daemon
-func New() *Daemon {
+func New(logger log.Logger) *Daemon {
+	if logger == nil {
+		logger = log.NewEmptyLogger()
+	}
 	return &Daemon{
 		shutdown: make(chan struct{}, 1),
+		logger:   logger,
 	}
 }
 
@@ -31,7 +36,7 @@ func (d *Daemon) Run(args []string, recordPid bool, daemonDelay time.Duration, m
 	defer func() {
 		if r := recover(); r != nil {
 			err := fmt.Errorf("daemon process error. %v", r)
-			log.Error(err, "daemon exited by panic")
+			d.logger.Error(err, "daemon exited by panic")
 			wd.DoneWithError(err)
 		}
 	}()
@@ -39,17 +44,19 @@ func (d *Daemon) Run(args []string, recordPid bool, daemonDelay time.Duration, m
 	for {
 		if d.waitShutdown(daemonDelay) {
 			wd.Done()
-			log.Info("daemon exited by shutdown")
+			d.logger.Info("daemon exited by shutdown")
 			return
 		}
 		p, err := d.startSubprocess(args)
 		if err == nil && p != nil {
 			if recordPid {
-				log.ErrorIf(d.writePidFile(os.Getppid(), os.Getpid(), p.Pid), "write pid info to file error")
+				if err = d.writePidFile(os.Getppid(), os.Getpid(), p.Pid); err != nil {
+					d.logger.Error(err, "write pid info to file error")
+				}
 			}
 			if d.monitor(p.Pid, monitorDelay) {
 				wd.Done()
-				log.Info("daemon exited by shutdown")
+				d.logger.Info("daemon exited by shutdown")
 				return
 			}
 		}
@@ -71,9 +78,9 @@ func (d *Daemon) startSubprocess(args []string) (*os.Process, error) {
 	args = append(args, "-"+SubprocessTag)
 	p, err := os.StartProcess(args[0], args, attr)
 	if err == nil && p != nil {
-		log.Info("[%d] start subprocess success", p.Pid)
+		d.logger.Info("[%d] start subprocess success", p.Pid)
 	} else {
-		log.Error(err, "start subprocess error")
+		d.logger.Error(err, "start subprocess error")
 	}
 	return p, err
 }
@@ -87,22 +94,24 @@ func (d *Daemon) monitor(pid int, monitorDelay time.Duration) (isShutdown bool) 
 
 		p, err := os.FindProcess(pid)
 		if err != nil {
-			log.Error(err, "[%d] subprocess status error", pid)
+			d.logger.Error(err, "[%d] subprocess status error", pid)
 			if p != nil {
-				log.Info("[%d] try to kill the subprocess", pid)
-				log.ErrorIf(p.Kill(), "[%d] try to kill the subprocess error", pid)
+				d.logger.Info("[%d] try to kill the subprocess", pid)
+				if err = p.Kill(); err != nil {
+					d.logger.Error(err, "[%d] try to kill the subprocess error", pid)
+				}
 			}
 			return
 		}
 		if p == nil {
-			log.Info("[%d] subprocess is not found", pid)
+			d.logger.Info("[%d] subprocess is not found", pid)
 			return
 		}
 
 		// wait subprocess to exit
 		stat, err := p.Wait()
 		if err != nil || stat.Exited() {
-			log.Info("[%d] subprocess is exited", pid)
+			d.logger.Info("[%d] subprocess is exited", pid)
 			return
 		}
 
@@ -136,10 +145,12 @@ func (d *Daemon) KillPPid() {
 		p, err := os.FindProcess(ppid)
 		if err == nil {
 			if p != nil {
-				log.ErrorIf(p.Kill(), "[%d] kill parent process error", ppid)
+				if err = p.Kill(); err != nil {
+					d.logger.Error(err, "[%d] kill parent process error", ppid)
+				}
 			}
 		} else {
-			log.Error(err, "[%d] find parent process error", ppid)
+			d.logger.Error(err, "[%d] find parent process error", ppid)
 		}
 	}
 
