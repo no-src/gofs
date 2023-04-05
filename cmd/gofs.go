@@ -93,7 +93,7 @@ func runWithConfig(c conf.Config, result result.Result) {
 	}
 
 	// kill parent process
-	daemon := daemon.New()
+	daemon := daemon.New(log.DefaultLogger())
 	if c.KillPPid {
 		daemon.KillPPid()
 	}
