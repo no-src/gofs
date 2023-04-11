@@ -277,11 +277,9 @@ Response field description:
     - `commit` returns last commit hash value of the gofs
     - `online` returns the client connection info that is online
         - `addr` the client connection address
-        - `is_auth` whether the client is authorized
         - `username` the username of client
         - `perm` the permission of client
         - `connect_time` the connected time of client
-        - `auth_time` the authorized time of client
         - `disconnect_time` the disconnected time of client
         - `life_time` the lifetime of a client, it is `0s` always that if the client is online
     - `offline` returns the client connection info that is offline, full fields see `online`
@@ -317,11 +315,9 @@ Here is an example response:
     "online": {
       "127.0.0.1:11993": {
         "addr": "127.0.0.1:11993",
-        "is_auth": true,
         "username": "698d51a19d8a121c",
         "perm": "rwx",
         "connect_time": "2022-03-28 01:10:11",
-        "auth_time": "2022-03-28 01:10:11",
         "disconnect_time": "1970-01-01 08:00:00",
         "life_time": "0s"
       }
@@ -329,11 +325,9 @@ Here is an example response:
     "offline": [
       {
         "addr": "127.0.0.1:11887",
-        "is_auth": true,
         "username": "698d51a19d8a121c",
         "perm": "rwx",
         "connect_time": "2022-03-28 01:08:46",
-        "auth_time": "2022-03-28 01:08:46",
         "disconnect_time": "2022-03-28 01:10:06",
         "life_time": "1m20s"
       }

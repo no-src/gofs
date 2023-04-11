@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/no-src/gofs/api/info";
+
+package info;
+
+// InfoService the info service of the api server
+service InfoService {
+  // GetInfo get the file server info
+  rpc GetInfo(google.protobuf.Empty) returns (FileServerInfo) {}
+}
+
+// FileServerInfo the file server basic info
+message FileServerInfo{
+  // ServerAddr the server running address
+  string server_addr = 1;
+  // SourcePath the source base path of the file server
+  string source_path = 2;
+  // DestPath the dest base path of the file server
+  string dest_path = 3;
+  // QueryAddr the query api address of the file server
+  string query_addr = 4;
+  // PushAddr the push api address of the file server
+  string push_addr = 5;
+}

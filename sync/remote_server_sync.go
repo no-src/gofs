@@ -1,8 +1,6 @@
 package sync
 
 import (
-	"bufio"
-	"bytes"
 	"errors"
 	"fmt"
 	"net"
@@ -11,13 +9,12 @@ import (
 	"time"
 
 	"github.com/no-src/gofs/action"
-	"github.com/no-src/gofs/auth"
+	"github.com/no-src/gofs/api/apiserver"
+	"github.com/no-src/gofs/api/monitor"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/server"
-	"github.com/no-src/gofs/tran"
 	"github.com/no-src/gofs/util/hashutil"
-	"github.com/no-src/gofs/util/jsonutil"
 	"github.com/no-src/log"
 )
 
@@ -29,7 +26,7 @@ var (
 type remoteServerSync struct {
 	diskSync
 
-	server     tran.Server
+	server     apiserver.Server
 	serverAddr string
 }
 
@@ -51,7 +48,6 @@ func NewRemoteServerSync(opt Option) (Sync, error) {
 	rs := &remoteServerSync{
 		diskSync: *ds,
 	}
-	rs.server = tran.NewServer(source.Host(), source.Port(), enableTLS, certFile, keyFile, users, opt.Reporter)
 
 	invalidPort := false
 	fsAddr, errAddr := net.ResolveTCPAddr("tcp", fileServerAddr)
@@ -69,15 +65,16 @@ func NewRemoteServerSync(opt Option) (Sync, error) {
 		if invalidPort {
 			return nil, fmt.Errorf("%w => %d", errInvalidServerPort, fsAddr.Port)
 		}
-		rs.serverAddr = server.GenerateAddr(scheme, rs.server.Host(), fsAddr.Port)
+		rs.serverAddr = server.GenerateAddr(scheme, source.Host(), fsAddr.Port)
 	} else {
 		rs.serverAddr = source.FsServer()
 	}
 	rs.serverAddr = strings.TrimRight(rs.serverAddr, "/")
-
 	if invalidPort {
 		log.Warn("create remote server sync warning, you should enable the file server with -server and -server_addr flags")
 	}
+
+	rs.server = apiserver.New(source.Host(), source.Port(), enableTLS, certFile, keyFile, users, opt.Reporter, rs.serverAddr, log.DefaultLogger())
 	return rs, rs.start()
 }
 
@@ -166,27 +163,21 @@ func (rs *remoteServerSync) send(act action.Action, path string) (err error) {
 		return err
 	}
 	path = filepath.ToSlash(path)
-	req := Message{
-		Status:  contract.SuccessStatus(contract.SyncMessageApi),
-		Action:  act,
+	req := &monitor.MonitorMessage{
+		Action:  int32(act),
 		BaseUrl: rs.serverAddr + server.SourceRoutePrefix,
-		FileInfo: contract.FileInfo{
+		FileInfo: &monitor.FileInfo{
 			Path:       path,
-			IsDir:      isDirValue,
+			IsDir:      int32(isDirValue),
 			Size:       size,
 			Hash:       hash,
-			HashValues: hvs,
+			HashValues: monitor.ToHashValueMessageList(hvs),
 			CTime:      cTime.Unix(),
 			ATime:      aTime.Unix(),
 			MTime:      mTime.Unix(),
 		},
 	}
-
-	data, err := jsonutil.Marshal(req)
-	if err != nil {
-		return err
-	}
-	return rs.server.Send(data)
+	return rs.server.SendMonitorMessage(req)
 }
 
 func (rs *remoteServerSync) IsDir(path string) (bool, error) {
@@ -201,102 +192,6 @@ func (rs *remoteServerSync) start() error {
 	if rs.server == nil {
 		return errNilRemoteSyncServer
 	}
-
-	err := rs.server.Listen()
-	if err != nil {
-		return err
-	}
-	go rs.server.Accept(func(client *tran.Conn, data []byte) {
-		data = bytes.TrimSuffix(data, tran.EndIdentity)
-		if client == nil {
-			log.Warn("client conn is nil, data => %s", string(data))
-			return
-		}
-		log.Debug("receive message [%s] => %s", client.RemoteAddrString(), string(data))
-		writer := bufio.NewWriter(client)
-		var result []byte
-		var cmd contract.Command
-		if bytes.Equal(data, contract.InfoCommand) {
-			cmd, result, err = rs.infoCommand(client)
-		} else if bytes.HasPrefix(data, contract.AuthCommand) {
-			cmd, result, err = rs.authCommand(client, data)
-		} else {
-			cmd, result, err = rs.unknownCommand()
-		}
-
-		// write to response
-		if err != nil {
-			result = append(result, []byte(err.Error())...)
-			result = append(result, tran.ErrorEndIdentity...)
-		} else {
-			result = append(result, tran.EndIdentity...)
-		}
-		result = append(result, tran.LFBytes...)
-		_, err = writer.Write(result)
-		if err != nil {
-			log.Error(err, "[%s]=>[%s] write message error", client.RemoteAddrString(), string(cmd))
-		}
-		err = writer.Flush()
-		if err != nil {
-			log.Error(err, "[%s]=>[%s] flush message error", client.RemoteAddrString(), string(cmd))
-		}
-	})
+	go rs.server.Start()
 	return nil
-}
-
-func (rs *remoteServerSync) infoCommand(client *tran.Conn) (cmd contract.Command, result []byte, err error) {
-	cmd = contract.InfoCommand
-	var info contract.FileServerInfo
-	if client.Authorized() {
-		if client.CheckPerm(auth.ReadPerm) {
-			info = contract.FileServerInfo{
-				Status:     contract.SuccessStatus(contract.InfoApi),
-				ServerAddr: rs.serverAddr,
-				SourcePath: server.SourceRoutePrefix,
-				DestPath:   server.DestRoutePrefix,
-				QueryAddr:  server.QueryRoute,
-				PushAddr:   server.PushFullRoute,
-			}
-		} else {
-			info = contract.FileServerInfo{
-				Status: contract.NoPermissionStatus(contract.InfoApi),
-			}
-		}
-	} else {
-		info = contract.FileServerInfo{
-			Status: contract.UnauthorizedStatus(contract.InfoApi),
-		}
-	}
-	result, err = jsonutil.Marshal(info)
-	return
-}
-
-func (rs *remoteServerSync) authCommand(client *tran.Conn, data []byte) (cmd contract.Command, result []byte, err error) {
-	cmd = contract.AuthCommand
-	authData := contract.FailStatus(contract.AuthApi)
-	hashUser, err := auth.ParseAuthCommandData(data)
-	if err == nil && client != nil {
-		authed, perm := rs.server.Auth(hashUser)
-		if authed {
-			hashUser.Perm = perm
-			client.MarkAuthorized(hashUser)
-			if auth.ToPerm(auth.ReadPerm).CheckTo(hashUser.Perm) {
-				authData = contract.SuccessStatus(contract.AuthApi)
-			} else {
-				authData = contract.NewStatus(contract.Success, "warning: you are authorized but have no permission to read", contract.AuthApi)
-			}
-		}
-	} else if err != nil {
-		log.Error(err, "parse auth command data error")
-	}
-	result, err = jsonutil.Marshal(authData)
-	return
-}
-
-func (rs *remoteServerSync) unknownCommand() (cmd contract.Command, result []byte, err error) {
-	cmd = contract.UnknownCommand
-	respData := contract.FailStatus(contract.UnknownApi)
-	respData.Message = "unknown command"
-	result, err = jsonutil.Marshal(respData)
-	return
 }

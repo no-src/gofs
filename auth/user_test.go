@@ -191,6 +191,15 @@ func TestNewUser_ReturnError(t *testing.T) {
 	}
 }
 
+func TestGetAnonymousUser(t *testing.T) {
+	user := GetAnonymousUser()
+	expect := "anonymous|anonymous|rwx"
+	actual := user.String()
+	if actual != expect {
+		t.Errorf("GetAnonymousUser expect get %s, but actual get %s", expect, actual)
+	}
+}
+
 func newUserNoError(t *testing.T, userId int, userName string, password string, perm string) *User {
 	u, err := NewUser(userId, userName, password, perm)
 	if err != nil {

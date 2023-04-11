@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/gofs/util/randutil"
 )
 
@@ -40,15 +39,6 @@ func (user *User) Password() string {
 // Perm return user permission
 func (user *User) Perm() Perm {
 	return user.perm
-}
-
-// ToHashUser convert User to HashUser
-func (user *User) ToHashUser() (hashUser *HashUser) {
-	hash, _ := hashutil.NewHash(hashutil.MD5Hash)
-	userNameHash := hash.HashFromString(user.userName)
-	passwordHash := hash.HashFromString(user.password)
-	hashUser = NewHashUser(userNameHash[:userNameHashLength], passwordHash[:passwordHashLength], user.Perm())
-	return hashUser
 }
 
 // NewUser create a new user
@@ -161,4 +151,14 @@ func ParseStringUsers(users []*User) (userStr string, err error) {
 	}
 	userStr = strings.Join(userResultList, ",")
 	return userStr, nil
+}
+
+// GetAnonymousUser get an anonymous user
+func GetAnonymousUser() *User {
+	return &User{
+		userId:   0,
+		userName: "anonymous",
+		password: "anonymous",
+		perm:     FullPerm,
+	}
 }

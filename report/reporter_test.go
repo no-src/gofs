@@ -26,21 +26,19 @@ func TestReporter_WithDisable_Concurrent(t *testing.T) {
 }
 
 func getTestReporter(enabled bool) (reporter Reporter, addrOnline, addrOffline string) {
-	user := &auth.HashUser{
-		UserNameHash: "698d51a19d8a121c",
-		Perm:         "rwx",
+	user := &auth.SessionUser{
+		UserName: "698d51a19d8a121c",
+		Perm:     "rwx",
 	}
 	reporter = NewReporter()
 	reporter.Enable(enabled)
 	addrOnline = "127.0.0.1:12345"
 	addrOffline = "127.0.0.1:54321"
-	reporter.PutConnection(addrOffline)
-	reporter.PutConnection(addrOnline)
+	reporter.PutConnection(addrOffline, user)
+	reporter.PutConnection(addrOnline, user)
 	time.Sleep(time.Millisecond * 100)
 	reporter.DeleteConnection(addrOffline)
-	reporter.PutAuth(addrOnline, user)
-	reporter.PutAuth("", user)
-	reporter.PutAuth(addrOnline, nil)
+	reporter.PutConnection(addrOnline, nil)
 	reporter.PutEvent(eventlog.NewEvent("./reporter_test.go", "WRITE"))
 	reporter.PutApiStat("127.0.0.1")
 	reporter.PutApiStat("127.0.0.1")
@@ -130,10 +128,6 @@ func testGetReporterWithEnable(t *testing.T, reporter Reporter, addrOnline, addr
 
 	if len(r.Offline) != 1 && r.Offline[0].Addr == addrOffline {
 		t.Errorf("[enabled] test PutConnection [Offline] error,expect to get connection %s, actual get a nil connection", addrOffline)
-	}
-
-	if !online.IsAuth {
-		t.Errorf("[enabled] test PutAuth error, expect to get an authorized connection")
 	}
 
 	expectEventCount := 1

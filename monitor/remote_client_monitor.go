@@ -9,15 +9,14 @@ import (
 	"time"
 
 	"github.com/no-src/gofs/action"
+	"github.com/no-src/gofs/api/apiclient"
+	"github.com/no-src/gofs/api/monitor"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/eventlog"
 	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/internal/cbool"
 	"github.com/no-src/gofs/internal/clist"
-	"github.com/no-src/gofs/sync"
-	"github.com/no-src/gofs/tran"
-	"github.com/no-src/gofs/util/jsonutil"
 	"github.com/no-src/gofs/util/stringutil"
 	"github.com/no-src/gofs/wait"
 	"github.com/no-src/log"
@@ -26,15 +25,10 @@ import (
 type remoteClientMonitor struct {
 	baseMonitor
 
-	client      tran.Client
-	closed      *cbool.CBool
-	messages    *clist.CList
-	currentUser *auth.HashUser
-	authorized  bool
-	authChan    chan contract.Status
-	infoChan    chan contract.Message
-	timeout     time.Duration
-	pi          ignore.PathIgnore
+	client   apiclient.Client
+	closed   *cbool.CBool
+	messages *clist.CList
+	pi       ignore.PathIgnore
 }
 
 // NewRemoteClientMonitor create an instance of remoteClientMonitor to monitor the remote file change
@@ -45,7 +39,6 @@ func NewRemoteClientMonitor(opt Option) (Monitor, error) {
 	port := source.Port()
 	enableTLS := opt.EnableTLS
 	certFile := opt.TLSCertFile
-	insecureSkipVerify := opt.TLSInsecureSkipVerify
 	users := opt.Users
 	pi := opt.PathIgnore
 
@@ -54,68 +47,30 @@ func NewRemoteClientMonitor(opt Option) (Monitor, error) {
 		return nil, err
 	}
 
+	var user *auth.User
+	if len(users) > 0 {
+		user = users[0]
+	}
 	m := &remoteClientMonitor{
-		client:      tran.NewClient(host, port, enableTLS, certFile, insecureSkipVerify),
+		client:      apiclient.New(host, port, enableTLS, certFile, user),
 		messages:    clist.New(),
 		baseMonitor: newBaseMonitor(opt),
-		authChan:    make(chan contract.Status, 100),
-		infoChan:    make(chan contract.Message, 100),
 		closed:      cbool.New(false),
-		timeout:     time.Minute * 3,
 		pi:          pi,
 	}
-	if len(users) > 0 {
-		user := users[0]
-		hashUser := user.ToHashUser()
-		m.currentUser = hashUser
-	}
 	return m, nil
-}
-
-// auth send auth request
-func (m *remoteClientMonitor) auth() error {
-	// if the currentUser is nil, it means to anonymous access
-	if m.currentUser == nil {
-		return nil
-	}
-	go m.retry.Do(func() error {
-		m.currentUser.RefreshExpires()
-		authData := auth.GenerateAuthCommandData(m.currentUser)
-		err := m.client.Write(authData)
-		return err
-	}, "send auth request")
-
-	var status contract.Status
-	select {
-	case status = <-m.authChan:
-	case <-time.After(m.timeout):
-		return fmt.Errorf("auth timeout for %s", m.timeout.String())
-	}
-	if status.Code != contract.Success {
-		return errors.New("receive auth command response error => " + status.Message)
-	}
-
-	// auth success
-	m.authorized = true
-	log.Info("auth success, current client is authorized => [%s] ", status.Message)
-	return nil
 }
 
 func (m *remoteClientMonitor) Start() (wait.Wait, error) {
 	if m.client == nil {
 		return nil, errors.New("remote sync client is nil")
 	}
-	// connect -> auth -> info|read
-	err := m.client.Connect()
+	err := m.client.Start()
 	if err != nil {
 		return nil, err
 	}
 
 	w := m.receive()
-
-	if err = m.auth(); err != nil {
-		return nil, err
-	}
 
 	// execute -sync_once flag
 	if m.syncOnce {
@@ -136,25 +91,10 @@ func (m *remoteClientMonitor) Start() (wait.Wait, error) {
 
 // sync try to sync all the files once
 func (m *remoteClientMonitor) sync() (err error) {
-	go func() {
-		log.ErrorIf(m.client.Write(contract.InfoCommand), "write info command error")
-	}()
-	var info contract.FileServerInfo
-	var infoMsg contract.Message
-	select {
-	case infoMsg = <-m.infoChan:
-	case <-time.After(m.timeout):
-		return fmt.Errorf("sync timeout for %s", m.timeout.String())
-	}
-	err = jsonutil.Unmarshal(infoMsg.Data, &info)
+	info, err := m.client.GetInfo()
 	if err != nil {
 		return err
 	}
-
-	if info.Code != contract.Success {
-		return errors.New("receive info command response error => " + info.Message)
-	}
-
 	return m.syncer.SyncOnce(info.ServerAddr + info.SourcePath)
 }
 
@@ -195,60 +135,21 @@ func (m *remoteClientMonitor) waitShutdown(st *cbool.CBool, wd wait.Done) {
 // readMessage loop read the messages, if receive a message, parse the message then send to consumers according to the api type.
 // if receive a shutdown notify, then stop reading the message.
 func (m *remoteClientMonitor) readMessage(st *cbool.CBool, wd wait.Done) {
+	mc, err := m.client.Monitor()
+	if err != nil {
+		return
+	}
 	for {
 		if m.closed.Get() {
 			wd.DoneWithError(errors.New("remote monitor is closed"))
 			break
 		}
-		data, err := m.client.ReadAll()
+		msg, err := mc.Recv()
 		if err != nil {
-			if st.Get() {
-				break
-			}
-			log.Error(err, "remote client monitor read data error")
-			if m.client.IsClosed() {
-				m.authorized = false
-				log.Debug("try reconnect to server %s:%d", m.client.Host(), m.client.Port())
-				m.retry.Do(func() error {
-					if m.client.IsClosed() {
-						innerErr := m.client.Connect()
-						if innerErr != nil {
-							return innerErr
-						}
-					}
-					return nil
-				}, fmt.Sprintf("client reconnect to %s:%d", m.client.Host(), m.client.Port()))
-
-				if !m.authorized {
-					go m.auth()
-				}
-			}
-		} else {
-			m.parseMessage(data)
+			return
 		}
+		m.messages.PushBack(msg)
 	}
-}
-
-// parseMessage arse the message then send to consumers according to the api type
-func (m *remoteClientMonitor) parseMessage(data []byte) error {
-	var status contract.Status
-	err := jsonutil.Unmarshal(data, &status)
-	if err != nil {
-		log.Error(err, "remote client monitor unmarshal data error")
-		return err
-	}
-
-	switch status.ApiType {
-	case contract.AuthApi:
-		m.authChan <- status
-	case contract.InfoApi:
-		m.infoChan <- contract.NewMessage(data)
-	case contract.SyncMessageApi:
-		m.messages.PushBack(contract.NewMessage(data))
-	default:
-		log.Warn("remote client monitor received a unknown data => %s", string(data))
-	}
-	return nil
 }
 
 // startProcessMessage start loop to process the file change messages
@@ -265,15 +166,9 @@ func (m *remoteClientMonitor) startProcessMessage() {
 			<-time.After(time.Second)
 			continue
 		}
-		message := element.Value.(contract.Message)
-		log.Info("client read request => %s", message.String())
-		var msg sync.Message
-		err := jsonutil.Unmarshal(message.Data, &msg)
-		if err != nil {
-			log.Error(err, "client unmarshal data error")
-		} else if msg.Code != contract.Success {
-			log.Error(errors.New(msg.Message), "remote monitor received the error message")
-		} else if m.pi.MatchPath(msg.Path, "remote client monitor", msg.Action.String()) {
+		msg := element.Value.(*monitor.MonitorMessage)
+		log.Info("client read request => %s", msg.String())
+		if m.pi.MatchPath(msg.FileInfo.Path, "remote client monitor", action.Action(msg.Action).String()) {
 			// ignore match
 		} else {
 			m.execSync(msg)
@@ -283,22 +178,23 @@ func (m *remoteClientMonitor) startProcessMessage() {
 }
 
 // execSync execute the file change message to sync
-func (m *remoteClientMonitor) execSync(msg sync.Message) (err error) {
+func (m *remoteClientMonitor) execSync(msg *monitor.MonitorMessage) (err error) {
+	fi := msg.FileInfo
 	values := url.Values{}
-	values.Add(contract.FsDir, msg.IsDir.String())
-	values.Add(contract.FsSize, stringutil.String(msg.Size))
-	values.Add(contract.FsHash, msg.Hash)
-	values.Add(contract.FsCtime, stringutil.String(msg.CTime))
-	values.Add(contract.FsAtime, stringutil.String(msg.ATime))
-	values.Add(contract.FsMtime, stringutil.String(msg.MTime))
-	if len(msg.HashValues) > 0 {
-		values.Add(contract.FsHashValues, stringutil.String(msg.HashValues))
+	values.Add(contract.FsDir, contract.FsDirValue(fi.IsDir).String())
+	values.Add(contract.FsSize, stringutil.String(fi.Size))
+	values.Add(contract.FsHash, fi.Hash)
+	values.Add(contract.FsCtime, stringutil.String(fi.CTime))
+	values.Add(contract.FsAtime, stringutil.String(fi.ATime))
+	values.Add(contract.FsMtime, stringutil.String(fi.MTime))
+	if len(fi.HashValues) > 0 {
+		values.Add(contract.FsHashValues, stringutil.String(fi.HashValues))
 	}
 
 	// replace question marks with "%3F" to avoid parse the path is breaking when it contains some question marks
-	path := msg.BaseUrl + strings.ReplaceAll(msg.Path, "?", "%3F") + fmt.Sprintf("?%s", values.Encode())
+	path := msg.BaseUrl + strings.ReplaceAll(fi.Path, "?", "%3F") + fmt.Sprintf("?%s", values.Encode())
 
-	switch msg.Action {
+	switch action.Action(msg.Action) {
 	case action.CreateAction:
 		err = m.syncer.Create(path)
 	case action.WriteAction:
@@ -307,7 +203,7 @@ func (m *remoteClientMonitor) execSync(msg sync.Message) (err error) {
 		if err != nil && os.IsNotExist(err) {
 			err = nil
 		}
-		m.addWrite(path, msg.Size)
+		m.addWrite(path, fi.Size)
 	case action.RemoveAction:
 		m.removeWrite(path)
 		err = m.syncer.Remove(path)
@@ -317,10 +213,10 @@ func (m *remoteClientMonitor) execSync(msg sync.Message) (err error) {
 		err = m.syncer.Chmod(path)
 	}
 
-	m.el.Write(eventlog.NewEvent(path, msg.Action.String()))
+	m.el.Write(eventlog.NewEvent(path, action.Action(msg.Action).String()))
 
 	if err != nil {
-		log.Error(err, "%s action execute error => [%s]", msg.Action.String(), path)
+		log.Error(err, "%s action execute error => [%s]", action.Action(msg.Action).String(), path)
 	}
 	return err
 }
@@ -329,7 +225,7 @@ func (m *remoteClientMonitor) execSync(msg sync.Message) (err error) {
 func (m *remoteClientMonitor) Close() error {
 	m.closed.Set(true)
 	if m.client != nil {
-		return m.client.Close()
+		return m.client.Stop()
 	}
 	return nil
 }

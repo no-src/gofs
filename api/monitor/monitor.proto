@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/no-src/gofs/api/monitor";
+
+package monitor;
+
+// MonitorService the info service of the api server
+service MonitorService {
+  // Monitor monitor the remote server
+  rpc Monitor(google.protobuf.Empty) returns (stream MonitorMessage) {}
+}
+
+// FileServerInfo the file server basic info
+message MonitorMessage{
+  FileInfo file_info = 1;
+  // Action the action of file change
+  int32 action = 2;
+  // BaseUrl the base url of file server
+  string base_url = 3;
+}
+
+// FileInfo the basic file info description
+message FileInfo{
+  // Path the file path
+  string path = 1;
+  // IsDir is a dir the path
+  int32 is_dir = 2;
+  // Size the size of path for bytes
+  int64 size = 3;
+  // Hash calculate the path hash value, if the path is a file
+  string hash = 4;
+  // HashValues the hash value of the entire file and first chunk and some checkpoints
+  repeated HashValue hash_values = 5;
+  // CTime creation time, unix sec
+  int64 c_time = 6;
+  // ATime last access time, unix sec
+  int64 a_time = 7;
+  // MTime last modify time, unix sec
+  int64 m_time = 8;
+}
+
+// HashValue the file hash info
+message HashValue{
+  // Offset the file data to calculate the hash value from zero to offset
+  int64 offset = 1 ;
+  // Hash the file checkpoint hash value
+  string hash = 2;
+}

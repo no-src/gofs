@@ -2,3 +2,5 @@ source: rs://127.0.0.1:8105
 dest: ./rc/dest
 log_dir: ./rc-logs/
 users: gofs|password|rwx
+tls_cert_file: ../util/httputil/testdata/cert.pem
+tls_key_file: ../util/httputil/testdata/key.pem
