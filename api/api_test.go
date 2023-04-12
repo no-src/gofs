@@ -21,12 +21,17 @@ const (
 	serverAddr    = "https://127.0.0.1"
 	apiServerHost = "127.0.0.1"
 	apiServerPort = 52172
+	tokenSecret   = "123456abcdefghij"
 )
 
 func TestApiServerAndClient(t *testing.T) {
-	server := runApiServer()
+	server, err := runApiServer()
+	if err != nil {
+		t.Errorf("running api server error => %v", err)
+		return
+	}
 	time.Sleep(time.Second * 3)
-	err := runApiClient()
+	err = runApiClient()
 	if err != nil {
 		t.Errorf("running api client error => %v", err)
 		return
@@ -34,11 +39,14 @@ func TestApiServerAndClient(t *testing.T) {
 	server.Stop()
 }
 
-func runApiServer() apiserver.Server {
+func runApiServer() (apiserver.Server, error) {
 	var users []*auth.User
 	user, _ := auth.NewUser(1, "root", "123990", auth.FullPerm)
 	users = append(users, user)
-	srv := apiserver.New(apiServerHost, apiServerPort, true, certFile, keyFile, users, report.NewReporter(), serverAddr, log.DefaultLogger())
+	srv, err := apiserver.New(apiServerHost, apiServerPort, true, certFile, keyFile, tokenSecret, users, report.NewReporter(), serverAddr, log.DefaultLogger())
+	if err != nil {
+		return nil, err
+	}
 	go srv.Start()
 	go func() {
 		for {
@@ -48,7 +56,7 @@ func runApiServer() apiserver.Server {
 			})
 		}
 	}()
-	return srv
+	return srv, nil
 }
 
 func runApiClient() error {

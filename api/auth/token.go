@@ -6,12 +6,12 @@ import (
 	"crypto/cipher"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/util/jsonutil"
-	"github.com/no-src/gofs/util/randutil"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -34,14 +34,18 @@ type token struct {
 }
 
 // NewToken create a default implementation of the Token
-func NewToken(users []*auth.User) Token {
+func NewToken(users []*auth.User, secret string) (Token, error) {
+	err := checkTokenSecret(secret)
+	if err != nil {
+		return nil, err
+	}
 	return &token{
 		users:               users,
 		timeoutSeconds:      60,
 		tokenExpiresSeconds: 60 * 30,
-		secret:              randutil.RandomString(16) + randutil.RandomString(16),
-		iv:                  randutil.RandomString(16),
-	}
+		secret:              secret,
+		iv:                  "nosrc-gofs-token",
+	}, nil
 }
 
 func (t *token) GenerateToken(in *LoginUser) (token string, err error) {
@@ -117,4 +121,12 @@ func (t *token) decodeToken(token string) (tu *TokenUser, err error) {
 	stream.XORKeyStream(dst, data)
 	err = jsonutil.Unmarshal(dst, &tu)
 	return tu, err
+}
+
+func checkTokenSecret(secret string) error {
+	length := len(secret)
+	if length == 16 || length == 24 || length == 32 {
+		return nil
+	}
+	return fmt.Errorf("invalid token secret size => %d, current must be either 16, 24, or 32 bytes, please check the -token_secret flag", length)
 }

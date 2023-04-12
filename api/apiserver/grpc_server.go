@@ -37,17 +37,21 @@ type grpcServer struct {
 }
 
 // New create the instance of the Server
-func New(ip string, port int, enableTLS bool, certFile string, keyFile string, users []*auth.User, reporter report.Reporter, httpServerAddr string, logger log.Logger) Server {
+func New(ip string, port int, enableTLS bool, certFile string, keyFile string, tokenSecret string, users []*auth.User, reporter report.Reporter, httpServerAddr string, logger log.Logger) (Server, error) {
 	if len(users) == 0 {
 		logger.Warn("the grpc server allows anonymous access, you should set some server users by the -users or -rand_user_count flag for security reasons")
 		users = append(users, auth.GetAnonymousUser())
+	}
+	token, err := authapi.NewToken(users, tokenSecret)
+	if err != nil {
+		return nil, err
 	}
 	srv := &grpcServer{
 		network:         "tcp",
 		ip:              net.ParseIP(ip),
 		port:            port,
 		users:           users,
-		token:           authapi.NewToken(users),
+		token:           token,
 		enableTLS:       enableTLS,
 		certFile:        certFile,
 		keyFile:         keyFile,
@@ -60,7 +64,7 @@ func New(ip string, port int, enableTLS bool, certFile string, keyFile string, u
 	if !enableTLS {
 		logger.Warn("the grpc server is not enable enableTLS, it is not a security connection")
 	}
-	return srv
+	return srv, nil
 }
 
 func (gs *grpcServer) Start() (err error) {

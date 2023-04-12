@@ -38,6 +38,7 @@ func NewRemoteServerSync(opt Option) (Sync, error) {
 	enableTLS := opt.EnableTLS
 	certFile := opt.TLSCertFile
 	keyFile := opt.TLSKeyFile
+	tokenSecret := opt.TokenSecret
 	users := opt.Users
 
 	ds, err := newDiskSync(opt)
@@ -74,7 +75,10 @@ func NewRemoteServerSync(opt Option) (Sync, error) {
 		log.Warn("create remote server sync warning, you should enable the file server with -server and -server_addr flags")
 	}
 
-	rs.server = apiserver.New(source.Host(), source.Port(), enableTLS, certFile, keyFile, users, opt.Reporter, rs.serverAddr, log.DefaultLogger())
+	rs.server, err = apiserver.New(source.Host(), source.Port(), enableTLS, certFile, keyFile, tokenSecret, users, opt.Reporter, rs.serverAddr, log.DefaultLogger())
+	if err != nil {
+		return nil, err
+	}
 	return rs, rs.start()
 }
 

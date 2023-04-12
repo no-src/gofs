@@ -28,6 +28,7 @@ type Option struct {
 	Progress              bool
 	MaxTranRate           int64
 	SSHKey                string
+	TokenSecret           string
 	Users                 []*auth.User
 	Retry                 retry.Retry
 	EncOpt                encrypt.Option
@@ -54,6 +55,7 @@ func NewSyncOption(config conf.Config, users []*auth.User, r retry.Retry, pi ign
 		Progress:              config.Progress,
 		MaxTranRate:           config.MaxTranRate,
 		SSHKey:                config.SSHKey,
+		TokenSecret:           config.TokenSecret,
 		Users:                 users,
 		Retry:                 r,
 		EncOpt:                encrypt.NewOption(config),
