@@ -15,4 +15,6 @@ type Client interface {
 	GetInfo() (*info.FileServerInfo, error)
 	// Monitor monitor the remote server
 	Monitor() (monitor.MonitorService_MonitorClient, error)
+	// IsClosed is connection closed of the current client
+	IsClosed(err error) bool
 }

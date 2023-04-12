@@ -146,9 +146,19 @@ func (m *remoteClientMonitor) readMessage(st *cbool.CBool, wd wait.Done) {
 		}
 		msg, err := mc.Recv()
 		if err != nil {
-			return
+			if st.Get() {
+				break
+			}
+			log.Error(err, "receive monitor message error")
+			if m.client.IsClosed(err) {
+				m.retry.Do(func() error {
+					mc, err = m.client.Monitor()
+					return err
+				}, "monitor the remote server")
+			}
+		} else {
+			m.messages.PushBack(msg)
 		}
-		m.messages.PushBack(msg)
 	}
 }
 

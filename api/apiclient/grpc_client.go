@@ -110,6 +110,10 @@ func (c *client) Monitor() (monitor.MonitorService_MonitorClient, error) {
 	return c.monitor()
 }
 
+func (c *client) IsClosed(err error) bool {
+	return status.Code(err) == codes.Unavailable
+}
+
 func (c *client) getToken() (token string, err error) {
 	reply, err := c.AuthServiceClient.Login(context.Background(), &authapi.LoginUser{
 		Username:  c.user.UserName(),
