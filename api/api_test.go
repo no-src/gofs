@@ -11,8 +11,6 @@ import (
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/report"
 	"github.com/no-src/log"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 const (
@@ -30,7 +28,6 @@ func TestApiServerAndClient(t *testing.T) {
 		t.Errorf("running api server error => %v", err)
 		return
 	}
-	time.Sleep(time.Second * 3)
 	err = runApiClient()
 	if err != nil {
 		t.Errorf("running api client error => %v", err)
@@ -50,7 +47,7 @@ func runApiServer() (apiserver.Server, error) {
 	go srv.Start()
 	go func() {
 		for {
-			time.Sleep(time.Second)
+			time.Sleep(time.Millisecond)
 			srv.SendMonitorMessage(&monitor.MonitorMessage{
 				BaseUrl: serverAddr,
 			})
@@ -79,14 +76,11 @@ func runApiClient() error {
 	if err != nil {
 		return err
 	}
-	go func() {
-		time.Sleep(time.Second * 3)
-		c.Stop()
-	}()
-	for {
+
+	for i := 0; i < 5; i++ {
 		msg, err := ms.Recv()
 		if err != nil {
-			if status.Code(err) == codes.Canceled {
+			if c.IsClosed(err) {
 				err = nil
 			}
 			return err
@@ -95,5 +89,5 @@ func runApiClient() error {
 			return errors.New("invalid baseurl")
 		}
 	}
-	return nil
+	return c.Stop()
 }
