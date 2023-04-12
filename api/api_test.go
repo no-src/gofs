@@ -23,7 +23,7 @@ const (
 )
 
 func TestApiServerAndClient(t *testing.T) {
-	server, err := runApiServer()
+	server, err := runApiServer(t)
 	if err != nil {
 		t.Errorf("running api server error => %v", err)
 		return
@@ -36,7 +36,7 @@ func TestApiServerAndClient(t *testing.T) {
 	server.Stop()
 }
 
-func runApiServer() (apiserver.Server, error) {
+func runApiServer(t *testing.T) (apiserver.Server, error) {
 	var users []*auth.User
 	user, _ := auth.NewUser(1, "root", "123990", auth.FullPerm)
 	users = append(users, user)
@@ -44,13 +44,20 @@ func runApiServer() (apiserver.Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	go srv.Start()
+	go func() {
+		if err := srv.Start(); err != nil {
+			t.Errorf("start api server error => %v", err)
+		}
+	}()
 	go func() {
 		for {
 			time.Sleep(time.Millisecond)
-			srv.SendMonitorMessage(&monitor.MonitorMessage{
+			err = srv.SendMonitorMessage(&monitor.MonitorMessage{
 				BaseUrl: serverAddr,
 			})
+			if err != nil {
+				t.Errorf("SendMonitorMessage error => %v", err)
+			}
 		}
 	}()
 	return srv, nil
