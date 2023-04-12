@@ -9,5 +9,5 @@ type Server interface {
 	// Stop stop the server
 	Stop()
 	// SendMonitorMessage send monitor message
-	SendMonitorMessage(message *monitor.MonitorMessage) error
+	SendMonitorMessage(message *monitor.MonitorMessage)
 }

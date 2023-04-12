@@ -181,7 +181,8 @@ func (rs *remoteServerSync) send(act action.Action, path string) (err error) {
 			MTime:      mTime.Unix(),
 		},
 	}
-	return rs.server.SendMonitorMessage(req)
+	rs.server.SendMonitorMessage(req)
+	return nil
 }
 
 func (rs *remoteServerSync) IsDir(path string) (bool, error) {

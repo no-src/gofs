@@ -96,9 +96,8 @@ func (gs *grpcServer) Stop() {
 	gs.server.GracefulStop()
 }
 
-func (gs *grpcServer) SendMonitorMessage(message *monitor.MonitorMessage) error {
+func (gs *grpcServer) SendMonitorMessage(message *monitor.MonitorMessage) {
 	gs.monitorMessages.PushBack(message)
-	return nil
 }
 
 func (gs *grpcServer) initRoute(s *grpc.Server) {

@@ -52,12 +52,9 @@ func runApiServer(t *testing.T) (apiserver.Server, error) {
 	go func() {
 		for {
 			time.Sleep(time.Millisecond)
-			err = srv.SendMonitorMessage(&monitor.MonitorMessage{
+			srv.SendMonitorMessage(&monitor.MonitorMessage{
 				BaseUrl: serverAddr,
 			})
-			if err != nil {
-				t.Errorf("SendMonitorMessage error => %v", err)
-			}
 		}
 	}()
 	return srv, nil

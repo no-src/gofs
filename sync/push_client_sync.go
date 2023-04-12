@@ -42,7 +42,6 @@ type pushClientSync struct {
 	cookies     []*http.Cookie
 	currentUser *auth.User
 	client      apiclient.Client
-	timeout     time.Duration
 	httpClient  httputil.HttpClient
 }
 
@@ -79,7 +78,6 @@ func NewPushClientSync(opt Option) (Sync, error) {
 		diskSync:    *ds,
 		client:      apiclient.New(dest.Host(), dest.Port(), enableTLS, certFile, user),
 		currentUser: user,
-		timeout:     time.Minute * 3,
 		httpClient:  httpClient,
 	}
 
