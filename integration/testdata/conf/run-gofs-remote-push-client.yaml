@@ -2,3 +2,4 @@ source: ./rc-push/source
 dest: rs://127.0.0.1:9105?local_sync_disabled=false&path=./rc-push/dest
 log_dir: ./rc-push-logs/
 users: gofs|password|rwx
+tls_cert_file: ../util/httputil/testdata/cert.pem
