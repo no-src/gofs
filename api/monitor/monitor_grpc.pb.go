@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v4.22.2
-// source: monitor.proto
+// source: api/proto/monitor.proto
 
 package monitor
 
@@ -135,5 +135,5 @@ var MonitorService_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 	},
-	Metadata: "monitor.proto",
+	Metadata: "api/proto/monitor.proto",
 }
