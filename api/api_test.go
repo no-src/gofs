@@ -18,7 +18,7 @@ const (
 	keyFile       = "../util/httputil/testdata/key.pem"
 	serverAddr    = "https://127.0.0.1"
 	apiServerHost = "127.0.0.1"
-	apiServerPort = 52172
+	apiServerPort = 8128
 	tokenSecret   = "123456abcdefghij"
 )
 
