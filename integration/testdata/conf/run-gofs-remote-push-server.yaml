@@ -1,0 +1,8 @@
+source: rs://127.0.0.1:9105?mode=server&local_sync_disabled=true&path=./rs-push/source&fs_server=https://127.0.0.1:2888
+dest: ./rs-push/dest
+log_dir: ./rs-push-logs/
+users: gofs|password|rwx
+server_addr: ":2888"
+tls_cert_file: ../util/httputil/testdata/cert.pem
+tls_key_file: ../util/httputil/testdata/key.pem
+push_server: true
