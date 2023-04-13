@@ -1,10 +1,10 @@
 syntax = "proto3";
 
+package monitor;
+
 import "google/protobuf/empty.proto";
 
 option go_package = "github.com/no-src/gofs/api/monitor";
-
-package monitor;
 
 // MonitorService the info service of the api server
 service MonitorService {

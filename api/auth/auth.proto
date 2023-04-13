@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-option go_package = "github.com/no-src/gofs/api/auth";
-
 package auth;
+
+option go_package = "github.com/no-src/gofs/api/auth";
 
 // AuthService the auth service of the api server
 service AuthService {
