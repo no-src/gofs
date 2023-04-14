@@ -21,7 +21,6 @@ type grpcServer struct {
 	network         string
 	ip              net.IP
 	port            int
-	listener        net.Listener
 	users           []*auth.User
 	token           authapi.Token
 	certFile        string
@@ -66,12 +65,12 @@ func New(ip string, port int, enableTLS bool, certFile string, keyFile string, t
 	return srv, nil
 }
 
-func (gs *grpcServer) Start() (err error) {
+func (gs *grpcServer) Start() error {
 	addr := &net.TCPAddr{
 		IP:   gs.ip,
 		Port: gs.port,
 	}
-	gs.listener, err = net.ListenTCP(gs.network, addr)
+	listener, err := net.ListenTCP(gs.network, addr)
 	if err != nil {
 		return err
 	}
@@ -87,7 +86,7 @@ func (gs *grpcServer) Start() (err error) {
 	gs.server = grpc.NewServer(grpc.Creds(creds), grpc.StreamInterceptor(gs.StreamServerInterceptor), grpc.UnaryInterceptor(gs.UnaryServerInterceptor))
 	gs.initRoute(gs.server)
 	go gs.processMonitorMessage()
-	err = gs.server.Serve(gs.listener)
+	err = gs.server.Serve(listener)
 	return err
 }
 
