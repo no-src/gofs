@@ -23,12 +23,21 @@ const (
 )
 
 func TestApiServerAndClient(t *testing.T) {
-	server, err := runApiServer(t)
+	user, _ := auth.NewUser(1, "root", "123990", auth.FullPerm)
+	runApiServerAndClient(t, user)
+}
+
+func TestApiServerAndClient_WithAnonymous(t *testing.T) {
+	runApiServerAndClient(t, nil)
+}
+
+func runApiServerAndClient(t *testing.T, user *auth.User) {
+	server, err := runApiServer(t, user)
 	if err != nil {
 		t.Errorf("running api server error => %v", err)
 		return
 	}
-	err = runApiClient()
+	err = runApiClient(user)
 	if err != nil {
 		t.Errorf("running api client error => %v", err)
 		return
@@ -36,10 +45,11 @@ func TestApiServerAndClient(t *testing.T) {
 	server.Stop()
 }
 
-func runApiServer(t *testing.T) (apiserver.Server, error) {
+func runApiServer(t *testing.T, user *auth.User) (apiserver.Server, error) {
 	var users []*auth.User
-	user, _ := auth.NewUser(1, "root", "123990", auth.FullPerm)
-	users = append(users, user)
+	if user != nil {
+		users = append(users, user)
+	}
 	srv, err := apiserver.New(apiServerHost, apiServerPort, true, certFile, keyFile, tokenSecret, users, report.NewReporter(), serverAddr, log.DefaultLogger())
 	if err != nil {
 		return nil, err
@@ -60,8 +70,7 @@ func runApiServer(t *testing.T) (apiserver.Server, error) {
 	return srv, nil
 }
 
-func runApiClient() (err error) {
-	user, _ := auth.NewUser(1, "root", "123990", auth.FullPerm)
+func runApiClient(user *auth.User) (err error) {
 	c := apiclient.New(apiServerHost, apiServerPort, true, certFile, user)
 	for i := 0; i < 3; i++ {
 		err = c.Start()
