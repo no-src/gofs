@@ -47,8 +47,6 @@ func runApiServer(t *testing.T) (apiserver.Server, error) {
 	go func() {
 		if err := srv.Start(); err != nil {
 			t.Errorf("start api server error => %v", err)
-		} else {
-			t.Logf("start api server success => %s:%d", apiServerHost, apiServerPort)
 		}
 	}()
 	go func() {
