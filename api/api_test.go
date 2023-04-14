@@ -70,6 +70,7 @@ func runApiClient() (err error) {
 		if err == nil {
 			break
 		}
+		time.Sleep(time.Second * 3)
 	}
 
 	info, err := c.GetInfo()
