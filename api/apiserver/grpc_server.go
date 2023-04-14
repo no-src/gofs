@@ -13,7 +13,6 @@ import (
 	"github.com/no-src/gofs/report"
 	"github.com/no-src/log"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/admin"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -101,7 +100,6 @@ func (gs *grpcServer) SendMonitorMessage(message *monitor.MonitorMessage) {
 }
 
 func (gs *grpcServer) initRoute(s *grpc.Server) {
-	admin.Register(s)
 	info.RegisterServer(s, gs.httpServerAddr)
 	monitor.RegisterServer(s, gs.monitors, gs.reporter, gs.token)
 	authapi.RegisterServer(s, gs.token)

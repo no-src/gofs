@@ -11,7 +11,6 @@ import (
 	"github.com/no-src/gofs/auth"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/channelz/grpc_channelz_v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
@@ -21,7 +20,6 @@ import (
 )
 
 type client struct {
-	grpc_channelz_v1.ChannelzClient
 	info.InfoServiceClient
 	monitor.MonitorServiceClient
 	authapi.AuthServiceClient
@@ -68,7 +66,6 @@ func (c *client) connect() (err error) {
 	if err != nil {
 		return err
 	}
-	c.ChannelzClient = grpc_channelz_v1.NewChannelzClient(clientConn)
 	c.InfoServiceClient = info.NewInfoServiceClient(clientConn)
 	c.MonitorServiceClient = monitor.NewMonitorServiceClient(clientConn)
 	c.AuthServiceClient = authapi.NewAuthServiceClient(clientConn)
