@@ -47,6 +47,8 @@ func runApiServer(t *testing.T) (apiserver.Server, error) {
 	go func() {
 		if err := srv.Start(); err != nil {
 			t.Errorf("start api server error => %v", err)
+		} else {
+			t.Logf("start api server success => %s:%d", apiServerHost, apiServerPort)
 		}
 	}()
 	go func() {
@@ -60,12 +62,14 @@ func runApiServer(t *testing.T) (apiserver.Server, error) {
 	return srv, nil
 }
 
-func runApiClient() error {
+func runApiClient() (err error) {
 	user, _ := auth.NewUser(1, "root", "123990", auth.FullPerm)
 	c := apiclient.New(apiServerHost, apiServerPort, true, certFile, user)
-	err := c.Start()
-	if err != nil {
-		return err
+	for i := 0; i < 3; i++ {
+		err = c.Start()
+		if err == nil {
+			break
+		}
 	}
 
 	info, err := c.GetInfo()
