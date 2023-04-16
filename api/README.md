@@ -13,7 +13,7 @@ go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 ```
 
-## Regenerate gRPC codes
+## Regenerate gRPC code
 
 Firstly, you should switch to the root path of the repository like the following command.
 
@@ -21,7 +21,7 @@ Firstly, you should switch to the root path of the repository like the following
 cd $GOPATH/src/github.com/no-src/gofs
 ```
 
-Then you can use the following command to regenerate gRPC codes.
+Then you can use the following command to regenerate gRPC code.
 
 ```bash
 protoc --go_out=../../../ --go_opt=paths=import --go-grpc_out=../../../ --go-grpc_opt=paths=import api/proto/*.proto
