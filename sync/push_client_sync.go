@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/no-src/gofs/action"
+	"github.com/no-src/gofs/api/apiclient"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/contract/push"
@@ -19,7 +20,6 @@ import (
 	"github.com/no-src/gofs/internal/rate"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/client"
-	"github.com/no-src/gofs/tran"
 	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/gofs/util/httputil"
 	"github.com/no-src/gofs/util/jsonutil"
@@ -38,15 +38,11 @@ var (
 type pushClientSync struct {
 	diskSync
 
-	pushAddr        string
-	cookies         []*http.Cookie
-	currentUser     *auth.User
-	currentHashUser *auth.HashUser
-	client          tran.Client
-	authChan        chan contract.Status
-	infoChan        chan contract.Message
-	timeout         time.Duration
-	httpClient      httputil.HttpClient
+	pushAddr    string
+	cookies     []*http.Cookie
+	currentUser *auth.User
+	client      apiclient.Client
+	httpClient  httputil.HttpClient
 }
 
 // NewPushClientSync create an instance of the pushClientSync
@@ -74,20 +70,15 @@ func NewPushClientSync(opt Option) (Sync, error) {
 		return nil, err
 	}
 
-	s := &pushClientSync{
-		diskSync:   *ds,
-		client:     tran.NewClient(dest.Host(), dest.Port(), enableTLS, certFile, insecureSkipVerify),
-		authChan:   make(chan contract.Status, 100),
-		infoChan:   make(chan contract.Message, 100),
-		timeout:    time.Minute * 3,
-		httpClient: httpClient,
-	}
-
+	var user *auth.User
 	if len(users) > 0 {
-		user := users[0]
-		hashUser := user.ToHashUser()
-		s.currentUser = user
-		s.currentHashUser = hashUser
+		user = users[0]
+	}
+	s := &pushClientSync{
+		diskSync:    *ds,
+		client:      apiclient.New(dest.Host(), dest.Port(), enableTLS, certFile, user),
+		currentUser: user,
+		httpClient:  httpClient,
 	}
 
 	err = s.start()
@@ -98,101 +89,24 @@ func NewPushClientSync(opt Option) (Sync, error) {
 }
 
 func (pcs *pushClientSync) start() error {
-	err := pcs.client.Connect()
-	if err != nil {
-		return err
-	}
-	pcs.receive()
-	err = pcs.auth()
+	err := pcs.client.Start()
 	if err != nil {
 		return err
 	}
 	err = pcs.info()
 	if err == nil {
-		pcs.client.Close()
+		pcs.client.Stop()
 	}
 	return err
 }
 
-func (pcs *pushClientSync) auth() error {
-	// if the currentHashUser is nil, it means to anonymous access
-	if pcs.currentHashUser == nil {
-		return nil
-	}
-	go func() {
-		pcs.currentHashUser.RefreshExpires()
-		authData := auth.GenerateAuthCommandData(pcs.currentHashUser)
-		log.ErrorIf(pcs.client.Write(authData), "send auth request error")
-	}()
-
-	var status contract.Status
-	select {
-	case status = <-pcs.authChan:
-	case <-time.After(pcs.timeout):
-		return fmt.Errorf("%w for %s", errAuthTimeout, pcs.timeout.String())
-	}
-	if status.Code != contract.Success {
-		return fmt.Errorf("%w => %s", errAuthResponse, status.Message)
-	}
-
-	log.Info("auth success, current client is authorized => [%s] ", status.Message)
-	return nil
-}
-
 func (pcs *pushClientSync) info() error {
-	go func() {
-		log.ErrorIf(pcs.client.Write(contract.InfoCommand), "write info command error")
-	}()
-	var info contract.FileServerInfo
-	var infoMsg contract.Message
-	select {
-	case infoMsg = <-pcs.infoChan:
-	case <-time.After(pcs.timeout):
-		return fmt.Errorf("%w for %s", errInfoTimeout, pcs.timeout.String())
-	}
-	err := jsonutil.Unmarshal(infoMsg.Data, &info)
+	info, err := pcs.client.GetInfo()
 	if err != nil {
 		return err
 	}
-
-	if info.Code != contract.Success {
-		return fmt.Errorf("%w => %s", errInfoResponse, info.Message)
-	}
 	pcs.pushAddr = info.ServerAddr + info.PushAddr
 	return nil
-}
-
-func (pcs *pushClientSync) receive() {
-	go func() {
-		for {
-			if pcs.client.IsClosed() {
-				break
-			}
-			data, err := pcs.client.ReadAll()
-			if err != nil {
-				if pcs.client.IsClosed() {
-					break
-				} else {
-					log.Error(err, "[push client sync] read data error")
-				}
-			} else {
-				var status contract.Status
-				err = jsonutil.Unmarshal(data, &status)
-				if err != nil {
-					log.Error(err, "[push client sync] unmarshal data error")
-					continue
-				}
-				switch status.ApiType {
-				case contract.AuthApi:
-					pcs.authChan <- status
-				case contract.InfoApi:
-					pcs.infoChan <- contract.NewMessage(data)
-				default:
-					log.Warn("[push client sync] receive and discard data => %s", string(data))
-				}
-			}
-		}
-	}()
 }
 
 func (pcs *pushClientSync) Create(path string) error {

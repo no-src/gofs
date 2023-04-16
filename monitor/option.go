@@ -14,39 +14,37 @@ import (
 
 // Option the monitor component option
 type Option struct {
-	SyncOnce              bool
-	EnableTLS             bool
-	TLSCertFile           string
-	TLSInsecureSkipVerify bool
-	EnableSyncDelay       bool
-	SyncDelayEvents       int
-	SyncDelayTime         time.Duration
-	SyncWorkers           int
-	Users                 []*auth.User
-	EventWriter           io.Writer
-	Syncer                sync.Sync
-	Retry                 retry.Retry
-	PathIgnore            ignore.PathIgnore
-	Reporter              report.Reporter
+	SyncOnce        bool
+	EnableTLS       bool
+	TLSCertFile     string
+	EnableSyncDelay bool
+	SyncDelayEvents int
+	SyncDelayTime   time.Duration
+	SyncWorkers     int
+	Users           []*auth.User
+	EventWriter     io.Writer
+	Syncer          sync.Sync
+	Retry           retry.Retry
+	PathIgnore      ignore.PathIgnore
+	Reporter        report.Reporter
 }
 
 // NewMonitorOption create an instance of the Option, store all the monitor component options
 func NewMonitorOption(config conf.Config, syncer sync.Sync, retry retry.Retry, users []*auth.User, eventWriter io.Writer, pi ignore.PathIgnore, reporter report.Reporter) Option {
 	opt := Option{
-		SyncOnce:              config.SyncOnce,
-		EnableTLS:             config.EnableTLS,
-		TLSCertFile:           config.TLSCertFile,
-		TLSInsecureSkipVerify: config.TLSInsecureSkipVerify,
-		EnableSyncDelay:       config.EnableSyncDelay,
-		SyncDelayEvents:       config.SyncDelayEvents,
-		SyncDelayTime:         config.SyncDelayTime.Duration(),
-		SyncWorkers:           config.SyncWorkers,
-		Syncer:                syncer,
-		Retry:                 retry,
-		Users:                 users,
-		EventWriter:           eventWriter,
-		PathIgnore:            pi,
-		Reporter:              reporter,
+		SyncOnce:        config.SyncOnce,
+		EnableTLS:       config.EnableTLS,
+		TLSCertFile:     config.TLSCertFile,
+		EnableSyncDelay: config.EnableSyncDelay,
+		SyncDelayEvents: config.SyncDelayEvents,
+		SyncDelayTime:   config.SyncDelayTime.Duration(),
+		SyncWorkers:     config.SyncWorkers,
+		Syncer:          syncer,
+		Retry:           retry,
+		Users:           users,
+		EventWriter:     eventWriter,
+		PathIgnore:      pi,
+		Reporter:        reporter,
 	}
 	return opt
 }

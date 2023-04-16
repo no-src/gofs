@@ -105,6 +105,7 @@ func parseFlags(args []string) (config conf.Config) {
 	cl.IntVar(&config.RandomUserNameLen, "rand_user_len", 6, "the length of the random user's username")
 	cl.IntVar(&config.RandomPasswordLen, "rand_pwd_len", 10, "the length of the random user's password")
 	cl.StringVar(&config.RandomDefaultPerm, "rand_perm", "r", "the default permission of every random user, like 'rwx'")
+	cl.StringVar(&config.TokenSecret, "token_secret", "", "a secret string for token")
 
 	// checksum
 	cl.BoolVar(&config.Checksum, "checksum", false, "calculate and print the checksum for source file")

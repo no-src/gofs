@@ -6,3 +6,4 @@ server_addr: ":2888"
 tls_cert_file: ../util/httputil/testdata/cert.pem
 tls_key_file: ../util/httputil/testdata/key.pem
 push_server: true
+token_secret: "1234567890123456"

@@ -37,9 +37,6 @@ jobs:
       - name: Test HttpUtil
         run: go test -v -race -tags=httputil_test ./util/httputil
 
-      - name: Test Tran
-        run: go test -v -race -tags=tran_test ./tran
-
       - name: Test Integration
         run: go test -v -race -tags=integration_test ./integration
 

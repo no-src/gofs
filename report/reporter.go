@@ -19,11 +19,9 @@ type Reporter interface {
 	// GetReport get current report data
 	GetReport() Report
 	// PutConnection put a new connection
-	PutConnection(addr string)
+	PutConnection(addr string, user *auth.SessionUser)
 	// DeleteConnection delete a closed connection
 	DeleteConnection(addr string)
-	// PutAuth put an auth info to update connection status
-	PutAuth(addr string, user *auth.HashUser)
 	// PutEvent put a file change event
 	PutEvent(event eventlog.Event)
 	// PutApiStat put an access log of api
@@ -70,11 +68,11 @@ func (r *reporter) GetReport() Report {
 	return r.report
 }
 
-func (r *reporter) PutConnection(addr string) {
-	go r.putConnection(addr)
+func (r *reporter) PutConnection(addr string, user *auth.SessionUser) {
+	go r.putConnection(addr, user)
 }
 
-func (r *reporter) putConnection(addr string) {
+func (r *reporter) putConnection(addr string, user *auth.SessionUser) {
 	now := timeutil.Now()
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -85,6 +83,10 @@ func (r *reporter) putConnection(addr string) {
 	stat := &ConnStat{
 		Addr:        addr,
 		ConnectTime: now,
+	}
+	if user != nil {
+		stat.UserName = user.UserName
+		stat.Perm = user.Perm.String()
 	}
 	r.report.Online[addr] = stat
 }
@@ -111,30 +113,6 @@ func (r *reporter) deleteConnection(addr string) {
 		stat.DisconnectTime = now
 		stat.LifeTime = core.Duration(stat.DisconnectTime.Time().Sub(stat.ConnectTime.Time()))
 		r.report.Offline = append(r.report.Offline, stat)
-	}
-}
-
-func (r *reporter) PutAuth(addr string, user *auth.HashUser) {
-	go r.putAuth(addr, user)
-}
-
-func (r *reporter) putAuth(addr string, user *auth.HashUser) {
-	if len(addr) == 0 || user == nil {
-		return
-	}
-	now := timeutil.Now()
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	if !r.enabled {
-		return
-	}
-	addr = r.connAddr(addr)
-	stat := r.report.Online[addr]
-	if stat != nil {
-		stat.IsAuth = true
-		stat.UserName = user.UserNameHash
-		stat.Perm = user.Perm.String()
-		stat.AuthTime = now
 	}
 }
 

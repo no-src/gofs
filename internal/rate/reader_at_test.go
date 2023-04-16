@@ -33,7 +33,7 @@ func TestReadAt(t *testing.T) {
 			defer f.Close()
 			r := NewReaderAt(f, tc.bytesPerSecond)
 			start := time.Now()
-			var total int64 = 0
+			var total int64
 			for {
 				p := make([]byte, defaultBufSize)
 				n, err := r.ReadAt(p, 1)

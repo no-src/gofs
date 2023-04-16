@@ -53,6 +53,7 @@ rand_user_count: 0
 rand_user_len: 6
 rand_pwd_len: 10
 rand_perm: r
+token_secret: ""
 checksum: false
 encrypt: false
 encrypt_path: ""

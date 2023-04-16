@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "github.com/no-src/gofs/api/auth";
+
+// AuthService the auth service of the api server
+service AuthService {
+  // Login login to the api server and return the access token
+  rpc Login(LoginUser) returns (LoginReply) {}
+}
+
+message LoginUser{
+  string username = 1;
+  string password = 2;
+  int64 timestamp = 3;
+}
+
+message LoginReply{
+  string token = 1;
+}
+
+message TokenUser{
+  int32 user_id = 1;
+  string username = 2;
+  int64 expires = 3;
+}
