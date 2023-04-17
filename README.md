@@ -233,7 +233,7 @@ You can use `encrypt` flag to enable encryption and specify a directory as an en
 flag. All files in the directory will be encrypted then sync to the destination path.
 
 ```bash
-$ gofs -source=./source -dest=./dest -encrypt -encrypt_path=./source/encrypt -encrypt_secret=mysecret
+$ gofs -source=./source -dest=./dest -encrypt -encrypt_path=./source/encrypt -encrypt_secret=mysecret_16bytes
 ```
 
 ### Decryption
@@ -241,7 +241,7 @@ $ gofs -source=./source -dest=./dest -encrypt -encrypt_path=./source/encrypt -en
 You can use the `decrypt` flag to decrypt the encryption files to a specified path.
 
 ```bash
-$ gofs -decrypt -decrypt_path=./dest/encrypt -decrypt_secret=mysecret -decrypt_out=./decrypt_out
+$ gofs -decrypt -decrypt_path=./dest/encrypt -decrypt_secret=mysecret_16bytes -decrypt_out=./decrypt_out
 ```
 
 ### Sync Once
@@ -318,7 +318,7 @@ You can use the `checkpoint_count` and `sync_delay` flags like the [Local Disk](
 # Start a remote disk server
 # Replace the `tls_cert_file` and `tls_key_file` flags with your real cert files in the production environment
 # Replace the `users` flag with complex username and password for security
-$ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1" -dest=./dest -users="gofs|password|r" -tls_cert_file=cert.pem -tls_key_file=key.pem
+$ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1" -dest=./dest -users="gofs|password|r" -tls_cert_file=cert.pem -tls_key_file=key.pem -token_secret=mysecret_16bytes
 ```
 
 ### Remote Disk Client
@@ -341,7 +341,7 @@ You can use the `sync_delay` flag like the [Local Disk](#local-disk).
 ```bash
 # Start a remote disk client
 # Replace the `users` flag with your real username and password
-$ gofs -source="rs://127.0.0.1:8105" -dest=./dest -users="gofs|password"
+$ gofs -source="rs://127.0.0.1:8105" -dest=./dest -users="gofs|password" -tls_cert_file=cert.pem
 ```
 
 ### Remote Push Server
@@ -356,7 +356,7 @@ example, `-users="gofs|password|rw"`.
 # Start a remote disk server and enable the remote push server
 # Replace the `tls_cert_file` and `tls_key_file` flags with your real cert files in the production environment
 # Replace the `users` flag with complex username and password for security
-$ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1" -dest=./dest -users="gofs|password|rw" -tls_cert_file=cert.pem -tls_key_file=key.pem -push_server
+$ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1" -dest=./dest -users="gofs|password|rw" -tls_cert_file=cert.pem -tls_key_file=key.pem -push_server -token_secret=mysecret_16bytes
 ```
 
 ### Remote Push Client
@@ -373,7 +373,7 @@ More flag usage see [Remote Disk Client](#remote-disk-client).
 ```bash
 # Start a remote push client and enable local disk sync, sync the file changes from source path to the local dest path and the remote push server
 # Replace the `users` flag with your real username and password
-$ gofs -source="./source" -dest="rs://127.0.0.1:8105?local_sync_disabled=false&path=./dest" -users="gofs|password"
+$ gofs -source="./source" -dest="rs://127.0.0.1:8105?local_sync_disabled=false&path=./dest" -users="gofs|password" -tls_cert_file=cert.pem
 ```
 
 ### SFTP Push Client
