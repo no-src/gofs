@@ -4,6 +4,8 @@ import (
 	"errors"
 	"os"
 	"testing"
+
+	"github.com/no-src/gofs/util/hashutil"
 )
 
 const (
@@ -26,6 +28,10 @@ func TestParse(t *testing.T) {
 			err := Parse(tc.path, &c)
 			if err != nil {
 				t.Errorf("parse configuration error => %s", tc.path)
+				return
+			}
+			if c.ChecksumAlgorithm != hashutil.DefaultHash {
+				t.Errorf("checksum_algorithm expect to get %s, but actual get %s", hashutil.DefaultHash, c.ChecksumAlgorithm)
 			}
 		})
 	}

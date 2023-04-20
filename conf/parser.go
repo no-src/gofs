@@ -15,7 +15,7 @@ var (
 )
 
 // Parse read and parse the config file, support json and yaml format currently
-func Parse(path string, config *Config) error {
+func Parse[T any](path string, config *T) error {
 	if len(path) == 0 {
 		return errEmptyConfigPath
 	}
