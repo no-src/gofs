@@ -23,12 +23,16 @@ func Parse[T any](path string, config *T) error {
 	if err != nil {
 		return err
 	}
-
 	ext := filepath.Ext(path)
+	return ParseContent(confBytes, ext, config)
+}
+
+// ParseContent parse the config content, support json and yaml format currently
+func ParseContent[T any](content []byte, ext string, config *T) (err error) {
 	if JsonFormat.MatchExt(ext) {
-		err = jsonutil.Unmarshal(confBytes, &config)
+		err = jsonutil.Unmarshal(content, &config)
 	} else if YamlFormat.MatchExt(ext) {
-		err = yamlutil.Unmarshal(confBytes, &config)
+		err = yamlutil.Unmarshal(content, &config)
 	} else {
 		err = errUnSupportedConfigFormat
 	}
