@@ -107,7 +107,7 @@ func runWithConfig(c conf.Config, result result.Result) {
 			return
 		}
 
-		ns := signal.Notify(daemon.Shutdown)
+		ns, ss := signal.Notify(daemon.Shutdown)
 		go func() {
 			result.RegisterNotifyHandler(ns)
 		}()
@@ -115,6 +115,7 @@ func runWithConfig(c conf.Config, result result.Result) {
 		w := wait.NewWaitDone()
 		go daemon.Run(args, c.DaemonPid, c.DaemonDelay.Duration(), c.DaemonMonitorDelay.Duration(), w)
 		err = w.Wait()
+		ss()
 		return
 	}
 
@@ -170,7 +171,7 @@ func runWithConfig(c conf.Config, result result.Result) {
 	// start monitor
 	log.Info("monitor is starting...")
 	defer log.Info("gofs exited")
-	ns := signal.Notify(m.Shutdown)
+	ns, ss := signal.Notify(m.Shutdown)
 	go func() {
 		result.RegisterNotifyHandler(ns)
 	}()
@@ -182,6 +183,7 @@ func runWithConfig(c conf.Config, result result.Result) {
 		return
 	}
 	err = log.ErrorIf(w.Wait(), "monitor running failed")
+	ss()
 }
 
 func parseConfigFile(cp *conf.Config) error {
