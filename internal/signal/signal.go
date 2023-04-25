@@ -19,8 +19,11 @@ var (
 // NotifySignal sends a signal with timeout
 type NotifySignal func(s os.Signal, timeout ...time.Duration) error
 
+// StopSignal stop receiving signals
+type StopSignal func()
+
 // Notify receive signal and try to shut down
-func Notify(shutdown func() error) NotifySignal {
+func Notify(shutdown func() error) (NotifySignal, StopSignal) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGABRT, syscall.SIGTERM)
 	go func() {
@@ -42,6 +45,10 @@ func Notify(shutdown func() error) NotifySignal {
 			}
 		}
 	}()
+
+	ss := func() {
+		signal.Stop(c)
+	}
 	return func(s os.Signal, timeout ...time.Duration) error {
 		t := defaultSendSignalTimeout
 		if len(timeout) > 0 {
@@ -55,5 +62,5 @@ func Notify(shutdown func() error) NotifySignal {
 			log.Warn("[timeout] send a signal [%s] by user", s.String())
 			return fmt.Errorf("%w => %s", errSendSignalTimeout, s.String())
 		}
-	}
+	}, ss
 }

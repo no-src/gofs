@@ -9,7 +9,7 @@ import (
 )
 
 func TestNotify(t *testing.T) {
-	st := Notify(func() error {
+	ns, ss := Notify(func() error {
 		return nil
 	})
 
@@ -25,13 +25,14 @@ func TestNotify(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			st(tc.signal, time.Second)
+			ns(tc.signal, time.Second)
+			ss()
 		})
 	}
 }
 
 func TestNotify_ShutdownError(t *testing.T) {
-	st := Notify(func() error {
+	ns, ss := Notify(func() error {
 		return errors.New("shutdown error mock")
 	})
 
@@ -51,13 +52,14 @@ func TestNotify_ShutdownError(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			st(tc.signal)
+			ns(tc.signal)
+			ss()
 		})
 	}
 }
 
 func TestNotify_IgnoreSignal(t *testing.T) {
-	st := Notify(func() error {
+	ns, ss := Notify(func() error {
 		return nil
 	})
 
@@ -71,7 +73,8 @@ func TestNotify_IgnoreSignal(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			st(tc.signal)
+			ns(tc.signal)
+			ss()
 		})
 	}
 }
