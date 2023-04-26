@@ -292,6 +292,16 @@ Web文件服务器默认使用HTTPS协议，使用`tls_cert_file`和`tls_key_fil
 $ gofs -source=./source -dest=./dest -server -tls_cert_file=cert.pem -tls_key_file=key.pem -rand_user_count=3
 ```
 
+### 速率限制
+
+使用`max_tran_rate`命令行参数来限制服务器端和客户端的最大传输速率，这是一个期望值，而不是绝对值
+
+例如，限制最大传输速率为1048576字节，即1MB
+
+```bash
+$ gofs -source=./source -dest=./dest -max_tran_rate=1048576
+```
+
 ### 远程磁盘服务端
 
 启动一个远程磁盘服务端作为一个远程文件数据源

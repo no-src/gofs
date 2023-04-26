@@ -303,6 +303,17 @@ If you want to use the redis as the session store, here is an example for redis 
 $ gofs -source=./source -dest=./dest -server -tls_cert_file=cert.pem -tls_key_file=key.pem -rand_user_count=3
 ```
 
+### Rate Limit
+
+Use the `max_tran_rate` flag to limit the max transmission rate in the server and client sides,
+and this is an expected value, not an absolute one.
+
+For example, limit the max transmission rate to 1048576 bytes, means 1MB.
+
+```bash
+$ gofs -source=./source -dest=./dest -max_tran_rate=1048576
+```
+
 ### Remote Disk Server
 
 Start a remote disk server as a remote file source.
