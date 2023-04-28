@@ -50,6 +50,19 @@ func RunWithConfig(c conf.Config) result.Result {
 	return result
 }
 
+// RunWithConfigContent running the gofs program with specified config content
+func RunWithConfigContent(content string, ext string) result.Result {
+	var c conf.Config
+	err := conf.ParseContent([]byte(content), ext, &c)
+	if err != nil {
+		result := result.New()
+		result.InitDoneWithError(err)
+		result.DoneWithError(err)
+		return result
+	}
+	return RunWithConfig(c)
+}
+
 //gocyclo:ignore
 func runWithConfig(c conf.Config, result result.Result) {
 	var err error
@@ -311,7 +324,7 @@ func initMonitor(c conf.Config, userList []*auth.User, eventLogger log.Logger, r
 	}
 
 	// create monitor
-	m, err := monitor.NewMonitor(monitor.NewMonitorOption(c, syncer, r, userList, eventLogger, pi, reporter))
+	m, err := monitor.NewMonitor(monitor.NewMonitorOption(c, syncer, r, userList, eventLogger, pi, reporter), RunWithConfigContent)
 	if err != nil {
 		log.Error(err, "create the instance of Monitor error")
 		return nil, err

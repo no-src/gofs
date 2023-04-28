@@ -33,7 +33,7 @@ type server struct {
 func (s *server) Monitor(in *emptypb.Empty, m MonitorService_MonitorServer) error {
 	p, ok := peer.FromContext(m.Context())
 	if !ok {
-		return status.Errorf(codes.Aborted, "the peer information is not found")
+		return status.Errorf(codes.Unknown, "the peer information is not found")
 	}
 	k := p.Addr.String()
 	var msgChan chan *MonitorMessage
@@ -56,5 +56,4 @@ func (s *server) Monitor(in *emptypb.Empty, m MonitorService_MonitorServer) erro
 			return nil
 		}
 	}
-	return nil
 }

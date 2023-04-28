@@ -1,0 +1,12 @@
+tasks:
+  - name: local disk sync once
+    conf: local-disk-sync-once.yaml
+    labels:
+      - local-disk-sync-once-test
+    allow_ip:
+      - 127.0.0.1
+
+  - name: local disk sync
+    conf: local-disk-sync.yaml
+    labels:
+      - local-disk-sync-test
