@@ -200,6 +200,6 @@ func (rs *remoteServerSync) start() error {
 	}
 	go func(){
 	log.ErrorIf(rs.server.Start(), "start api server error")
-	}
+	}()
 	return nil
 }
