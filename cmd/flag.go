@@ -121,6 +121,11 @@ func parseFlags(args []string) (config conf.Config) {
 	cl.StringVar(&config.DecryptSecret, "decrypt_secret", "", "a secret string for decryption")
 	cl.StringVar(&config.DecryptOut, "decrypt_out", "", "the decrypt files output directory path")
 
+	// task
+	cl.StringVar(&config.TaskConf, "task_conf", "", "the task conf address")
+	cl.BoolVar(&config.EnableTaskClient, "task_client", false, "start a task client")
+	cl.StringVar(&config.TaskClientLabels, "task_client_labels", "", "the labels of the task client")
+
 	cl.Parse(args[1:])
 	return config
 }

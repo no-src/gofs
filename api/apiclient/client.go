@@ -3,6 +3,7 @@ package apiclient
 import (
 	"github.com/no-src/gofs/api/info"
 	"github.com/no-src/gofs/api/monitor"
+	"github.com/no-src/gofs/api/task"
 )
 
 // Client the gofs api client
@@ -17,4 +18,6 @@ type Client interface {
 	Monitor() (monitor.MonitorService_MonitorClient, error)
 	// IsClosed is connection closed of the current client
 	IsClosed(err error) bool
+	// SubscribeTask register a task client to the task server and wait to receive task
+	SubscribeTask(clientInfo *task.ClientInfo) (task.TaskService_SubscribeTaskClient, error)
 }

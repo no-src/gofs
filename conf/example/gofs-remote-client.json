@@ -62,5 +62,8 @@
   "decrypt": false,
   "decrypt_path": "",
   "decrypt_secret": "",
-  "decrypt_out": ""
+  "decrypt_out": "",
+  "task_conf": "",
+  "task_client": false,
+  "task_client_labels": ""
 }

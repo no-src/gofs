@@ -34,6 +34,7 @@ type Option struct {
 	EncOpt                encrypt.Option
 	PathIgnore            ignore.PathIgnore
 	Reporter              report.Reporter
+	TaskConf              string
 }
 
 // NewSyncOption create an instance of the Option, store all the sync component options
@@ -61,6 +62,7 @@ func NewSyncOption(config conf.Config, users []*auth.User, r retry.Retry, pi ign
 		EncOpt:                encrypt.NewOption(config),
 		PathIgnore:            pi,
 		Reporter:              reporter,
+		TaskConf:              config.TaskConf,
 	}
 	return opt
 }

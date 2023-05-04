@@ -8,6 +8,7 @@ import (
 	authapi "github.com/no-src/gofs/api/auth"
 	"github.com/no-src/gofs/api/info"
 	"github.com/no-src/gofs/api/monitor"
+	"github.com/no-src/gofs/api/task"
 	"github.com/no-src/gofs/auth"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
@@ -23,6 +24,7 @@ type client struct {
 	info.InfoServiceClient
 	monitor.MonitorServiceClient
 	authapi.AuthServiceClient
+	task.TaskServiceClient
 
 	host       string
 	port       int
@@ -69,6 +71,7 @@ func (c *client) connect() (err error) {
 	c.InfoServiceClient = info.NewInfoServiceClient(clientConn)
 	c.MonitorServiceClient = monitor.NewMonitorServiceClient(clientConn)
 	c.AuthServiceClient = authapi.NewAuthServiceClient(clientConn)
+	c.TaskServiceClient = task.NewTaskServiceClient(clientConn)
 	c.clientConn = clientConn
 	return nil
 }
@@ -109,6 +112,21 @@ func (c *client) Monitor() (monitor.MonitorService_MonitorClient, error) {
 
 func (c *client) IsClosed(err error) bool {
 	return status.Code(err) == codes.Unavailable
+}
+
+func (c *client) subscribeTask(clientInfo *task.ClientInfo) (task.TaskService_SubscribeTaskClient, error) {
+	return c.TaskServiceClient.SubscribeTask(context.Background(), clientInfo, grpc.PerRPCCredentials(c.creds))
+}
+
+func (c *client) SubscribeTask(clientInfo *task.ClientInfo) (task.TaskService_SubscribeTaskClient, error) {
+	rc, err := c.subscribeTask(clientInfo)
+	if !c.needLogin(err) {
+		return rc, err
+	}
+	if err = c.login(); err != nil {
+		return nil, err
+	}
+	return c.subscribeTask(clientInfo)
 }
 
 func (c *client) getToken() (token string, err error) {

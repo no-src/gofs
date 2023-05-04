@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/no-src/gofs/core"
+	"github.com/no-src/gofs/result"
 	"github.com/no-src/gofs/wait"
 )
 
@@ -19,13 +20,17 @@ type Monitor interface {
 	Shutdown() error
 }
 
+type runFn func(content string, ext string) result.Result
+
 // NewMonitor create a monitor instance
-func NewMonitor(opt Option) (Monitor, error) {
+func NewMonitor(opt Option, run runFn) (Monitor, error) {
 	source := opt.Syncer.Source()
 	if source.IsDisk() {
 		return NewFsNotifyMonitor(opt)
 	} else if source.Is(core.RemoteDisk) && source.Server() {
 		return NewRemoteServerMonitor(opt)
+	} else if source.Is(core.RemoteDisk) && !source.Server() && opt.EnableTaskClient {
+		return NewTaskClientMonitor(opt, run)
 	} else if source.Is(core.RemoteDisk) && !source.Server() {
 		return NewRemoteClientMonitor(opt)
 	} else if source.Is(core.SFTP) {

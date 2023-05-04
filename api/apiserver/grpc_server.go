@@ -8,6 +8,7 @@ import (
 	authapi "github.com/no-src/gofs/api/auth"
 	"github.com/no-src/gofs/api/info"
 	"github.com/no-src/gofs/api/monitor"
+	"github.com/no-src/gofs/api/task"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/internal/clist"
 	"github.com/no-src/gofs/report"
@@ -32,10 +33,11 @@ type grpcServer struct {
 	monitors        *sync.Map
 	monitorMessages *clist.CList
 	logger          log.Logger
+	taskConf        string
 }
 
 // New create the instance of the Server
-func New(ip string, port int, enableTLS bool, certFile string, keyFile string, tokenSecret string, users []*auth.User, reporter report.Reporter, httpServerAddr string, logger log.Logger) (Server, error) {
+func New(ip string, port int, enableTLS bool, certFile string, keyFile string, tokenSecret string, users []*auth.User, reporter report.Reporter, httpServerAddr string, logger log.Logger, taskConf string) (Server, error) {
 	if len(users) == 0 {
 		logger.Warn("the grpc server allows anonymous access, you should set some server users by the -users or -rand_user_count flag for security reasons")
 		users = append(users, auth.GetAnonymousUser())
@@ -58,6 +60,7 @@ func New(ip string, port int, enableTLS bool, certFile string, keyFile string, t
 		monitors:        &sync.Map{},
 		monitorMessages: clist.New(),
 		logger:          logger,
+		taskConf:        taskConf,
 	}
 	if !enableTLS {
 		logger.Warn("the grpc server is not enable enableTLS, it is not a security connection")
@@ -84,7 +87,9 @@ func (gs *grpcServer) Start() error {
 	}
 
 	gs.server = grpc.NewServer(grpc.Creds(creds), grpc.StreamInterceptor(gs.StreamServerInterceptor), grpc.UnaryInterceptor(gs.UnaryServerInterceptor))
-	gs.initRoute(gs.server)
+	if err = gs.initRoute(gs.server); err != nil {
+		return err
+	}
 	go gs.processMonitorMessage()
 	err = gs.server.Serve(listener)
 	return err
@@ -98,10 +103,12 @@ func (gs *grpcServer) SendMonitorMessage(message *monitor.MonitorMessage) {
 	gs.monitorMessages.PushBack(message)
 }
 
-func (gs *grpcServer) initRoute(s *grpc.Server) {
+func (gs *grpcServer) initRoute(s *grpc.Server) (err error) {
 	info.RegisterServer(s, gs.httpServerAddr)
 	monitor.RegisterServer(s, gs.monitors, gs.reporter, gs.token)
 	authapi.RegisterServer(s, gs.token)
+	err = task.RegisterServer(s, gs.taskConf)
+	return err
 }
 
 func (gs *grpcServer) processMonitorMessage() {

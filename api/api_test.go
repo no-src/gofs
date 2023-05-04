@@ -2,13 +2,16 @@ package api
 
 import (
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/no-src/gofs/api/apiclient"
 	"github.com/no-src/gofs/api/apiserver"
 	"github.com/no-src/gofs/api/monitor"
+	"github.com/no-src/gofs/api/task"
 	"github.com/no-src/gofs/auth"
+	"github.com/no-src/gofs/conf"
 	"github.com/no-src/gofs/report"
 	"github.com/no-src/log"
 )
@@ -20,6 +23,8 @@ const (
 	apiServerHost = "127.0.0.1"
 	apiServerPort = 8128
 	tokenSecret   = "123456abcdefghij"
+	taskConfFile  = "file://./testdata/tasks.yaml"
+	taskLabels    = "local-disk-sync-once-test,local-disk-sync-test"
 )
 
 func TestApiServerAndClient(t *testing.T) {
@@ -50,7 +55,7 @@ func runApiServer(t *testing.T, user *auth.User) (apiserver.Server, error) {
 	if user != nil {
 		users = append(users, user)
 	}
-	srv, err := apiserver.New(apiServerHost, apiServerPort, true, certFile, keyFile, tokenSecret, users, report.NewReporter(), serverAddr, log.DefaultLogger())
+	srv, err := apiserver.New(apiServerHost, apiServerPort, true, certFile, keyFile, tokenSecret, users, report.NewReporter(), serverAddr, log.DefaultLogger(), taskConfFile)
 	if err != nil {
 		return nil, err
 	}
@@ -103,6 +108,34 @@ func runApiClient(user *auth.User) (err error) {
 		}
 		if msg.GetBaseUrl() != serverAddr {
 			return errors.New("invalid baseurl")
+		}
+	}
+
+	rc, err := c.SubscribeTask(&task.ClientInfo{
+		Labels: strings.Split(taskLabels, ","),
+	})
+	if err != nil {
+		return err
+	}
+
+	for i := 0; i < 2; i++ {
+		msg, err := rc.Recv()
+		if err != nil {
+			if c.IsClosed(err) {
+				err = nil
+			}
+			return err
+		}
+		var c conf.Config
+		err = conf.ParseContent([]byte(msg.Content), msg.Ext, &c)
+		if err != nil {
+			return err
+		}
+		if i == 0 && (!c.SyncOnce || c.Source.Path() != "source" || c.Dest.Path() != "dest") {
+			return errors.New("unexpect arguments")
+		}
+		if i == 1 && (c.SyncOnce || c.Source.Path() != "source" || c.Dest.Path() != "dest") {
+			return errors.New("unexpect arguments")
 		}
 	}
 	return c.Stop()

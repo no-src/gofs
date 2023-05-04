@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package task;
+
+option go_package = "github.com/no-src/gofs/api/task";
+
+// TaskService the task service of the api server
+service TaskService {
+  // SubscribeTask register a task client to the task server and wait to receive task
+  rpc SubscribeTask(ClientInfo) returns (stream TaskInfo) {}
+}
+
+// ClientInfo the task client info
+message ClientInfo{
+  // ClientId the client id
+  string client_id = 1;
+  // Labels the client labels that are used to match tasks
+  repeated string labels = 2;
+}
+
+// TaskInfo the task info
+message TaskInfo{
+  // Name the unique task name
+  string name = 1;
+  // Ext the extension type of the task config content
+  string ext = 2;
+  // Content the task config content
+  string content = 3;
+}
