@@ -284,6 +284,8 @@ default port with the `server_addr` flag, like `-server_addr=":443"`.
 If you enable the `tls` flag on the server side, you can control whether a client skip verifies the server's certificate
 chain and host name by the `tls_insecure_skip_verify` flag, default is `true`.
 
+If you already enable the `tls` flag, then you can use the `http3` flag to enable the HTTP3 protocol in the server and client sides.
+
 You should set the `rand_user_count` flag to auto generate some random users or set the `users` flag to customize server
 users for security reasons.
 
