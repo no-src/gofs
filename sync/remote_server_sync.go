@@ -198,8 +198,8 @@ func (rs *remoteServerSync) start() error {
 	if rs.server == nil {
 		return errNilRemoteSyncServer
 	}
-	go func(){
-	log.ErrorIf(rs.server.Start(), "start api server error")
+	go func() {
+		log.ErrorIf(rs.server.Start(), "start api server error")
 	}()
 	return nil
 }
