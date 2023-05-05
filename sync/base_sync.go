@@ -23,3 +23,6 @@ func (s *baseSync) Source() core.VFS {
 func (s *baseSync) Dest() core.VFS {
 	return s.dest
 }
+
+func (s *baseSync) Close() {
+}

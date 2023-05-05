@@ -1,4 +1,4 @@
-source: rs://127.0.0.1:9105?mode=server&local_sync_disabled=true&path=./rs-push/source&fs_server=https://127.0.0.1:2888
+source: rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./rs-push/source&fs_server=https://127.0.0.1:2888
 dest: ./rs-push/dest
 log_dir: ./rs-push-logs/
 users: gofs|password|rwx
