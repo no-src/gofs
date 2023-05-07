@@ -1,0 +1,7 @@
+tasks:
+  - name: remote-push-with-http3-task
+    conf: ../run-gofs-remote-push-client-with-http3.yaml
+    labels:
+      - remote-push-with-http3-client
+    allow_ip:
+      - 127.0.0.1

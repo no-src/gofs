@@ -8,3 +8,4 @@ tls_key_file: ../util/httputil/testdata/key.pem
 push_server: true
 http3: true
 token_secret: "1234567890123456"
+task_conf: "file://./testdata/conf/task/remote-push-with-http3-task.yaml"
