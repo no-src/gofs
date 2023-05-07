@@ -38,3 +38,16 @@ func ParseContent[T any](content []byte, ext string, config *T) (err error) {
 	}
 	return err
 }
+
+// ToString convert the config object to string, support json and yaml format currently
+func ToString(ext string, config any) (s string, err error) {
+	var data []byte
+	if JsonFormat.MatchExt(ext) {
+		data, err = jsonutil.Marshal(config)
+	} else if YamlFormat.MatchExt(ext) {
+		data, err = yamlutil.Marshal(config)
+	} else {
+		err = errUnSupportedConfigFormat
+	}
+	return string(data), err
+}
