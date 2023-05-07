@@ -18,7 +18,7 @@ import (
 )
 
 type taskClientMonitor struct {
-	shutdown chan bool
+	shutdown chan struct{}
 	retry    retry.Retry
 	client   apiclient.Client
 	closed   *cbool.CBool
@@ -44,7 +44,7 @@ func NewTaskClientMonitor(opt Option, run runFn) (Monitor, error) {
 		user = users[0]
 	}
 	m := &taskClientMonitor{
-		shutdown: make(chan bool, 1),
+		shutdown: make(chan struct{}, 1),
 		retry:    retry,
 		client:   apiclient.New(host, port, enableTLS, certFile, user),
 		closed:   cbool.New(false),
@@ -79,12 +79,11 @@ func (m *taskClientMonitor) receive() wait.Wait {
 // waitShutdown wait for the shutdown notify then mark the work done
 func (m *taskClientMonitor) waitShutdown(st *cbool.CBool, wd wait.Done) {
 	select {
-	case <-st.SetC(<-m.shutdown):
+	case <-m.shutdown:
 		{
-			if st.Get() {
-				log.ErrorIf(m.Close(), "close remote client monitor error")
-				wd.Done()
-			}
+			st.Set(true)
+			log.ErrorIf(m.Close(), "close remote client monitor error")
+			wd.Done()
 		}
 	}
 }
@@ -152,7 +151,7 @@ func (m *taskClientMonitor) Shutdown() (err error) {
 			err = fmt.Errorf("%v", r)
 		}
 	}()
-	m.shutdown <- true
+	close(m.shutdown)
 	return err
 }
 
@@ -162,7 +161,16 @@ func (m *taskClientMonitor) run(t task.TaskInfo) {
 	}
 	go func() {
 		log.Info("running gofs task [%s]", t.Name)
-		m.runFn(t.Content, t.Ext).Wait()
+		r := m.runFn(t.Content, t.Ext)
+		done := make(chan struct{}, 1)
+		go func() {
+			log.ErrorIf(r.Wait(), "running gofs task error [%s]", t.Name)
+		}()
+		select {
+		case <-m.shutdown:
+			log.ErrorIf(r.Shutdown(), "shutdown gofs task error [%s]", t.Name)
+		case <-done:
+		}
 		m.tasks.Delete(t.Name)
 		log.Info("running gofs task finished [%s]", t.Name)
 	}()
