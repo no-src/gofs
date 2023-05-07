@@ -136,6 +136,7 @@ func (m *fsNotifyMonitor) startReceiveEvents(wd wait.Done) error {
 		case shutdown := <-m.shutdown:
 			{
 				if shutdown {
+					m.syncer.Close()
 					wd.Done()
 					return nil
 				}

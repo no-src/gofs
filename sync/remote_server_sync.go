@@ -203,3 +203,7 @@ func (rs *remoteServerSync) start() error {
 	}()
 	return nil
 }
+
+func (rs *remoteServerSync) Close() {
+	rs.server.Stop()
+}

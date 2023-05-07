@@ -46,6 +46,7 @@ func (m *driverPullClientMonitor) waitShutdown(st *cbool.CBool, wd wait.Done) {
 		{
 			if st.Get() {
 				log.ErrorIf(m.Close(), "close driver pull client monitor error")
+				m.syncer.Close()
 				wd.Done()
 			}
 		}

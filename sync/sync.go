@@ -36,6 +36,8 @@ type Sync interface {
 	Source() core.VFS
 	// Dest the destination file system
 	Dest() core.VFS
+	// Close release the resource that is used by the sync component
+	Close()
 }
 
 // NewSync auto create an instance of the expected sync according to source and dest
