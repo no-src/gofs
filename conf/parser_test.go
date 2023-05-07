@@ -66,3 +66,45 @@ func TestParse_ReturnError_NotExistPath(t *testing.T) {
 		t.Errorf("parse configuration error, expert error not exist, actual err:%s", err)
 	}
 }
+
+func TestToString(t *testing.T) {
+	testCases := []struct {
+		name string
+		ext  string
+		c    Config
+	}{
+		{"json configuration", ".json", Config{}},
+		{"yaml configuration", ".yaml", Config{}},
+		{"yml configuration", ".yml", Config{}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := ToString(tc.ext, tc.c)
+			if err != nil {
+				t.Errorf("convert configuration to string error => %s", tc.name)
+			}
+		})
+	}
+}
+
+func TestToString_ReturnError(t *testing.T) {
+	testCases := []struct {
+		name string
+		ext  string
+		c    Config
+	}{
+		{"empty ext", "", Config{}},
+		{"invalid ext", ".xyz", Config{}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := ToString(tc.ext, tc.c)
+			expect := errUnSupportedConfigFormat
+			if !errors.Is(err, expect) {
+				t.Errorf("convert configuration to string error, expert err:%s, actual err:%s", expect, err)
+			}
+		})
+	}
+}
