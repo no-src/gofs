@@ -3,10 +3,14 @@ package task
 import (
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/no-src/gofs/api/task/loader"
+	"github.com/no-src/gofs/conf"
+	"github.com/no-src/gofs/flag"
 )
 
 // Dispatcher the task dispatcher interface
@@ -56,10 +60,20 @@ func (d *dispatcher) Acquire(client *ClientInfo, ip string) (task *TaskInfo, err
 		if err != nil {
 			return nil, err
 		}
+		ext := filepath.Ext(t.Conf)
+		// get default config
+		c := flag.ParseFlags([]string{os.Args[0], "-conf="})
+		// override config
+		if err = conf.ParseContent([]byte(content), ext, &c); err != nil {
+			return nil, err
+		}
+		if content, err = conf.ToString(ext, c); err != nil {
+			return nil, err
+		}
 		d.markAcquired(client, t)
 		return &TaskInfo{
 			Name:    t.Name,
-			Ext:     filepath.Ext(t.Conf),
+			Ext:     ext,
 			Content: content,
 		}, nil
 	}
@@ -104,7 +118,8 @@ func (d *dispatcher) checkLabels(taskLabels []string, clientLabels []string) boo
 
 func (d *dispatcher) contain(list []string, s string) bool {
 	for _, str := range list {
-		if str == s {
+		str = strings.TrimSpace(str)
+		if len(str) > 0 && str == strings.TrimSpace(s) {
 			return true
 		}
 	}
