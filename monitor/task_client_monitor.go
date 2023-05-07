@@ -110,12 +110,15 @@ func (m *taskClientMonitor) readMessage(st *cbool.CBool, wd wait.Done) {
 			if st.Get() {
 				break
 			}
-			log.Error(err, "receive monitor message error")
+			log.Error(err, "subscribe task message error")
 			if m.client.IsClosed(err) {
 				m.retry.Do(func() error {
-					rc, err = m.client.SubscribeTask(clientInfo)
+					nrc, err := m.client.SubscribeTask(clientInfo)
+					if err == nil {
+						rc = nrc
+					}
 					return err
-				}, "monitor the remote server")
+				}, "subscribe the task server")
 			} else {
 				wd.DoneWithError(fmt.Errorf("remote task server is return error %w", err))
 				break
