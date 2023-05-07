@@ -1,4 +1,4 @@
-package cmd
+package flag
 
 import (
 	"flag"
@@ -14,7 +14,8 @@ import (
 	"github.com/no-src/log/level"
 )
 
-func parseFlags(args []string) (config conf.Config) {
+// ParseFlags parse config from arguments
+func ParseFlags(args []string) (config conf.Config) {
 	if len(args) < 1 {
 		panic("at least one argument is required, starting with the program name")
 	}

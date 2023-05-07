@@ -9,6 +9,7 @@ import (
 	"github.com/no-src/gofs/conf"
 	"github.com/no-src/gofs/daemon"
 	"github.com/no-src/gofs/encrypt"
+	"github.com/no-src/gofs/flag"
 	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/internal/about"
@@ -35,7 +36,7 @@ func Run() result.Result {
 
 // RunWithArgs running the gofs program with specified command-line arguments, starting with the program name
 func RunWithArgs(args []string) result.Result {
-	return RunWithConfig(parseFlags(args))
+	return RunWithConfig(flag.ParseFlags(args))
 }
 
 // RunWithConfigFile running the gofs program with specified config file
