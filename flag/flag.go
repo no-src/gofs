@@ -126,6 +126,7 @@ func ParseFlags(args []string) (config conf.Config) {
 	cl.StringVar(&config.TaskConf, "task_conf", "", "the task conf address")
 	cl.BoolVar(&config.EnableTaskClient, "task_client", false, "start a task client")
 	cl.StringVar(&config.TaskClientLabels, "task_client_labels", "", "the labels of the task client")
+	cl.IntVar(&config.TaskClientMaxWorker, "task_client_max_worker", 1, "limit the max concurrent workers in the task client side")
 
 	cl.Parse(args[1:])
 	return config

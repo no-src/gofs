@@ -65,5 +65,6 @@
   "decrypt_out": "",
   "task_conf": "",
   "task_client": false,
-  "task_client_labels": ""
+  "task_client_labels": "",
+  "task_client_max_worker": 1
 }

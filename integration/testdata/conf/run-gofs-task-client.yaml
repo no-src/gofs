@@ -10,3 +10,4 @@ task_client_labels:
   remote-disk-with-http3-client,
   remote-push-client,
   remote-push-with-http3-client
+task_client_max_worker: 3
