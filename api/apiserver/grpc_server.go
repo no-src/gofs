@@ -62,8 +62,17 @@ func New(ip string, port int, enableTLS bool, certFile string, keyFile string, t
 		logger:          logger,
 		taskConf:        taskConf,
 	}
-	if !enableTLS {
+	creds := insecure.NewCredentials()
+	if enableTLS {
+		if creds, err = credentials.NewServerTLSFromFile(srv.certFile, srv.keyFile); err != nil {
+			return nil, err
+		}
+	} else {
 		logger.Warn("the grpc server is not enable enableTLS, it is not a security connection")
+	}
+	srv.server = grpc.NewServer(grpc.Creds(creds), grpc.StreamInterceptor(srv.StreamServerInterceptor), grpc.UnaryInterceptor(srv.UnaryServerInterceptor))
+	if err = srv.initRoute(srv.server); err != nil {
+		return nil, err
 	}
 	return srv, nil
 }
@@ -78,21 +87,8 @@ func (gs *grpcServer) Start() error {
 		return err
 	}
 	gs.logger.Info("grpc server is listening at:%s:%d enableTLS=%v", gs.ip, gs.port, gs.enableTLS)
-
-	creds := insecure.NewCredentials()
-	if gs.enableTLS {
-		if creds, err = credentials.NewServerTLSFromFile(gs.certFile, gs.keyFile); err != nil {
-			return err
-		}
-	}
-
-	gs.server = grpc.NewServer(grpc.Creds(creds), grpc.StreamInterceptor(gs.StreamServerInterceptor), grpc.UnaryInterceptor(gs.UnaryServerInterceptor))
-	if err = gs.initRoute(gs.server); err != nil {
-		return err
-	}
 	go gs.processMonitorMessage()
-	err = gs.server.Serve(listener)
-	return err
+	return gs.server.Serve(listener)
 }
 
 func (gs *grpcServer) Stop() {
