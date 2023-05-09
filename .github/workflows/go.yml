@@ -40,6 +40,9 @@ jobs:
       - name: Test Integration
         run: go test -v -race -tags=integration_test ./integration
 
+      - name: Test Integration Task
+        run: go test -v -race -tags=integration_test_task ./integration
+
       - name: Codecov
         uses: codecov/codecov-action@v3
         if: matrix.os == 'ubuntu-latest'

@@ -1,0 +1,7 @@
+tasks:
+  - name: remote-disk-with-http3-task
+    conf: ../run-gofs-remote-disk-client-with-http3.yaml
+    labels:
+      - remote-disk-with-http3-client
+    allow_ip:
+      - 127.0.0.1

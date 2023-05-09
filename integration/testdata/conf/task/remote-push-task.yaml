@@ -1,0 +1,7 @@
+tasks:
+  - name: remote-push-task
+    conf: ../run-gofs-remote-push-client.yaml
+    labels:
+      - remote-push-client
+    allow_ip:
+      - 127.0.0.1

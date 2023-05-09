@@ -1,0 +1,12 @@
+source: rs://127.0.0.1:8105
+dest: ./task-client/dest
+log_dir: ./task-client-logs/
+users: gofs|password|rwx
+tls_cert_file: ../util/httputil/testdata/cert.pem
+task_client: true
+task_client_labels:
+  local-disk-client,
+  remote-disk-client,
+  remote-disk-with-http3-client,
+  remote-push-client,
+  remote-push-with-http3-client

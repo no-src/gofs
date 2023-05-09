@@ -7,3 +7,4 @@ tls_cert_file: ../util/httputil/testdata/cert.pem
 tls_key_file: ../util/httputil/testdata/key.pem
 http3: true
 token_secret: "1234567890123456"
+task_conf: "file://./testdata/conf/task/remote-disk-with-http3-task.yaml"
