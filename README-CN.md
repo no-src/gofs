@@ -402,6 +402,43 @@ $ gofs -source="./source" -dest="minio://127.0.0.1:9000?secure=false&local_sync_
 $ gofs -source="minio://127.0.0.1:9000?secure=false&remote_path=minio-bucket" -dest="./dest" -users="minio_user|minio_pwd" -sync_once
 ```
 
+### 任务服务端
+
+启动一个任务服务器，将任务分发给客户端
+
+以[远程磁盘服务端](#远程磁盘服务端)为例，
+首先创建一个任务清单配置文件[remote-disk-task.yaml](/integration/testdata/conf/task/remote-disk-task.yaml)，
+这里定义了一个从服务器同步文件的任务
+
+然后创建在上述清单配置文件中定义的任务内容配置文件[run-gofs-remote-disk-client.yaml](/integration/testdata/conf/run-gofs-remote-disk-client.yaml)
+，它将会被客户端执行
+
+最后使用`task_conf`命令行参数启动远程磁盘服务端
+
+这里使用`conf`命令行参数来简化命令并复用集成测试的配置文件
+
+```bash
+$ cd integration
+$ mkdir -p rs/source rs/dest
+$ gofs -conf=./testdata/conf/run-gofs-remote-disk-server.yaml
+```
+
+### 任务客户端
+
+启动一个任务客户端来订阅任务服务器，然后获取任务并执行它
+
+使用`task_client`命令行参数来启动任务客户端，`task_client_max_worker`命令行参数将限制任务客户端的最大并发工作线程数
+
+你可以使用`task_client_labels`命令行参数来定义任务客户端的标签，这些标签用于在任务服务器端匹配任务
+
+这里使用`conf`命令行参数来简化命令并复用集成测试的配置文件
+
+```bash
+$ cd integration
+$ mkdir -p rc/source rc/dest
+$ gofs -conf=./testdata/conf/run-gofs-task-client.yaml
+```
+
 ### 中继
 
 如果你需要在两个无法直接相连的设备之间同步文件，可以使用反向代理作为中继服务器来实现，详情参见[中继模式](/relay/README-CN.md)

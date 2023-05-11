@@ -284,7 +284,8 @@ default port with the `server_addr` flag, like `-server_addr=":443"`.
 If you enable the `tls` flag on the server side, you can control whether a client skip verifies the server's certificate
 chain and host name by the `tls_insecure_skip_verify` flag, default is `true`.
 
-If you already enable the `tls` flag, then you can use the `http3` flag to enable the HTTP3 protocol in the server and client sides.
+If you already enable the `tls` flag, then you can use the `http3` flag to enable the HTTP3 protocol in the server and
+client sides.
 
 You should set the `rand_user_count` flag to auto generate some random users or set the `users` flag to customize server
 users for security reasons.
@@ -419,6 +420,46 @@ Start a MinIO pull client to pull the files from the MinIO server to the local d
 
 ```bash
 $ gofs -source="minio://127.0.0.1:9000?secure=false&remote_path=minio-bucket" -dest="./dest" -users="minio_user|minio_pwd" -sync_once
+```
+
+### Task Server
+
+Start a task server to distribute the tasks to clients.
+
+Take the [Remote Disk Server](#remote-disk-server) for example, create a task manifest config file like
+the [remote-disk-task.yaml](/integration/testdata/conf/task/remote-disk-task.yaml) file first.
+Here defined a task that synchronizes files from server.
+
+Then create the task content config
+file [run-gofs-remote-disk-client.yaml](/integration/testdata/conf/run-gofs-remote-disk-client.yaml) that defined in the
+above manifest config file, and it will be executed by client.
+
+Finally, start the remote disk server with the `task_conf` flag.
+
+Here use `conf` to simplify the command and reuse the integration test config files.
+
+```bash
+$ cd integration
+$ mkdir -p rs/source rs/dest
+$ gofs -conf=./testdata/conf/run-gofs-remote-disk-server.yaml
+```
+
+### Task Client
+
+Start a task client to subscribe to the task server, then acquire the task and execute it.
+
+Use the `task_client` flag to start the task client, and the `task_client_max_worker` flag will limit the max
+concurrent workers in the task client side.
+
+And you can use the `task_client_labels` flag to define the labels of the task client that use to match the task in the
+task server side.
+
+Here use `conf` to simplify the command and reuse the integration test config files.
+
+```bash
+$ cd integration
+$ mkdir -p rc/source rc/dest
+$ gofs -conf=./testdata/conf/run-gofs-task-client.yaml
 ```
 
 ### Relay
