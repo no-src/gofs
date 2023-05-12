@@ -107,9 +107,10 @@ type Config struct {
 	DecryptOut    string `json:"decrypt_out" yaml:"decrypt_out"`
 
 	// task
-	TaskConf         string `json:"task_conf" yaml:"task_conf"`
-	EnableTaskClient bool   `json:"task_client" yaml:"task_client"`
-	TaskClientLabels string `json:"task_client_labels" yaml:"task_client_labels"`
+	TaskConf            string `json:"task_conf" yaml:"task_conf"`
+	EnableTaskClient    bool   `json:"task_client" yaml:"task_client"`
+	TaskClientLabels    string `json:"task_client_labels" yaml:"task_client_labels"`
+	TaskClientMaxWorker int    `json:"task_client_max_worker" yaml:"task_client_max_worker"`
 }
 
 // ToArgs parse the Config to program arguments and the first argument is the current program name

@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/no-src/gofs/api/apiclient"
 	"github.com/no-src/gofs/api/task"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/internal/cbool"
+	"github.com/no-src/gofs/internal/clist"
 	"github.com/no-src/gofs/result"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/util/randutil"
@@ -26,6 +28,8 @@ type taskClientMonitor struct {
 	clientId string
 	labels   []string
 	tasks    sync.Map
+	workers  chan struct{}
+	queue    *clist.CList
 }
 
 // NewTaskClientMonitor create an instance of taskClientMonitor to receive the task from remote server
@@ -38,6 +42,7 @@ func NewTaskClientMonitor(opt Option, run runFn) (Monitor, error) {
 	users := opt.Users
 	labels := opt.TaskClientLabels
 	retry := opt.Retry
+	maxWorker := opt.TaskClientMaxWorker
 
 	var user *auth.User
 	if len(users) > 0 {
@@ -51,6 +56,8 @@ func NewTaskClientMonitor(opt Option, run runFn) (Monitor, error) {
 		runFn:    run,
 		clientId: randutil.RandomString(10),
 		labels:   labels,
+		queue:    clist.New(),
+		workers:  make(chan struct{}, maxWorker),
 	}
 	return m, nil
 }
@@ -73,6 +80,7 @@ func (m *taskClientMonitor) receive() wait.Wait {
 	shutdown := cbool.New(false)
 	go m.waitShutdown(shutdown, wd)
 	go m.readMessage(shutdown, wd)
+	go m.dequeue()
 	return wd
 }
 
@@ -123,7 +131,7 @@ func (m *taskClientMonitor) readMessage(st *cbool.CBool, wd wait.Done) {
 				break
 			}
 		} else {
-			m.run(*t)
+			m.enqueue(t)
 		}
 	}
 }
@@ -155,23 +163,47 @@ func (m *taskClientMonitor) Shutdown() (err error) {
 	return err
 }
 
-func (m *taskClientMonitor) run(t task.TaskInfo) {
-	if _, loaded := m.tasks.LoadOrStore(t.Name, t); loaded {
-		return
-	}
+func (m *taskClientMonitor) run(t *task.TaskInfo) {
+	log.Info("running gofs task [%s]", t.Name)
+	r := m.runFn(t.Content, t.Ext)
+	done := make(chan struct{}, 1)
 	go func() {
-		log.Info("running gofs task [%s]", t.Name)
-		r := m.runFn(t.Content, t.Ext)
-		done := make(chan struct{}, 1)
-		go func() {
-			log.ErrorIf(r.Wait(), "running gofs task error [%s]", t.Name)
-		}()
-		select {
-		case <-m.shutdown:
-			log.ErrorIf(r.Shutdown(), "shutdown gofs task error [%s]", t.Name)
-		case <-done:
-		}
-		m.tasks.Delete(t.Name)
-		log.Info("running gofs task finished [%s]", t.Name)
+		log.ErrorIf(r.Wait(), "running gofs task error [%s]", t.Name)
 	}()
+	select {
+	case <-m.shutdown:
+		log.ErrorIf(r.Shutdown(), "shutdown gofs task error [%s]", t.Name)
+	case <-done:
+	}
+	m.tasks.Delete(t.Name)
+	<-m.workers
+	log.Info("running gofs task finished [%s]", t.Name)
+}
+
+func (m *taskClientMonitor) enqueue(t *task.TaskInfo) {
+	if t != nil {
+		m.queue.PushBack(t)
+	}
+}
+
+func (m *taskClientMonitor) dequeue() {
+	for {
+		if m.closed.Get() {
+			break
+		}
+		e := m.queue.Front()
+		if e == nil {
+			time.Sleep(time.Millisecond * 100)
+			continue
+		}
+		t := e.Value.(*task.TaskInfo)
+		m.queue.Remove(e)
+
+		if _, loaded := m.tasks.LoadOrStore(t.Name, t); loaded {
+			log.Info("[ignore task] task already exists => %s", t.Name)
+			continue
+		}
+		m.workers <- struct{}{}
+		go m.run(t)
+	}
 }
