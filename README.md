@@ -79,17 +79,19 @@ cert.pem  key.pem  source  dest
 
 Synchronize files between disks by [Local Disk](#local-disk).
 
-```text
-+----------+                             +----------+                          +----------+
-|          |<---(A)-- monitor disk   ----+          |                          |          |
-|  DiskA   |                             |  Client  |                          |  DiskB   |
-|          |----(B)--- notify change --->|          |                          |          |
-|          |                             |          |                          |          |
-|          |<---(C)--- read file     ----|          |                          |          |
-|          |                             |          |                          |          |
-|          |----(D)--- return file   --->|          |----(E)--- write file --->|          |
-|          |                             |          |                          |          |
-+----------+                             +----------+                          +----------+
+```mermaid
+sequenceDiagram
+    participant DA as DiskA
+    participant C as Client
+    participant DB as DiskB
+
+    autonumber
+
+    C ->> DA: monitor disk
+    DA ->> C: notify change
+    C ->> DA: read file
+    DA ->> C: return file
+    C ->> DB: write file
 ```
 
 #### From Server
@@ -97,102 +99,127 @@ Synchronize files between disks by [Local Disk](#local-disk).
 Synchronize files from server by [Remote Disk Server](#remote-disk-server)
 and [Remote Disk Client](#remote-disk-client).
 
-```text
-+----------+                             +----------+                           +----------+                          +----------+
-|          |<---(A)-- monitor disk   ----+          |                           |          |                          |          |
-|  Server  |                             |  Server  |                           |  Client  |                          |  Client  |
-|  Disk    |----(B)--- notify change --->|          |----(C)--notify change --->|          |                          |  Disk    |
-|          |                             |          |                           |          |                          |          |
-|          |<---(E)--- read file     ----|          |<---(D)-- pull file    ----|          |                          |          |
-|          |                             |          |                           |          |                          |          |
-|          |----(F)--- return file   --->|          |----(G)--- send file   --->|          |----(H)--- write file --->|          |
-|          |                             |          |                           |          |                          |          |
-+----------+                             +----------+                           +----------+                          +----------+
+```mermaid
+sequenceDiagram
+    participant SD as Server Disk
+    participant S as Server
+    participant C as Client
+    participant CD as Client Disk
+
+    autonumber
+
+    S ->> SD: monitor disk
+    C ->> S: connect and auth
+    SD ->> S: notify change
+    S ->> C: notify change
+    C ->> S: pull file
+    S ->> SD: read file
+    SD ->> S: return file
+    S ->> C: send file
+    C ->> CD: write file
 ```
 
 #### To Server
 
 Synchronize files to server by [Remote Push Server](#remote-push-server) and [Remote Push Client](#remote-push-client).
 
-```text
-+----------+                             +----------+                         +----------+                          +----------+
-|          |<---(A)--- monitor disk  ----+          |                         |          |                          |          |
-|  Client  |                             |  Client  |                         |  Server  |                          |  Server  |
-|  Disk    |----(B)--- notify change --->|          |                         |          |                          |  Disk    |
-|          |                             |          |                         |          |                          |          |
-|          |<---(C)--- read file     ----|          |                         |          |                          |          |
-|          |                             |          |                         |          |                          |          |
-|          |----(D)--- return file   --->|          |----(E)--- push file --->|          |----(F)--- write file --->|          |
-|          |                             |          |                         |          |                          |          |
-+----------+                             +----------+                         +----------+                          +----------+
+```mermaid
+sequenceDiagram
+    participant CD as Client Disk
+    participant C as Client
+    participant S as Server
+    participant SD as Server Disk
+
+    autonumber
+
+    C ->> CD: monitor disk
+    CD ->> C: notify change
+    C ->> CD: read file
+    CD ->> C: return file
+    C ->> S: push file
+    S ->> SD: write file
 ```
 
 #### From SFTP Server
 
 Synchronize files from SFTP server by [SFTP Pull Client](#sftp-pull-client).
 
-```text
-+----------+                             +----------+                         +----------+                          +----------+
-|          |<---(A)--- monitor disk  ----+          |                         |          |                          |          |
-|  Client  |                             |  Client  |                         |  SFTP    |                          |  SFTP    |
-|  Disk    |----(B)--- notify change --->|          |                         |  Server  |                          |  Server  |
-|          |                             |          |                         |          |                          |  Disk    |
-|          |<---(C)--- read file     ----|          |                         |          |                          |          |
-|          |                             |          |                         |          |                          |          |
-|          |----(D)--- return file   --->|          |----(E)--- push file --->|          |----(F)--- write file --->|          |
-|          |                             |          |                         |          |                          |          |
-+----------+                             +----------+                         +----------+                          +----------+
+```mermaid
+sequenceDiagram
+    participant CD as Client Disk
+    participant C as Client
+    participant SS as SFTP Server
+    participant SSD as SFTP Server Disk
+
+    autonumber
+
+    C ->> SS: pull file
+    SS ->> SSD: read file
+    SSD ->> SS: return file
+    SS ->> C: send file
+    C ->> CD: write file
 ```
 
 #### To SFTP Server
 
 Synchronize files to SFTP server by [SFTP Push Client](#sftp-push-client).
 
-```text
-+----------+                          +----------+                         +----------+                           +----------+
-|          |                          |          +----(A)--- pull file --->|          |----(B)--- read file   --->|          |
-|  Client  |                          |  Client  |                         |  SFTP    |                           |  SFTP    |
-|  Disk    |<---(E)--- write file ----|          |<---(D)--- send file ----|  Server  |<---(C)--- return file ----|  Server  |
-|          |                          |          |                         |          |                           |  Disk    |
-|          |                          |          |                         |          |                           |          |
-|          |                          |          |                         |          |                           |          |
-|          |                          |          |                         |          |                           |          |
-|          |                          |          |                         |          |                           |          |
-+----------+                          +----------+                         +----------+                           +----------+
+```mermaid
+sequenceDiagram
+    participant CD as Client Disk
+    participant C as Client
+    participant SS as SFTP Server
+    participant SSD as SFTP Server Disk
+
+    autonumber
+
+    C ->> CD: monitor disk
+    CD ->> C: notify change
+    C ->> CD: read file
+    CD ->> C: return file
+    C ->> SS: push file
+    SS ->> SSD: write file
 ```
 
 #### From MinIO Server
 
 Synchronize files from MinIO server by [MinIO Pull Client](#minio-pull-client).
 
-```text
-+----------+                             +----------+                         +----------+                          +----------+
-|          |<---(A)--- monitor disk  ----+          |                         |          |                          |          |
-|  Client  |                             |  Client  |                         |  MinIO   |                          |  MinIO   |
-|  Disk    |----(B)--- notify change --->|          |                         |  Server  |                          |  Server  |
-|          |                             |          |                         |          |                          |  Disk    |
-|          |<---(C)--- read file     ----|          |                         |          |                          |          |
-|          |                             |          |                         |          |                          |          |
-|          |----(D)--- return file   --->|          |----(E)--- push file --->|          |----(F)--- write file --->|          |
-|          |                             |          |                         |          |                          |          |
-+----------+                             +----------+                         +----------+                          +----------+
+```mermaid
+sequenceDiagram
+    participant CD as Client Disk
+    participant C as Client
+    participant MS as MinIO Server
+    participant MSD as MinIO Server Disk
+
+    autonumber
+
+    C ->> MS: pull file
+    MS ->> MSD: read file
+    MSD ->> MS: return file
+    MS ->> C: send file
+    C ->> CD: write file
 ```
 
 #### To MinIO Server
 
 Synchronize files to MinIO server by [MinIO Push Client](#minio-push-client).
 
-```text
-+----------+                          +----------+                         +----------+                           +----------+
-|          |                          |          +----(A)--- pull file --->|          |----(B)--- read file   --->|          |
-|  Client  |                          |  Client  |                         |  MinIO   |                           |  MinIO   |
-|  Disk    |<---(E)--- write file ----|          |<---(D)--- send file ----|  Server  |<---(C)--- return file ----|  Server  |
-|          |                          |          |                         |          |                           |  Disk    |
-|          |                          |          |                         |          |                           |          |
-|          |                          |          |                         |          |                           |          |
-|          |                          |          |                         |          |                           |          |
-|          |                          |          |                         |          |                           |          |
-+----------+                          +----------+                         +----------+                           +----------+
+```mermaid
+sequenceDiagram
+    participant CD as Client Disk
+    participant C as Client
+    participant MS as MinIO Server
+    participant MSD as MinIO Server Disk
+
+    autonumber
+
+    C ->> CD: monitor disk
+    CD ->> C: notify change
+    C ->> CD: read file
+    CD ->> C: return file
+    C ->> MS: push file
+    MS ->> MSD: write file
 ```
 
 ## Features
