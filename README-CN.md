@@ -220,6 +220,46 @@ sequenceDiagram
     MS ->> MSD: write file
 ```
 
+#### 任务模式
+
+启动一个[任务客户端](#任务客户端)来订阅[任务服务端](#任务服务端)，然后获取任务并执行它，
+以[从服务器端同步](#从服务器端同步)为例
+
+```mermaid
+sequenceDiagram
+    participant A as Admin
+    participant TS as Task Server
+    participant SD as Server Disk
+    participant S as Server
+    participant TC as Task Client
+    participant CW as Client Worker
+    participant CD as Client Disk
+    participant TQ as Task Queue
+
+    autonumber
+
+    S ->> SD: monitor disk
+    S ->> TS: start task server
+    A ->> TS: create task
+    TC ->> TS: subscribe task
+    TS ->> TC: distribute task
+    TC ->> CW: start worker
+    CW ->> TQ: add to task queue
+    TQ ->> CW: execute task
+    activate CW
+    CW ->> S: connect and auth
+    loop
+        SD ->> S: notify change
+        S ->> CW: notify change
+        CW ->> S: pull file
+        S ->> SD: read file
+        SD ->> S: return file
+        S ->> CW: send file
+        CW ->> CD: write file
+    end
+    deactivate CW
+```
+
 ## 核心功能
 
 ### 本地磁盘
