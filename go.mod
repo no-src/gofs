@@ -8,7 +8,7 @@ require (
 	github.com/gin-contrib/pprof v1.4.0
 	github.com/gin-contrib/sessions v0.0.5
 	github.com/gin-gonic/gin v1.9.0
-	github.com/minio/minio-go/v7 v7.0.52
+	github.com/minio/minio-go/v7 v7.0.53
 	github.com/no-src/fsctl v0.1.1
 	github.com/no-src/log v0.1.10
 	github.com/no-src/nscache v0.0.3
