@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/no-src/nscache"
+	_ "github.com/no-src/nscache/boltdb"
 	_ "github.com/no-src/nscache/buntdb"
 	_ "github.com/no-src/nscache/etcd"
 	_ "github.com/no-src/nscache/memory"
