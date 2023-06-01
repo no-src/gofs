@@ -13,7 +13,7 @@ require (
 	github.com/no-src/log v0.1.10
 	github.com/no-src/nscache v0.1.0
 	github.com/pkg/sftp v1.13.5
-	github.com/quic-go/quic-go v0.34.0
+	github.com/quic-go/quic-go v0.35.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/schollz/progressbar/v3 v3.13.1
 	golang.org/x/crypto v0.9.0
