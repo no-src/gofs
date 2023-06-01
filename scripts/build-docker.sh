@@ -6,6 +6,9 @@
 # build the image with a specified tag
 # ./scripts/build-docker.sh v0.6.0
 
+# switch to branch main
+git checkout main
+
 # update git repository
 # git pull --no-rebase
 
