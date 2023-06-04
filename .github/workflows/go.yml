@@ -43,6 +43,14 @@ jobs:
       - name: Test Integration Task
         run: go test -v -race -tags=integration_test_task ./integration
 
+      - name: Install and mount MinIO
+        run: chmod +x ./scripts/minio/*.sh && ./scripts/minio/install-minio.sh && ./scripts/minio/mount-minio.sh
+        if: matrix.os == 'ubuntu-latest'
+
+      - name: Test MinIO Integration
+        run: go test -v -race -tags=integration_test_minio ./integration
+        if: matrix.os == 'ubuntu-latest'
+
       - name: Codecov
         uses: codecov/codecov-action@v3
         if: matrix.os == 'ubuntu-latest'

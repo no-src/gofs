@@ -1,0 +1,88 @@
+name: test for gofs MinIO push
+init:
+  - mkdir:
+    source: ./minio-data-mount
+  - mkdir:
+    source: ./minio-push-client/source
+  - mkdir:
+    source: ./minio-push-client/dest
+actions:
+  - cp:
+    source: ./integration_test.go
+    dest: ./minio-push-client/source/integration_test.go.bak1
+  - cp:
+    source: ./integration_test.go
+    dest: ./minio-push-client/source/integration_test.go.bak2
+  - rm:
+    source: ./minio-push-client/source/integration_test.go.bak2
+  - touch:
+    source: ./minio-push-client/source/hello
+  - echo:
+    source: ./minio-push-client/source/hello
+    input: Hello World
+    append: false
+  - echo:
+    source: ./minio-push-client/source/hello
+    input: Bye Bye
+    append: true
+    no-newline: false
+  - echo:
+    source: ./minio-push-client/source/empty1
+    no-newline: true
+  - echo:
+    source: ./minio-push-client/source/empty2
+    no-newline: true
+  - sleep: 10s
+  - is-equal:
+    source: ./minio-push-client/source/integration_test.go.bak1
+    dest: ./minio-data-mount/integration_test.go.bak1
+    expect: true
+    must-non-empty: true
+  - is-equal:
+    source: ./minio-push-client/source/integration_test.go.bak1
+    dest: ./minio-data-mount/integration_test.go.bak1
+    expect: true
+    must-non-empty: true
+    algorithm: sha1
+  - is-equal:
+    source: ./minio-push-client/source/integration_test.go.bak1
+    dest: ./minio-data-mount/empty1
+    expect: false
+  - is-equal:
+    source: ./minio-push-client/source/empty1
+    dest: ./minio-data-mount/empty2
+    expect: true
+    must-non-empty: false
+  - is-empty:
+    source: ./minio-data-mount/integration_test.go.bak1
+    expect: false
+  - is-exist:
+    source: ./minio-data-mount/integration_test.go.bak1
+    expect: true
+  - is-exist:
+    source: ./minio-data-mount/integration_test.go.bak2
+    expect: false
+  - is-dir:
+    source: ./minio-data-mount
+    expect: true
+  - is-dir:
+    source: ./minio-data-mount/integration_test.go.bak1
+    expect: false
+  - hash:
+    algorithm: md5
+    source: ./minio-data-mount/hello
+    expect: 856719c57653fa86008d49db895a5752
+  - hash:
+    algorithm: sha1
+    source: ./minio-data-mount/hello
+    expect: f343874b5df87e887d85df2e790df33584463162
+  - rm:
+    source: ./minio-push-client/source/integration_test.go.bak1
+  - sleep: 10s
+  - run: ../scripts/minio/remount-minio.sh
+  - is-exist:
+    source: ./minio-data-mount/integration_test.go.bak1
+    expect: false
+clear:
+  - rm:
+    source: ./minio-push-client
