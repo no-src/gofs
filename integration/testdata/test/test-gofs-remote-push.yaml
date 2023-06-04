@@ -34,7 +34,7 @@ actions:
   - echo:
     source: ./rc-push/source/empty2
     no-newline: true
-  - sleep: 5s
+  - sleep: 10s
   - is-equal:
     source: ./rc-push/source/integration_test.go.bak1
     dest: ./rs-push/source/integration_test.go.bak1
