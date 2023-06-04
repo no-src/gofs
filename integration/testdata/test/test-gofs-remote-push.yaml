@@ -36,48 +36,54 @@ actions:
     no-newline: true
   - sleep: 10s
   - is-equal:
-    source: ./integration_test.go
-    dest: ./rc-push/dest/integration_test.go.bak1
+    source: ./rc-push/source/integration_test.go.bak1
+    dest: ./rs-push/source/integration_test.go.bak1
     expect: true
     must-non-empty: true
   - is-equal:
-    source: ./integration_test.go
-    dest: ./rc-push/dest/integration_test.go.bak1
+    source: ./rc-push/source/integration_test.go.bak1
+    dest: ./rs-push/source/integration_test.go.bak1
     expect: true
     must-non-empty: true
     algorithm: sha1
   - is-equal:
-    source: ./integration_test.go
-    dest: ./rc-push/dest/empty1
+    source: ./rc-push/source/integration_test.go.bak1
+    dest: ./rs-push/source/empty1
     expect: false
   - is-equal:
-    source: ./rc-push/dest/empty1
-    dest: ./rc-push/dest/empty2
+    source: ./rc-push/source/empty1
+    dest: ./rs-push/source/empty2
     expect: true
     must-non-empty: false
   - is-empty:
-    source: ./rc-push/dest/integration_test.go.bak1
+    source: ./rs-push/source/integration_test.go.bak1
     expect: false
   - is-exist:
-    source: ./rc-push/dest/integration_test.go.bak1
+    source: ./rs-push/source/integration_test.go.bak1
     expect: true
   - is-exist:
-    source: ./rc-push/dest/integration_test.go.bak2
+    source: ./rs-push/source/integration_test.go.bak2
     expect: false
   - is-dir:
-    source: ./rc-push/source
+    source: ./rs-push/source
     expect: true
   - is-dir:
-    source: ./rc-push/dest/integration_test.go.bak1
+    source: ./rs-push/source/integration_test.go.bak1
     expect: false
   - hash:
     algorithm: md5
-    source: ./rc-push/dest/hello
+    source: ./rs-push/source/hello
     expect: 856719c57653fa86008d49db895a5752
   - hash:
     algorithm: sha1
-    source: ./rc-push/dest/hello
+    source: ./rs-push/source/hello
     expect: f343874b5df87e887d85df2e790df33584463162
+  - rm:
+    source: ./rc-push/source/integration_test.go.bak1
+  - sleep: 5s
+  - is-exist:
+    source: ./rs-push/source/integration_test.go.bak1
+    expect: false
 clear:
   - rm:
     source: ./rs-push
