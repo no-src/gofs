@@ -47,7 +47,7 @@ jobs:
         run: chmod +x ./scripts/minio/*.sh && ./scripts/minio/install-minio.sh && ./scripts/minio/mount-minio.sh
         if: matrix.os == 'ubuntu-latest'
 
-      - name: Test MinIO Integration
+      - name: Test Integration MinIO
         run: go test -v -race -tags=integration_test_minio ./integration
         if: matrix.os == 'ubuntu-latest'
 
