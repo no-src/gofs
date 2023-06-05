@@ -1,8 +1,6 @@
 name: test for gofs MinIO push
 init:
   - mkdir:
-    source: ./minio-data-mount
-  - mkdir:
     source: ./minio-push-client/source
   - mkdir:
     source: ./minio-push-client/dest
