@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -22,7 +23,9 @@ func runWithConfigFile(path string) result.Result {
 }
 
 func testIntegrationClientServer(t *testing.T, runServerConf string, runClientConf string, testConf string) {
-	runServerConf = getRunConf(runServerConf)
+	if len(runServerConf) > 0 {
+		runServerConf = getRunConf(runServerConf)
+	}
 	runClientConf = getRunConf(runClientConf)
 	testConf = getTestConf(testConf)
 
@@ -37,7 +40,12 @@ func testIntegrationClientServer(t *testing.T, runServerConf string, runClientCo
 		return
 	}
 
-	sr := runWithConfigFile(runServerConf)
+	var sr result.Result
+	if len(runServerConf) == 0 {
+		sr = noServer()
+	} else {
+		sr = runWithConfigFile(runServerConf)
+	}
 	if err = sr.WaitInit(); err != nil {
 		t.Errorf("wait gofs server init error, err=%v", err)
 		return
@@ -78,4 +86,14 @@ func testIntegrationClientServer(t *testing.T, runServerConf string, runClientCo
 	if err = commands.ExecClear(); err != nil {
 		t.Errorf("execute clear commands error, err=%v", err)
 	}
+}
+
+func noServer() result.Result {
+	r := result.New()
+	r.InitDone()
+	r.RegisterNotifyHandler(func(s os.Signal, timeout ...time.Duration) error {
+		r.Done()
+		return nil
+	})
+	return r
 }

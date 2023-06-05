@@ -1,0 +1,40 @@
+name: test for gofs MinIO pull
+init:
+  - mkdir:
+    source: ./minio-pull-client/source
+  - mkdir:
+    source: ./minio-pull-client/dest
+actions:
+  - cp:
+    source: ./integration_minio_test.go
+    dest: ./minio-data-mount/integration_minio_test.go.pull.bak1
+  - cp:
+    source: ./integration_minio_test.go
+    dest: ./minio-data-mount/integration_minio_test.go.pull.bak2
+  - rm:
+    source: ./minio-data-mount/integration_minio_test.go.pull.bak2
+  - touch:
+    source: ./minio-data-mount/hello.pull
+  - mkdir:
+    source: ./minio-data-mount/work_pull
+  - sleep: 10s
+  - is-equal:
+    source: ./minio-data-mount/integration_minio_test.go.pull.bak1
+    dest: ./minio-pull-client/dest/integration_minio_test.go.pull.bak1
+    expect: true
+    must-non-empty: true
+  - is-exist:
+    source: ./minio-pull-client/dest/integration_minio_test.go.pull.bak2
+    expect: false
+  - is-exist:
+    source: ./minio-pull-client/dest/hello.pull
+    expect: true
+  - is-empty:
+    source: ./minio-pull-client/dest/hello.pull
+    expect: true
+  - is-dir:
+    source: ./minio-pull-client/dest/work_pull
+    expect: true
+clear:
+  - rm:
+    source: ./minio-pull-client
