@@ -2,4 +2,4 @@ source: minio://127.0.0.1:9000?secure=false&remote_path=minio-bucket
 dest: ./minio-pull-client/dest
 log_dir: ./minio-pull-client-logs/
 users: minio_user|minio_pwd
-sync_once: true
+sync_cron: "*/5 * * * * *"
