@@ -9,7 +9,7 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/memstore"
-	"github.com/gin-contrib/sessions/redis"
+	"github.com/no-src/gin-session-redis/redis"
 )
 
 // NewSessionStore create a session store, stored in memory or redis
@@ -48,7 +48,7 @@ func redisSessionStore(redisUrl string, secret []byte) (sessions.Store, error) {
 
 // parseRedisConnection parse the redis connection string
 // for example => redis://127.0.0.1:6379?password=redis_password&db=10&max_idle=10&secret=redis_secret
-func parseRedisConnection(redisUrl string) (maxIdle int, network, address, password string, db string, secret []byte, err error) {
+func parseRedisConnection(redisUrl string) (maxIdle int, network, address, password string, db int, secret []byte, err error) {
 	u, err := url.Parse(redisUrl)
 	if err != nil {
 		return
@@ -82,16 +82,16 @@ func parseRedisConnection(redisUrl string) (maxIdle int, network, address, passw
 	secret = []byte(u.Query().Get("secret"))
 
 	// db
-	defaultDB := "0"
-	db = u.Query().Get("db")
-	if len(db) == 0 {
-		db = defaultDB
+	dbValue := u.Query().Get("db")
+	if len(dbValue) == 0 {
 		return
 	}
-	if dbInt, dbErr := strconv.Atoi(db); dbErr != nil {
-		err = fmt.Errorf("invalid redis db => %s", db)
+	if dbInt, dbErr := strconv.Atoi(dbValue); dbErr != nil {
+		err = fmt.Errorf("invalid redis db => %s", dbValue)
 	} else if dbInt < 0 || dbInt > 15 {
-		err = fmt.Errorf("invalid redis db => %s, db must be between 0 and 15", db)
+		err = fmt.Errorf("invalid redis db => %s, db must be between 0 and 15", dbValue)
+	} else {
+		db = dbInt
 	}
 	return
 }
