@@ -11,7 +11,7 @@ require (
 	github.com/minio/minio-go/v7 v7.0.56
 	github.com/no-src/fsctl v0.1.1
 	github.com/no-src/log v0.1.10
-	github.com/no-src/nscache v0.1.0
+	github.com/no-src/nscache v0.1.1
 	github.com/pkg/sftp v1.13.5
 	github.com/quic-go/quic-go v0.35.1
 	github.com/robfig/cron/v3 v3.0.1
@@ -69,7 +69,7 @@ require (
 	github.com/quic-go/qpack v0.4.0 // indirect
 	github.com/quic-go/qtls-go1-19 v0.3.2 // indirect
 	github.com/quic-go/qtls-go1-20 v0.2.2 // indirect
-	github.com/redis/go-redis/v9 v9.0.4 // indirect
+	github.com/redis/go-redis/v9 v9.0.5 // indirect
 	github.com/rivo/uniseg v0.4.3 // indirect
 	github.com/rs/xid v1.5.0 // indirect
 	github.com/sirupsen/logrus v1.9.2 // indirect
