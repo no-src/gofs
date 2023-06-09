@@ -22,11 +22,11 @@ type TaskItem struct {
 	AllowIP []string `json:"allow_ip" yaml:"allow_ip"`
 }
 
-func (c *TaskConfig) Verify() error {
+func (c *TaskConfig) verify() error {
 	m := make(map[string]struct{})
 	for _, t := range c.Tasks {
 		if _, ok := m[t.Name]; ok {
-			return fmt.Errorf("duplicate task => %s", t.Name)
+			return fmt.Errorf("%w => %s", errDuplicateTask, t.Name)
 		}
 		m[t.Name] = struct{}{}
 	}
