@@ -1,6 +1,7 @@
 package loader
 
 import (
+	"errors"
 	"strings"
 )
 
@@ -9,12 +10,23 @@ const (
 	confKey    = "nosrc-gofs-task-conf"
 )
 
+var (
+	errNilTaskConfig = errors.New("task config is nil")
+	errDuplicateTask = errors.New("duplicate task")
+)
+
 // Loader a task config loader interface
 type Loader interface {
 	// LoadConfig load the task config
 	LoadConfig() (*TaskConfig, error)
 	// LoadContent load the specified task item content
 	LoadContent(conf string) (string, error)
+	// SaveConfig save the task config
+	SaveConfig(c *TaskConfig) error
+	// SaveContent save the specified task item content
+	SaveContent(conf string, content string) error
+	// Close release the dependent resource
+	Close() error
 }
 
 // NewLoader return a task config loader instance and currently support file, memory, redis, buntdb memory, buntdb, etcd.
