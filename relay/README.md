@@ -97,8 +97,8 @@ expose.
 
 ```bash
 # remote disk server
-$ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server={YOUR HTTP(S) REVERSE PROXY ADDRESS}" -dest=./dest -users="gofs|password|r" -tls_cert_file=cert.pem -tls_key_file=key.pem
+$ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server={YOUR HTTP(S) REVERSE PROXY ADDRESS}" -dest=./dest -users="gofs|password|r" -tls_cert_file=cert.pem -tls_key_file=key.pem -token_secret=mysecret_16bytes
 
 # remote disk client
-$ gofs -source="rs://{YOUR TCP REVERSE PROXY ADDRESS}" -dest=./dest -users="gofs|password"
+$ gofs -source="rs://{YOUR TCP REVERSE PROXY ADDRESS}" -dest=./dest -users="gofs|password" -tls_cert_file=cert.pem
 ```
