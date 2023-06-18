@@ -77,7 +77,10 @@ func (c *client) connect() (err error) {
 }
 
 func (c *client) Stop() error {
-	return c.clientConn.Close()
+	if c.clientConn != nil {
+		return c.clientConn.Close()
+	}
+	return nil
 }
 
 func (c *client) getInfo() (*info.FileServerInfo, error) {
