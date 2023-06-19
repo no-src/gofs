@@ -90,8 +90,8 @@ $ ngrok tcp 8105 --authtoken={YOUR NGROK TOEKN}
 
 ```bash
 # 远程磁盘服务端
-$ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server={YOUR HTTP(S) REVERSE PROXY ADDRESS}" -dest=./dest -users="gofs|password|r" -tls_cert_file=cert.pem -tls_key_file=key.pem
+$ gofs -source="rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server={YOUR HTTP(S) REVERSE PROXY ADDRESS}" -dest=./dest -users="gofs|password|r" -tls_cert_file=cert.pem -tls_key_file=key.pem -token_secret=mysecret_16bytes
 
 # 远程磁盘客户端
-$ gofs -source="rs://{YOUR TCP REVERSE PROXY ADDRESS}" -dest=./dest -users="gofs|password"
+$ gofs -source="rs://{YOUR TCP REVERSE PROXY ADDRESS}" -dest=./dest -users="gofs|password" -tls_cert_file=cert.pem
 ```
