@@ -10,7 +10,7 @@
 
 English | [简体中文](README-CN.md)
 
-A cross-platform file synchronization tool out of the box based on golang.
+A cross-platform real-time file synchronization tool out of the box based on Golang.
 
 ## Installation
 
