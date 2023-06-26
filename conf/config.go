@@ -31,6 +31,7 @@ type Config struct {
 	ChecksumAlgorithm     string   `json:"checksum_algorithm" yaml:"checksum_algorithm"`
 	Progress              bool     `json:"progress" yaml:"progress"`
 	MaxTranRate           int64    `json:"max_tran_rate" yaml:"max_tran_rate"`
+	DryRun                bool     `json:"dry_run" yaml:"dry_run"`
 
 	// ssh
 	SSHKey string `json:"ssh_key" yaml:"ssh_key"`

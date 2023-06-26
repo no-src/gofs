@@ -86,12 +86,22 @@ func runWithConfig(c conf.Config, result result.Result) {
 		c.IsDaemon = false
 	}
 
+	switchDebug := false
+	if c.DryRun && c.LogLevel != int(level.DebugLevel) {
+		c.LogLevel = int(level.DebugLevel)
+		switchDebug = true
+	}
+
 	// init the default logger
 	if err = initDefaultLogger(c); err != nil {
 		result.InitDoneWithError(err)
 		return
 	}
 	defer log.Close()
+
+	if switchDebug {
+		log.Info("to be able to see more details, force enable the log with debug level in dry run mode!")
+	}
 
 	var exit bool
 	// execute and exit

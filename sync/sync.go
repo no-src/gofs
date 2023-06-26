@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/no-src/gofs/core"
+	"github.com/no-src/log"
 )
 
 var (
@@ -42,6 +43,15 @@ type Sync interface {
 
 // NewSync auto create an instance of the expected sync according to source and dest
 func NewSync(opt Option) (Sync, error) {
+	s, err := newSync(opt)
+	if err == nil && opt.DryRun {
+		log.Info("dry run mode is enabled and no files will actually be written!")
+		s, err = NewEmptySync(opt)
+	}
+	return s, err
+}
+
+func newSync(opt Option) (Sync, error) {
 	// the fields of option
 	source := opt.Source
 	dest := opt.Dest
