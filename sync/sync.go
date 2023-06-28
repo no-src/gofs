@@ -46,6 +46,7 @@ func NewSync(opt Option) (Sync, error) {
 	s, err := newSync(opt)
 	if err == nil && opt.DryRun {
 		log.Info("dry run mode is enabled and no files will actually be written!")
+		// should we call the s.Close() here to close the old Sync?
 		s, err = NewEmptySync(opt)
 	}
 	return s, err
