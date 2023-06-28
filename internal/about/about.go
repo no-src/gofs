@@ -26,7 +26,7 @@ const (
 // PrintAbout print the program logo and basic info
 func PrintAbout() {
 	log.Log(logo)
-	log.Log("The gofs is a file synchronization tool out of the box based on golang")
+	log.Log("The gofs is a real-time file synchronization tool out of the box based on Golang")
 	log.Log("Open source repository at: <%s>", openSourceUrl)
 	log.Log("Download the latest version at: <%s>", releaseUrl)
 	log.Log("The docker image repository address at: <%s>", dockerImageUrl)
