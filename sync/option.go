@@ -27,6 +27,7 @@ type Option struct {
 	ChecksumAlgorithm     string
 	Progress              bool
 	MaxTranRate           int64
+	DryRun                bool
 	SSHKey                string
 	TokenSecret           string
 	Users                 []*auth.User
@@ -55,6 +56,7 @@ func NewSyncOption(config conf.Config, users []*auth.User, r retry.Retry, pi ign
 		ChecksumAlgorithm:     config.ChecksumAlgorithm,
 		Progress:              config.Progress,
 		MaxTranRate:           config.MaxTranRate,
+		DryRun:                config.DryRun,
 		SSHKey:                config.SSHKey,
 		TokenSecret:           config.TokenSecret,
 		Users:                 users,

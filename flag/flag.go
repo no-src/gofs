@@ -47,6 +47,7 @@ func ParseFlags(args []string) (config conf.Config) {
 	cl.StringVar(&config.ChecksumAlgorithm, "checksum_algorithm", hashutil.DefaultHash, "set the default hash algorithm for checksum, current supported algorithms: md5, sha1, sha256, sha512, crc32, crc64, adler32, fnv-1-32, fnv-1a-32, fnv-1-64, fnv-1a-64, fnv-1-128, fnv-1a-128")
 	cl.BoolVar(&config.Progress, "progress", false, "print the sync progress")
 	cl.Int64Var(&config.MaxTranRate, "max_tran_rate", 0, "limit the max transmission rate in the server and client sides, and this is an expected value, not an absolute one")
+	cl.BoolVar(&config.DryRun, "dry_run", false, "In dry run mode, gofs is started without actual sync operations")
 
 	// ssh
 	cl.StringVar(&config.SSHKey, "ssh_key", "", "a cryptographic key used for authenticating computers in the SSH protocol")
