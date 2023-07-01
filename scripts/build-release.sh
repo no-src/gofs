@@ -10,13 +10,13 @@ git checkout main
 echo -e "$(git rev-parse main)\c" >internal/version/commit
 
 # set GOPROXY environment variable
-# GOPROXY=https://goproxy.cn
+# export GOPROXY=https://goproxy.cn
 
 ############################## linux-release ##############################
 
 # set go env for linux
-GOOS=linux
-GOARCH=amd64
+export GOOS=linux
+export GOARCH=amd64
 
 # build gofs
 go build -v -o . ./...
@@ -41,8 +41,8 @@ rm -rf "$GOFS_RELEASE"
 ############################# windows-release #############################
 
 # set go env for windows
-GOOS=windows
-GOARCH=amd64
+export GOOS=windows
+export GOARCH=amd64
 
 # build gofs
 go build -v -o . ./...
@@ -66,8 +66,8 @@ rm -rf "$GOFS_RELEASE"
 ############################## macOS-release ##############################
 
 # set go env for macOS
-GOOS=darwin
-GOARCH=amd64
+export GOOS=darwin
+export GOARCH=amd64
 
 # build gofs
 go build -v -o . ./...
