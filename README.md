@@ -687,3 +687,8 @@ $ gofs -v
 ```bash
 $ gofs -about
 ```
+
+### Web UI
+
+The [gofs-webui](https://github.com/no-src/gofs-webui) is a web UI tool for `gofs`, and it allows you to generate the
+config file of `gofs` through the web UI, making the use of gofs easier.
