@@ -657,3 +657,8 @@ $ gofs -v
 ```bash
 $ gofs -about
 ```
+
+### Web UI
+
+[gofs-webui](https://github.com/no-src/gofs-webui)是`gofs`的Web用户界面工具，它允许你通过Web用户界面来生成`gofs`
+的配置文件，让使用`gofs`变得更加简单
