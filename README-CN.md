@@ -41,7 +41,7 @@ $ docker pull nosrc/gofs
 
 在windows系统中，你可以使用下面的命令构建一个在后台运行的不带命令行界面的程序
 
-```bat
+```bash
 go install -ldflags="-H windowsgui" github.com/no-src/gofs/...@latest
 ```
 
