@@ -42,7 +42,7 @@ For more scripts about release and docker, see the [scripts](/scripts) directory
 
 You can install a program run in the background using the following command on Windows.
 
-```bat
+```bash
 go install -ldflags="-H windowsgui" github.com/no-src/gofs/...@latest
 ```
 
