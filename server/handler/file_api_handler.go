@@ -74,6 +74,8 @@ func (h *fileApiHandler) Handle(c *gin.Context) {
 		}
 		return
 	}
+	defer f.Close()
+
 	stat, err := f.Stat()
 	if err != nil {
 		h.logger.Error(err, "file server get file stat error")
