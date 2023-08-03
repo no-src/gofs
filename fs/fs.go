@@ -93,3 +93,22 @@ func IsSub(parent, child string) (bool, error) {
 	relPath = filepath.ToSlash(relPath)
 	return relPath != ".." && !strings.HasPrefix(relPath, "../"), nil
 }
+
+// SafePath encode some special characters for the path like "?", "#" etc.
+func SafePath(path string) string {
+	if len(path) == 0 {
+		return path
+	}
+	filterRule := []struct {
+		old string
+		new string
+	}{
+		{"%", "%25"}, // stay in the first position
+		{"?", "%3F"},
+		{"#", "%23"},
+	}
+	for _, r := range filterRule {
+		path = strings.ReplaceAll(path, r.old, r.new)
+	}
+	return path
+}
