@@ -9,6 +9,14 @@ init:
   - mkdir:
     source: ./rc/dest
 actions:
+  - mkdir:
+    source: ./rs/source/#1/%25/%3F/%23
+  - touch:
+    source: ./rs/source/#1/%25/%3F/%23/#%25.txt
+  - echo:
+    source: ./rs/source/#1/%25/%3F/%23/#%25.txt
+    input: Hello World
+    no-newline: true
   - cp:
     source: ./integration_test.go
     dest: ./rs/source/integration_test.go.bak1
@@ -35,6 +43,10 @@ actions:
     source: ./rs/source/empty2
     no-newline: true
   - sleep: 10s
+  - hash:
+    algorithm: md5
+    source: ./rc/dest/#1/%25/%3F/%23/#%25.txt
+    expect: b10a8db164e0754105b7a99be72e3fe5
   - is-equal:
     source: ./integration_test.go
     dest: ./rc/dest/integration_test.go.bak1

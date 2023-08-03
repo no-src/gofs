@@ -385,7 +385,7 @@ func (rs *remoteClientSync) syncFiles(files []contract.FileInfo, serverAddr, pat
 		values.Add(contract.FsCtime, stringutil.String(file.CTime))
 		values.Add(contract.FsAtime, stringutil.String(file.ATime))
 		values.Add(contract.FsMtime, stringutil.String(file.MTime))
-		syncPath := fmt.Sprintf("%s/%s?%s", serverAddr, currentPath, values.Encode())
+		syncPath := fmt.Sprintf("%s/%s?%s", serverAddr, fs.SafePath(currentPath), values.Encode())
 
 		// create directory or file
 		log.ErrorIf(rs.Create(syncPath), "sync create directory or file error => [syncPath=%s]", syncPath)

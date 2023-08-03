@@ -3,6 +3,7 @@ package fs
 import (
 	"errors"
 	"io"
+	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
@@ -345,6 +346,34 @@ func TestIsSub_ReturnError_Windows(t *testing.T) {
 			_, err := IsSub(tc.parent, tc.child)
 			if err == nil {
 				t.Errorf("test IsSub error, expect to get an error but get nil")
+			}
+		})
+	}
+}
+
+func TestSafePath(t *testing.T) {
+	testCases := []struct {
+		path string
+	}{
+		{""},
+		{" "},
+		{"/hello/world"},
+		{"/1 1"},
+		{"/#1/#2"},
+		{"/?1/?2"},
+		{"/%25/%3F/%23"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.path, func(t *testing.T) {
+			safePath := SafePath(tc.path)
+			u, err := url.Parse(safePath)
+			if err != nil {
+				t.Errorf("parse url error: %v path=%s safe path=%s", err, tc.path, safePath)
+				return
+			}
+			if u.Path != tc.path {
+				t.Errorf("test SafePath error, expect to get %s, but actual get %s", tc.path, u.Path)
 			}
 		})
 	}

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/no-src/gofs/action"
@@ -14,6 +13,7 @@ import (
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/eventlog"
+	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/internal/cbool"
 	"github.com/no-src/gofs/internal/clist"
@@ -204,9 +204,7 @@ func (m *remoteClientMonitor) execSync(msg *monitor.MonitorMessage) (err error) 
 	if len(fi.HashValues) > 0 {
 		values.Add(contract.FsHashValues, stringutil.String(fi.HashValues))
 	}
-
-	// replace question marks with "%3F" to avoid parse the path is breaking when it contains some question marks
-	path := msg.BaseUrl + strings.ReplaceAll(fi.Path, "?", "%3F") + fmt.Sprintf("?%s", values.Encode())
+	path := msg.BaseUrl + fs.SafePath(fi.Path) + fmt.Sprintf("?%s", values.Encode())
 
 	switch action.Action(msg.Action) {
 	case action.CreateAction:
