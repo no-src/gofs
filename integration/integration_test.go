@@ -83,6 +83,7 @@ func testIntegrationClientServer(t *testing.T, runServerConf string, runClientCo
 		t.Errorf("wait for the gofs server exit error, %v", err)
 	}
 
+	time.Sleep(time.Second)
 	if err = commands.ExecClear(); err != nil {
 		t.Errorf("execute clear commands error, err=%v", err)
 	}
