@@ -112,3 +112,12 @@ func SafePath(path string) string {
 	}
 	return path
 }
+
+// IsSymlink the path is a symbolic link or not
+func IsSymlink(path string) (bool, error) {
+	fi, err := os.Lstat(path)
+	if err != nil {
+		return false, err
+	}
+	return fi.Mode()&os.ModeSymlink != 0, nil
+}
