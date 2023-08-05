@@ -379,6 +379,62 @@ func TestSafePath(t *testing.T) {
 	}
 }
 
+func TestIsSymlink(t *testing.T) {
+	tmpFile, err := os.CreateTemp("", "test_for_symlink")
+	if err != nil {
+		t.Errorf("create temp file error => %v", err)
+		return
+	}
+	defer func() {
+		tmpFile.Close()
+		os.Remove(tmpFile.Name())
+	}()
+	symlinkName := tmpFile.Name() + ".symlink"
+	err = os.Symlink(tmpFile.Name(), symlinkName)
+	hasSymlink := true
+	if err != nil {
+		// symlink unsupported or don't have enough privileges
+		hasSymlink = false
+		t.Logf("create symlink error => %v", err)
+	} else {
+		defer func() {
+			os.Remove(symlinkName)
+		}()
+	}
+
+	testCases := []struct {
+		path     string
+		hasError bool
+		expect   bool
+	}{
+		{"", true, false},
+		{testNotFoundFilePath, true, false},
+		{testExistFilePath, false, false},
+		{symlinkName, false, true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.path, func(t *testing.T) {
+			if !hasSymlink && !tc.hasError && tc.expect {
+				tc.hasError = true
+				tc.expect = false
+			}
+			symlink, err := IsSymlink(tc.path)
+			if tc.hasError && err == nil {
+				t.Errorf("test TestIsSymlink error => %s, expect to get an error, but actual get nil", tc.path)
+				return
+			}
+			if !tc.hasError && err != nil {
+				t.Errorf("test TestIsSymlink error => %s, get an error => %v", tc.path, err)
+				return
+			}
+			if !tc.hasError && err == nil && tc.expect != symlink {
+				t.Errorf("test TestIsSymlink error => %s, expect to get symlink: %v, but actual get %v", tc.path, tc.expect, symlink)
+			}
+		})
+	}
+}
+
 func isNotExistAlwaysFalseMock(err error) bool {
 	return false
 }
