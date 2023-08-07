@@ -172,9 +172,18 @@ func (sc *sftpDriver) Create(path string) (err error) {
 	return err
 }
 
+func (sc *sftpDriver) Symlink(oldname, newname string) error {
+	if err := sc.Remove(newname); err != nil {
+		return err
+	}
+	return sc.reconnectIfLost(func() error {
+		return sc.client.Symlink(oldname, newname)
+	})
+}
+
 func (sc *sftpDriver) Remove(path string) error {
 	return sc.reconnectIfLost(func() error {
-		f, err := sc.client.Stat(path)
+		f, err := sc.client.Lstat(path)
 		if os.IsNotExist(err) {
 			return nil
 		}
@@ -260,10 +269,18 @@ func (sc *sftpDriver) Stat(path string) (fi os.FileInfo, err error) {
 	return fi, err
 }
 
+func (sc *sftpDriver) Lstat(path string) (fi os.FileInfo, err error) {
+	err = sc.reconnectIfLost(func() error {
+		fi, err = sc.client.Lstat(path)
+		return err
+	})
+	return fi, err
+}
+
 func (sc *sftpDriver) GetFileTime(path string) (cTime time.Time, aTime time.Time, mTime time.Time, err error) {
 	err = sc.reconnectIfLost(func() error {
 		var fi os.FileInfo
-		fi, err = sc.client.Stat(path)
+		fi, err = sc.client.Lstat(path)
 		if err != nil {
 			return err
 		}
@@ -313,6 +330,14 @@ func (sc *sftpDriver) Write(src string, dest string) (err error) {
 		return err
 	})
 	return err
+}
+
+func (sc *sftpDriver) ReadLink(path string) (realPath string, err error) {
+	err = sc.reconnectIfLost(func() error {
+		realPath, err = sc.client.ReadLink(path)
+		return err
+	})
+	return realPath, err
 }
 
 type statDirEntry struct {
