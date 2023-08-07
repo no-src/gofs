@@ -2,7 +2,9 @@ package fs
 
 import (
 	"errors"
+	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -119,5 +121,32 @@ func IsSymlink(path string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return fi.Mode()&os.ModeSymlink != 0, nil
+	return IsSymlinkMode(fi.Mode()), nil
+}
+
+// IsSymlinkMode check the mode is a symbolic link or not
+func IsSymlinkMode(mode fs.FileMode) bool {
+	return mode&fs.ModeSymlink != 0
+}
+
+// IsSymlinkSupported checks if the system supports symbolic links
+func IsSymlinkSupported() bool {
+	symlink := filepath.Join(os.TempDir(), "symlink_detect.symlink")
+	defer os.RemoveAll(symlink)
+	return Symlink(os.Args[0], symlink) == nil
+}
+
+// Symlink create a symbolic link
+func Symlink(oldname, newname string) error {
+	return os.Symlink(oldname, newname)
+}
+
+// Readlink returns the destination of the named symbolic link
+func Readlink(name string) (string, error) {
+	return os.Readlink(name)
+}
+
+// SymlinkText build custom symlink text content
+func SymlinkText(realPath string) string {
+	return fmt.Sprintf("# symlink\n%s", realPath)
 }

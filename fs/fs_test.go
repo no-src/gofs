@@ -435,6 +435,25 @@ func TestIsSymlink(t *testing.T) {
 	}
 }
 
+func TestIsSymlinkSupported(t *testing.T) {
+	IsSymlinkSupported()
+}
+
+func TestReadlink_IsNotExistError(t *testing.T) {
+	_, err := Readlink(testNotFoundFilePath)
+	if !os.IsNotExist(err) {
+		t.Errorf("expect to get is not exist error, but actual get %v", err)
+	}
+}
+
+func TestSymlinkText(t *testing.T) {
+	expect := "# symlink\n/etc/profile"
+	actual := SymlinkText("/etc/profile")
+	if expect != actual {
+		t.Errorf("TestSymlinkText error, expect get %s, but actual get %s", expect, actual)
+	}
+}
+
 func isNotExistAlwaysFalseMock(err error) bool {
 	return false
 }
