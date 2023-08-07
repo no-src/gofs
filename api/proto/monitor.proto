@@ -39,6 +39,8 @@ message FileInfo{
   int64 a_time = 7;
   // MTime last modify time, unix sec
   int64 m_time = 8;
+  // LinkTo link to the real file
+  string link_to = 9;
 }
 
 // HashValue the file hash info
