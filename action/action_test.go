@@ -12,6 +12,7 @@ func TestParseActionFromString(t *testing.T) {
 		{"3", RemoveAction},
 		{"4", RenameAction},
 		{"5", ChmodAction},
+		{"6", SymlinkAction},
 		{"99999", UnknownAction},
 		{"xyz", UnknownAction},
 		{"0", UnknownAction},
@@ -40,6 +41,7 @@ func TestAction_Int(t *testing.T) {
 		{"RemoveAction", RemoveAction, 3},
 		{"RenameAction", RenameAction, 4},
 		{"ChmodAction", ChmodAction, 5},
+		{"SymlinkAction", SymlinkAction, 6},
 		{"Action(10)", Action(10), 10},
 		{"Action(10).Valid()", Action(10).Valid(), UnknownAction.Int()},
 	}
@@ -66,6 +68,7 @@ func TestAction_String(t *testing.T) {
 		{"RemoveAction", RemoveAction, "Remove"},
 		{"RenameAction", RenameAction, "Rename"},
 		{"ChmodAction", ChmodAction, "Chmod"},
+		{"SymlinkAction", SymlinkAction, "Symlink"},
 		{"Action(10)", Action(10), "Invalid"},
 	}
 

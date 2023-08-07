@@ -18,6 +18,8 @@ const (
 	RenameAction
 	// ChmodAction the action of change the file mode
 	ChmodAction
+	// SymlinkAction the action of create a symbolic link
+	SymlinkAction
 	// maxAction the max boundary value of Action, it is an invalid value
 	maxAction
 )
@@ -36,6 +38,8 @@ func (action Action) String() string {
 		desc = "Rename"
 	case ChmodAction:
 		desc = "Chmod"
+	case SymlinkAction:
+		desc = "Symlink"
 	case UnknownAction:
 		desc = "Unknown"
 	default:
