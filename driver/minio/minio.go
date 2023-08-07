@@ -18,6 +18,7 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/minio/minio-go/v7/pkg/s3utils"
 	"github.com/no-src/gofs/driver"
+	nsfs "github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/internal/rate"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/log"
@@ -144,6 +145,18 @@ func (c *minIODriver) Create(path string) (err error) {
 	return err
 }
 
+func (c *minIODriver) Symlink(oldname, newname string) (err error) {
+	if err = c.Remove(newname); err != nil {
+		return err
+	}
+	err = c.reconnectIfLost(func() error {
+		content := nsfs.SymlinkText(oldname)
+		_, err = c.client.PutObject(c.ctx, c.bucketName, newname, bytes.NewReader([]byte(content)), int64(len(content)), minio.PutObjectOptions{})
+		return err
+	})
+	return err
+}
+
 func (c *minIODriver) Remove(path string) (err error) {
 	return c.reconnectIfLost(func() error {
 		infoChan := c.client.ListObjects(c.ctx, c.bucketName, minio.ListObjectsOptions{
@@ -250,6 +263,10 @@ func (c *minIODriver) Stat(path string) (fi os.FileInfo, err error) {
 	return fi, err
 }
 
+func (c *minIODriver) Lstat(path string) (fi os.FileInfo, err error) {
+	return c.Stat(path)
+}
+
 func (c *minIODriver) GetFileTime(path string) (cTime time.Time, aTime time.Time, mTime time.Time, err error) {
 	err = c.reconnectIfLost(func() error {
 		var info minio.ObjectInfo
@@ -286,6 +303,10 @@ func (c *minIODriver) Write(src string, dest string) (err error) {
 
 func (c *minIODriver) Client() *minio.Client {
 	return c.client
+}
+
+func (c *minIODriver) ReadLink(path string) (string, error) {
+	return path, nil
 }
 
 // fPutObject - Create an object in a bucket, with contents from file at filePath. Allows request cancellation.
