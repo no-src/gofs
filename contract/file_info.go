@@ -20,4 +20,6 @@ type FileInfo struct {
 	ATime int64 `json:"a_time"`
 	// MTime last modify time, unix sec
 	MTime int64 `json:"m_time"`
+	// LinkTo link to the real file
+	LinkTo string `json:"link_to"`
 }
