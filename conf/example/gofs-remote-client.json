@@ -14,6 +14,8 @@
   "progress": false,
   "max_tran_rate": 0,
   "dry_run": false,
+  "copy_link": false,
+  "copy_unsafe_link": false,
   "ssh_key": "",
   "sync_delay": false,
   "sync_delay_events": 10,

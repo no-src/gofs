@@ -32,6 +32,8 @@ type Config struct {
 	Progress              bool     `json:"progress" yaml:"progress"`
 	MaxTranRate           int64    `json:"max_tran_rate" yaml:"max_tran_rate"`
 	DryRun                bool     `json:"dry_run" yaml:"dry_run"`
+	CopyLink              bool     `json:"copy_link" yaml:"copy_link"`
+	CopyUnsafeLink        bool     `json:"copy_unsafe_link" yaml:"copy_unsafe_link"`
 
 	// ssh
 	SSHKey string `json:"ssh_key" yaml:"ssh_key"`

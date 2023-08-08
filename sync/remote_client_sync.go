@@ -43,6 +43,8 @@ type remoteClientSync struct {
 	maxTranRate           int64
 	httpClient            httputil.HttpClient
 	pi                    ignore.PathIgnore
+	copyLink              bool
+	copyUnsafeLink        bool
 }
 
 // NewRemoteClientSync create an instance of remoteClientSync to receive the file change message and execute it
@@ -60,6 +62,8 @@ func NewRemoteClientSync(opt Option) (Sync, error) {
 	checksumAlgorithm := opt.ChecksumAlgorithm
 	enableLogicallyDelete := opt.EnableLogicallyDelete
 	maxTranRate := opt.MaxTranRate
+	copyLink := opt.CopyLink
+	copyUnsafeLink := opt.CopyUnsafeLink
 
 	if dest.IsEmpty() {
 		return nil, errDestNotFound
@@ -90,6 +94,8 @@ func NewRemoteClientSync(opt Option) (Sync, error) {
 		maxTranRate:           maxTranRate,
 		httpClient:            httpClient,
 		pi:                    pi,
+		copyLink:              copyLink,
+		copyUnsafeLink:        copyUnsafeLink,
 	}
 	if len(users) > 0 {
 		rs.currentUser = users[0]
@@ -405,12 +411,32 @@ func (rs *remoteClientSync) syncFiles(files []contract.FileInfo, serverAddr, pat
 			// sync current directory content
 			log.ErrorIf(rs.sync(serverAddr, currentPath), "sync current directory content error => [serverAddr=%s] [currentPath=%s]", serverAddr, currentPath)
 		} else if len(file.LinkTo) > 0 {
-			log.ErrorIf(rs.Symlink(syncPath, file.LinkTo), "sync remote symlink to local disk error => [syncPath=%s] [linkTo=%s]", syncPath, file.LinkTo)
+			log.ErrorIf(rs.syncSymlink(syncPath, file.LinkTo), "sync remote symlink to local disk error => [syncPath=%s] [linkTo=%s]", syncPath, file.LinkTo)
 		} else {
 			// sync remote file to local disk
 			log.ErrorIf(rs.Write(syncPath), "sync remote file to local disk error => [syncPath=%s]", syncPath)
 		}
 	}
+}
+
+func (rs *remoteClientSync) syncSymlink(currentPath, realPath string) (err error) {
+	ok := false
+	if rs.copyLink {
+		if rs.copyUnsafeLink {
+			ok = true
+		} else {
+			// ignore unsafe file
+			if isSub, err := fs.IsSub(filepath.Base(currentPath), realPath); err == nil && isSub {
+				ok = true
+			}
+		}
+	}
+	if ok {
+		err = rs.Write(currentPath)
+	} else {
+		err = rs.Symlink(realPath, currentPath)
+	}
+	return err
 }
 
 func (rs *remoteClientSync) buildDestAbsFile(sourceFileAbs string) (string, error) {

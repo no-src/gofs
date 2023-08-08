@@ -31,6 +31,8 @@ type diskSync struct {
 	enc                   *encrypt.Encrypt
 	hash                  hashutil.Hash
 	pi                    ignore.PathIgnore
+	copyLink              bool
+	copyUnsafeLink        bool
 
 	isDirFn       nsfs.IsDirFunc
 	statFn        nsfs.StatFunc
@@ -57,6 +59,8 @@ func newDiskSync(opt Option) (s *diskSync, err error) {
 	enableLogicallyDelete := opt.EnableLogicallyDelete
 	progress := opt.Progress
 	maxTranRate := opt.MaxTranRate
+	copyLink := opt.CopyLink
+	copyUnsafeLink := opt.CopyUnsafeLink
 
 	if source.IsEmpty() {
 		return nil, errSourceNotFound
@@ -98,6 +102,8 @@ func newDiskSync(opt Option) (s *diskSync, err error) {
 		enc:                   enc,
 		hash:                  hash,
 		pi:                    pi,
+		copyLink:              copyLink,
+		copyUnsafeLink:        copyUnsafeLink,
 		isDirFn:               nsfs.IsDir,
 		statFn:                os.Stat,
 		getFileTimeFn:         nsfs.GetFileTime,
@@ -364,9 +370,35 @@ func (s *diskSync) syncWalk(currentPath string, d fs.DirEntry, sync Sync, readLi
 }
 
 func (s *diskSync) syncSymlink(currentPath string, sync Sync, readLink func(path string) (string, error)) (err error) {
-	realPath, err := readLink(currentPath)
-	if err != nil {
-		return err
+	ok := false
+	var realPath string
+	if s.copyLink {
+		if s.copyUnsafeLink {
+			ok = true
+		} else {
+			realPath, err = readLink(currentPath)
+			if err != nil {
+				return err
+			}
+			// ignore unsafe file
+			if isSub, err := nsfs.IsSub(filepath.Base(currentPath), realPath); err == nil && isSub {
+				ok = true
+			}
+		}
+	} else {
+		realPath, err = readLink(currentPath)
+		if err != nil {
+			return err
+		}
 	}
-	return sync.Symlink(realPath, currentPath)
+
+	if ok {
+		err = sync.Create(currentPath)
+		if err == nil {
+			err = sync.Write(currentPath)
+		}
+	} else {
+		err = sync.Symlink(realPath, currentPath)
+	}
+	return err
 }

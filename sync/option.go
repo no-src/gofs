@@ -28,6 +28,8 @@ type Option struct {
 	Progress              bool
 	MaxTranRate           int64
 	DryRun                bool
+	CopyLink              bool
+	CopyUnsafeLink        bool
 	SSHKey                string
 	TokenSecret           string
 	Users                 []*auth.User
@@ -57,6 +59,8 @@ func NewSyncOption(config conf.Config, users []*auth.User, r retry.Retry, pi ign
 		Progress:              config.Progress,
 		MaxTranRate:           config.MaxTranRate,
 		DryRun:                config.DryRun,
+		CopyLink:              config.CopyLink,
+		CopyUnsafeLink:        config.CopyUnsafeLink,
 		SSHKey:                config.SSHKey,
 		TokenSecret:           config.TokenSecret,
 		Users:                 users,
