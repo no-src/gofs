@@ -42,6 +42,20 @@ actions:
   - echo:
     source: ./rs/source/empty2
     no-newline: true
+  - symlink:
+    link: ./rs/source/hello.symlink
+    dest: ./rs/source/hello
+    ignore-error: false
+  - symlink:
+    link: ./rs/source/hello.symlink.bak
+    dest: ./rs/source/hello
+    ignore-error: false
+  - symlink:
+    link: ./rs/source/not_exist.symlink
+    dest: ./rs/source/not_exist
+    ignore-error: false
+  - rm:
+    source: ./rs/source/hello.symlink.bak
   - sleep: 10s
   - hash:
     algorithm: md5
@@ -90,6 +104,17 @@ actions:
     algorithm: sha1
     source: ./rc/dest/hello
     expect: f343874b5df87e887d85df2e790df33584463162
+  - is-symlink:
+    link: ./rc/dest/hello.symlink
+    expect: true
+    ignore-error: false
+  - is-symlink:
+    link: ./rc/dest/not_exist.symlink
+    expect: true
+    ignore-error: false
+  - is-exist:
+    source: ./rc/dest/hello.symlink.bak
+    expect: false
 clear:
   - rm:
     source: ./rs

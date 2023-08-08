@@ -209,6 +209,8 @@ func (m *remoteClientMonitor) execSync(msg *monitor.MonitorMessage) (err error) 
 	switch action.Action(msg.Action) {
 	case action.CreateAction:
 		err = m.syncer.Create(path)
+	case action.SymlinkAction:
+		err = m.syncer.Symlink(fi.LinkTo, path)
 	case action.WriteAction:
 		err = m.syncer.Create(path)
 		// ignore is not exist error

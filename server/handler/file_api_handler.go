@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -9,7 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/no-src/gofs/contract"
-	"github.com/no-src/gofs/fs"
+	nsfs "github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/log"
@@ -102,7 +103,7 @@ func (h *fileApiHandler) readDir(f http.File, needHash bool, needCheckpoint bool
 		return fileList, err
 	}
 	for _, file := range files {
-		cTime, aTime, mTime, fsTimeErr := fs.GetFileTimeBySys(file.Sys())
+		cTime, aTime, mTime, fsTimeErr := nsfs.GetFileTimeBySys(file.Sys())
 		if fsTimeErr != nil {
 			h.logger.Error(fsTimeErr, "get file times error => %s", file.Name())
 			cTime = time.Now()
@@ -137,7 +138,16 @@ func (h *fileApiHandler) readDir(f http.File, needHash bool, needCheckpoint bool
 			ATime:      aTime.Unix(),
 			CTime:      cTime.Unix(),
 			MTime:      mTime.Unix(),
+			LinkTo:     h.readlink(file),
 		})
 	}
 	return fileList, nil
+}
+
+func (h *fileApiHandler) readlink(file fs.FileInfo) string {
+	if nsfs.IsSymlinkMode(file.Mode()) {
+		// TODO readlink
+		return file.Name()
+	}
+	return ""
 }

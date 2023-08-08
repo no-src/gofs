@@ -51,6 +51,19 @@ func (s *driverPushClientSync) Create(path string) error {
 	return err
 }
 
+func (s *driverPushClientSync) Symlink(oldname, newname string) error {
+	if !s.dest.LocalSyncDisabled() {
+		if err := s.diskSync.Symlink(oldname, newname); err != nil {
+			return err
+		}
+	}
+	destPath, err := s.buildDestAbsFile(newname)
+	if err != nil {
+		return err
+	}
+	return s.driver.Symlink(oldname, destPath)
+}
+
 func (s *driverPushClientSync) Write(path string) error {
 	if !s.dest.LocalSyncDisabled() {
 		if err := s.diskSync.Write(path); err != nil {
@@ -161,15 +174,7 @@ func (s *driverPushClientSync) SyncOnce(path string) error {
 		if s.pi.MatchPath(currentPath, s.driver.DriverName()+" push client sync", "sync once") {
 			return nil
 		}
-		if d.IsDir() {
-			err = s.Create(currentPath)
-		} else {
-			err = s.Create(currentPath)
-			if err == nil {
-				err = s.Write(currentPath)
-			}
-		}
-		return err
+		return s.syncWalk(currentPath, d, s, fs.Readlink)
 	})
 }
 

@@ -30,6 +30,20 @@ actions:
   - echo:
     source: ./minio-push-client/source/empty2
     no-newline: true
+  - symlink:
+    link: ./minio-push-client/source/hello.symlink
+    dest: ./minio-push-client/source/hello
+    ignore-error: false
+  - symlink:
+    link: ./minio-push-client/source/hello.symlink.bak
+    dest: ./minio-push-client/source/hello
+    ignore-error: false
+  - symlink:
+    link: ./minio-push-client/source/not_exist.symlink
+    dest: ./minio-push-client/source/not_exist
+    ignore-error: false
+  - rm:
+    source: ./minio-push-client/source/hello.symlink.bak
   - sleep: 10s
   - is-equal:
     source: ./minio-push-client/source/integration_test.go.bak1
@@ -80,6 +94,15 @@ actions:
   - run: ../scripts/minio/remount-minio.sh
   - is-exist:
     source: ./minio-data-mount/integration_test.go.bak1
+    expect: false
+  - is-empty:
+    source: ./minio-data-mount/hello.symlink
+    expect: false
+  - is-empty:
+    source: ./minio-data-mount/not_exist.symlink
+    expect: false
+  - is-exist:
+    source: ./minio-data-mount/hello.symlink.bak
     expect: false
 clear:
   - rm:

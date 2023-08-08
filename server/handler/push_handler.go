@@ -67,6 +67,8 @@ func (h *pushHandler) Handle(c *gin.Context) {
 	switch pushData.Action {
 	case action.CreateAction:
 		err = h.create(fi)
+	case action.SymlinkAction:
+		err = h.symlink(fi)
 	case action.RemoveAction:
 		err = h.remove(fi)
 	case action.RenameAction:
@@ -128,6 +130,19 @@ func (h *pushHandler) create(fi contract.FileInfo) error {
 		return err
 	}
 	h.logger.Info("create the dest file success [%s]", path)
+	return nil
+}
+
+func (h *pushHandler) symlink(fi contract.FileInfo) error {
+	path := h.buildAbsPath(fi.Path)
+	err := os.RemoveAll(path)
+	if err != nil {
+		return err
+	}
+	if err = fs.Symlink(fi.LinkTo, path); err != nil {
+		return err
+	}
+	h.logger.Info("create symlink success [%s] -> [%s]", path, fi.LinkTo)
 	return nil
 }
 

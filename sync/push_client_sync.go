@@ -118,6 +118,15 @@ func (pcs *pushClientSync) Create(path string) error {
 	return pcs.send(action.CreateAction, path)
 }
 
+func (pcs *pushClientSync) Symlink(oldname, newname string) error {
+	if !pcs.dest.LocalSyncDisabled() {
+		if err := pcs.diskSync.Symlink(oldname, newname); err != nil {
+			return err
+		}
+	}
+	return pcs.sendSymlink(oldname, newname)
+}
+
 func (pcs *pushClientSync) Write(path string) error {
 	if !pcs.dest.LocalSyncDisabled() {
 		if err := pcs.diskSync.Write(path); err != nil {
@@ -173,15 +182,7 @@ func (pcs *pushClientSync) SyncOnce(path string) error {
 		if pcs.pi.MatchPath(currentPath, "push client sync", "sync once") {
 			return nil
 		}
-		if d.IsDir() {
-			err = pcs.Create(currentPath)
-		} else {
-			err = pcs.Create(currentPath)
-			if err == nil {
-				err = pcs.Write(currentPath)
-			}
-		}
-		return err
+		return pcs.syncWalk(currentPath, d, pcs, nsfs.Readlink)
 	})
 }
 
@@ -242,6 +243,33 @@ func (pcs *pushClientSync) send(act action.Action, path string) (err error) {
 		ForceChecksum: pcs.forceChecksum,
 	}
 	return pcs.sendPushData(pd, act, path)
+}
+
+func (pcs *pushClientSync) sendSymlink(oldname, newname string) (err error) {
+	cTime, aTime, mTime, timeErr := nsfs.GetFileTime(newname)
+	if timeErr != nil {
+		return timeErr
+	}
+
+	relPath, err := filepath.Rel(pcs.sourceAbsPath, newname)
+	if err != nil {
+		return err
+	}
+	relPath = filepath.ToSlash(relPath)
+	pd := push.PushData{
+		Action: action.SymlinkAction,
+		FileInfo: contract.FileInfo{
+			Path:   relPath,
+			IsDir:  contract.FsNotDir,
+			Size:   0,
+			CTime:  cTime.Unix(),
+			ATime:  aTime.Unix(),
+			MTime:  mTime.Unix(),
+			LinkTo: oldname,
+		},
+		ForceChecksum: pcs.forceChecksum,
+	}
+	return pcs.sendPushData(pd, pd.Action, newname)
 }
 
 func (pcs *pushClientSync) needCheckDir(act action.Action) bool {

@@ -34,6 +34,20 @@ actions:
     source: ./source/empty2
     no-newline: true
   - run: echo "Bye Bye"
+  - symlink:
+    link: ./source/hello.symlink
+    dest: ./source/hello
+    ignore-error: false
+  - symlink:
+    link: ./source/hello.symlink.bak
+    dest: ./source/hello
+    ignore-error: false
+  - symlink:
+    link: ./source/not_exist.symlink
+    dest: ./source/not_exist
+    ignore-error: false
+  - rm:
+    source: ./source/hello.symlink.bak
   - sleep: 10s
   - is-equal:
     source: ./integration_test.go
@@ -75,6 +89,17 @@ actions:
     algorithm: sha1
     source: ./source/hello
     expect: f343874b5df87e887d85df2e790df33584463162
+  - is-symlink:
+    link: ./dest/hello.symlink
+    expect: true
+    ignore-error: false
+  - is-symlink:
+    link: ./dest/not_exist.symlink
+    expect: true
+    ignore-error: false
+  - is-exist:
+    source: ./dest/hello.symlink.bak
+    expect: false
 clear:
   - rm:
     source: ./source

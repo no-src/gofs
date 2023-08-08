@@ -61,6 +61,7 @@ Response field description:
     - `c_time` file creation time
     - `a_time` file last access time
     - `m_time` file last modify time
+    - `link_to` link to the real file
 
 ##### Example
 
@@ -128,7 +129,8 @@ Here is an example response:
       ],
       "c_time": 1649431872,
       "a_time": 1649431873,
-      "m_time": 1647397031
+      "m_time": 1647397031,
+      "link_to": ""
     },
     {
       "path": "hello_gofs.txt",
@@ -143,7 +145,8 @@ Here is an example response:
       ],
       "c_time": 1649431542,
       "a_time": 1649434237,
-      "m_time": 1649434237
+      "m_time": 1649434237,
+      "link_to": ""
     },
     {
       "path": "resource",
@@ -153,7 +156,8 @@ Here is an example response:
       "hash_values": null,
       "c_time": 1649431669,
       "a_time": 1649431898,
-      "m_time": 1649431898
+      "m_time": 1649431898,
+      "link_to": ""
     }
   ]
 }
@@ -174,7 +178,7 @@ Push the file changes to the [Remote Push Server](/README.md#remote-push-server)
 Request field description:
 
 - `push_data` the request data of push api, contains basic push file info and chunk info etc
-    - `action` the action of file change, Create(1) Write(2) Remove(3) Rename(4) Chmod(5)
+    - `action` the action of file change, Create(1) Write(2) Remove(3) Rename(4) Chmod(5) Symlink(6)
     - `push_action` the file upload action, CompareFile(1) CompareChunk(2) CompareFileAndChunk(3) Write(4) Truncate(5)
     - `file_info` basic push file info
         - `path` file path
@@ -184,6 +188,7 @@ Request field description:
         - `c_time` file creation time
         - `a_time` file last access time
         - `m_time` file last modify time
+        - `link_to` link to the real file
     - `chunk`
         - `offset` the offset relative to the origin of the file
         - `size` file chunk size of bytes, directory is always `0`
@@ -208,7 +213,7 @@ Accept-Encoding: gzip
 --d9e3eb63103de1c2698b0675a70567e47bed1b06c71ff9e26199967312d1
 Content-Disposition: form-data; name="push_data"
 
-{"action":2,"push_action":4,"file_info":{"path":"hello_gofs.txt","is_dir":0,"size":5,"hash":"5d41402abc4b2a76b9719d911017c592","hash_values":null,"c_time":1651681421,"a_time":1651681421,"m_time":1651681421},"chunk":{"offset":0,"hash":"5d41402abc4b2a76b9719d911017c592","size":5},"force_checksum":false}
+{"action":2,"push_action":4,"file_info":{"path":"hello_gofs.txt","is_dir":0,"size":5,"hash":"5d41402abc4b2a76b9719d911017c592","hash_values":null,"c_time":1651681421,"a_time":1651681421,"m_time":1651681421,"link_to":""},"chunk":{"offset":0,"hash":"5d41402abc4b2a76b9719d911017c592","size":5},"force_checksum":false}
 --d9e3eb63103de1c2698b0675a70567e47bed1b06c71ff9e26199967312d1
 Content-Disposition: form-data; name="up_file"; filename="hello_gofs.txt"
 Content-Type: application/octet-stream
