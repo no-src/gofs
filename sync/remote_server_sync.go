@@ -92,6 +92,15 @@ func (rs *remoteServerSync) Create(path string) error {
 	return rs.send(action.CreateAction, path)
 }
 
+func (rs *remoteServerSync) Symlink(oldname, newname string) error {
+	if !rs.source.LocalSyncDisabled() {
+		if err := rs.diskSync.Symlink(oldname, newname); err != nil {
+			return err
+		}
+	}
+	return rs.sendSymlink(oldname, newname)
+}
+
 func (rs *remoteServerSync) Write(path string) error {
 	if !rs.source.LocalSyncDisabled() {
 		if err := rs.diskSync.Write(path); err != nil {
@@ -180,6 +189,34 @@ func (rs *remoteServerSync) send(act action.Action, path string) (err error) {
 			CTime:      cTime.Unix(),
 			ATime:      aTime.Unix(),
 			MTime:      mTime.Unix(),
+		},
+	}
+	rs.server.SendMonitorMessage(req)
+	return nil
+}
+
+func (rs *remoteServerSync) sendSymlink(oldname, newname string) (err error) {
+	cTime, aTime, mTime, timeErr := fs.GetFileTime(newname)
+	if timeErr != nil {
+		return timeErr
+	}
+
+	newname, err = filepath.Rel(rs.sourceAbsPath, newname)
+	if err != nil {
+		return err
+	}
+	newname = filepath.ToSlash(newname)
+	req := &monitor.MonitorMessage{
+		Action:  int32(action.SymlinkAction),
+		BaseUrl: rs.serverAddr + server.SourceRoutePrefix,
+		FileInfo: &monitor.FileInfo{
+			Path:   newname,
+			IsDir:  int32(contract.FsNotDir),
+			Size:   0,
+			CTime:  cTime.Unix(),
+			ATime:  aTime.Unix(),
+			MTime:  mTime.Unix(),
+			LinkTo: oldname,
 		},
 	}
 	rs.server.SendMonitorMessage(req)

@@ -27,6 +27,10 @@ func (s *emptySync) Create(path string) error {
 	return nil
 }
 
+func (s *emptySync) Symlink(oldname, newname string) error {
+	return nil
+}
+
 func (s *emptySync) Write(path string) error {
 	return nil
 }

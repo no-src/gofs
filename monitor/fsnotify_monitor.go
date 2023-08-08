@@ -10,6 +10,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/eventlog"
+	nsfs "github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/internal/clist"
 	"github.com/no-src/gofs/report"
@@ -167,9 +168,13 @@ func (m *fsNotifyMonitor) startProcessEvents() error {
 			// the file "info.log" does not match the ignore rule and should be synchronized to destination directory.
 			m.monitorDirIfCreate(event)
 		} else if event.Op&fsnotify.Write == fsnotify.Write {
-			m.write(event)
+			symlink, err := nsfs.IsSymlink(event.Name)
+			log.ErrorIf(err, "[write] check is symlink error =>%s", event.Name)
+			if err == nil && !symlink {
+				m.write(event)
+			}
 		} else if event.Op&fsnotify.Create == fsnotify.Create {
-			m.create(event)
+			m.symlinkOrCreate(event)
 		} else if event.Op&fsnotify.Remove == fsnotify.Remove {
 			m.remove(event)
 		} else if event.Op&fsnotify.Rename == fsnotify.Rename {
@@ -212,13 +217,35 @@ func (m *fsNotifyMonitor) create(event fsnotify.Event) {
 			// rename a file will not trigger the Write event
 			// rename a dir will not trigger the Write event on Linux and some Windows environments
 			// in some cases it will trigger the Write event for the parent dir on Windows
-			// send a Write event manually
+			// send a Write event manually if the file is not a symbolic link
 			log.Debug("prepare to send a [write] event after [create] event [%s]", event.Name)
 			m.events.PushBack(fsnotify.Event{
 				Name: event.Name,
 				Op:   fsnotify.Write,
 			})
 		}
+	}
+}
+
+func (m *fsNotifyMonitor) symlink(event fsnotify.Event) {
+	source, err := nsfs.Readlink(event.Name)
+	if err != nil {
+		log.Error(err, "[symlink] read link error => [%s]", event.Name)
+		return
+	}
+	log.ErrorIf(m.syncer.Symlink(source, event.Name), "[symlink] event execute error => [%s]", event.Name)
+}
+
+func (m *fsNotifyMonitor) symlinkOrCreate(event fsnotify.Event) {
+	symlink, err := nsfs.IsSymlink(event.Name)
+	if err != nil {
+		log.Error(err, "[create] check is symlink error =>%s", event.Name)
+		return
+	}
+	if symlink {
+		m.symlink(event)
+	} else {
+		m.create(event)
 	}
 }
 

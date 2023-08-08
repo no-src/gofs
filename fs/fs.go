@@ -71,7 +71,7 @@ func IsNonEOF(err error) bool {
 
 // GetFileTime get the creation time, last access time, last modify time of the path
 func GetFileTime(path string) (cTime time.Time, aTime time.Time, mTime time.Time, err error) {
-	stat, err := os.Stat(path)
+	stat, err := os.Lstat(path)
 	if err != nil {
 		return
 	}
@@ -131,7 +131,7 @@ func IsSymlinkMode(mode fs.FileMode) bool {
 
 // IsSymlinkSupported checks if the system supports symbolic links
 func IsSymlinkSupported() bool {
-	symlink := filepath.Join(os.TempDir(), "symlink_detect.symlink")
+	symlink := filepath.Join(os.TempDir(), fmt.Sprintf("%d.symlink_detect", time.Now().UnixNano()))
 	defer os.RemoveAll(symlink)
 	return Symlink(os.Args[0], symlink) == nil
 }

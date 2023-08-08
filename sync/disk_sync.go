@@ -155,6 +155,18 @@ func (s *diskSync) Create(path string) error {
 	return nil
 }
 
+// Symlink create a symbolic link
+func (s *diskSync) Symlink(oldname, newname string) error {
+	dest, err := s.buildDestAbsFile(newname)
+	if err != nil {
+		return err
+	}
+	if err = os.RemoveAll(dest); err != nil {
+		return err
+	}
+	return nsfs.Symlink(oldname, dest)
+}
+
 // Write sync the source file to the dest
 func (s *diskSync) Write(path string) error {
 	dest, err := s.buildDestAbsFile(path)
@@ -333,14 +345,28 @@ func (s *diskSync) SyncOnce(path string) error {
 		if s.pi.MatchPath(currentPath, "disk sync", "sync once") {
 			return nil
 		}
-		if d.IsDir() {
-			err = s.Create(currentPath)
-		} else {
-			err = s.Create(currentPath)
-			if err == nil {
-				err = s.Write(currentPath)
-			}
-		}
-		return err
+		return s.syncWalk(currentPath, d, s, nsfs.Readlink)
 	})
+}
+
+func (s *diskSync) syncWalk(currentPath string, d fs.DirEntry, sync Sync, readLink func(path string) (string, error)) (err error) {
+	if d.IsDir() {
+		err = sync.Create(currentPath)
+	} else if nsfs.IsSymlinkMode(d.Type()) {
+		err = s.syncSymlink(currentPath, sync, readLink)
+	} else {
+		err = sync.Create(currentPath)
+		if err == nil {
+			err = sync.Write(currentPath)
+		}
+	}
+	return err
+}
+
+func (s *diskSync) syncSymlink(currentPath string, sync Sync, readLink func(path string) (string, error)) (err error) {
+	realPath, err := readLink(currentPath)
+	if err != nil {
+		return err
+	}
+	return sync.Symlink(realPath, currentPath)
 }

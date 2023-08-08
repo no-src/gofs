@@ -21,6 +21,8 @@ var (
 type Sync interface {
 	// Create create the path
 	Create(path string) error
+	// Symlink create a symbolic link
+	Symlink(oldname, newname string) error
 	// Write write the data to path
 	Write(path string) error
 	// Remove remove the path

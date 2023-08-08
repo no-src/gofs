@@ -2,7 +2,7 @@ package sync
 
 import (
 	"bufio"
-	iofs "io/fs"
+	"io/fs"
 	"os"
 
 	"github.com/no-src/gofs/driver"
@@ -22,6 +22,10 @@ func (s *driverPullClientSync) start() error {
 
 func (s *driverPullClientSync) Create(path string) error {
 	return s.diskSync.Create(path)
+}
+
+func (s *driverPullClientSync) Symlink(oldname, newname string) error {
+	return s.diskSync.Symlink(oldname, newname)
 }
 
 func (s *driverPullClientSync) Write(path string) error {
@@ -125,21 +129,13 @@ func (s *driverPullClientSync) IsDir(path string) (bool, error) {
 }
 
 func (s *driverPullClientSync) SyncOnce(path string) error {
-	return s.driver.WalkDir(path, func(currentPath string, d iofs.DirEntry, err error) error {
+	return s.driver.WalkDir(path, func(currentPath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		if s.pi.MatchPath(currentPath, s.driver.DriverName()+" pull client sync", "sync once") {
 			return nil
 		}
-		if d.IsDir() {
-			err = s.Create(currentPath)
-		} else {
-			err = s.Create(currentPath)
-			if err == nil {
-				err = s.Write(currentPath)
-			}
-		}
-		return err
+		return s.syncWalk(currentPath, d, s, s.driver.ReadLink)
 	})
 }

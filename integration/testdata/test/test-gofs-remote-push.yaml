@@ -42,6 +42,20 @@ actions:
   - echo:
     source: ./rc-push/source/empty2
     no-newline: true
+  - symlink:
+    link: ./rc-push/source/hello.symlink
+    dest: ./rc-push/source/hello
+    ignore-error: false
+  - symlink:
+    link: ./rc-push/source/hello.symlink.bak
+    dest: ./rc-push/source/hello
+    ignore-error: false
+  - symlink:
+    link: ./rc-push/source/not_exist.symlink
+    dest: ./rc-push/source/not_exist
+    ignore-error: false
+  - rm:
+    source: ./rc-push/source/hello.symlink.bak
   - sleep: 10s
   - hash:
     algorithm: md5
@@ -95,6 +109,17 @@ actions:
   - sleep: 5s
   - is-exist:
     source: ./rs-push/source/integration_test.go.bak1
+    expect: false
+  - is-symlink:
+    link: ./rs-push/source/hello.symlink
+    expect: true
+    ignore-error: false
+  - is-symlink:
+    link: ./rs-push/source/not_exist.symlink
+    expect: true
+    ignore-error: false
+  - is-exist:
+    source: ./rs-push/source/hello.symlink.bak
     expect: false
 clear:
   - rm:

@@ -126,8 +126,8 @@ github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd h1:TRLaZ9cD/w
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/reflect2 v1.0.2 h1:xBagoLtFs94CBntxluKeaWgTMpvLxC4ur3nMaC9Gz0M=
 github.com/modern-go/reflect2 v1.0.2/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjYzDa0/r8luk=
-github.com/no-src/fsctl v0.1.1 h1:E4JTXDhASk6LtZLWFVpDCqVIw7DtU8IPDydamYi/wTQ=
-github.com/no-src/fsctl v0.1.1/go.mod h1:ObH5aEHwS6JLtV81Igj2BxciD5W/Tm40szqhm8W55q8=
+github.com/no-src/fsctl v0.1.2-0.20230808162217-242297fbaea4 h1:l4/bFYazcDMwBEogCeLwNRVxGtmNYBwLZEoJRqOxdf0=
+github.com/no-src/fsctl v0.1.2-0.20230808162217-242297fbaea4/go.mod h1:sXkup5MSxKl0br3AbtkoOhaGD0QSuieO8J3pExKegVs=
 github.com/no-src/log v0.2.3 h1:lCJrWeMMuC2Wkp6CKEVylgllH+k4YAm0eRsFX9nVxaQ=
 github.com/no-src/log v0.2.3/go.mod h1:C58ahv0WdsBL3Yxi+v6wyUXzwqk7aEPN+/1ltOsdHXg=
 github.com/no-src/nscache v0.1.1 h1:gs9hJ4Y5CaeLRmexvE4Rto6Gnjf5maKoTxFnssXAuJE=
