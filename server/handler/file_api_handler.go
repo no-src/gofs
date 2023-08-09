@@ -18,14 +18,14 @@ import (
 
 type fileApiHandler struct {
 	logger          log.Logger
-	root            http.FileSystem
+	root            http.Dir
 	chunkSize       int64
 	checkpointCount int
 	hash            hashutil.Hash
 }
 
 // NewFileApiHandlerFunc returns a gin.HandlerFunc that queries the file info
-func NewFileApiHandlerFunc(logger log.Logger, root http.FileSystem, chunkSize int64, checkpointCount int, hash hashutil.Hash) gin.HandlerFunc {
+func NewFileApiHandlerFunc(logger log.Logger, root http.Dir, chunkSize int64, checkpointCount int, hash hashutil.Hash) gin.HandlerFunc {
 	return (&fileApiHandler{
 		logger:          logger,
 		root:            root,
@@ -146,7 +146,12 @@ func (h *fileApiHandler) readDir(f http.File, needHash bool, needCheckpoint bool
 
 func (h *fileApiHandler) readlink(file fs.FileInfo) string {
 	if nsfs.IsSymlinkMode(file.Mode()) {
-		// TODO readlink
+		path := filepath.Join(string(h.root), file.Name())
+		realPath, err := nsfs.Readlink(path)
+		if err == nil {
+			return realPath
+		}
+		h.logger.Error(err, "file api read link error => %s", path)
 		return file.Name()
 	}
 	return ""
