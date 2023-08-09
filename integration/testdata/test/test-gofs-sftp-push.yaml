@@ -91,7 +91,6 @@ actions:
   - rm:
     source: ./sftp-push-client/source/integration_test.go.bak1
   - sleep: 10s
-  - run: ../scripts/sftp/remount-sftp.sh
   - is-exist:
     source: /sftp-workspace/integration_test.go.bak1
     expect: false

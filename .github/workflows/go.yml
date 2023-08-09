@@ -51,8 +51,8 @@ jobs:
         run: go test -v -race -tags=integration_test_minio ./integration
         if: matrix.os == 'ubuntu-latest'
 
-      - name: Install SFTP
-        run: chmod +x ./scripts/sftp/*.sh && ./scripts/sftp/install-sftp.sh
+      - name: Init SFTP
+        run: chmod +x ./scripts/sftp/*.sh && ./scripts/sftp/init-sftp.sh
         if: matrix.os == 'ubuntu-latest'
 
       - name: Test Integration SFTP

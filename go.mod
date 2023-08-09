@@ -9,7 +9,7 @@ require (
 	github.com/gin-contrib/sessions v0.0.5
 	github.com/gin-gonic/gin v1.9.1
 	github.com/minio/minio-go/v7 v7.0.60
-	github.com/no-src/fsctl v0.1.2-0.20230808162217-242297fbaea4
+	github.com/no-src/fsctl v0.1.2-0.20230809094346-873969ea2e79
 	github.com/no-src/log v0.2.3
 	github.com/no-src/nscache v0.1.1
 	github.com/pkg/sftp v1.13.5
