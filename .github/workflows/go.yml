@@ -51,6 +51,14 @@ jobs:
         run: go test -v -race -tags=integration_test_minio ./integration
         if: matrix.os == 'ubuntu-latest'
 
+      - name: Init SFTP
+        run: chmod +x ./scripts/sftp/*.sh && ./scripts/sftp/init-sftp.sh
+        if: matrix.os == 'ubuntu-latest'
+
+      - name: Test Integration SFTP
+        run: go test -v -race -tags=integration_test_sftp ./integration
+        if: matrix.os == 'ubuntu-latest'
+
       - name: Codecov
         uses: codecov/codecov-action@v3
         if: matrix.os == 'ubuntu-latest'

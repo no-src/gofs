@@ -1,0 +1,40 @@
+name: test for gofs SFTP pull
+init:
+  - mkdir:
+    source: ./sftp-pull-client/source
+  - mkdir:
+    source: ./sftp-pull-client/dest
+actions:
+  - cp:
+    source: ./integration_sftp_test.go
+    dest: /sftp-workspace/integration_sftp_test.go.pull.bak1
+  - cp:
+    source: ./integration_sftp_test.go
+    dest: /sftp-workspace/integration_sftp_test.go.pull.bak2
+  - rm:
+    source: /sftp-workspace/integration_sftp_test.go.pull.bak2
+  - touch:
+    source: /sftp-workspace/hello.pull
+  - mkdir:
+    source: /sftp-workspace/work_pull
+  - sleep: 10s
+  - is-equal:
+    source: /sftp-workspace/integration_sftp_test.go.pull.bak1
+    dest: ./sftp-pull-client/dest/integration_sftp_test.go.pull.bak1
+    expect: true
+    must-non-empty: true
+  - is-exist:
+    source: ./sftp-pull-client/dest/integration_sftp_test.go.pull.bak2
+    expect: false
+  - is-exist:
+    source: ./sftp-pull-client/dest/hello.pull
+    expect: true
+  - is-empty:
+    source: ./sftp-pull-client/dest/hello.pull
+    expect: true
+  - is-dir:
+    source: ./sftp-pull-client/dest/work_pull
+    expect: true
+clear:
+  - rm:
+    source: ./sftp-pull-client

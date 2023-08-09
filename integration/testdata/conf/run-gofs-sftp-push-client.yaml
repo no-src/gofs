@@ -1,0 +1,4 @@
+source: ./sftp-push-client/source
+dest: sftp://127.0.0.1:22?local_sync_disabled=false&path=./sftp-push-client/dest&remote_path=/sftp-workspace
+log_dir: ./sftp-push-client-logs/
+users: sftp_user|sftp_pwd
