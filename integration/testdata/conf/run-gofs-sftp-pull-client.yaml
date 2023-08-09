@@ -1,0 +1,5 @@
+source: sftp://127.0.0.1:22?remote_path=/sftp-workspace
+dest: ./sftp-pull-client/dest
+log_dir: ./sftp-pull-client-logs/
+users: sftp_user|sftp_pwd
+sync_cron: "*/5 * * * * *"
