@@ -94,12 +94,14 @@ actions:
   - is-exist:
     source: /sftp-workspace/integration_test.go.bak1
     expect: false
-  - is-empty:
-    source: /sftp-workspace/hello.symlink
-    expect: false
-  - is-empty:
-    source: /sftp-workspace/not_exist.symlink
-    expect: false
+  - is-symlink:
+    link: /sftp-workspace/hello.symlink
+    expect: true
+    ignore-error: false
+  - is-symlink:
+    link: /sftp-workspace/not_exist.symlink
+    expect: true
+    ignore-error: false
   - is-exist:
     source: /sftp-workspace/hello.symlink.bak
     expect: false
