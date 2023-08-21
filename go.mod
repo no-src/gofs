@@ -8,7 +8,7 @@ require (
 	github.com/gin-contrib/pprof v1.4.0
 	github.com/gin-contrib/sessions v0.0.5
 	github.com/gin-gonic/gin v1.9.1
-	github.com/minio/minio-go/v7 v7.0.60
+	github.com/minio/minio-go/v7 v7.0.62
 	github.com/no-src/fsctl v0.1.2-0.20230809094346-873969ea2e79
 	github.com/no-src/log v0.2.3
 	github.com/no-src/nscache v0.1.1
@@ -52,8 +52,8 @@ require (
 	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/gorilla/sessions v1.2.1 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.16.5 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
+	github.com/klauspost/compress v1.16.7 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
@@ -71,7 +71,7 @@ require (
 	github.com/redis/go-redis/v9 v9.0.5 // indirect
 	github.com/rivo/uniseg v0.4.3 // indirect
 	github.com/rs/xid v1.5.0 // indirect
-	github.com/sirupsen/logrus v1.9.2 // indirect
+	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/tidwall/btree v1.4.2 // indirect
 	github.com/tidwall/buntdb v1.3.0 // indirect
 	github.com/tidwall/gjson v1.14.3 // indirect
