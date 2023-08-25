@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"sync/atomic"
 	"time"
 
 	"github.com/no-src/gofs/action"
@@ -15,7 +16,6 @@ import (
 	"github.com/no-src/gofs/eventlog"
 	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/ignore"
-	"github.com/no-src/gofs/internal/cbool"
 	"github.com/no-src/gofs/internal/clist"
 	"github.com/no-src/gofs/util/stringutil"
 	"github.com/no-src/gofs/wait"
@@ -26,7 +26,7 @@ type remoteClientMonitor struct {
 	baseMonitor
 
 	client   apiclient.Client
-	closed   *cbool.CBool
+	closed   atomic.Bool
 	messages *clist.CList
 	pi       ignore.PathIgnore
 }
@@ -55,7 +55,6 @@ func NewRemoteClientMonitor(opt Option) (Monitor, error) {
 		client:      apiclient.New(host, port, enableTLS, certFile, user),
 		messages:    clist.New(),
 		baseMonitor: newBaseMonitor(opt),
-		closed:      cbool.New(false),
 		pi:          pi,
 	}
 	return m, nil
@@ -113,41 +112,36 @@ func (m *remoteClientMonitor) syncAndShutdown() (err error) {
 // if receive a shutdown notify, then stop reading the message.
 func (m *remoteClientMonitor) receive() wait.Wait {
 	wd := wait.NewWaitDone()
-	shutdown := cbool.New(false)
+	shutdown := &atomic.Bool{}
 	go m.waitShutdown(shutdown, wd)
 	go m.readMessage(shutdown, wd)
 	return wd
 }
 
 // waitShutdown wait for the shutdown notify then mark the work done
-func (m *remoteClientMonitor) waitShutdown(st *cbool.CBool, wd wait.Done) {
-	select {
-	case <-st.SetC(<-m.shutdown):
-		{
-			if st.Get() {
-				log.ErrorIf(m.Close(), "close remote client monitor error")
-				m.syncer.Close()
-				wd.Done()
-			}
-		}
-	}
+func (m *remoteClientMonitor) waitShutdown(st *atomic.Bool, wd wait.Done) {
+	<-m.shutdown
+	st.Store(true)
+	log.ErrorIf(m.Close(), "close remote client monitor error")
+	m.syncer.Close()
+	wd.Done()
 }
 
 // readMessage loop read the messages, if receive a message, parse the message then send to consumers according to the api type.
 // if receive a shutdown notify, then stop reading the message.
-func (m *remoteClientMonitor) readMessage(st *cbool.CBool, wd wait.Done) {
+func (m *remoteClientMonitor) readMessage(st *atomic.Bool, wd wait.Done) {
 	mc, err := m.client.Monitor()
 	if err != nil {
 		return
 	}
 	for {
-		if m.closed.Get() {
+		if m.closed.Load() {
 			wd.DoneWithError(errors.New("remote monitor is closed"))
 			break
 		}
 		msg, err := mc.Recv()
 		if err != nil {
-			if st.Get() {
+			if st.Load() {
 				break
 			}
 			log.Error(err, "receive monitor message error")
@@ -237,7 +231,7 @@ func (m *remoteClientMonitor) execSync(msg *monitor.MonitorMessage) (err error) 
 
 // Close mark the monitor is closed, then close the connection
 func (m *remoteClientMonitor) Close() error {
-	m.closed.Set(true)
+	m.closed.Store(true)
 	if m.client != nil {
 		return m.client.Stop()
 	}

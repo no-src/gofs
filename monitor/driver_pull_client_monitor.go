@@ -1,7 +1,8 @@
 package monitor
 
 import (
-	"github.com/no-src/gofs/internal/cbool"
+	"sync/atomic"
+
 	"github.com/no-src/gofs/wait"
 	"github.com/no-src/log"
 )
@@ -12,7 +13,7 @@ type driverPullClientMonitor struct {
 
 func (m *driverPullClientMonitor) Start() (wait.Wait, error) {
 	wd := wait.NewWaitDone()
-	shutdown := cbool.New(false)
+	shutdown := &atomic.Bool{}
 	go m.waitShutdown(shutdown, wd)
 
 	// execute -sync_once flag
@@ -40,17 +41,12 @@ func (m *driverPullClientMonitor) syncAndShutdown() (err error) {
 }
 
 // waitShutdown wait for the shutdown notify then mark the work done
-func (m *driverPullClientMonitor) waitShutdown(st *cbool.CBool, wd wait.Done) {
-	select {
-	case <-st.SetC(<-m.shutdown):
-		{
-			if st.Get() {
-				log.ErrorIf(m.Close(), "close driver pull client monitor error")
-				m.syncer.Close()
-				wd.Done()
-			}
-		}
-	}
+func (m *driverPullClientMonitor) waitShutdown(st *atomic.Bool, wd wait.Done) {
+	<-m.shutdown
+	st.Store(true)
+	log.ErrorIf(m.Close(), "close driver pull client monitor error")
+	m.syncer.Close()
+	wd.Done()
 }
 
 // sync try to sync all the files once
