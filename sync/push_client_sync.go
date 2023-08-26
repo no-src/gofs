@@ -27,10 +27,6 @@ import (
 )
 
 var (
-	errAuthResponse          = errors.New("receive auth command response error")
-	errInfoResponse          = errors.New("receive info command response error")
-	errAuthTimeout           = errors.New("auth timeout")
-	errInfoTimeout           = errors.New("info timeout")
 	errPushServerUnsupported = errors.New("the push server is unsupported")
 	errSendToPushServer      = errors.New("send a request to the push server error")
 )
