@@ -2,7 +2,6 @@ package sftp
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"io/fs"
 	"net"
@@ -67,15 +66,23 @@ func (sc *sftpDriver) Connect() error {
 	if err != nil {
 		return err
 	}
-	hostKeyCallback, err := sc.getHostKeyCallback()
-	if err != nil {
-		return err
+	// hostKeyCallback, err := sc.getHostKeyCallback()
+	// if err != nil {
+	// 	return err
+	// }
+	signer, e := sc.getSigner()
+	if e != nil {
+		return e
 	}
 	conf := ssh.ClientConfig{
-		HostKeyCallback: hostKeyCallback,
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 		User:            sc.userName,
+		Auth: []ssh.AuthMethod{
+			ssh.PublicKeys(signer),
+			ssh.Password(sc.password),
+		},
 	}
-	conf.Auth = append(conf.Auth, ssh.Password(sc.password))
+	// conf.Auth = append(conf.Auth{}, ssh.Password(sc.password))
 	cc, chans, reqs, err := ssh.NewClientConn(c, "", &conf)
 	if err != nil {
 		return err
@@ -88,38 +95,59 @@ func (sc *sftpDriver) Connect() error {
 	return err
 }
 
-func (sc *sftpDriver) getHostKeyCallback() (ssh.HostKeyCallback, error) {
+func (sc *sftpDriver) getSigner() (signer ssh.Signer, e error) {
 	sc.sshKey = strings.TrimSpace(sc.sshKey)
 	if len(sc.sshKey) == 0 {
-		return ssh.InsecureIgnoreHostKey(), nil
+		return
 	}
-	keyFile, err := os.Open(sc.sshKey)
-	if err != nil {
-		return nil, err
+
+	keyFile, e := os.Open(sc.sshKey)
+	if e != nil {
+		return
 	}
 	defer keyFile.Close()
-	keyData, err := io.ReadAll(keyFile)
-	if err != nil {
-		return nil, err
+
+	keyData, e := io.ReadAll(keyFile)
+	if e != nil {
+		return
 	}
-	keyStat, err := keyFile.Stat()
-	if err != nil {
-		return nil, err
-	}
-	keyFileName := strings.ToLower(keyStat.Name())
-	var pk ssh.PublicKey
-	// ~/.ssh/known_hosts
-	if keyFileName == "known_hosts" {
-		_, _, pk, _, _, err = ssh.ParseKnownHosts(keyData)
-		if err != nil {
-			return nil, err
-		}
-	}
-	if pk == nil {
-		return nil, fmt.Errorf("invalid ssh key file => %s", keyFileName)
-	}
-	return ssh.FixedHostKey(pk), nil
+
+	signer, e = ssh.ParsePrivateKey(keyData)
+	return
 }
+
+// func (sc *sftpDriver) getHostKeyCallback() (ssh.HostKeyCallback, error) {
+// 	sc.sshKey = strings.TrimSpace(sc.sshKey)
+// 	if len(sc.sshKey) == 0 {
+// 		return ssh.InsecureIgnoreHostKey(), nil
+// 	}
+// 	keyFile, err := os.Open(sc.sshKey)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer keyFile.Close()
+// 	keyData, err := io.ReadAll(keyFile)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	keyStat, err := keyFile.Stat()
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	keyFileName := strings.ToLower(keyStat.Name())
+// 	var pk ssh.PublicKey
+// 	// ~/.ssh/known_hosts
+// 	if keyFileName == "known_hosts" {
+// 		_, _, pk, _, _, err = ssh.ParseKnownHosts(keyData)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 	}
+// 	if pk == nil {
+// 		return nil, fmt.Errorf("invalid ssh key file => %s", keyFileName)
+// 	}
+// 	return ssh.FixedHostKey(pk), nil
+// }
 
 func (sc *sftpDriver) reconnect() error {
 	log.Debug("reconnect to sftp server => %s", sc.remoteAddr)
