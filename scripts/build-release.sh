@@ -109,3 +109,5 @@ build_release
 
 # reset commit file
 echo -e "\c" >internal/version/commit
+
+ls -alh | grep gofs_
