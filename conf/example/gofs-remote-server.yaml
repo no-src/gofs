@@ -13,7 +13,6 @@ checksum_algorithm: md5
 progress: false
 max_tran_rate: 0
 dry_run: false
-ssh_key: ""
 sync_delay: false
 sync_delay_events: 10
 sync_delay_time: 30s

@@ -164,11 +164,7 @@ func initRoute(engine *gin.Engine, opt server.Option, logger log.Logger) error {
 		rootGroup.StaticFS(server.DestRoutePrefix, rate.NewHTTPDir(dest.Path(), opt.MaxTranRate))
 		enableFileApi = true
 	} else if dest.Is(core.SFTP) {
-		if len(opt.Users) == 0 {
-			return errors.New("a user is required for sftp server")
-		}
-		user := opt.Users[0]
-		sftpDir, err := sftp.NewDir(dest.RemotePath(), dest.Addr(), user.UserName(), user.Password(), opt.SSHKey, opt.Retry, opt.MaxTranRate)
+		sftpDir, err := sftp.NewDir(dest.RemotePath(), dest.Addr(), dest.SSHConfig(), opt.Retry, opt.MaxTranRate)
 		if err != nil {
 			return err
 		}

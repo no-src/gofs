@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/retry"
 )
 
@@ -17,20 +18,12 @@ type Dir struct {
 }
 
 // NewDir returns a http.FileSystem instance for sftp
-func NewDir(root string, address string, userName string, password string, sshKey string, r retry.Retry, maxTranRate int64) (http.FileSystem, error) {
+func NewDir(root string, address string, sshConfig core.SSHConfig, r retry.Retry, maxTranRate int64) (http.FileSystem, error) {
 	root = strings.TrimSpace(root)
 	if len(root) == 0 {
 		root = "."
 	}
-	userName = strings.TrimSpace(userName)
-	if len(userName) == 0 {
-		return nil, errors.New("invalid username for sftp")
-	}
-	password = strings.TrimSpace(password)
-	if len(password) == 0 {
-		return nil, errors.New("invalid password for sftp")
-	}
-	driver := newSFTPDriver(address, userName, password, sshKey, true, r, maxTranRate)
+	driver := newSFTPDriver(address, sshConfig, true, r, maxTranRate)
 	return &Dir{
 		driver: driver,
 		root:   root,
