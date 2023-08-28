@@ -13,7 +13,7 @@ require (
 	github.com/no-src/log v0.3.0
 	github.com/no-src/nscache v0.1.1
 	github.com/pkg/sftp v1.13.6
-	github.com/quic-go/quic-go v0.38.0
+	github.com/quic-go/quic-go v0.38.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/schollz/progressbar/v3 v3.13.1
 	golang.org/x/crypto v0.12.0
@@ -67,7 +67,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/quasoft/memstore v0.0.0-20191010062613-2bce066d2b0b // indirect
 	github.com/quic-go/qpack v0.4.0 // indirect
-	github.com/quic-go/qtls-go1-20 v0.3.2 // indirect
+	github.com/quic-go/qtls-go1-20 v0.3.3 // indirect
 	github.com/redis/go-redis/v9 v9.0.5 // indirect
 	github.com/rivo/uniseg v0.4.3 // indirect
 	github.com/rs/xid v1.5.0 // indirect
