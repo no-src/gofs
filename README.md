@@ -462,7 +462,7 @@ $ gofs -source="./source" -dest="rs://127.0.0.1:8105?local_sync_disabled=false&p
 Start a SFTP push client to sync change files to the SFTP server.
 
 ```bash
-$ gofs -source="./source" -dest="sftp://127.0.0.1:22?local_sync_disabled=false&path=./dest&remote_path=/gofs_sftp_server" -users="sftp_user|sftp_pwd"
+$ gofs -source="./source" -dest="sftp://127.0.0.1:22?local_sync_disabled=false&path=./dest&remote_path=/gofs_sftp_server&ssh_user=sftp_user&ssh_pass=sftp_pwd"
 ```
 
 ### SFTP Pull Client
@@ -470,7 +470,7 @@ $ gofs -source="./source" -dest="sftp://127.0.0.1:22?local_sync_disabled=false&p
 Start a SFTP pull client to pull the files from the SFTP server to the local destination path.
 
 ```bash
-$ gofs -source="sftp://127.0.0.1:22?remote_path=/gofs_sftp_server" -dest="./dest" -users="sftp_user|sftp_pwd" -sync_once
+$ gofs -source="sftp://127.0.0.1:22?remote_path=/gofs_sftp_server&ssh_user=sftp_user&ssh_pass=sftp_pwd" -dest="./dest" -sync_once
 ```
 
 ### MinIO Push Client
