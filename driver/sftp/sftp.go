@@ -2,13 +2,11 @@ package sftp
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"io/fs"
 	"net"
 	"net/http"
 	"os"
-	"strings"
 	"sync"
 	"time"
 
@@ -118,30 +116,14 @@ func (sc *sftpDriver) getHostKeyCallback() (ssh.HostKeyCallback, error) {
 	if len(sc.sshConfig.HostKey) == 0 {
 		return ssh.InsecureIgnoreHostKey(), nil
 	}
-	keyFile, err := os.Open(sc.sshConfig.HostKey)
-	if err != nil {
-		return nil, err
-	}
-	defer keyFile.Close()
-	keyData, err := io.ReadAll(keyFile)
-	if err != nil {
-		return nil, err
-	}
-	keyStat, err := keyFile.Stat()
-	if err != nil {
-		return nil, err
-	}
-	keyFileName := strings.ToLower(keyStat.Name())
-	var pk ssh.PublicKey
 	// ~/.ssh/known_hosts
-	if keyFileName == "known_hosts" {
-		_, _, pk, _, _, err = ssh.ParseKnownHosts(keyData)
-		if err != nil {
-			return nil, err
-		}
+	keyData, err := os.ReadFile(sc.sshConfig.HostKey)
+	if err != nil {
+		return nil, err
 	}
-	if pk == nil {
-		return nil, fmt.Errorf("invalid ssh key file => %s", keyFileName)
+	_, _, pk, _, _, err := ssh.ParseKnownHosts(keyData)
+	if err != nil {
+		return nil, err
 	}
 	return ssh.FixedHostKey(pk), nil
 }
