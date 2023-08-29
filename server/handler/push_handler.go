@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -15,7 +16,7 @@ import (
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/contract/push"
 	"github.com/no-src/gofs/core"
-	"github.com/no-src/gofs/fs"
+	nsfs "github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/gofs/util/jsonutil"
@@ -96,7 +97,7 @@ func (h *pushHandler) buildAbsPath(path string) string {
 
 func (h *pushHandler) create(fi contract.FileInfo) error {
 	path := h.buildAbsPath(fi.Path)
-	exist, err := fs.FileExist(path)
+	exist, err := nsfs.FileExist(path)
 	if err != nil {
 		return err
 	}
@@ -104,17 +105,17 @@ func (h *pushHandler) create(fi contract.FileInfo) error {
 		return nil
 	}
 	if fi.IsDir.Bool() {
-		err = os.MkdirAll(path, os.ModePerm)
+		err = os.MkdirAll(path, fs.ModePerm)
 		if err != nil {
 			return err
 		}
 	} else {
 		dir := filepath.Dir(path)
-		err = os.MkdirAll(dir, os.ModePerm)
+		err = os.MkdirAll(dir, fs.ModePerm)
 		if err != nil {
 			return err
 		}
-		f, err := fs.CreateFile(path)
+		f, err := nsfs.CreateFile(path)
 		defer func() {
 			if err = f.Close(); err != nil {
 				h.logger.Error(err, "close file error")
@@ -139,7 +140,7 @@ func (h *pushHandler) symlink(fi contract.FileInfo) error {
 	if err != nil {
 		return err
 	}
-	if err = fs.Symlink(fi.LinkTo, path); err != nil {
+	if err = nsfs.Symlink(fi.LinkTo, path); err != nil {
 		return err
 	}
 	h.logger.Info("create symlink success [%s] -> [%s]", path, fi.LinkTo)
@@ -149,7 +150,7 @@ func (h *pushHandler) symlink(fi contract.FileInfo) error {
 func (h *pushHandler) remove(fi contract.FileInfo) (err error) {
 	path := h.buildAbsPath(fi.Path)
 	if h.enableLogicallyDelete {
-		err = fs.LogicallyDelete(path)
+		err = nsfs.LogicallyDelete(path)
 	} else {
 		err = os.RemoveAll(path)
 	}
@@ -225,7 +226,7 @@ func (h *pushHandler) Save(file *multipart.FileHeader, dst string, pushData push
 
 	var out *os.File
 	if offset > 0 {
-		out, err = fs.CreateFile(dst)
+		out, err = nsfs.CreateFile(dst)
 	} else {
 		out, err = os.Create(dst)
 	}

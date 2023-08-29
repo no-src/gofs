@@ -2,7 +2,6 @@ package minio
 
 import (
 	"io/fs"
-	"os"
 	"time"
 )
 
@@ -24,7 +23,7 @@ func (fi *dirMinIOFileInfo) Size() int64 {
 	return 0
 }
 
-func (fi *dirMinIOFileInfo) Mode() os.FileMode {
+func (fi *dirMinIOFileInfo) Mode() fs.FileMode {
 	return 0755
 }
 

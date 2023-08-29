@@ -20,7 +20,7 @@ var (
 )
 
 // StatFunc the function prototype of os.Stat
-type StatFunc func(name string) (os.FileInfo, error)
+type StatFunc func(name string) (fs.FileInfo, error)
 
 // GetFileTimeFunc the function prototype of GetFileTime
 type GetFileTimeFunc func(path string) (cTime time.Time, aTime time.Time, mTime time.Time, err error)
