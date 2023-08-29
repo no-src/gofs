@@ -9,4 +9,4 @@ export SFTP_SERVER_REMOTE_PATH=/gofs_sftp_server
 export WORKDIR=/workspace
 
 docker run -it --rm -v "$PWD":"$WORKDIR" --name running-gofs-sftp-push-client nosrc/gofs:latest \
-  gofs -source="$WORKDIR/sftp-push-client/source" -dest="sftp://$SFTP_SERVER_ADDR:22?local_sync_disabled=false&path=$WORKDIR/sftp-push-client/dest&remote_path=$SFTP_SERVER_REMOTE_PATH" -users="sftp_user|sftp_pwd"
+  gofs -source="$WORKDIR/sftp-push-client/source" -dest="sftp://$SFTP_SERVER_ADDR:22?local_sync_disabled=false&path=$WORKDIR/sftp-push-client/dest&remote_path=$SFTP_SERVER_REMOTE_PATH&ssh_user=sftp_user&ssh_pass=sftp_pwd"

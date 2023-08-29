@@ -30,7 +30,6 @@ type Option struct {
 	DryRun                bool
 	CopyLink              bool
 	CopyUnsafeLink        bool
-	SSHKey                string
 	TokenSecret           string
 	Users                 []*auth.User
 	Retry                 retry.Retry
@@ -61,7 +60,6 @@ func NewSyncOption(config conf.Config, users []*auth.User, r retry.Retry, pi ign
 		DryRun:                config.DryRun,
 		CopyLink:              config.CopyLink,
 		CopyUnsafeLink:        config.CopyUnsafeLink,
-		SSHKey:                config.SSHKey,
 		TokenSecret:           config.TokenSecret,
 		Users:                 users,
 		Retry:                 r,

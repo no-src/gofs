@@ -51,9 +51,6 @@ func ParseFlags(args []string) (config conf.Config) {
 	cl.BoolVar(&config.CopyLink, "copy_link", false, "transform symlink into referent file, and symlinks that point outside the source tree will be ignored")
 	cl.BoolVar(&config.CopyUnsafeLink, "copy_unsafe_link", false, "force to transform the symlinks that point outside the source tree into referent file")
 
-	// ssh
-	cl.StringVar(&config.SSHKey, "ssh_key", "", "a cryptographic key used for authenticating computers in the SSH protocol")
-
 	// file monitor
 	cl.BoolVar(&config.EnableSyncDelay, "sync_delay", false, "enable sync delay, start sync when the event count is equal or greater than -sync_delay_events, or wait for -sync_delay_time interval time since the last sync")
 	cl.IntVar(&config.SyncDelayEvents, "sync_delay_events", 10, "the maximum event count of sync delay")

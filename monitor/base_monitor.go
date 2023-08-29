@@ -28,7 +28,7 @@ type baseMonitor struct {
 	mu              sync.Mutex
 	syncSpec        string
 	cronChan        chan struct{}
-	shutdown        chan bool
+	shutdown        chan struct{}
 	syncOnce        bool
 	el              eventlog.EventLog
 	enableSyncDelay bool
@@ -63,7 +63,7 @@ func newBaseMonitor(opt Option) baseMonitor {
 		writeChan:       make(chan *writeMessage, 100),
 		writeNotify:     make(chan struct{}, 100),
 		cronChan:        make(chan struct{}, 1),
-		shutdown:        make(chan bool, 1),
+		shutdown:        make(chan struct{}, 1),
 		syncOnce:        syncOnce,
 		el:              eventlog.New(eventWriter),
 		enableSyncDelay: enableSyncDelay,
@@ -281,7 +281,7 @@ func (m *baseMonitor) Shutdown() (err error) {
 			err = fmt.Errorf("%v", r)
 		}
 	}()
-	m.shutdown <- true
+	m.shutdown <- struct{}{}
 	return err
 }
 

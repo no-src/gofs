@@ -35,9 +35,6 @@ type Config struct {
 	CopyLink              bool     `json:"copy_link" yaml:"copy_link"`
 	CopyUnsafeLink        bool     `json:"copy_unsafe_link" yaml:"copy_unsafe_link"`
 
-	// ssh
-	SSHKey string `json:"ssh_key" yaml:"ssh_key"`
-
 	// file monitor
 	EnableSyncDelay bool          `json:"sync_delay" yaml:"sync_delay"`
 	SyncDelayEvents int           `json:"sync_delay_events" yaml:"sync_delay_events"`

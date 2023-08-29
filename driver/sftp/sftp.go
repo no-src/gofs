@@ -2,16 +2,15 @@ package sftp
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"io/fs"
 	"net"
 	"net/http"
 	"os"
-	"strings"
 	"sync"
 	"time"
 
+	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/driver"
 	"github.com/no-src/gofs/internal/rate"
 	"github.com/no-src/gofs/retry"
@@ -25,9 +24,7 @@ type sftpDriver struct {
 	client        *sftp.Client
 	driverName    string
 	remoteAddr    string
-	userName      string
-	password      string
-	sshKey        string
+	sshConfig     core.SSHConfig
 	r             retry.Retry
 	mu            sync.RWMutex
 	online        bool
@@ -36,17 +33,15 @@ type sftpDriver struct {
 }
 
 // NewSFTPDriver get a sftp driver
-func NewSFTPDriver(remoteAddr string, userName string, password string, sshKey string, autoReconnect bool, r retry.Retry, maxTranRate int64) driver.Driver {
-	return newSFTPDriver(remoteAddr, userName, password, sshKey, autoReconnect, r, maxTranRate)
+func NewSFTPDriver(remoteAddr string, sshConfig core.SSHConfig, autoReconnect bool, r retry.Retry, maxTranRate int64) driver.Driver {
+	return newSFTPDriver(remoteAddr, sshConfig, autoReconnect, r, maxTranRate)
 }
 
-func newSFTPDriver(remoteAddr string, userName string, password string, sshKey string, autoReconnect bool, r retry.Retry, maxTranRate int64) *sftpDriver {
+func newSFTPDriver(remoteAddr string, sshConfig core.SSHConfig, autoReconnect bool, r retry.Retry, maxTranRate int64) *sftpDriver {
 	return &sftpDriver{
 		driverName:    "sftp",
 		remoteAddr:    remoteAddr,
-		userName:      userName,
-		password:      password,
-		sshKey:        sshKey,
+		sshConfig:     sshConfig,
 		r:             r,
 		autoReconnect: autoReconnect,
 		maxTranRate:   maxTranRate,
@@ -63,6 +58,9 @@ func (sc *sftpDriver) Connect() error {
 	if sc.online {
 		return nil
 	}
+	if len(sc.sshConfig.Username) == 0 {
+		return errors.New("sftp: the username is required")
+	}
 	c, err := net.Dial("tcp", sc.remoteAddr)
 	if err != nil {
 		return err
@@ -73,9 +71,23 @@ func (sc *sftpDriver) Connect() error {
 	}
 	conf := ssh.ClientConfig{
 		HostKeyCallback: hostKeyCallback,
-		User:            sc.userName,
+		User:            sc.sshConfig.Username,
 	}
-	conf.Auth = append(conf.Auth, ssh.Password(sc.password))
+	if len(sc.sshConfig.Key) > 0 {
+		signer, err := sc.getSigner()
+		if err != nil {
+			return err
+		}
+		conf.Auth = append(conf.Auth, ssh.PublicKeys(signer))
+	}
+	if len(sc.sshConfig.Password) > 0 {
+		conf.Auth = append(conf.Auth, ssh.Password(sc.sshConfig.Password))
+	}
+
+	if len(conf.Auth) == 0 {
+		return errors.New("sftp: must set the ssh password or ssh key file")
+	}
+
 	cc, chans, reqs, err := ssh.NewClientConn(c, "", &conf)
 	if err != nil {
 		return err
@@ -88,35 +100,31 @@ func (sc *sftpDriver) Connect() error {
 	return err
 }
 
+func (sc *sftpDriver) getSigner() (signer ssh.Signer, err error) {
+	pemBytes, err := os.ReadFile(sc.sshConfig.Key)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(sc.sshConfig.KeyPass) > 0 {
+		return ssh.ParsePrivateKeyWithPassphrase(pemBytes, []byte(sc.sshConfig.KeyPass))
+	}
+	return ssh.ParsePrivateKey(pemBytes)
+}
+
 func (sc *sftpDriver) getHostKeyCallback() (ssh.HostKeyCallback, error) {
-	sc.sshKey = strings.TrimSpace(sc.sshKey)
-	if len(sc.sshKey) == 0 {
+	if len(sc.sshConfig.HostKey) == 0 {
+		log.Warn("sftp: the ssh host key file is not set, the server's host key validation will be disabled, it may cause a MitM attack")
 		return ssh.InsecureIgnoreHostKey(), nil
 	}
-	keyFile, err := os.Open(sc.sshKey)
-	if err != nil {
-		return nil, err
-	}
-	defer keyFile.Close()
-	keyData, err := io.ReadAll(keyFile)
-	if err != nil {
-		return nil, err
-	}
-	keyStat, err := keyFile.Stat()
-	if err != nil {
-		return nil, err
-	}
-	keyFileName := strings.ToLower(keyStat.Name())
-	var pk ssh.PublicKey
 	// ~/.ssh/known_hosts
-	if keyFileName == "known_hosts" {
-		_, _, pk, _, _, err = ssh.ParseKnownHosts(keyData)
-		if err != nil {
-			return nil, err
-		}
+	keyData, err := os.ReadFile(sc.sshConfig.HostKey)
+	if err != nil {
+		return nil, err
 	}
-	if pk == nil {
-		return nil, fmt.Errorf("invalid ssh key file => %s", keyFileName)
+	_, _, pk, _, _, err := ssh.ParseKnownHosts(keyData)
+	if err != nil {
+		return nil, err
 	}
 	return ssh.FixedHostKey(pk), nil
 }
