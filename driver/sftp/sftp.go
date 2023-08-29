@@ -114,6 +114,7 @@ func (sc *sftpDriver) getSigner() (signer ssh.Signer, err error) {
 
 func (sc *sftpDriver) getHostKeyCallback() (ssh.HostKeyCallback, error) {
 	if len(sc.sshConfig.HostKey) == 0 {
+		log.Warn("sftp: the ssh host key file is not set, the server's host key validation will be disabled, it may cause a MitM attack")
 		return ssh.InsecureIgnoreHostKey(), nil
 	}
 	// ~/.ssh/known_hosts
