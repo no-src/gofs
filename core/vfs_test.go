@@ -13,8 +13,8 @@ const (
 	testVFSServerPath                     = "rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1"
 	testVFSServerPathWithNoPort           = "rs://127.0.0.1?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1"
 	testVFSServerPathWithNoSchemeFsServer = "rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=127.0.0.1"
-	testVFSSFTPDestPath                   = "sftp://127.0.0.1:22?mode=server&local_sync_disabled=true&path=./source&remote_path=/home/remote/dest"
-	testVFSSFTPDestPathWithNoPort         = "sftp://127.0.0.1?mode=server&local_sync_disabled=true&path=./source&remote_path=/home/remote/dest"
+	testVFSSFTPDestPath                   = "sftp://127.0.0.1:22?mode=server&local_sync_disabled=true&path=./source&remote_path=/home/remote/dest&ssh_user=sftp_user&ssh_pass=sftp_pwd&ssh_key=./id_rsa&ssh_key_pass=123456&ssh_host_key=/root/.ssh/known_hosts"
+	testVFSSFTPDestPathWithNoPort         = "sftp://127.0.0.1?mode=server&local_sync_disabled=true&path=./source&remote_path=/home/remote/dest&ssh_user=sftp_user&ssh_pass=sftp_pwd&ssh_key=./id_rsa&ssh_key_pass=123456&ssh_host_key=/root/.ssh/known_hosts"
 	testVFSMinIODestPath                  = "minio://127.0.0.1:9000?mode=server&local_sync_disabled=true&path=./source&remote_path=/home/remote/dest&secure=true"
 	testVFSMinIODestPathWithNoPort        = "minio://127.0.0.1?mode=server&local_sync_disabled=true&path=./source&remote_path=/home/remote/dest&secure=false"
 )
@@ -254,6 +254,13 @@ func compareVFS(t *testing.T, expect, actual VFS) {
 	assert(t, expect.FsServer() == actual.FsServer(), "compare vfs FsServer error, expect:%s, actual:%s", expect.FsServer(), actual.FsServer())
 	assert(t, expect.LocalSyncDisabled() == actual.LocalSyncDisabled(), "compare vfs LocalSyncDisabled error, expect:%v, actual:%v", expect.LocalSyncDisabled(), actual.LocalSyncDisabled())
 	assert(t, expect.Secure() == actual.Secure(), "compare vfs Secure error, expect:%v, actual:%v", expect.Secure(), actual.Secure())
+	expectSSHConfig := expect.SSHConfig()
+	actualSSHConfig := actual.SSHConfig()
+	assert(t, expectSSHConfig.Username == actualSSHConfig.Username, "compare vfs SSHConfig.Username error, expect:%v, actual:%v", expectSSHConfig.Username, actualSSHConfig.Username)
+	assert(t, expectSSHConfig.Password == actualSSHConfig.Password, "compare vfs SSHConfig.Password error, expect:%v, actual:%v", expectSSHConfig.Password, actualSSHConfig.Password)
+	assert(t, expectSSHConfig.Key == actualSSHConfig.Key, "compare vfs SSHConfig.Key error, expect:%v, actual:%v", expectSSHConfig.Key, actualSSHConfig.Key)
+	assert(t, expectSSHConfig.KeyPass == actualSSHConfig.KeyPass, "compare vfs SSHConfig.KeyPass error, expect:%v, actual:%v", expectSSHConfig.KeyPass, actualSSHConfig.KeyPass)
+	assert(t, expectSSHConfig.HostKey == actualSSHConfig.HostKey, "compare vfs SSHConfig.HostKey error, expect:%v, actual:%v", expectSSHConfig.HostKey, actualSSHConfig.HostKey)
 }
 
 func assert(t *testing.T, ok bool, format string, args ...any) {

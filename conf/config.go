@@ -33,9 +33,6 @@ type Config struct {
 	MaxTranRate           int64    `json:"max_tran_rate" yaml:"max_tran_rate"`
 	DryRun                bool     `json:"dry_run" yaml:"dry_run"`
 
-	// ssh
-	SSHKey string `json:"ssh_key" yaml:"ssh_key"`
-
 	// file monitor
 	EnableSyncDelay bool          `json:"sync_delay" yaml:"sync_delay"`
 	SyncDelayEvents int           `json:"sync_delay_events" yaml:"sync_delay_events"`

@@ -22,6 +22,7 @@ type VFS struct {
 	fsServer          string
 	localSyncDisabled bool
 	secure            bool
+	sshConf           SSHConfig
 }
 
 const (
@@ -31,6 +32,11 @@ const (
 	paramFsServer           = "fs_server"
 	paramLocalSyncDisabled  = "local_sync_disabled"
 	paramSecure             = "secure"
+	paramSSHUsername        = "ssh_user"
+	paramSSHPassword        = "ssh_pass"
+	paramSSHKey             = "ssh_key"
+	paramSSHKeyPassphrase   = "ssh_key_pass"
+	paramSSHHostKey         = "ssh_host_key"
 	valueModeServer         = "server"
 	valueTrue               = "true"
 	schemeDelimiter         = "://"
@@ -112,6 +118,11 @@ func (vfs *VFS) Secure() bool {
 	return vfs.secure
 }
 
+// SSHConfig returns the SSH config
+func (vfs *VFS) SSHConfig() SSHConfig {
+	return vfs.sshConf
+}
+
 // NewDiskVFS create an instance of VFS for the local disk file system
 func NewDiskVFS(path string) VFS {
 	vfs := VFS{
@@ -138,13 +149,13 @@ func NewVFS(path string) VFS {
 	if strings.HasPrefix(lowerPath, remoteServerScheme+schemeDelimiter) {
 		// example of rs protocol to see README.md
 		vfs.fsType = RemoteDisk
-		_, vfs.host, vfs.port, vfs.path, vfs.remotePath, vfs.server, vfs.fsServer, vfs.localSyncDisabled, vfs.secure, err = parse(path)
+		_, vfs.host, vfs.port, vfs.path, vfs.remotePath, vfs.server, vfs.fsServer, vfs.localSyncDisabled, vfs.secure, _, err = parse(path)
 	} else if strings.HasPrefix(lowerPath, sftpServerScheme+schemeDelimiter) {
 		vfs.fsType = SFTP
-		_, vfs.host, vfs.port, vfs.path, vfs.remotePath, vfs.server, vfs.fsServer, vfs.localSyncDisabled, vfs.secure, err = parse(path)
+		_, vfs.host, vfs.port, vfs.path, vfs.remotePath, vfs.server, vfs.fsServer, vfs.localSyncDisabled, vfs.secure, vfs.sshConf, err = parse(path)
 	} else if strings.HasPrefix(lowerPath, minIOServerScheme+schemeDelimiter) {
 		vfs.fsType = MinIO
-		_, vfs.host, vfs.port, vfs.path, vfs.remotePath, vfs.server, vfs.fsServer, vfs.localSyncDisabled, vfs.secure, err = parse(path)
+		_, vfs.host, vfs.port, vfs.path, vfs.remotePath, vfs.server, vfs.fsServer, vfs.localSyncDisabled, vfs.secure, _, err = parse(path)
 	}
 	if err != nil {
 		return NewEmptyVFS()
@@ -152,7 +163,7 @@ func NewVFS(path string) VFS {
 	return vfs
 }
 
-func parse(path string) (scheme string, host string, port int, localPath string, remotePath string, isServer bool, fsServer string, localSyncDisabled bool, secure bool, err error) {
+func parse(path string) (scheme string, host string, port int, localPath string, remotePath string, isServer bool, fsServer string, localSyncDisabled bool, secure bool, sshConf SSHConfig, err error) {
 	parseUrl, err := url.Parse(path)
 	if err != nil {
 		return
@@ -201,5 +212,12 @@ func parse(path string) (scheme string, host string, port int, localPath string,
 	if strings.ToLower(isSecure) == valueTrue {
 		secure = true
 	}
+
+	// parse SSH config
+	sshConf.Username = strings.TrimSpace(parseUrl.Query().Get(paramSSHUsername))
+	sshConf.Password = strings.TrimSpace(parseUrl.Query().Get(paramSSHPassword))
+	sshConf.Key = strings.TrimSpace(parseUrl.Query().Get(paramSSHKey))
+	sshConf.KeyPass = strings.TrimSpace(parseUrl.Query().Get(paramSSHKeyPassphrase))
+	sshConf.HostKey = strings.TrimSpace(parseUrl.Query().Get(paramSSHHostKey))
 	return
 }
