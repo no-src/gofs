@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
 	"net/url"
 	"os"
@@ -14,7 +15,7 @@ import (
 
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
-	"github.com/no-src/gofs/fs"
+	nsfs "github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/internal/rate"
 	"github.com/no-src/gofs/server"
@@ -103,7 +104,7 @@ func (rs *remoteClientSync) Create(path string) error {
 		return err
 	}
 
-	exist, err := fs.FileExist(dest)
+	exist, err := nsfs.FileExist(dest)
 	if err != nil {
 		return err
 	}
@@ -116,17 +117,17 @@ func (rs *remoteClientSync) Create(path string) error {
 		return err
 	}
 	if isDir {
-		err = os.MkdirAll(dest, os.ModePerm)
+		err = os.MkdirAll(dest, fs.ModePerm)
 		if err != nil {
 			return err
 		}
 	} else {
 		dir := filepath.Dir(dest)
-		err = os.MkdirAll(dir, os.ModePerm)
+		err = os.MkdirAll(dir, fs.ModePerm)
 		if err != nil {
 			return err
 		}
-		f, err := fs.CreateFile(dest)
+		f, err := nsfs.CreateFile(dest)
 		defer func() {
 			log.ErrorIf(f.Close(), "[create] close the dest file error")
 		}()
@@ -154,7 +155,7 @@ func (rs *remoteClientSync) Symlink(oldname, newname string) error {
 	if err = os.RemoveAll(dest); err != nil {
 		return err
 	}
-	return fs.Symlink(oldname, dest)
+	return nsfs.Symlink(oldname, dest)
 }
 
 func (rs *remoteClientSync) Write(path string) error {
@@ -210,7 +211,7 @@ func (rs *remoteClientSync) write(path, dest string) error {
 		log.ErrorIf(resp.Body.Close(), "[remote client sync] [write] close the resp body error")
 	}()
 
-	destFile, err := fs.OpenRWFile(dest)
+	destFile, err := nsfs.OpenRWFile(dest)
 	if err != nil {
 		return err
 	}
@@ -262,7 +263,7 @@ func (rs *remoteClientSync) remove(path string, forceDelete bool) error {
 		return err
 	}
 	if !forceDelete && rs.enableLogicallyDelete {
-		err = fs.LogicallyDelete(dest)
+		err = nsfs.LogicallyDelete(dest)
 	} else {
 		err = os.RemoveAll(dest)
 	}
@@ -396,7 +397,7 @@ func (rs *remoteClientSync) syncFiles(files []contract.FileInfo, serverAddr, pat
 		values.Add(contract.FsCtime, stringutil.String(file.CTime))
 		values.Add(contract.FsAtime, stringutil.String(file.ATime))
 		values.Add(contract.FsMtime, stringutil.String(file.MTime))
-		syncPath := fmt.Sprintf("%s/%s?%s", serverAddr, fs.SafePath(currentPath), values.Encode())
+		syncPath := fmt.Sprintf("%s/%s?%s", serverAddr, nsfs.SafePath(currentPath), values.Encode())
 
 		// create directory or file
 		log.ErrorIf(rs.Create(syncPath), "sync create directory or file error => [syncPath=%s]", syncPath)

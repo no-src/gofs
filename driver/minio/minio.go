@@ -239,7 +239,7 @@ func (c *minIODriver) openFileOrDir(path string) (f http.File, err error) {
 	return f, err
 }
 
-func (c *minIODriver) ReadDir(path string) (fis []os.FileInfo, err error) {
+func (c *minIODriver) ReadDir(path string) (fis []fs.FileInfo, err error) {
 	err = c.reconnectIfLost(func() error {
 		infoChan := c.client.ListObjects(c.ctx, c.bucketName, minio.ListObjectsOptions{Recursive: true})
 		for info := range infoChan {
@@ -250,7 +250,7 @@ func (c *minIODriver) ReadDir(path string) (fis []os.FileInfo, err error) {
 	return fis, err
 }
 
-func (c *minIODriver) Stat(path string) (fi os.FileInfo, err error) {
+func (c *minIODriver) Stat(path string) (fi fs.FileInfo, err error) {
 	err = c.reconnectIfLost(func() error {
 		var info minio.ObjectInfo
 		info, err = c.client.StatObject(c.ctx, c.bucketName, path, minio.StatObjectOptions{})
@@ -263,7 +263,7 @@ func (c *minIODriver) Stat(path string) (fi os.FileInfo, err error) {
 	return fi, err
 }
 
-func (c *minIODriver) Lstat(path string) (fi os.FileInfo, err error) {
+func (c *minIODriver) Lstat(path string) (fi fs.FileInfo, err error) {
 	return c.Stat(path)
 }
 
@@ -286,7 +286,7 @@ func (c *minIODriver) WalkDir(root string, fn fs.WalkDirFunc) error {
 	return c.reconnectIfLost(func() error {
 		infoChan := c.client.ListObjects(c.ctx, c.bucketName, minio.ListObjectsOptions{Recursive: true})
 		for info := range infoChan {
-			if err := fn(info.Key, &statDirEntry{newMinIOFileInfo(info)}, info.Err); err != nil {
+			if err := fn(info.Key, fs.FileInfoToDirEntry(newMinIOFileInfo(info)), info.Err); err != nil {
 				return err
 			}
 		}
@@ -346,12 +346,3 @@ func (c *minIODriver) fPutObject(ctx context.Context, bucketName, objectName, fi
 	}
 	return c.client.PutObject(ctx, bucketName, objectName, rate.NewReader(fileReader, c.maxTranRate), fileSize, opts)
 }
-
-type statDirEntry struct {
-	info fs.FileInfo
-}
-
-func (d *statDirEntry) Name() string               { return d.info.Name() }
-func (d *statDirEntry) IsDir() bool                { return d.info.IsDir() }
-func (d *statDirEntry) Type() fs.FileMode          { return d.info.Mode().Type() }
-func (d *statDirEntry) Info() (fs.FileInfo, error) { return d.info, nil }

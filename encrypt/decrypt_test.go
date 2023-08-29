@@ -6,6 +6,7 @@ import (
 	"archive/zip"
 	"crypto/aes"
 	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
@@ -33,7 +34,7 @@ func TestDecrypt_DecryptOutNotDir(t *testing.T) {
 
 func TestDecrypt_EvilFile(t *testing.T) {
 	evilFile := "./testdata/zipslip.zip"
-	err := os.MkdirAll(filepath.Dir(evilFile), os.ModePerm)
+	err := os.MkdirAll(filepath.Dir(evilFile), fs.ModePerm)
 	if err != nil {
 		t.Errorf("mkdir evil path error err=%v", err)
 		return

@@ -3,7 +3,6 @@ package driver
 import (
 	"io/fs"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -29,10 +28,10 @@ type Driver interface {
 	WalkDir(root string, fn fs.WalkDirFunc) error
 	// Open opens the named file for reading
 	Open(path string) (f http.File, err error)
-	// Stat returns the os.FileInfo describing the named file, if path is a symbolic link, read the real file
-	Stat(path string) (fi os.FileInfo, err error)
-	// Lstat returns the os.FileInfo describing the named file, if path is a symbolic link, read the symbolic link info
-	Lstat(path string) (fi os.FileInfo, err error)
+	// Stat returns the fs.FileInfo describing the named file, if path is a symbolic link, read the real file
+	Stat(path string) (fi fs.FileInfo, err error)
+	// Lstat returns the fs.FileInfo describing the named file, if path is a symbolic link, read the symbolic link info
+	Lstat(path string) (fi fs.FileInfo, err error)
 	// GetFileTime get the creation time, last access time, last modify time of the path
 	GetFileTime(path string) (cTime time.Time, aTime time.Time, mTime time.Time, err error)
 	// Write write src file to dest file

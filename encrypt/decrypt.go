@@ -2,11 +2,11 @@ package encrypt
 
 import (
 	"errors"
-	iofs "io/fs"
+	"io/fs"
 	"os"
 	"path/filepath"
 
-	"github.com/no-src/gofs/fs"
+	nsfs "github.com/no-src/gofs/fs"
 )
 
 var (
@@ -37,10 +37,10 @@ func (dec *Decrypt) Decrypt() error {
 	if !dec.opt.Decrypt {
 		return nil
 	}
-	isDir, err := fs.IsDir(dec.opt.DecryptOut)
+	isDir, err := nsfs.IsDir(dec.opt.DecryptOut)
 	if err != nil {
 		if os.IsNotExist(err) {
-			err = os.MkdirAll(dec.opt.DecryptOut, os.ModePerm)
+			err = os.MkdirAll(dec.opt.DecryptOut, fs.ModePerm)
 		}
 		if err != nil {
 			return err
@@ -50,7 +50,7 @@ func (dec *Decrypt) Decrypt() error {
 	if !isDir {
 		return errDecryptOutNotDir
 	}
-	return filepath.WalkDir(dec.opt.DecryptPath, func(path string, d iofs.DirEntry, err error) error {
+	return filepath.WalkDir(dec.opt.DecryptPath, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}

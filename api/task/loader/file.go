@@ -1,6 +1,7 @@
 package loader
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -61,5 +62,5 @@ func (loader *fileLoader) Close() error {
 }
 
 func (loader *fileLoader) write(path string, content string) error {
-	return os.WriteFile(path, []byte(content), os.ModePerm)
+	return os.WriteFile(path, []byte(content), fs.ModePerm)
 }

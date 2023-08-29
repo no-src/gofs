@@ -2,6 +2,7 @@ package loader
 
 import (
 	"errors"
+	"io/fs"
 	"os"
 	"testing"
 
@@ -203,7 +204,7 @@ func TestFileLoader_LoadConfig_WithDuplicateTasks(t *testing.T) {
 		return
 	}
 	duplicateTaskFile := "duplicate-tasks.yaml"
-	err = os.WriteFile(duplicateTaskFile, []byte(data), os.ModePerm)
+	err = os.WriteFile(duplicateTaskFile, []byte(data), fs.ModePerm)
 	if err != nil {
 		t.Errorf("create duplicate task config error => %v", err)
 		return
