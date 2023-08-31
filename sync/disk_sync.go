@@ -390,8 +390,12 @@ func (s *diskSync) syncSymlink(currentPath string, sync Sync, readLink func(path
 			if err != nil {
 				return err
 			}
+			absRealPath := realPath
+			if !filepath.IsAbs(absRealPath) {
+				absRealPath = filepath.Join(filepath.Dir(currentPath), realPath)
+			}
 			// ignore unsafe file
-			if isSub, err := nsfs.IsSub(filepath.Base(currentPath), realPath); err == nil && isSub {
+			if isSub, err := nsfs.IsSub(s.sourceAbsPath, realPath); err == nil && isSub {
 				ok = true
 			}
 		}
@@ -441,6 +445,10 @@ func (s *diskSync) deepCopy(source, dest string) error {
 
 	// sync symlink
 	if nsfs.IsSymlinkMode(sourceStat.Mode()) {
+		if s.pi.MatchPath(source, "local disk deep copy", "the symlink") {
+			return nil
+		}
+		originalSource := source
 		realPath, err := nsfs.Readlink(source)
 		if err != nil {
 			return err
@@ -456,6 +464,21 @@ func (s *diskSync) deepCopy(source, dest string) error {
 		}
 		if err != nil {
 			return err
+		}
+		if s.pi.MatchPath(source, "local disk deep copy", "the symlink's real path") {
+			return nil
+		}
+		// check unsafe link
+		if !s.copyUnsafeLink {
+			// ignore unsafe file
+			isSub, err := nsfs.IsSub(s.sourceAbsPath, source)
+			if err != nil {
+				return err
+			}
+			if !isSub {
+				log.Info("ignore the symlink because it point outside the source tree, symlink => %s, real file => %s", originalSource, source)
+				return nil
+			}
 		}
 		return s.deepCopy(source, dest)
 	}
