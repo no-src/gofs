@@ -132,32 +132,38 @@ func (s *diskSync) Create(path string) error {
 	}
 
 	if isDir {
-		err = os.MkdirAll(dest, fs.ModePerm)
-		if err != nil {
-			return err
-		}
-
-		// only changes the times when the destination path is a directory
-		// because the file's modified time will be used to compare whether file changed
-		if err = s.chtimes(path, dest); err != nil {
-			return err
-		}
+		err = s.createDir(path, dest)
 	} else {
-		dir := filepath.Dir(dest)
-		err = os.MkdirAll(dir, fs.ModePerm)
-		if err != nil {
-			return err
-		}
-		f, err := nsfs.CreateFile(dest)
-		if err != nil {
-			return err
-		}
-		defer func() {
-			log.ErrorIf(f.Close(), "[create] close the dest file error")
-		}()
+		err = s.createFile(dest)
+	}
+	if err == nil {
+		log.Info("create the dest file success [%s] -> [%s]", path, dest)
+	}
+	return err
+}
+
+func (s *diskSync) createDir(source, dest string) error {
+	err := os.MkdirAll(dest, fs.ModePerm)
+	if err != nil {
+		return err
 	}
 
-	log.Info("create the dest file success [%s] -> [%s]", path, dest)
+	// only changes the times when the destination path is a directory
+	// because the file's modified time will be used to compare whether file changed
+	return s.chtimes(source, dest)
+}
+
+func (s *diskSync) createFile(dest string) error {
+	dir := filepath.Dir(dest)
+	err := os.MkdirAll(dir, fs.ModePerm)
+	if err != nil {
+		return err
+	}
+	f, err := nsfs.CreateFile(dest)
+	if err != nil {
+		return err
+	}
+	log.ErrorIf(f.Close(), "[create] close the dest file error")
 	return nil
 }
 
@@ -418,7 +424,7 @@ func (s *diskSync) deepCopy(source, dest string) error {
 	}
 	// sync dir
 	if sourceStat.IsDir() {
-		if err = os.MkdirAll(dest, fs.ModePerm); err != nil {
+		if err = s.createDir(source, dest); err != nil {
 			return err
 		}
 		files, err := os.ReadDir(source)
@@ -426,9 +432,7 @@ func (s *diskSync) deepCopy(source, dest string) error {
 			return err
 		}
 		for _, f := range files {
-			source = filepath.Join(filepath.Dir(source), f.Name())
-			dest = filepath.Join(filepath.Dir(dest), f.Name())
-			if err = s.deepCopy(source, dest); err != nil {
+			if err = s.deepCopy(filepath.Join(source, f.Name()), filepath.Join(dest, f.Name())); err != nil {
 				return err
 			}
 		}
@@ -437,9 +441,18 @@ func (s *diskSync) deepCopy(source, dest string) error {
 
 	// sync symlink
 	if nsfs.IsSymlinkMode(sourceStat.Mode()) {
-		source, err := nsfs.Readlink(source)
+		realPath, err := nsfs.Readlink(source)
+		if err != nil {
+			return err
+		}
+		if filepath.IsAbs(realPath) {
+			source = realPath
+		} else {
+			source = filepath.Join(filepath.Dir(source), realPath)
+		}
+		sourceStat, err = os.Stat(source)
 		if os.IsNotExist(err) {
-			return s.symlink(source, dest)
+			return s.symlink(realPath, dest)
 		}
 		if err != nil {
 			return err
@@ -448,5 +461,8 @@ func (s *diskSync) deepCopy(source, dest string) error {
 	}
 
 	// sync file
+	if err = s.createFile(dest); err != nil {
+		return err
+	}
 	return s.write(source, dest)
 }
