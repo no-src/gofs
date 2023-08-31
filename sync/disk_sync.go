@@ -167,10 +167,14 @@ func (s *diskSync) Symlink(oldname, newname string) error {
 	if err != nil {
 		return err
 	}
-	if err = os.RemoveAll(dest); err != nil {
+	return s.symlink(oldname, dest)
+}
+
+func (s *diskSync) symlink(oldname, newname string) error {
+	if err := os.RemoveAll(newname); err != nil {
 		return err
 	}
-	return nsfs.Symlink(oldname, dest)
+	return nsfs.Symlink(oldname, newname)
 }
 
 // Write sync the source file to the dest
@@ -393,12 +397,56 @@ func (s *diskSync) syncSymlink(currentPath string, sync Sync, readLink func(path
 	}
 
 	if ok {
-		err = sync.Create(currentPath)
+		// only for local disk
+		var dest string
+		dest, err = s.buildDestAbsFile(currentPath)
 		if err == nil {
-			err = sync.Write(currentPath)
+			err = s.deepCopy(currentPath, dest)
 		}
 	} else {
 		err = sync.Symlink(realPath, currentPath)
 	}
 	return err
+}
+
+// deepCopy copy the source file to dest recursively, if source is a symlink, copy the real file to dest,
+// only use for local disk mode.
+func (s *diskSync) deepCopy(source, dest string) error {
+	sourceStat, err := os.Lstat(source)
+	if err != nil {
+		return err
+	}
+	// sync dir
+	if sourceStat.IsDir() {
+		if err = os.MkdirAll(dest, fs.ModePerm); err != nil {
+			return err
+		}
+		files, err := os.ReadDir(source)
+		if err != nil {
+			return err
+		}
+		for _, f := range files {
+			source = filepath.Join(filepath.Dir(source), f.Name())
+			dest = filepath.Join(filepath.Dir(dest), f.Name())
+			if err = s.deepCopy(source, dest); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	// sync symlink
+	if nsfs.IsSymlinkMode(sourceStat.Mode()) {
+		source, err := nsfs.Readlink(source)
+		if os.IsNotExist(err) {
+			return s.symlink(source, dest)
+		}
+		if err != nil {
+			return err
+		}
+		return s.deepCopy(source, dest)
+	}
+
+	// sync file
+	return s.write(source, dest)
 }
