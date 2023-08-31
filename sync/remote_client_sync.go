@@ -427,7 +427,7 @@ func (rs *remoteClientSync) syncSymlink(currentPath, realPath string) (err error
 			ok = true
 		} else {
 			// ignore unsafe file
-			if isSub, err := fs.IsSub(filepath.Base(currentPath), realPath); err == nil && isSub {
+			if isSub, err := nsfs.IsSub(filepath.Base(currentPath), realPath); err == nil && isSub {
 				ok = true
 			}
 		}
