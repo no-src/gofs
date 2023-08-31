@@ -44,8 +44,6 @@ type remoteClientSync struct {
 	maxTranRate           int64
 	httpClient            httputil.HttpClient
 	pi                    ignore.PathIgnore
-	copyLink              bool
-	copyUnsafeLink        bool
 }
 
 // NewRemoteClientSync create an instance of remoteClientSync to receive the file change message and execute it
@@ -63,8 +61,6 @@ func NewRemoteClientSync(opt Option) (Sync, error) {
 	checksumAlgorithm := opt.ChecksumAlgorithm
 	enableLogicallyDelete := opt.EnableLogicallyDelete
 	maxTranRate := opt.MaxTranRate
-	copyLink := opt.CopyLink
-	copyUnsafeLink := opt.CopyUnsafeLink
 
 	if dest.IsEmpty() {
 		return nil, errDestNotFound
@@ -95,8 +91,6 @@ func NewRemoteClientSync(opt Option) (Sync, error) {
 		maxTranRate:           maxTranRate,
 		httpClient:            httpClient,
 		pi:                    pi,
-		copyLink:              copyLink,
-		copyUnsafeLink:        copyUnsafeLink,
 	}
 	if len(users) > 0 {
 		rs.currentUser = users[0]
@@ -421,23 +415,7 @@ func (rs *remoteClientSync) syncFiles(files []contract.FileInfo, serverAddr, pat
 }
 
 func (rs *remoteClientSync) syncSymlink(currentPath, realPath string) (err error) {
-	ok := false
-	if rs.copyLink {
-		if rs.copyUnsafeLink {
-			ok = true
-		} else {
-			// ignore unsafe file
-			if isSub, err := nsfs.IsSub(filepath.Base(currentPath), realPath); err == nil && isSub {
-				ok = true
-			}
-		}
-	}
-	if ok {
-		err = rs.Write(currentPath)
-	} else {
-		err = rs.Symlink(realPath, currentPath)
-	}
-	return err
+	return rs.Symlink(realPath, currentPath)
 }
 
 func (rs *remoteClientSync) buildDestAbsFile(sourceFileAbs string) (string, error) {

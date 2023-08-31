@@ -58,8 +58,11 @@ func newSync(opt Option) (Sync, error) {
 	// the fields of option
 	source := opt.Source
 	dest := opt.Dest
+	copyLink, copyUnsafeLink := opt.CopyLink, opt.CopyUnsafeLink
+	opt.CopyLink, opt.CopyUnsafeLink = false, false
 
 	if source.IsDisk() && dest.IsDisk() {
+		opt.CopyLink, opt.CopyUnsafeLink = copyLink, copyUnsafeLink
 		return NewDiskSync(opt)
 	} else if source.Is(core.RemoteDisk) {
 		return NewRemoteSync(opt)
