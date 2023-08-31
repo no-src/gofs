@@ -29,7 +29,7 @@ func (r *decryptReader) WriteTo(path string) (err error) {
 
 		// path is directory
 		if file.FileInfo().IsDir() {
-			err = os.MkdirAll(outPath, os.ModePerm)
+			err = os.MkdirAll(outPath, fs.ModePerm)
 			if err != nil {
 				return err
 			}
@@ -43,7 +43,7 @@ func (r *decryptReader) WriteTo(path string) (err error) {
 			return err
 		}
 
-		err = os.MkdirAll(filepath.Dir(outPath), os.ModePerm)
+		err = os.MkdirAll(filepath.Dir(outPath), fs.ModePerm)
 		if err != nil {
 			return err
 		}

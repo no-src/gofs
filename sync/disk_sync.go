@@ -132,7 +132,7 @@ func (s *diskSync) Create(path string) error {
 	}
 
 	if isDir {
-		err = os.MkdirAll(dest, os.ModePerm)
+		err = os.MkdirAll(dest, fs.ModePerm)
 		if err != nil {
 			return err
 		}
@@ -144,7 +144,7 @@ func (s *diskSync) Create(path string) error {
 		}
 	} else {
 		dir := filepath.Dir(dest)
-		err = os.MkdirAll(dir, os.ModePerm)
+		err = os.MkdirAll(dir, fs.ModePerm)
 		if err != nil {
 			return err
 		}

@@ -2,14 +2,14 @@ package sync
 
 import (
 	"errors"
-	iofs "io/fs"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"sync"
 
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/driver"
-	"github.com/no-src/gofs/fs"
+	nsfs "github.com/no-src/gofs/fs"
 	"github.com/no-src/log"
 )
 
@@ -99,7 +99,7 @@ func (s *driverPushClientSync) Write(path string) error {
 	err = s.driver.Write(encryptPath, destPath)
 	if err == nil {
 		log.Info("[%s-driver-push] [write] [success] => %s", s.driver.DriverName(), path)
-		if _, aTime, mTime, err := fs.GetFileTime(path); err == nil {
+		if _, aTime, mTime, err := nsfs.GetFileTime(path); err == nil {
 			log.ErrorIf(s.driver.Chtimes(destPath, aTime, mTime), "[%s push client sync] [write] change file times error", s.driver.DriverName())
 		}
 		s.storeFileInfo(path)
@@ -132,10 +132,10 @@ func (s *driverPushClientSync) remove(path string, forceDelete bool) (err error)
 
 // logicallyDelete delete the path logically
 func (s *driverPushClientSync) logicallyDelete(path string) error {
-	if fs.IsDeleted(path) {
+	if nsfs.IsDeleted(path) {
 		return nil
 	}
-	deletedFile := fs.ToDeletedPath(path)
+	deletedFile := nsfs.ToDeletedPath(path)
 	err := s.driver.Rename(path, deletedFile)
 	if os.IsNotExist(err) {
 		return nil
@@ -167,14 +167,14 @@ func (s *driverPushClientSync) SyncOnce(path string) error {
 	if err != nil {
 		return err
 	}
-	return filepath.WalkDir(absPath, func(currentPath string, d iofs.DirEntry, err error) error {
+	return filepath.WalkDir(absPath, func(currentPath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		if s.pi.MatchPath(currentPath, s.driver.DriverName()+" push client sync", "sync once") {
 			return nil
 		}
-		return s.syncWalk(currentPath, d, s, fs.Readlink)
+		return s.syncWalk(currentPath, d, s, nsfs.Readlink)
 	})
 }
 
@@ -229,7 +229,7 @@ func (s *driverPushClientSync) initFileInfo() error {
 	initMax := 5000
 	count := 0
 	errWalkDirStop := errors.New("walk dir stop")
-	err := filepath.WalkDir(s.sourceAbsPath, func(path string, d iofs.DirEntry, err error) error {
+	err := filepath.WalkDir(s.sourceAbsPath, func(path string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() {
 			return err
 		}
