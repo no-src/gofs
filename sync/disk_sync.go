@@ -469,6 +469,15 @@ func (s *diskSync) deepCopy(source, dest string) error {
 		if err != nil {
 			return err
 		}
+		isSym, err := nsfs.IsSymlink(source)
+		if err != nil {
+			return err
+		}
+		// if symlink is linked to symlink, just sync the symlink self
+		if isSym {
+			return s.symlink(realPath, dest)
+		}
+
 		if s.pi.MatchPath(source, "local disk deep copy", "the symlink's real path") {
 			return nil
 		}
@@ -481,7 +490,7 @@ func (s *diskSync) deepCopy(source, dest string) error {
 			}
 			if !isSub {
 				log.Info("ignore the symlink because it point outside the source tree, symlink => %s, real file => %s", originalSource, source)
-				return nil
+				return s.symlink(realPath, dest)
 			}
 		}
 		return s.deepCopy(source, dest)
