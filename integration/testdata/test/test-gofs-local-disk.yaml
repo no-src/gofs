@@ -8,14 +8,14 @@ actions:
   - cp:
     source: ./integration_test.go
     dest: ./source/integration_test.go.bak
-  - sleep: 1s
+  - sleep: 2s
   - mv:
     source: ./source/integration_test.go.bak
     dest: ./source/integration_test_v2.go.bak
   - cp:
     source: ./source/integration_test_v2.go.bak
     dest: ./source/integration_test.go.bak
-  - sleep: 1s
+  - sleep: 2s
   - rm:
     source: ./source/integration_test_v2.go.bak
   - touch:
@@ -48,7 +48,7 @@ actions:
     link: ./source/not_exist.symlink
     dest: ./source/not_exist
     ignore-error: false
-  - sleep: 1s
+  - sleep: 2s
   - rm:
     source: ./source/hello.symlink.bak
   - sleep: 10s
