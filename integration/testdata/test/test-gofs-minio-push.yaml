@@ -11,6 +11,7 @@ actions:
   - cp:
     source: ./integration_test.go
     dest: ./minio-push-client/source/integration_test.go.bak2
+  - sleep: 2s
   - rm:
     source: ./minio-push-client/source/integration_test.go.bak2
   - touch:
@@ -42,6 +43,7 @@ actions:
     link: ./minio-push-client/source/not_exist.symlink
     dest: ./minio-push-client/source/not_exist
     ignore-error: false
+  - sleep: 2s
   - rm:
     source: ./minio-push-client/source/hello.symlink.bak
   - sleep: 10s

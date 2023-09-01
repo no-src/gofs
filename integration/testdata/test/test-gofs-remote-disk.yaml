@@ -23,6 +23,7 @@ actions:
   - cp:
     source: ./integration_test.go
     dest: ./rs/source/integration_test.go.bak2
+  - sleep: 2s
   - rm:
     source: ./rs/source/integration_test.go.bak2
   - touch:
@@ -54,6 +55,7 @@ actions:
     link: ./rs/source/not_exist.symlink
     dest: ./rs/source/not_exist
     ignore-error: false
+  - sleep: 2s
   - rm:
     source: ./rs/source/hello.symlink.bak
   - sleep: 10s
