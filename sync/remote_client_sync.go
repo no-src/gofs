@@ -406,12 +406,16 @@ func (rs *remoteClientSync) syncFiles(files []contract.FileInfo, serverAddr, pat
 			// sync current directory content
 			log.ErrorIf(rs.sync(serverAddr, currentPath), "sync current directory content error => [serverAddr=%s] [currentPath=%s]", serverAddr, currentPath)
 		} else if len(file.LinkTo) > 0 {
-			log.ErrorIf(rs.Symlink(syncPath, file.LinkTo), "sync remote symlink to local disk error => [syncPath=%s] [linkTo=%s]", syncPath, file.LinkTo)
+			log.ErrorIf(rs.syncSymlink(syncPath, file.LinkTo), "sync remote symlink to local disk error => [syncPath=%s] [linkTo=%s]", syncPath, file.LinkTo)
 		} else {
 			// sync remote file to local disk
 			log.ErrorIf(rs.Write(syncPath), "sync remote file to local disk error => [syncPath=%s]", syncPath)
 		}
 	}
+}
+
+func (rs *remoteClientSync) syncSymlink(currentPath, realPath string) (err error) {
+	return rs.Symlink(realPath, currentPath)
 }
 
 func (rs *remoteClientSync) buildDestAbsFile(sourceFileAbs string) (string, error) {
