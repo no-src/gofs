@@ -379,48 +379,21 @@ func (s *diskSync) syncWalk(currentPath string, d fs.DirEntry, sync Sync, readLi
 	return err
 }
 
-func (s *diskSync) syncSymlink(currentPath string, sync Sync, readLink func(path string) (string, error)) (err error) {
-	ok := false
-	var realPath string
-	if s.copyLink {
-		if s.copyUnsafeLink {
-			ok = true
-		} else {
-			realPath, err = readLink(currentPath)
-			if err != nil {
-				return err
-			}
-			absRealPath := realPath
-			if !filepath.IsAbs(absRealPath) {
-				absRealPath = filepath.Join(filepath.Dir(currentPath), realPath)
-			}
-			// ignore unsafe file
-			isSub, err := nsfs.IsSub(s.sourceAbsPath, absRealPath)
-			if err != nil {
-				return err
-			}
-			if isSub {
-				ok = true
-			}
-		}
-	} else {
-		realPath, err = readLink(currentPath)
+func (s *diskSync) syncSymlink(currentPath string, sync Sync, readLink func(path string) (string, error)) error {
+	if !s.copyLink {
+		realPath, err := readLink(currentPath)
 		if err != nil {
 			return err
 		}
+		return sync.Symlink(realPath, currentPath)
 	}
 
-	if ok {
-		// only for local disk
-		var dest string
-		dest, err = s.buildDestAbsFile(currentPath)
-		if err == nil {
-			err = s.deepCopy(currentPath, dest)
-		}
-	} else {
-		err = sync.Symlink(realPath, currentPath)
+	// only for local disk
+	dest, err := s.buildDestAbsFile(currentPath)
+	if err != nil {
+		return err
 	}
-	return err
+	return s.deepCopy(currentPath, dest)
 }
 
 // deepCopy copy the source file to dest recursively, if source is a symlink, copy the real file to dest,
