@@ -11,6 +11,7 @@ actions:
   - cp:
     source: ./integration_test.go
     dest: ./sftp-push-client/source/integration_test.go.bak2
+  - sleep: 2s
   - rm:
     source: ./sftp-push-client/source/integration_test.go.bak2
   - touch:
@@ -42,6 +43,7 @@ actions:
     link: ./sftp-push-client/source/not_exist.symlink
     dest: ./sftp-push-client/source/not_exist
     ignore-error: false
+  - sleep: 2s
   - rm:
     source: ./sftp-push-client/source/hello.symlink.bak
   - sleep: 10s
@@ -88,6 +90,7 @@ actions:
     algorithm: sha1
     source: /sftp-workspace/hello
     expect: f343874b5df87e887d85df2e790df33584463162
+  - sleep: 2s
   - rm:
     source: ./sftp-push-client/source/integration_test.go.bak1
   - sleep: 10s

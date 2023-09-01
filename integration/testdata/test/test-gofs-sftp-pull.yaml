@@ -11,6 +11,7 @@ actions:
   - cp:
     source: ./integration_sftp_test.go
     dest: /sftp-workspace/integration_sftp_test.go.pull.bak2
+  - sleep: 2s
   - rm:
     source: /sftp-workspace/integration_sftp_test.go.pull.bak2
   - touch:

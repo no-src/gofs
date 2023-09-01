@@ -11,6 +11,7 @@ actions:
   - cp:
     source: ./integration_minio_test.go
     dest: ./minio-data-mount/integration_minio_test.go.pull.bak2
+  - sleep: 2s
   - rm:
     source: ./minio-data-mount/integration_minio_test.go.pull.bak2
   - touch:
