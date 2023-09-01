@@ -1,0 +1,5 @@
+source: ./source-copy-unsafe-link
+dest: ./dest-copy-unsafe-link
+sync_once: true
+copy_link: true
+copy_unsafe_link: true

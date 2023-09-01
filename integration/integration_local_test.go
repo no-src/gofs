@@ -15,6 +15,9 @@ func TestIntegration_LocalDisk(t *testing.T) {
 		testConf string
 	}{
 		{"gofs local disk", "run-gofs-local-disk.yaml", "test-gofs-local-disk.yaml"},
+		{"gofs local disk with sync once", "run-gofs-local-disk-sync-once.yaml", "test-gofs-local-disk-sync-once.yaml"},
+		{"gofs local disk with copy link", "run-gofs-local-disk-copy-link.yaml", "test-gofs-local-disk-copy-link.yaml"},
+		{"gofs local disk with copy unsafe link", "run-gofs-local-disk-copy-unsafe-link.yaml", "test-gofs-local-disk-copy-unsafe-link.yaml"},
 	}
 
 	for _, tc := range testCases {

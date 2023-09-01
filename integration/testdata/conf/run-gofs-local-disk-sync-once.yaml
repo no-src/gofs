@@ -1,0 +1,3 @@
+source: ./source-sync-once
+dest: ./dest-sync-once
+sync_once: true
