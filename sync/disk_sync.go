@@ -395,7 +395,11 @@ func (s *diskSync) syncSymlink(currentPath string, sync Sync, readLink func(path
 				absRealPath = filepath.Join(filepath.Dir(currentPath), realPath)
 			}
 			// ignore unsafe file
-			if isSub, err := nsfs.IsSub(s.sourceAbsPath, realPath); err == nil && isSub {
+			isSub, err := nsfs.IsSub(s.sourceAbsPath, absRealPath)
+			if err != nil {
+				return err
+			}
+			if isSub {
 				ok = true
 			}
 		}
