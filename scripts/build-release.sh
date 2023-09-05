@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-# switch to branch main
-git checkout main
+echo "current branch is $(git branch --show-current)"
 
 # update repository
 #git pull --no-rebase

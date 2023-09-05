@@ -6,8 +6,7 @@
 # build the image with a specified tag
 # ./scripts/build-docker.sh v0.6.0
 
-# switch to branch main
-git checkout main
+echo "current branch is $(git branch --show-current)"
 
 # update git repository
 # git pull --no-rebase
@@ -38,8 +37,10 @@ docker build --build-arg GOPROXY=$GOPROXY -t $GOFS_IMAGE_NAME:$GOFS_IMAGE_TAG .
 # remove dangling images
 docker image prune -f
 
+docker images | grep gofs
+
 # run a container to print the gofs version
-docker run -it --rm --name running-gofs-version $GOFS_IMAGE_NAME:$GOFS_IMAGE_TAG gofs -v
+docker run --rm --name running-gofs-version $GOFS_IMAGE_NAME:$GOFS_IMAGE_TAG gofs -v
 
 # push the image to the DockerHub
 # docker push $GOFS_IMAGE_NAME:$GOFS_IMAGE_TAG
