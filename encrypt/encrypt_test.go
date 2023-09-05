@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
@@ -150,7 +151,7 @@ func testEncrypt(encryptOpt Option, decryptOpt Option, sourcePath string, origin
 	}
 	defer originFile.Close()
 
-	err = os.MkdirAll(filepath.Dir(encryptFilePath), os.ModePerm)
+	err = os.MkdirAll(filepath.Dir(encryptFilePath), fs.ModePerm)
 	if err != nil {
 		return err
 	}

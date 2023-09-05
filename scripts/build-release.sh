@@ -12,13 +12,30 @@ echo -e "$(git rev-parse main)\c" >internal/version/commit
 # set GOPROXY environment variable
 # export GOPROXY=https://goproxy.cn
 
-############################## linux-release ##############################
+function build_release {
+  # build
+  go build -v -o . ./...
 
-# set go env for linux
+  # release path, for example, gofs_go1.20.1_arm64_linux_v0.6.0
+  GOFS_RELEASE="gofs_${GOFS_RELEASE_GO_VERSION}_${GOARCH}_${GOOS}_${GOFS_RELEASE_VERSION}"
+
+  rm -rf "$GOFS_RELEASE"
+  mkdir "$GOFS_RELEASE"
+  mv gofs "$GOFS_RELEASE/"
+
+  # release archive
+  tar -zcvf "$GOFS_RELEASE.tar.gz" "$GOFS_RELEASE"
+
+  rm -rf "$GOFS_RELEASE"
+}
+
+############################## linux-amd64-release ##############################
+
+# set go env
 export GOOS=linux
 export GOARCH=amd64
 
-# build gofs
+# build
 go build -v -o . ./...
 
 GOFS_RELEASE_GO_VERSION=$(go version | awk '{print $3}')
@@ -31,23 +48,32 @@ rm -rf "$GOFS_RELEASE"
 mkdir "$GOFS_RELEASE"
 mv gofs "$GOFS_RELEASE/"
 
-# linux release archive
+# release archive
 tar -zcvf "$GOFS_RELEASE.tar.gz" "$GOFS_RELEASE"
 
 rm -rf "$GOFS_RELEASE"
 
-############################## linux-release ##############################
+############################## linux-amd64-release ##############################
+
+############################## linux-arm64-release ##############################
+
+export GOOS=linux
+export GOARCH=arm64
+
+build_release
+
+############################## linux-arm64-release ##############################
 
 ############################# windows-release #############################
 
-# set go env for windows
+# set go env
 export GOOS=windows
 export GOARCH=amd64
 
-# build gofs
+# build
 go build -v -o . ./...
 
-# build gofs with -ldflags="-H windowsgui" flag
+# build with -ldflags="-H windowsgui" flag
 go build -v -ldflags="-H windowsgui" -o ./gofs_background.exe ./cmd/gofs
 
 # release path, for example, gofs_go1.20.1_amd64_windows_v0.6.0
@@ -63,28 +89,25 @@ rm -rf "$GOFS_RELEASE"
 
 ############################# windows-release #############################
 
-############################## macOS-release ##############################
+############################## macOS-amd64-release ##############################
 
-# set go env for macOS
 export GOOS=darwin
 export GOARCH=amd64
 
-# build gofs
-go build -v -o . ./...
+build_release
 
-# release path, for example, gofs_go1.20.1_amd64_darwin_v0.6.0
-GOFS_RELEASE="gofs_${GOFS_RELEASE_GO_VERSION}_${GOARCH}_${GOOS}_${GOFS_RELEASE_VERSION}"
+############################## macOS-amd64-release ##############################
 
-rm -rf "$GOFS_RELEASE"
-mkdir "$GOFS_RELEASE"
-mv gofs "$GOFS_RELEASE/"
+############################## macOS-arm64-release ##############################
 
-# macOS release archive
-tar -zcvf "$GOFS_RELEASE.tar.gz" "$GOFS_RELEASE"
+export GOOS=darwin
+export GOARCH=arm64
 
-rm -rf "$GOFS_RELEASE"
+build_release
 
-############################## macOS-release ##############################
+############################## macOS-arm64-release ##############################
 
 # reset commit file
 echo -e "\c" >internal/version/commit
+
+ls -alh | grep gofs_

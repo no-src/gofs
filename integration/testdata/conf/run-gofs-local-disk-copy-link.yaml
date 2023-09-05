@@ -1,0 +1,4 @@
+source: ./source-copy-link
+dest: ./dest-copy-link
+sync_once: true
+copy_link: true

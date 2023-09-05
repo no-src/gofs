@@ -48,9 +48,8 @@ func ParseFlags(args []string) (config conf.Config) {
 	cl.BoolVar(&config.Progress, "progress", false, "print the sync progress")
 	cl.Int64Var(&config.MaxTranRate, "max_tran_rate", 0, "limit the max transmission rate in the server and client sides, and this is an expected value, not an absolute one")
 	cl.BoolVar(&config.DryRun, "dry_run", false, "In dry run mode, gofs is started without actual sync operations")
-
-	// ssh
-	cl.StringVar(&config.SSHKey, "ssh_key", "", "a cryptographic key used for authenticating computers in the SSH protocol")
+	cl.BoolVar(&config.CopyLink, "copy_link", false, "transform symlink into referent file, and symlinks that point outside the source tree will be ignored, only work in the local disk mode")
+	cl.BoolVar(&config.CopyUnsafeLink, "copy_unsafe_link", false, "force to transform the symlinks that point outside the source tree into referent file")
 
 	// file monitor
 	cl.BoolVar(&config.EnableSyncDelay, "sync_delay", false, "enable sync delay, start sync when the event count is equal or greater than -sync_delay_events, or wait for -sync_delay_time interval time since the last sync")

@@ -31,6 +31,8 @@ type diskSync struct {
 	enc                   *encrypt.Encrypt
 	hash                  hashutil.Hash
 	pi                    ignore.PathIgnore
+	copyLink              bool
+	copyUnsafeLink        bool
 
 	isDirFn       nsfs.IsDirFunc
 	statFn        nsfs.StatFunc
@@ -57,6 +59,8 @@ func newDiskSync(opt Option) (s *diskSync, err error) {
 	enableLogicallyDelete := opt.EnableLogicallyDelete
 	progress := opt.Progress
 	maxTranRate := opt.MaxTranRate
+	copyLink := opt.CopyLink
+	copyUnsafeLink := opt.CopyUnsafeLink
 
 	if source.IsEmpty() {
 		return nil, errSourceNotFound
@@ -98,6 +102,8 @@ func newDiskSync(opt Option) (s *diskSync, err error) {
 		enc:                   enc,
 		hash:                  hash,
 		pi:                    pi,
+		copyLink:              copyLink,
+		copyUnsafeLink:        copyUnsafeLink,
 		isDirFn:               nsfs.IsDir,
 		statFn:                os.Stat,
 		getFileTimeFn:         nsfs.GetFileTime,
@@ -126,32 +132,38 @@ func (s *diskSync) Create(path string) error {
 	}
 
 	if isDir {
-		err = os.MkdirAll(dest, os.ModePerm)
-		if err != nil {
-			return err
-		}
-
-		// only changes the times when the destination path is a directory
-		// because the file's modified time will be used to compare whether file changed
-		if err = s.chtimes(path, dest); err != nil {
-			return err
-		}
+		err = s.createDir(path, dest)
 	} else {
-		dir := filepath.Dir(dest)
-		err = os.MkdirAll(dir, os.ModePerm)
-		if err != nil {
-			return err
-		}
-		f, err := nsfs.CreateFile(dest)
-		if err != nil {
-			return err
-		}
-		defer func() {
-			log.ErrorIf(f.Close(), "[create] close the dest file error")
-		}()
+		err = s.createFile(dest)
+	}
+	if err == nil {
+		log.Info("create the dest file success [%s] -> [%s]", path, dest)
+	}
+	return err
+}
+
+func (s *diskSync) createDir(source, dest string) error {
+	err := os.MkdirAll(dest, fs.ModePerm)
+	if err != nil {
+		return err
 	}
 
-	log.Info("create the dest file success [%s] -> [%s]", path, dest)
+	// only changes the times when the destination path is a directory
+	// because the file's modified time will be used to compare whether file changed
+	return s.chtimes(source, dest)
+}
+
+func (s *diskSync) createFile(dest string) error {
+	dir := filepath.Dir(dest)
+	err := os.MkdirAll(dir, fs.ModePerm)
+	if err != nil {
+		return err
+	}
+	f, err := nsfs.CreateFile(dest)
+	if err != nil {
+		return err
+	}
+	log.ErrorIf(f.Close(), "[create] close the dest file error")
 	return nil
 }
 
@@ -161,10 +173,14 @@ func (s *diskSync) Symlink(oldname, newname string) error {
 	if err != nil {
 		return err
 	}
-	if err = os.RemoveAll(dest); err != nil {
+	return s.symlink(oldname, dest)
+}
+
+func (s *diskSync) symlink(oldname, newname string) error {
+	if err := os.RemoveAll(newname); err != nil {
 		return err
 	}
-	return nsfs.Symlink(oldname, dest)
+	return nsfs.Symlink(oldname, newname)
 }
 
 // Write sync the source file to the dest
@@ -363,10 +379,99 @@ func (s *diskSync) syncWalk(currentPath string, d fs.DirEntry, sync Sync, readLi
 	return err
 }
 
-func (s *diskSync) syncSymlink(currentPath string, sync Sync, readLink func(path string) (string, error)) (err error) {
-	realPath, err := readLink(currentPath)
+func (s *diskSync) syncSymlink(currentPath string, sync Sync, readLink func(path string) (string, error)) error {
+	if !s.copyLink {
+		realPath, err := readLink(currentPath)
+		if err != nil {
+			return err
+		}
+		return sync.Symlink(realPath, currentPath)
+	}
+
+	// only for local disk
+	dest, err := s.buildDestAbsFile(currentPath)
 	if err != nil {
 		return err
 	}
-	return sync.Symlink(realPath, currentPath)
+	return s.deepCopy(currentPath, dest)
+}
+
+// deepCopy copy the source file to dest recursively, if source is a symlink, copy the real file to dest,
+// only use for local disk mode.
+func (s *diskSync) deepCopy(source, dest string) error {
+	sourceStat, err := os.Lstat(source)
+	if err != nil {
+		return err
+	}
+	// sync dir
+	if sourceStat.IsDir() {
+		if err = s.createDir(source, dest); err != nil {
+			return err
+		}
+		files, err := os.ReadDir(source)
+		if err != nil {
+			return err
+		}
+		for _, f := range files {
+			if err = s.deepCopy(filepath.Join(source, f.Name()), filepath.Join(dest, f.Name())); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	// sync symlink
+	if nsfs.IsSymlinkMode(sourceStat.Mode()) {
+		if s.pi.MatchPath(source, "local disk deep copy", "the symlink") {
+			return nil
+		}
+		originalSource := source
+		realPath, err := nsfs.Readlink(source)
+		if err != nil {
+			return err
+		}
+		if filepath.IsAbs(realPath) {
+			source = realPath
+		} else {
+			source = filepath.Join(filepath.Dir(source), realPath)
+		}
+		sourceStat, err = os.Stat(source)
+		if os.IsNotExist(err) {
+			return s.symlink(realPath, dest)
+		}
+		if err != nil {
+			return err
+		}
+		isSym, err := nsfs.IsSymlink(source)
+		if err != nil {
+			return err
+		}
+		// if symlink is linked to symlink, just sync the symlink self
+		if isSym {
+			return s.symlink(realPath, dest)
+		}
+
+		if s.pi.MatchPath(source, "local disk deep copy", "the symlink's real path") {
+			return nil
+		}
+		// check unsafe link
+		if !s.copyUnsafeLink {
+			// ignore unsafe file
+			isSub, err := nsfs.IsSub(s.sourceAbsPath, source)
+			if err != nil {
+				return err
+			}
+			if !isSub {
+				log.Info("ignore the symlink because it point outside the source tree, symlink => %s, real file => %s", originalSource, source)
+				return s.symlink(realPath, dest)
+			}
+		}
+		return s.deepCopy(source, dest)
+	}
+
+	// sync file
+	if err = s.createFile(dest); err != nil {
+		return err
+	}
+	return s.write(source, dest)
 }
