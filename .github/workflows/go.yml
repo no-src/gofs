@@ -62,7 +62,3 @@ jobs:
       - name: Codecov
         uses: codecov/codecov-action@v3
         if: matrix.os == 'ubuntu-latest'
-
-      - name: Test Release
-        run: chmod +x ./scripts/build-release.sh && ./scripts/build-release.sh
-        if: matrix.os == 'ubuntu-latest'
