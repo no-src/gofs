@@ -7,7 +7,7 @@ git checkout main
 #git pull --no-rebase
 
 # update the last git commit
-echo -e "$(git rev-parse main)\c" >internal/version/commit
+echo -e "$(git rev-parse HEAD)\c" >internal/version/commit
 
 # set GOPROXY environment variable
 # export GOPROXY=https://goproxy.cn
@@ -41,17 +41,7 @@ go build -v -o . ./...
 GOFS_RELEASE_GO_VERSION=$(go version | awk '{print $3}')
 GOFS_RELEASE_VERSION=$(./gofs -v | awk 'NR==1 {print $3}')
 
-# release path, for example, gofs_go1.20.1_amd64_linux_v0.6.0
-GOFS_RELEASE="gofs_${GOFS_RELEASE_GO_VERSION}_${GOARCH}_${GOOS}_${GOFS_RELEASE_VERSION}"
-
-rm -rf "$GOFS_RELEASE"
-mkdir "$GOFS_RELEASE"
-mv gofs "$GOFS_RELEASE/"
-
-# release archive
-tar -zcvf "$GOFS_RELEASE.tar.gz" "$GOFS_RELEASE"
-
-rm -rf "$GOFS_RELEASE"
+build_release
 
 ############################## linux-amd64-release ##############################
 
