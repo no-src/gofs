@@ -1,10 +1,5 @@
 #!/usr/bin/env bash
 
-# switch to branch main
-if git show-ref --quiet "refs/heads/main"; then
-  git checkout main
-fi
-
 echo "current branch is $(git branch --show-current)"
 
 # update repository

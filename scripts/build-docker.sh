@@ -6,11 +6,6 @@
 # build the image with a specified tag
 # ./scripts/build-docker.sh v0.6.0
 
-# switch to branch main
-if git show-ref --quiet "refs/heads/main"; then
-  git checkout main
-fi
-
 echo "current branch is $(git branch --show-current)"
 
 # update git repository
