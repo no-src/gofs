@@ -66,3 +66,7 @@ jobs:
       - name: Test Release
         run: chmod +x ./scripts/build-release.sh && ./scripts/build-release.sh
         if: matrix.os == 'ubuntu-latest'
+
+      - name: Test Docker
+        run: chmod +x ./scripts/build-docker.sh && ./scripts/build-docker.sh
+        if: matrix.os == 'ubuntu-latest'
