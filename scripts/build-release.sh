@@ -7,7 +7,7 @@ git checkout main
 #git pull --no-rebase
 
 # update the last git commit
-echo -e "$(git rev-parse main)\c" >internal/version/commit
+echo -e "$(git rev-parse HEAD)\c" >internal/version/commit
 
 # set GOPROXY environment variable
 # export GOPROXY=https://goproxy.cn
