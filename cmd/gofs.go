@@ -64,6 +64,8 @@ func RunWithConfigContent(content string, ext string) result.Result {
 
 //gocyclo:ignore
 func runWithConfig(c conf.Config, result result.Result) {
+	defer innerLogger.Close()
+
 	var err error
 
 	//  ensure all the code in this function is executed

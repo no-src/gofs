@@ -13,6 +13,10 @@ const (
 	DefaultFormatter = formatter.TextFormatter
 )
 
+var (
+	innerLogger = newInnerLogger()
+)
+
 // Logger an logger component
 type Logger struct {
 	// Logger the default logger
@@ -45,5 +49,15 @@ func NewTestLogger() *Logger {
 // NewEmptyLogger get an empty logger, there is nothing to do
 func NewEmptyLogger() *Logger {
 	logger := log.NewEmptyLogger()
+	return NewLogger(logger, logger)
+}
+
+// InnerLogger is used before other loggers have completed initialization
+func InnerLogger() *Logger {
+	return innerLogger
+}
+
+func newInnerLogger() *Logger {
+	logger := log.NewConsoleLogger(level.DebugLevel)
 	return NewLogger(logger, logger)
 }

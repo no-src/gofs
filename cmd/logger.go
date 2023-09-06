@@ -10,8 +10,7 @@ import (
 )
 
 var (
-	// innerLogger is used before other loggers have completed initialization
-	innerLogger = log.NewConsoleLogger(level.DebugLevel)
+	innerLogger = logger.InnerLogger()
 )
 
 const (

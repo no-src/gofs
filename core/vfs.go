@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/no-src/log"
+	"github.com/no-src/gofs/logger"
 )
 
 // VFS virtual file system
@@ -175,15 +175,15 @@ func parse(path string) (scheme string, host string, port int, localPath string,
 		if scheme == remoteServerScheme {
 			port = remoteServerDefaultPort
 			err = nil
-			log.Info("no remote server source port is specified, use default port => %d", port)
+			logger.InnerLogger().Info("no remote server source port is specified, use default port => %d", port)
 		} else if scheme == sftpServerScheme {
 			port = sftpServerDefaultPort
 			err = nil
-			log.Info("no sftp server destination port is specified, use default port => %d", port)
+			logger.InnerLogger().Info("no sftp server destination port is specified, use default port => %d", port)
 		} else if scheme == minIOServerScheme {
 			port = minIOServerDefaultPort
 			err = nil
-			log.Info("no MinIO server destination port is specified, use default port => %d", port)
+			logger.InnerLogger().Info("no MinIO server destination port is specified, use default port => %d", port)
 		}
 	}
 
