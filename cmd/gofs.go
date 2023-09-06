@@ -13,6 +13,7 @@ import (
 	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/internal/about"
+	"github.com/no-src/gofs/internal/logger"
 	"github.com/no-src/gofs/internal/signal"
 	"github.com/no-src/gofs/internal/version"
 	"github.com/no-src/gofs/monitor"
@@ -93,7 +94,8 @@ func runWithConfig(c conf.Config, result result.Result) {
 	}
 
 	// init the default logger
-	if err = initDefaultLogger(c); err != nil {
+	var logger *logger.Logger
+	if logger, err = initDefaultLogger(c); err != nil {
 		result.InitDoneWithError(err)
 		return
 	}
@@ -186,7 +188,7 @@ func runWithConfig(c conf.Config, result result.Result) {
 	}
 
 	// init the monitor
-	m, err := initMonitor(c, userList, eventLogger, r, pi, reporter)
+	m, err := initMonitor(c, userList, eventLogger, r, pi, reporter, logger)
 	if err != nil {
 		result.InitDoneWithError(err)
 		return
@@ -257,7 +259,7 @@ func executeOnce(c conf.Config) (exit bool, err error) {
 }
 
 // initDefaultLogger init the default logger
-func initDefaultLogger(c conf.Config) error {
+func initDefaultLogger(c conf.Config) (*logger.Logger, error) {
 	// init log formatter
 	if c.LogFormat != formatter.TextFormatter {
 		log.Info("switch logger format to %s", c.LogFormat)
@@ -275,13 +277,13 @@ func initDefaultLogger(c conf.Config) error {
 		flogger, err := log.NewFileLoggerWithOption(option.NewFileLoggerOption(level.Level(c.LogLevel), c.LogDir, filePrefix, c.LogFlush, c.LogFlushInterval.Duration(), c.LogSplitDate))
 		if err != nil {
 			log.Error(err, "init file logger error")
-			return err
+			return nil, err
 		}
 		loggers = append(loggers, flogger)
 	}
 
 	log.InitDefaultLoggerWithSample(log.NewMultiLogger(loggers...), c.LogSampleRate)
-	return nil
+	return logger.NewLogger(log.DefaultLogger(), log.DefaultSampleLogger()), nil
 }
 
 // initWebServerLogger init the web server logger
@@ -326,24 +328,24 @@ func initEventLogger(c conf.Config) (log.Logger, error) {
 }
 
 // initMonitor init the monitor
-func initMonitor(c conf.Config, userList []*auth.User, eventLogger log.Logger, r retry.Retry, pi ignore.PathIgnore, reporter report.Reporter) (monitor.Monitor, error) {
+func initMonitor(c conf.Config, userList []*auth.User, eventLogger log.Logger, r retry.Retry, pi ignore.PathIgnore, reporter report.Reporter, logger *logger.Logger) (monitor.Monitor, error) {
 	// create syncer
-	syncer, err := sync.NewSync(sync.NewSyncOption(c, userList, r, pi, reporter))
+	syncer, err := sync.NewSync(sync.NewSyncOption(c, userList, r, pi, reporter, logger))
 	if err != nil {
-		log.Error(err, "create the instance of Sync error")
+		logger.Error(err, "create the instance of Sync error")
 		return nil, err
 	}
 
 	// create monitor
-	m, err := monitor.NewMonitor(monitor.NewMonitorOption(c, syncer, r, userList, eventLogger, pi, reporter), RunWithConfigContent)
+	m, err := monitor.NewMonitor(monitor.NewMonitorOption(c, syncer, r, userList, eventLogger, pi, reporter, logger), RunWithConfigContent)
 	if err != nil {
-		log.Error(err, "create the instance of Monitor error")
+		logger.Error(err, "create the instance of Monitor error")
 		return nil, err
 	}
 
 	err = m.SyncCron(c.SyncCron)
 	if err != nil {
-		log.Error(err, "register sync cron task error")
+		logger.Error(err, "register sync cron task error")
 		return nil, err
 	}
 	return m, nil

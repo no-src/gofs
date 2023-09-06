@@ -8,6 +8,7 @@ import (
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/conf"
 	"github.com/no-src/gofs/ignore"
+	"github.com/no-src/gofs/internal/logger"
 	"github.com/no-src/gofs/report"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/sync"
@@ -31,10 +32,11 @@ type Option struct {
 	EnableTaskClient    bool
 	TaskClientLabels    []string
 	TaskClientMaxWorker int
+	Logger              *logger.Logger
 }
 
 // NewMonitorOption create an instance of the Option, store all the monitor component options
-func NewMonitorOption(config conf.Config, syncer sync.Sync, retry retry.Retry, users []*auth.User, eventWriter io.Writer, pi ignore.PathIgnore, reporter report.Reporter) Option {
+func NewMonitorOption(config conf.Config, syncer sync.Sync, retry retry.Retry, users []*auth.User, eventWriter io.Writer, pi ignore.PathIgnore, reporter report.Reporter, logger *logger.Logger) Option {
 	opt := Option{
 		SyncOnce:            config.SyncOnce,
 		EnableTLS:           config.EnableTLS,
@@ -52,6 +54,7 @@ func NewMonitorOption(config conf.Config, syncer sync.Sync, retry retry.Retry, u
 		EnableTaskClient:    config.EnableTaskClient,
 		TaskClientLabels:    strings.Split(strings.Trim(strings.TrimSpace(config.TaskClientLabels), ","), ","),
 		TaskClientMaxWorker: config.TaskClientMaxWorker,
+		Logger:              logger,
 	}
 	if opt.TaskClientMaxWorker < 1 {
 		opt.TaskClientMaxWorker = 1

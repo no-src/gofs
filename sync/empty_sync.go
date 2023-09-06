@@ -9,6 +9,7 @@ func NewEmptySync(opt Option) (s Sync, err error) {
 	// the fields of option
 	source := opt.Source
 	dest := opt.Dest
+	logger := opt.Logger
 
 	if source.IsEmpty() {
 		return nil, errSourceNotFound
@@ -18,7 +19,7 @@ func NewEmptySync(opt Option) (s Sync, err error) {
 	}
 
 	s = &emptySync{
-		baseSync: newBaseSync(source, dest),
+		baseSync: newBaseSync(source, dest, logger),
 	}
 	return s, nil
 }

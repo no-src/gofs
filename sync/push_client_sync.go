@@ -23,7 +23,6 @@ import (
 	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/gofs/util/httputil"
 	"github.com/no-src/gofs/util/jsonutil"
-	"github.com/no-src/log"
 )
 
 var (
@@ -158,7 +157,7 @@ func (pcs *pushClientSync) Rename(path string) error {
 }
 
 func (pcs *pushClientSync) Chmod(path string) error {
-	log.Debug("Chmod is unimplemented [%s]", path)
+	pcs.logger.Debug("Chmod is unimplemented [%s]", path)
 	return nil
 }
 
@@ -372,11 +371,11 @@ func (pcs *pushClientSync) sendChunkRequest(path string, pd *push.PushData, offs
 	if err != nil {
 		return true, err
 	} else if code == contract.NotModified {
-		log.Debug("upload a file that not modified, ignore and abort next request => %s", path)
+		pcs.logger.Debug("upload a file that not modified, ignore and abort next request => %s", path)
 		return true, nil
 	} else if code == contract.ChunkNotModified {
 		// current chunk is not modified, continue to compare next chunk in the next loop
-		log.Debug("upload a file chunk that not modified, continue to compare next chunk [%d]=> %s", *offset, path)
+		pcs.logger.Debug("upload a file chunk that not modified, continue to compare next chunk [%d]=> %s", *offset, path)
 		*checkChunkHash = true
 		*offset += int64(chunkSize)
 		// if the checkpoint compare result offset is greater than the next offset, then replace it
@@ -491,7 +490,7 @@ func (pcs *pushClientSync) httpPostWithAuth(rawURL string, act action.Action, fi
 		}
 		if len(cookies) > 0 {
 			pcs.cookies = cookies
-			log.Debug("try to auto login file server success maybe, retry to get resource => %s", rawURL)
+			pcs.logger.Debug("try to auto login file server success maybe, retry to get resource => %s", rawURL)
 			if sendFile {
 				return pcs.httpClient.HttpPostFileChunkWithCookie(rawURL, fieldName, fileName, data, chunk, pcs.cookies...)
 			}

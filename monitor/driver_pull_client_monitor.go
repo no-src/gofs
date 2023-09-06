@@ -4,7 +4,6 @@ import (
 	"sync/atomic"
 
 	"github.com/no-src/gofs/wait"
-	"github.com/no-src/log"
 )
 
 type driverPullClientMonitor struct {
@@ -44,7 +43,7 @@ func (m *driverPullClientMonitor) syncAndShutdown() (err error) {
 func (m *driverPullClientMonitor) waitShutdown(st *atomic.Bool, wd wait.Done) {
 	<-m.shutdown
 	st.Store(true)
-	log.ErrorIf(m.Close(), "close driver pull client monitor error")
+	m.logger.ErrorIf(m.Close(), "close driver pull client monitor error")
 	m.syncer.Close()
 	wd.Done()
 }
