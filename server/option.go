@@ -3,7 +3,7 @@ package server
 import (
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/conf"
-	"github.com/no-src/gofs/internal/logger"
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/report"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/wait"

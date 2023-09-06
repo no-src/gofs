@@ -1,7 +1,7 @@
 package checksum
 
 import (
-	"github.com/no-src/gofs/internal/logger"
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/gofs/util/jsonutil"
 )

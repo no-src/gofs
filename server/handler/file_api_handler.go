@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/no-src/gofs/contract"
 	nsfs "github.com/no-src/gofs/fs"
-	"github.com/no-src/gofs/internal/logger"
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/util/hashutil"
 )

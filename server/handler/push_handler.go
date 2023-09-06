@@ -17,7 +17,7 @@ import (
 	"github.com/no-src/gofs/contract/push"
 	"github.com/no-src/gofs/core"
 	nsfs "github.com/no-src/gofs/fs"
-	"github.com/no-src/gofs/internal/logger"
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/gofs/util/jsonutil"

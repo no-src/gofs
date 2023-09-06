@@ -2,7 +2,7 @@ package sync
 
 import (
 	"github.com/no-src/gofs/core"
-	"github.com/no-src/gofs/internal/logger"
+	"github.com/no-src/gofs/logger"
 )
 
 type baseSync struct {

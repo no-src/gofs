@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/no-src/gofs/eventlog"
-	"github.com/no-src/gofs/internal/logger"
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/retry"
 	nssync "github.com/no-src/gofs/sync"
 	"github.com/robfig/cron/v3"
