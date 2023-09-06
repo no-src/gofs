@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/no-src/gofs/conf"
-	"github.com/no-src/gofs/internal/logger"
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/log"
 	"github.com/no-src/log/formatter"
 	"github.com/no-src/log/level"

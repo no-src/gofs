@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/no-src/gofs/core"
-	"github.com/no-src/gofs/internal/logger"
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/retry"
 )
 

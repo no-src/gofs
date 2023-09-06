@@ -6,7 +6,7 @@ import (
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/encrypt"
 	"github.com/no-src/gofs/ignore"
-	"github.com/no-src/gofs/internal/logger"
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/report"
 	"github.com/no-src/gofs/retry"
 )

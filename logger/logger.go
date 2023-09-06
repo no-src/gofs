@@ -5,7 +5,7 @@ import (
 	"github.com/no-src/log/level"
 )
 
-// Logger an internal logger
+// Logger an logger component
 type Logger struct {
 	// Logger the default logger
 	log.Logger

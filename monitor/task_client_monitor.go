@@ -12,7 +12,7 @@ import (
 	"github.com/no-src/gofs/api/task"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/internal/clist"
-	"github.com/no-src/gofs/internal/logger"
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/result"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/util/randutil"

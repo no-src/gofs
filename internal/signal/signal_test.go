@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/no-src/gofs/internal/logger"
+	"github.com/no-src/gofs/logger"
 )
 
 func TestNotify(t *testing.T) {

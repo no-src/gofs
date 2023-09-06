@@ -19,8 +19,8 @@ import (
 	"github.com/minio/minio-go/v7/pkg/s3utils"
 	"github.com/no-src/gofs/driver"
 	nsfs "github.com/no-src/gofs/fs"
-	"github.com/no-src/gofs/internal/logger"
 	"github.com/no-src/gofs/internal/rate"
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/retry"
 )
 
