@@ -12,9 +12,9 @@ import (
 
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/driver"
+	"github.com/no-src/gofs/internal/logger"
 	"github.com/no-src/gofs/internal/rate"
 	"github.com/no-src/gofs/retry"
-	"github.com/no-src/log"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 )
@@ -30,14 +30,15 @@ type sftpDriver struct {
 	online        bool
 	autoReconnect bool
 	maxTranRate   int64
+	logger        *logger.Logger
 }
 
 // NewSFTPDriver get a sftp driver
-func NewSFTPDriver(remoteAddr string, sshConfig core.SSHConfig, autoReconnect bool, r retry.Retry, maxTranRate int64) driver.Driver {
-	return newSFTPDriver(remoteAddr, sshConfig, autoReconnect, r, maxTranRate)
+func NewSFTPDriver(remoteAddr string, sshConfig core.SSHConfig, autoReconnect bool, r retry.Retry, maxTranRate int64, logger *logger.Logger) driver.Driver {
+	return newSFTPDriver(remoteAddr, sshConfig, autoReconnect, r, maxTranRate, logger)
 }
 
-func newSFTPDriver(remoteAddr string, sshConfig core.SSHConfig, autoReconnect bool, r retry.Retry, maxTranRate int64) *sftpDriver {
+func newSFTPDriver(remoteAddr string, sshConfig core.SSHConfig, autoReconnect bool, r retry.Retry, maxTranRate int64, logger *logger.Logger) *sftpDriver {
 	return &sftpDriver{
 		driverName:    "sftp",
 		remoteAddr:    remoteAddr,
@@ -45,6 +46,7 @@ func newSFTPDriver(remoteAddr string, sshConfig core.SSHConfig, autoReconnect bo
 		r:             r,
 		autoReconnect: autoReconnect,
 		maxTranRate:   maxTranRate,
+		logger:        logger,
 	}
 }
 
@@ -95,7 +97,7 @@ func (sd *sftpDriver) Connect() error {
 	sd.client, err = sftp.NewClient(ssh.NewClient(cc, chans, reqs))
 	if err == nil {
 		sd.online = true
-		log.Debug("connect to sftp server success => %s", sd.remoteAddr)
+		sd.logger.Debug("connect to sftp server success => %s", sd.remoteAddr)
 	}
 	return err
 }
@@ -114,7 +116,7 @@ func (sd *sftpDriver) getSigner() (signer ssh.Signer, err error) {
 
 func (sd *sftpDriver) getHostKeyCallback() (ssh.HostKeyCallback, error) {
 	if len(sd.sshConfig.HostKey) == 0 {
-		log.Warn("sftp: the ssh host key file is not set, the server's host key validation will be disabled, it may cause a MitM attack")
+		sd.logger.Warn("sftp: the ssh host key file is not set, the server's host key validation will be disabled, it may cause a MitM attack")
 		return ssh.InsecureIgnoreHostKey(), nil
 	}
 	// ~/.ssh/known_hosts
@@ -130,7 +132,7 @@ func (sd *sftpDriver) getHostKeyCallback() (ssh.HostKeyCallback, error) {
 }
 
 func (sd *sftpDriver) reconnect() error {
-	log.Debug("reconnect to sftp server => %s", sd.remoteAddr)
+	sd.logger.Debug("reconnect to sftp server => %s", sd.remoteAddr)
 	return sd.r.Do(sd.Connect, "sftp reconnect").Wait()
 }
 
@@ -147,7 +149,7 @@ func (sd *sftpDriver) reconnectIfLost(f func() error) error {
 
 	err := f()
 	if sd.isClosed(err) {
-		log.Error(err, "connect to sftp server failed")
+		sd.logger.Error(err, "connect to sftp server failed")
 		sd.mu.Lock()
 		sd.online = false
 		sd.mu.Unlock()
@@ -173,7 +175,7 @@ func (sd *sftpDriver) Create(path string) (err error) {
 		var f *sftp.File
 		f, err = sd.client.Create(path)
 		if err == nil {
-			log.ErrorIf(f.Close(), "close sftp file err => %s", path)
+			sd.logger.ErrorIf(f.Close(), "close sftp file err => %s", path)
 		}
 		return err
 	})

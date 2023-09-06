@@ -131,7 +131,7 @@ func runWithConfig(c conf.Config, result result.Result) {
 			return
 		}
 
-		ns, ss := signal.Notify(daemon.Shutdown)
+		ns, ss := signal.Notify(daemon.Shutdown, logger)
 		go func() {
 			result.RegisterNotifyHandler(ns)
 		}()
@@ -195,7 +195,7 @@ func runWithConfig(c conf.Config, result result.Result) {
 	// start monitor
 	logger.Info("monitor is starting...")
 	defer logger.Info("gofs exited")
-	ns, ss := signal.Notify(m.Shutdown)
+	ns, ss := signal.Notify(m.Shutdown, logger)
 	go func() {
 		result.RegisterNotifyHandler(ns)
 	}()
@@ -251,7 +251,7 @@ func executeOnce(c conf.Config, logger *logger.Logger) (exit bool, err error) {
 
 	// calculate checksum
 	if c.Checksum {
-		return true, checksum.PrintChecksum(c.Source.Path(), c.ChunkSize, c.CheckpointCount, c.ChecksumAlgorithm)
+		return true, checksum.PrintChecksum(c.Source.Path(), c.ChunkSize, c.CheckpointCount, c.ChecksumAlgorithm, logger)
 	}
 	return false, nil
 }

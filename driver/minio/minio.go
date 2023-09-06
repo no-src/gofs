@@ -19,9 +19,9 @@ import (
 	"github.com/minio/minio-go/v7/pkg/s3utils"
 	"github.com/no-src/gofs/driver"
 	nsfs "github.com/no-src/gofs/fs"
+	"github.com/no-src/gofs/internal/logger"
 	"github.com/no-src/gofs/internal/rate"
 	"github.com/no-src/gofs/retry"
-	"github.com/no-src/log"
 )
 
 // minIODriver a MinIO driver component, support auto reconnect
@@ -39,14 +39,15 @@ type minIODriver struct {
 	autoReconnect bool
 	ctx           context.Context
 	maxTranRate   int64
+	logger        *logger.Logger
 }
 
 // NewMinIODriver get a MinIO driver
-func NewMinIODriver(endpoint string, bucketName string, secure bool, userName string, password string, autoReconnect bool, r retry.Retry, maxTranRate int64) driver.Driver {
-	return newMinIODriver(endpoint, bucketName, secure, userName, password, autoReconnect, r, maxTranRate)
+func NewMinIODriver(endpoint string, bucketName string, secure bool, userName string, password string, autoReconnect bool, r retry.Retry, maxTranRate int64, logger *logger.Logger) driver.Driver {
+	return newMinIODriver(endpoint, bucketName, secure, userName, password, autoReconnect, r, maxTranRate, logger)
 }
 
-func newMinIODriver(endpoint string, bucketName string, secure bool, userName string, password string, autoReconnect bool, r retry.Retry, maxTranRate int64) *minIODriver {
+func newMinIODriver(endpoint string, bucketName string, secure bool, userName string, password string, autoReconnect bool, r retry.Retry, maxTranRate int64, logger *logger.Logger) *minIODriver {
 	return &minIODriver{
 		driverName:    "minio",
 		endpoint:      endpoint,
@@ -58,6 +59,7 @@ func newMinIODriver(endpoint string, bucketName string, secure bool, userName st
 		autoReconnect: autoReconnect,
 		ctx:           context.Background(),
 		maxTranRate:   maxTranRate,
+		logger:        logger,
 	}
 }
 
@@ -91,13 +93,13 @@ func (c *minIODriver) Connect() (err error) {
 	}
 
 	c.online = true
-	log.Debug("connect to MinIO server success => %s", c.endpoint)
+	c.logger.Debug("connect to MinIO server success => %s", c.endpoint)
 
 	return nil
 }
 
 func (c *minIODriver) reconnect() error {
-	log.Debug("reconnect to MinIO server => %s", c.endpoint)
+	c.logger.Debug("reconnect to MinIO server => %s", c.endpoint)
 	return c.r.Do(c.Connect, "MinIO reconnect").Wait()
 }
 
@@ -114,7 +116,7 @@ func (c *minIODriver) reconnectIfLost(f func() error) error {
 
 	err := f()
 	if c.isClosed(err) {
-		log.Error(err, "connect to MinIO server failed")
+		c.logger.Error(err, "connect to MinIO server failed")
 		c.mu.Lock()
 		c.online = false
 		c.mu.Unlock()

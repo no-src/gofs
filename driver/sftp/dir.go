@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/no-src/gofs/core"
+	"github.com/no-src/gofs/internal/logger"
 	"github.com/no-src/gofs/retry"
 )
 
@@ -18,12 +19,12 @@ type Dir struct {
 }
 
 // NewDir returns a http.FileSystem instance for sftp
-func NewDir(root string, address string, sshConfig core.SSHConfig, r retry.Retry, maxTranRate int64) (http.FileSystem, error) {
+func NewDir(root string, address string, sshConfig core.SSHConfig, r retry.Retry, maxTranRate int64, logger *logger.Logger) (http.FileSystem, error) {
 	root = strings.TrimSpace(root)
 	if len(root) == 0 {
 		root = "."
 	}
-	driver := newSFTPDriver(address, sshConfig, true, r, maxTranRate)
+	driver := newSFTPDriver(address, sshConfig, true, r, maxTranRate, logger)
 	return &Dir{
 		driver: driver,
 		root:   root,
