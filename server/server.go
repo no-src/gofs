@@ -3,8 +3,6 @@ package server
 import (
 	"fmt"
 	"strings"
-
-	"github.com/no-src/log"
 )
 
 const (
@@ -83,9 +81,4 @@ func GenerateAddr(scheme, host string, port int) string {
 		addr = fmt.Sprintf("%s://%s:%d", scheme, host, port)
 	}
 	return addr
-}
-
-// PrintAnonymousAccessWarning print the warning log of anonymous access
-func PrintAnonymousAccessWarning() {
-	log.Warn("the file server allows anonymous access, you should set some server users by the -users or -rand_user_count flag for security reasons")
 }

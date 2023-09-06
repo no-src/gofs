@@ -9,17 +9,17 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/no-src/gofs/auth"
+	"github.com/no-src/gofs/internal/logger"
 	"github.com/no-src/gofs/server"
-	"github.com/no-src/log"
 )
 
 type loginHandler struct {
 	users  []*auth.User
-	logger log.Logger
+	logger *logger.Logger
 }
 
 // NewLoginHandlerFunc returns a gin.HandlerFunc that providers a login api
-func NewLoginHandlerFunc(users []*auth.User, logger log.Logger) gin.HandlerFunc {
+func NewLoginHandlerFunc(users []*auth.User, logger *logger.Logger) gin.HandlerFunc {
 	return (&loginHandler{
 		users:  users,
 		logger: logger,

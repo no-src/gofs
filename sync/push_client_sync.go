@@ -484,7 +484,7 @@ func (pcs *pushClientSync) httpPostWithAuth(rawURL string, act action.Action, fi
 			return nil, err
 		}
 		user := pcs.currentUser
-		cookies, err := client.SignIn(pcs.httpClient, parseUrl.Scheme, parseUrl.Host, user.UserName(), user.Password())
+		cookies, err := client.SignIn(pcs.httpClient, parseUrl.Scheme, parseUrl.Host, user.UserName(), user.Password(), pcs.logger)
 		if err != nil {
 			return nil, err
 		}

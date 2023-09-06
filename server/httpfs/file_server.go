@@ -17,13 +17,13 @@ import (
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/driver/minio"
 	"github.com/no-src/gofs/driver/sftp"
+	"github.com/no-src/gofs/internal/logger"
 	"github.com/no-src/gofs/internal/rate"
 	"github.com/no-src/gofs/report"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/handler"
 	"github.com/no-src/gofs/server/middleware"
 	"github.com/no-src/gofs/util/hashutil"
-	"github.com/no-src/log"
 	"github.com/quic-go/quic-go/http3"
 )
 
@@ -51,7 +51,7 @@ func StartFileServer(opt server.Option) error {
 		return err
 	}
 
-	log.Info("file server [%s] starting...", opt.FileServerAddr)
+	logger.Info("file server [%s] starting...", opt.FileServerAddr)
 	c := make(chan error, 1)
 	go func() {
 		select {
@@ -65,18 +65,18 @@ func StartFileServer(opt server.Option) error {
 	var err error
 	if opt.EnableTLS {
 		if opt.EnableHTTP3 {
-			err = log.ErrorIf(http3.ListenAndServe(opt.FileServerAddr, opt.TLSCertFile, opt.TLSKeyFile, engine.Handler()), "running the http3 server error")
+			err = logger.ErrorIf(http3.ListenAndServe(opt.FileServerAddr, opt.TLSCertFile, opt.TLSKeyFile, engine.Handler()), "running the http3 server error")
 		} else {
-			err = log.ErrorIf(engine.RunTLS(opt.FileServerAddr, opt.TLSCertFile, opt.TLSKeyFile), "running the https server error")
+			err = logger.ErrorIf(engine.RunTLS(opt.FileServerAddr, opt.TLSCertFile, opt.TLSKeyFile), "running the https server error")
 		}
 		c <- err
 		return err
 	}
 	if opt.EnableHTTP3 && !opt.EnableTLS {
-		log.Warn("please enable the TLS first if you want to enable the HTTP3 protocol, currently downgraded to HTTP2!")
+		logger.Warn("please enable the TLS first if you want to enable the HTTP3 protocol, currently downgraded to HTTP2!")
 	}
-	log.Warn("file server is not a security connection, you need the https replaced maybe!")
-	err = log.ErrorIf(engine.Run(opt.FileServerAddr), "running the http server error")
+	logger.Warn("file server is not a security connection, you need the https replaced maybe!")
+	err = logger.ErrorIf(engine.Run(opt.FileServerAddr), "running the http server error")
 	c <- err
 	return err
 }
@@ -110,7 +110,6 @@ func initDefaultMiddleware(engine *gin.Engine, logger io.Writer, reporter report
 func initHTMLTemplate(engine *gin.Engine) error {
 	tmpl, err := template.ParseFS(server.Templates, server.ResourceTemplatePath)
 	if err != nil {
-		log.Error(err, "parse template fs error")
 		return err
 	}
 	engine.SetHTMLTemplate(tmpl)
@@ -124,7 +123,7 @@ func initCompress(engine *gin.Engine, enableCompress bool) {
 	}
 }
 
-func initRoute(engine *gin.Engine, opt server.Option, logger log.Logger) error {
+func initRoute(engine *gin.Engine, opt server.Option, logger *logger.Logger) error {
 	enableFileApi := false
 	source := opt.Source
 	dest := opt.Dest
@@ -189,17 +188,17 @@ func initRoute(engine *gin.Engine, opt server.Option, logger log.Logger) error {
 	return nil
 }
 
-func initRouteAuth(opt server.Option, logger log.Logger, rootGroup, wGroup, manageGroup *gin.RouterGroup) {
+func initRouteAuth(opt server.Option, logger *logger.Logger, rootGroup, wGroup, manageGroup *gin.RouterGroup) {
 	if len(opt.Users) > 0 {
 		rootGroup.Use(middleware.NewAuthHandlerFunc(logger, auth.ReadPerm))
 		wGroup.Use(middleware.NewAuthHandlerFunc(logger, auth.WritePerm))
 		manageGroup.Use(middleware.NewAuthHandlerFunc(logger, auth.ExecutePerm))
 	} else {
-		server.PrintAnonymousAccessWarning()
+		logger.Warn("the file server allows anonymous access, you should set some server users by the -users or -rand_user_count flag for security reasons")
 	}
 }
 
-func initManageRoute(opt server.Option, logger log.Logger, manageGroup *gin.RouterGroup, reporter report.Reporter) {
+func initManageRoute(opt server.Option, logger *logger.Logger, manageGroup *gin.RouterGroup, reporter report.Reporter) {
 	if opt.EnableManage {
 		if opt.ManagePrivate {
 			manageGroup.Use(middleware.NewPrivateAccessHandlerFunc(logger))
