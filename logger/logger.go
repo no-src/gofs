@@ -6,7 +6,7 @@ import (
 	"github.com/no-src/log/level"
 )
 
-var (
+const (
 	// DefaultLevel default log level
 	DefaultLevel = level.InfoLevel
 	// DefaultFormatter default log formatter
