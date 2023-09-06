@@ -4,9 +4,14 @@ import (
 	"os"
 	"testing"
 	"time"
+
+	"github.com/no-src/gofs/logger"
 )
 
 func TestReadAt(t *testing.T) {
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
 	testCases := []struct {
 		name           string
 		dataSize       int64
@@ -31,7 +36,7 @@ func TestReadAt(t *testing.T) {
 				return
 			}
 			defer f.Close()
-			r := NewReaderAt(f, tc.bytesPerSecond)
+			r := NewReaderAt(f, tc.bytesPerSecond, logger)
 			start := time.Now()
 			var total int64
 			for {
@@ -68,6 +73,9 @@ func TestReadAt(t *testing.T) {
 }
 
 func TestNewReaderAt_DisableOrEnableRate(t *testing.T) {
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
 	testCases := []struct {
 		name           string
 		bytesPerSecond int64
@@ -79,7 +87,7 @@ func TestNewReaderAt_DisableOrEnableRate(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			d := NewReaderAt(os.Stdout, tc.bytesPerSecond)
+			d := NewReaderAt(os.Stdout, tc.bytesPerSecond, logger)
 			switch d.(type) {
 			case *os.File:
 				if !tc.expectRate {

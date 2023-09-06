@@ -151,7 +151,7 @@ func initRoute(engine *gin.Engine, opt server.Option, logger *logger.Logger) err
 	}
 
 	if source.IsDisk() || source.Is(core.RemoteDisk) {
-		rootGroup.StaticFS(server.SourceRoutePrefix, rate.NewHTTPDir(source.Path(), opt.MaxTranRate))
+		rootGroup.StaticFS(server.SourceRoutePrefix, rate.NewHTTPDir(source.Path(), opt.MaxTranRate, logger))
 		enableFileApi = true
 
 		if opt.EnablePushServer {
@@ -160,7 +160,7 @@ func initRoute(engine *gin.Engine, opt server.Option, logger *logger.Logger) err
 	}
 
 	if dest.IsDisk() {
-		rootGroup.StaticFS(server.DestRoutePrefix, rate.NewHTTPDir(dest.Path(), opt.MaxTranRate))
+		rootGroup.StaticFS(server.DestRoutePrefix, rate.NewHTTPDir(dest.Path(), opt.MaxTranRate, logger))
 		enableFileApi = true
 	} else if dest.Is(core.SFTP) {
 		sftpDir, err := sftp.NewDir(dest.RemotePath(), dest.Addr(), dest.SSHConfig(), opt.Retry, opt.MaxTranRate, logger)

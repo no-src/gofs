@@ -6,9 +6,14 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/no-src/gofs/logger"
 )
 
 func TestReader(t *testing.T) {
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
 	testCases := []struct {
 		name           string
 		dataSize       int64
@@ -28,7 +33,7 @@ func TestReader(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			buf := bytes.NewBuffer(nil)
 			buf.WriteString(strings.Repeat("a", int(tc.dataSize)))
-			r := NewReader(buf, tc.bytesPerSecond)
+			r := NewReader(buf, tc.bytesPerSecond, logger)
 			start := time.Now()
 			br := bufio.NewReaderSize(r, defaultBufSize)
 			_, err := br.WriteTo(&writer{})
@@ -54,6 +59,9 @@ func TestReader(t *testing.T) {
 }
 
 func TestNewReader_DisableOrEnableRate(t *testing.T) {
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
 	testCases := []struct {
 		name           string
 		bytesPerSecond int64
@@ -66,7 +74,7 @@ func TestNewReader_DisableOrEnableRate(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			buf := bytes.NewBuffer(nil)
-			d := NewReader(buf, tc.bytesPerSecond)
+			d := NewReader(buf, tc.bytesPerSecond, logger)
 			switch d.(type) {
 			case *bytes.Buffer:
 				if !tc.expectRate {

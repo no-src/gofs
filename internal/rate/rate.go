@@ -5,7 +5,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/no-src/log"
+	"github.com/no-src/gofs/logger"
 	"golang.org/x/time/rate"
 )
 
@@ -16,14 +16,16 @@ type rateReader struct {
 	bytesPerSecond int64
 	c              int64
 	once           sync.Once
+	logger         *logger.Logger
 }
 
-func newRateReader(r io.Reader, ra io.ReaderAt, bytesPerSecond int64) *rateReader {
+func newRateReader(r io.Reader, ra io.ReaderAt, bytesPerSecond int64, logger *logger.Logger) *rateReader {
 	return &rateReader{
 		r:              r,
 		ra:             ra,
 		l:              rate.NewLimiter(1, 1),
 		bytesPerSecond: bytesPerSecond,
+		logger:         logger,
 	}
 }
 
@@ -49,7 +51,7 @@ func (r *rateReader) call(f func() (n int, err error)) (n int, err error) {
 	}
 	r.c += int64(n)
 	if r.c >= r.bytesPerSecond {
-		log.ErrorIf(r.l.Wait(context.Background()), "limiter wait error")
+		r.logger.ErrorIf(r.l.Wait(context.Background()), "limiter wait error")
 		r.c = 0
 	}
 	return n, err

@@ -3,6 +3,8 @@ package rate
 import (
 	"io"
 	"net/http"
+
+	"github.com/no-src/gofs/logger"
 )
 
 type file struct {
@@ -12,10 +14,10 @@ type file struct {
 }
 
 // NewFile create a limit http.File that wrap the real http.File.
-func NewFile(f http.File, bytesPerSecond int64) http.File {
+func NewFile(f http.File, bytesPerSecond int64, logger *logger.Logger) http.File {
 	return &file{
 		File: f,
-		r:    NewReader(f, bytesPerSecond),
+		r:    NewReader(f, bytesPerSecond, logger),
 	}
 }
 

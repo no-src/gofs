@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/util/osutil"
 )
 
@@ -70,6 +71,9 @@ func TestIsDeleted(t *testing.T) {
 }
 
 func TestClearDeletedFile(t *testing.T) {
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
 	testCases := []struct {
 		path string
 	}{
@@ -79,7 +83,7 @@ func TestClearDeletedFile(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.path, func(t *testing.T) {
-			if err := ClearDeletedFile(tc.path); err != nil {
+			if err := ClearDeletedFile(tc.path, logger); err != nil {
 				t.Errorf("clear deleted file error %s => %v", tc.path, err)
 			}
 		})
@@ -87,6 +91,9 @@ func TestClearDeletedFile(t *testing.T) {
 }
 
 func TestClearDeletedFile_ReturnError_RemoveAllAlwaysReturnError(t *testing.T) {
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
 	removeAll = removeAllErrorMock
 	isDeleted = isDeleteMock
 	defer func() {
@@ -102,7 +109,7 @@ func TestClearDeletedFile_ReturnError_RemoveAllAlwaysReturnError(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.path, func(t *testing.T) {
-			if err := ClearDeletedFile(tc.path); err == nil {
+			if err := ClearDeletedFile(tc.path, logger); err == nil {
 				t.Errorf("clear deleted file expect to get an error but get nil => %s", tc.path)
 			}
 		})
@@ -110,6 +117,9 @@ func TestClearDeletedFile_ReturnError_RemoveAllAlwaysReturnError(t *testing.T) {
 }
 
 func TestClearDeletedFile_ReturnError_NotExistAlwaysFalse(t *testing.T) {
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
 	if !osutil.IsWindows() {
 		isNotExist = isNotExistAlwaysFalseMock
 		defer func() {
@@ -125,7 +135,7 @@ func TestClearDeletedFile_ReturnError_NotExistAlwaysFalse(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.path, func(t *testing.T) {
-			if err := ClearDeletedFile(tc.path); err == nil {
+			if err := ClearDeletedFile(tc.path, logger); err == nil {
 				t.Errorf("clear deleted file expect to get an error but get nil => %s", tc.path)
 			}
 		})
@@ -133,6 +143,9 @@ func TestClearDeletedFile_ReturnError_NotExistAlwaysFalse(t *testing.T) {
 }
 
 func TestClearDeletedFile_RemoveAllAlwaysReturnNil(t *testing.T) {
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
 	removeAll = removeAllSuccessMock
 	isDeleted = isDeleteMock
 	defer func() {
@@ -149,7 +162,7 @@ func TestClearDeletedFile_RemoveAllAlwaysReturnNil(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.path, func(t *testing.T) {
-			if err := ClearDeletedFile(tc.path); err != nil {
+			if err := ClearDeletedFile(tc.path, logger); err != nil {
 				t.Errorf("clear deleted file error %s => %v", tc.path, err)
 			}
 		})

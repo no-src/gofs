@@ -25,7 +25,6 @@ import (
 	"github.com/no-src/gofs/server/httpfs"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/wait"
-	"github.com/no-src/log/level"
 )
 
 // Run running the gofs program
@@ -65,6 +64,8 @@ func RunWithConfigContent(content string, ext string) result.Result {
 
 //gocyclo:ignore
 func runWithConfig(c conf.Config, result result.Result) {
+	defer innerLogger.Close()
+
 	var err error
 
 	//  ensure all the code in this function is executed
@@ -86,8 +87,8 @@ func runWithConfig(c conf.Config, result result.Result) {
 	}
 
 	switchDebug := false
-	if c.DryRun && c.LogLevel != int(level.DebugLevel) {
-		c.LogLevel = int(level.DebugLevel)
+	if c.DryRun && c.LogLevel != int(debugLogLevel) {
+		c.LogLevel = int(debugLogLevel)
 		switchDebug = true
 	}
 
@@ -161,7 +162,7 @@ func runWithConfig(c conf.Config, result result.Result) {
 	defer webLogger.Close()
 
 	// create retry
-	r := retry.New(c.RetryCount, c.RetryWait.Duration(), c.RetryAsync)
+	r := retry.New(c.RetryCount, c.RetryWait.Duration(), c.RetryAsync, logger)
 
 	reporter := report.NewReporter()
 	// start a file web server
@@ -178,7 +179,7 @@ func runWithConfig(c conf.Config, result result.Result) {
 	}
 	defer eventLogger.Close()
 
-	pi, err := ignore.NewPathIgnore(c.IgnoreConf, c.IgnoreDeletedPath)
+	pi, err := ignore.NewPathIgnore(c.IgnoreConf, c.IgnoreDeletedPath, logger)
 	if err != nil {
 		logger.Error(err, "init ignore config error")
 		result.InitDoneWithError(err)
@@ -224,24 +225,24 @@ func parseConfigFile(cp *conf.Config) error {
 func executeOnce(c conf.Config, logger *logger.Logger) (exit bool, err error) {
 	// print version info
 	if c.PrintVersion {
-		version.PrintVersion("gofs")
+		version.PrintVersion("gofs", logger.Log)
 		return true, nil
 	}
 
 	// print about info
 	if c.PrintAbout {
-		about.PrintAbout()
+		about.PrintAbout(logger.Log)
 		return true, nil
 	}
 
 	// clear the deleted files
 	if c.ClearDeletedPath {
-		return true, logger.ErrorIf(fs.ClearDeletedFile(c.Dest.Path()), "clear the deleted files error")
+		return true, logger.ErrorIf(fs.ClearDeletedFile(c.Dest.Path(), logger), "clear the deleted files error")
 	}
 
 	// decrypt the specified file or directory
 	if c.Decrypt {
-		dec, err := encrypt.NewDecrypt(encrypt.NewOption(c))
+		dec, err := encrypt.NewDecrypt(encrypt.NewOption(c, logger))
 		if err != nil {
 			logger.Error(err, "init decrypt component error")
 			return true, err

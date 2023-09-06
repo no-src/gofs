@@ -2,7 +2,19 @@ package logger
 
 import (
 	"github.com/no-src/log"
+	"github.com/no-src/log/formatter"
 	"github.com/no-src/log/level"
+)
+
+const (
+	// DefaultLevel default log level
+	DefaultLevel = level.InfoLevel
+	// DefaultFormatter default log formatter
+	DefaultFormatter = formatter.TextFormatter
+)
+
+var (
+	innerLogger = newInnerLogger()
 )
 
 // Logger an logger component
@@ -32,4 +44,20 @@ func NewConsoleLogger(lvl level.Level, sampleRate float64) *Logger {
 // NewTestLogger return a logger used for the test
 func NewTestLogger() *Logger {
 	return NewConsoleLogger(level.DebugLevel, 1)
+}
+
+// NewEmptyLogger get an empty logger, there is nothing to do
+func NewEmptyLogger() *Logger {
+	logger := log.NewEmptyLogger()
+	return NewLogger(logger, logger)
+}
+
+// InnerLogger is used before other loggers have completed initialization
+func InnerLogger() *Logger {
+	return innerLogger
+}
+
+func newInnerLogger() *Logger {
+	logger := log.NewConsoleLogger(level.DebugLevel)
+	return NewLogger(logger, logger)
 }
