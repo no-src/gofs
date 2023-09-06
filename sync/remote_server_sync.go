@@ -15,7 +15,6 @@ import (
 	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/util/hashutil"
-	"github.com/no-src/log"
 )
 
 var (
@@ -41,6 +40,7 @@ func NewRemoteServerSync(opt Option) (Sync, error) {
 	tokenSecret := opt.TokenSecret
 	users := opt.Users
 	taskConf := opt.TaskConf
+	logger := opt.Logger
 
 	ds, err := newDiskSync(opt)
 	if err != nil {
@@ -73,10 +73,10 @@ func NewRemoteServerSync(opt Option) (Sync, error) {
 	}
 	rs.serverAddr = strings.TrimRight(rs.serverAddr, "/")
 	if invalidPort {
-		log.Warn("create remote server sync warning, you should enable the file server with -server and -server_addr flags")
+		rs.logger.Warn("create remote server sync warning, you should enable the file server with -server and -server_addr flags")
 	}
 
-	rs.server, err = apiserver.New(source.Host(), source.Port(), enableTLS, certFile, keyFile, tokenSecret, users, opt.Reporter, rs.serverAddr, log.DefaultLogger(), taskConf)
+	rs.server, err = apiserver.New(source.Host(), source.Port(), enableTLS, certFile, keyFile, tokenSecret, users, opt.Reporter, rs.serverAddr, logger, taskConf)
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +236,7 @@ func (rs *remoteServerSync) start() error {
 		return errNilRemoteSyncServer
 	}
 	go func() {
-		log.ErrorIf(rs.server.Start(), "start api server error")
+		rs.logger.ErrorIf(rs.server.Start(), "start api server error")
 	}()
 	return nil
 }

@@ -10,7 +10,6 @@ import (
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/driver"
 	nsfs "github.com/no-src/gofs/fs"
-	"github.com/no-src/log"
 )
 
 type driverPushClientSync struct {
@@ -80,7 +79,7 @@ func (s *driverPushClientSync) Write(path string) error {
 
 	// compare whether the file is changed or not
 	if s.fileInfoCompare(path) {
-		log.Debug("[push] [ignored], the file modification time is unmodified => %s", path)
+		s.logger.Debug("[push] [ignored], the file modification time is unmodified => %s", path)
 		return nil
 	}
 
@@ -98,9 +97,9 @@ func (s *driverPushClientSync) Write(path string) error {
 
 	err = s.driver.Write(encryptPath, destPath)
 	if err == nil {
-		log.Info("[%s-driver-push] [write] [success] => %s", s.driver.DriverName(), path)
+		s.logger.Info("[%s-driver-push] [write] [success] => %s", s.driver.DriverName(), path)
 		if _, aTime, mTime, err := nsfs.GetFileTime(path); err == nil {
-			log.ErrorIf(s.driver.Chtimes(destPath, aTime, mTime), "[%s push client sync] [write] change file times error", s.driver.DriverName())
+			s.logger.ErrorIf(s.driver.Chtimes(destPath, aTime, mTime), "[%s push client sync] [write] change file times error", s.driver.DriverName())
 		}
 		s.storeFileInfo(path)
 	}
@@ -154,7 +153,7 @@ func (s *driverPushClientSync) Rename(path string) error {
 }
 
 func (s *driverPushClientSync) Chmod(path string) error {
-	log.Debug("Chmod is unimplemented [%s]", path)
+	s.logger.Debug("Chmod is unimplemented [%s]", path)
 	return nil
 }
 
@@ -181,7 +180,7 @@ func (s *driverPushClientSync) SyncOnce(path string) error {
 func (s *driverPushClientSync) buildDestAbsFile(sourceFileAbs string) (string, error) {
 	sourceFileRel, err := filepath.Rel(s.sourceAbsPath, sourceFileAbs)
 	if err != nil {
-		log.Error(err, "parse rel path error, basePath=%s destPath=%s", s.sourceAbsPath, sourceFileRel)
+		s.logger.Error(err, "parse rel path error, basePath=%s destPath=%s", s.sourceAbsPath, sourceFileRel)
 		return "", err
 	}
 
@@ -197,7 +196,7 @@ func (s *driverPushClientSync) fileInfoCompare(sourcePath string) (equal bool) {
 		fi := fiv.(contract.FileInfo)
 		sourceStat, err := os.Stat(sourcePath)
 		if err != nil {
-			log.Error(err, "get source file stat error => %s", sourcePath)
+			s.logger.Error(err, "get source file stat error => %s", sourcePath)
 			return false
 		}
 		if sourceStat.Size() == fi.Size && sourceStat.ModTime().Unix() == fi.MTime {
@@ -214,7 +213,7 @@ func (s *driverPushClientSync) storeFileInfo(sourcePath string) {
 	}
 	sourceStat, err := os.Stat(sourcePath)
 	if err != nil {
-		log.Error(err, "get source file stat error => %s", sourcePath)
+		s.logger.Error(err, "get source file stat error => %s", sourcePath)
 		return
 	}
 	s.files.Store(sourcePath, contract.FileInfo{

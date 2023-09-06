@@ -2,17 +2,20 @@ package sync
 
 import (
 	"github.com/no-src/gofs/core"
+	"github.com/no-src/gofs/internal/logger"
 )
 
 type baseSync struct {
 	source core.VFS
 	dest   core.VFS
+	logger *logger.Logger
 }
 
-func newBaseSync(source, dest core.VFS) baseSync {
+func newBaseSync(source, dest core.VFS, logger *logger.Logger) baseSync {
 	return baseSync{
 		source: source,
 		dest:   dest,
+		logger: logger,
 	}
 }
 

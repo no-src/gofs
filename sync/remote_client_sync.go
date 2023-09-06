@@ -24,7 +24,6 @@ import (
 	"github.com/no-src/gofs/util/httputil"
 	"github.com/no-src/gofs/util/jsonutil"
 	"github.com/no-src/gofs/util/stringutil"
-	"github.com/no-src/log"
 )
 
 var (
@@ -61,6 +60,7 @@ func NewRemoteClientSync(opt Option) (Sync, error) {
 	checksumAlgorithm := opt.ChecksumAlgorithm
 	enableLogicallyDelete := opt.EnableLogicallyDelete
 	maxTranRate := opt.MaxTranRate
+	logger := opt.Logger
 
 	if dest.IsEmpty() {
 		return nil, errDestNotFound
@@ -83,7 +83,7 @@ func NewRemoteClientSync(opt Option) (Sync, error) {
 
 	rs := &remoteClientSync{
 		destAbsPath:           destAbsPath,
-		baseSync:              newBaseSync(source, dest),
+		baseSync:              newBaseSync(source, dest, logger),
 		chunkSize:             chunkSize,
 		enableLogicallyDelete: enableLogicallyDelete,
 		forceChecksum:         forceChecksum,
@@ -129,7 +129,7 @@ func (rs *remoteClientSync) Create(path string) error {
 		}
 		f, err := nsfs.CreateFile(dest)
 		defer func() {
-			log.ErrorIf(f.Close(), "[create] close the dest file error")
+			rs.logger.ErrorIf(f.Close(), "[create] close the dest file error")
 		}()
 		if err != nil {
 			return err
@@ -143,7 +143,7 @@ func (rs *remoteClientSync) Create(path string) error {
 	if err != nil {
 		return err
 	}
-	log.Info("create the dest file success [%s] -> [%s]", path, dest)
+	rs.logger.Info("create the dest file success [%s] -> [%s]", path, dest)
 	return nil
 }
 
@@ -187,14 +187,14 @@ func (rs *remoteClientSync) write(path, dest string) error {
 
 	destStat, err := os.Stat(dest)
 	if err == nil && rs.hash.QuickCompare(rs.forceChecksum, size, destStat.Size(), mTime, destStat.ModTime()) {
-		log.Debug("[remote client sync] [write] [ignored], the file size and file modification time are both unmodified => %s", path)
+		rs.logger.Debug("[remote client sync] [write] [ignored], the file size and file modification time are both unmodified => %s", path)
 		return nil
 	}
 
 	// if source and dest is the same file, ignore the following steps and return directly
 	equal, hv := rs.hash.CompareHashValues(dest, size, hash, rs.chunkSize, hvs)
 	if equal {
-		log.Debug("[remote client sync] [write] [ignored], the file is unmodified => %s", path)
+		rs.logger.Debug("[remote client sync] [write] [ignored], the file is unmodified => %s", path)
 		return nil
 	}
 	var offset int64
@@ -208,7 +208,7 @@ func (rs *remoteClientSync) write(path, dest string) error {
 		return err
 	}
 	defer func() {
-		log.ErrorIf(resp.Body.Close(), "[remote client sync] [write] close the resp body error")
+		rs.logger.ErrorIf(resp.Body.Close(), "[remote client sync] [write] close the resp body error")
 	}()
 
 	destFile, err := nsfs.OpenRWFile(dest)
@@ -216,7 +216,7 @@ func (rs *remoteClientSync) write(path, dest string) error {
 		return err
 	}
 	defer func() {
-		log.ErrorIf(destFile.Close(), "[remote client sync] [write] close the dest file error")
+		rs.logger.ErrorIf(destFile.Close(), "[remote client sync] [write] close the dest file error")
 	}()
 
 	if _, err = destFile.Seek(offset, io.SeekStart); err != nil {
@@ -240,7 +240,7 @@ func (rs *remoteClientSync) write(path, dest string) error {
 	err = writer.Flush()
 
 	if err == nil {
-		log.Info("[remote-client] [write] [success] size[%d => %d] [%s] => [%s]", size, n, path, dest)
+		rs.logger.Info("[remote-client] [write] [success] size[%d => %d] [%s] => [%s]", size, n, path, dest)
 		rs.chtimes(dest, aTime, mTime)
 	}
 	return err
@@ -249,7 +249,7 @@ func (rs *remoteClientSync) write(path, dest string) error {
 // chtimes change file times
 func (rs *remoteClientSync) chtimes(dest string, aTime, mTime time.Time) {
 	if err := os.Chtimes(dest, aTime, mTime); err != nil {
-		log.Warn("[remote client sync] change file times error => %s =>[%s]", err.Error(), dest)
+		rs.logger.Warn("[remote client sync] change file times error => %s =>[%s]", err.Error(), dest)
 	}
 }
 
@@ -268,7 +268,7 @@ func (rs *remoteClientSync) remove(path string, forceDelete bool) error {
 		err = os.RemoveAll(dest)
 	}
 	if err == nil {
-		log.Info("remove file success [%s] -> [%s]", path, dest)
+		rs.logger.Info("remove file success [%s] -> [%s]", path, dest)
 	}
 	return err
 }
@@ -279,7 +279,7 @@ func (rs *remoteClientSync) Rename(path string) error {
 }
 
 func (rs *remoteClientSync) Chmod(path string) error {
-	log.Debug("Chmod is unimplemented [%s]", path)
+	rs.logger.Debug("Chmod is unimplemented [%s]", path)
 	return nil
 }
 
@@ -343,7 +343,7 @@ func (rs *remoteClientSync) SyncOnce(path string) error {
 }
 
 func (rs *remoteClientSync) sync(serverAddr, path string) error {
-	log.Debug("remote client sync path => %s", path)
+	rs.logger.Debug("remote client sync path => %s", path)
 	reqValues := url.Values{}
 	reqValues.Add(contract.FsPath, path)
 	reqValues.Add(contract.FsNeedHash, contract.FsNeedHashValueTrue)
@@ -400,16 +400,16 @@ func (rs *remoteClientSync) syncFiles(files []contract.FileInfo, serverAddr, pat
 		syncPath := fmt.Sprintf("%s/%s?%s", serverAddr, nsfs.SafePath(currentPath), values.Encode())
 
 		// create directory or file
-		log.ErrorIf(rs.Create(syncPath), "sync create directory or file error => [syncPath=%s]", syncPath)
+		rs.logger.ErrorIf(rs.Create(syncPath), "sync create directory or file error => [syncPath=%s]", syncPath)
 
 		if file.IsDir.Bool() {
 			// sync current directory content
-			log.ErrorIf(rs.sync(serverAddr, currentPath), "sync current directory content error => [serverAddr=%s] [currentPath=%s]", serverAddr, currentPath)
+			rs.logger.ErrorIf(rs.sync(serverAddr, currentPath), "sync current directory content error => [serverAddr=%s] [currentPath=%s]", serverAddr, currentPath)
 		} else if len(file.LinkTo) > 0 {
-			log.ErrorIf(rs.syncSymlink(syncPath, file.LinkTo), "sync remote symlink to local disk error => [syncPath=%s] [linkTo=%s]", syncPath, file.LinkTo)
+			rs.logger.ErrorIf(rs.syncSymlink(syncPath, file.LinkTo), "sync remote symlink to local disk error => [syncPath=%s] [linkTo=%s]", syncPath, file.LinkTo)
 		} else {
 			// sync remote file to local disk
-			log.ErrorIf(rs.Write(syncPath), "sync remote file to local disk error => [syncPath=%s]", syncPath)
+			rs.logger.ErrorIf(rs.Write(syncPath), "sync remote file to local disk error => [syncPath=%s]", syncPath)
 		}
 	}
 }
@@ -421,7 +421,7 @@ func (rs *remoteClientSync) syncSymlink(currentPath, realPath string) (err error
 func (rs *remoteClientSync) buildDestAbsFile(sourceFileAbs string) (string, error) {
 	remoteUrl, err := url.Parse(sourceFileAbs)
 	if err != nil {
-		log.Error(err, "parse url error, sourceFileAbs=%s", sourceFileAbs)
+		rs.logger.Error(err, "parse url error, sourceFileAbs=%s", sourceFileAbs)
 		return "", err
 	}
 	return filepath.Join(rs.destAbsPath, strings.TrimPrefix(remoteUrl.Path, server.SourceRoutePrefix)), nil
@@ -448,7 +448,7 @@ func (rs *remoteClientSync) httpGetWithAuth(rawURL string, header http.Header) (
 		}
 		if len(cookies) > 0 {
 			rs.cookies = cookies
-			log.Debug("try to auto login file server success maybe, retry to get resource => %s", rawURL)
+			rs.logger.Debug("try to auto login file server success maybe, retry to get resource => %s", rawURL)
 			return rs.httpClient.HttpGetWithCookie(rawURL, header, rs.cookies...)
 		}
 		return nil, errFileServerUnauthorized

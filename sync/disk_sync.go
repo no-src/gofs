@@ -14,7 +14,6 @@ import (
 	"github.com/no-src/gofs/internal/rate"
 	"github.com/no-src/gofs/progress"
 	"github.com/no-src/gofs/util/hashutil"
-	"github.com/no-src/log"
 )
 
 type diskSync struct {
@@ -61,6 +60,7 @@ func newDiskSync(opt Option) (s *diskSync, err error) {
 	maxTranRate := opt.MaxTranRate
 	copyLink := opt.CopyLink
 	copyUnsafeLink := opt.CopyUnsafeLink
+	logger := opt.Logger
 
 	if source.IsEmpty() {
 		return nil, errSourceNotFound
@@ -92,7 +92,7 @@ func newDiskSync(opt Option) (s *diskSync, err error) {
 	s = &diskSync{
 		sourceAbsPath:         sourceAbsPath,
 		destAbsPath:           destAbsPath,
-		baseSync:              newBaseSync(source, dest),
+		baseSync:              newBaseSync(source, dest, logger),
 		chunkSize:             chunkSize,
 		checkpointCount:       checkpointCount,
 		enableLogicallyDelete: enableLogicallyDelete,
@@ -137,7 +137,7 @@ func (s *diskSync) Create(path string) error {
 		err = s.createFile(dest)
 	}
 	if err == nil {
-		log.Info("create the dest file success [%s] -> [%s]", path, dest)
+		s.logger.Info("create the dest file success [%s] -> [%s]", path, dest)
 	}
 	return err
 }
@@ -163,7 +163,7 @@ func (s *diskSync) createFile(dest string) error {
 	if err != nil {
 		return err
 	}
-	log.ErrorIf(f.Close(), "[create] close the dest file error")
+	s.logger.ErrorIf(f.Close(), "[create] close the dest file error")
 	return nil
 }
 
@@ -211,7 +211,7 @@ func (s *diskSync) write(path, dest string) error {
 		return err
 	}
 	defer func() {
-		log.ErrorIf(sourceFile.Close(), "[write] close the source file error")
+		s.logger.ErrorIf(sourceFile.Close(), "[write] close the source file error")
 	}()
 
 	sourceStat, err := sourceFile.Stat()
@@ -231,17 +231,17 @@ func (s *diskSync) write(path, dest string) error {
 	if s.enc.NeedEncrypt(path) {
 		// ignore the size compare from encryption file because the size of encryption file may not equal to the source file
 		if s.hash.QuickCompare(s.forceChecksum, 0, 0, sourceStat.ModTime(), destStat.ModTime()) {
-			log.Debug("[write] [ignored], the file modification time is unmodified => %s", path)
+			s.logger.Debug("[write] [ignored], the file modification time is unmodified => %s", path)
 			return nil
 		}
 	} else {
 		if s.hash.QuickCompare(s.forceChecksum, sourceSize, destSize, sourceStat.ModTime(), destStat.ModTime()) {
-			log.Debug("[write] [ignored], the file size and file modification time are both unmodified => %s", path)
+			s.logger.Debug("[write] [ignored], the file size and file modification time are both unmodified => %s", path)
 			return nil
 		}
 
 		if s.hash.Compare(s.chunkSize, s.checkpointCount, sourceFile, sourceSize, dest, destSize, &offset) {
-			log.Debug("[write] [ignored], the file is unmodified => %s", path)
+			s.logger.Debug("[write] [ignored], the file is unmodified => %s", path)
 			return nil
 		}
 	}
@@ -251,7 +251,7 @@ func (s *diskSync) write(path, dest string) error {
 		return err
 	}
 	defer func() {
-		log.ErrorIf(destFile.Close(), "[write] close the dest file error")
+		s.logger.ErrorIf(destFile.Close(), "[write] close the dest file error")
 	}()
 
 	if _, err = sourceFile.Seek(offset, io.SeekStart); err != nil {
@@ -282,7 +282,7 @@ func (s *diskSync) write(path, dest string) error {
 	err = writer.Close()
 
 	if err == nil {
-		log.Info("[disk] [write] [success] size[%d => %d] [%s] => [%s]", sourceSize, n, path, dest)
+		s.logger.Info("[disk] [write] [success] size[%d => %d] [%s] => [%s]", sourceSize, n, path, dest)
 		s.chtimes(path, dest)
 	}
 	return err
@@ -293,10 +293,10 @@ func (s *diskSync) chtimes(source, dest string) error {
 	_, aTime, mTime, err := s.getFileTimeFn(source)
 	if err == nil {
 		if err = os.Chtimes(dest, aTime, mTime); err != nil {
-			log.Warn("[write] change file times error => %s =>[%s]", err.Error(), dest)
+			s.logger.Warn("[write] change file times error => %s =>[%s]", err.Error(), dest)
 		}
 	} else {
-		log.Warn("[write] get file times error => %s =>[%s]", err.Error(), source)
+		s.logger.Warn("[write] get file times error => %s =>[%s]", err.Error(), source)
 	}
 	return err
 }
@@ -317,7 +317,7 @@ func (s *diskSync) remove(path string, forceDelete bool) error {
 		err = os.RemoveAll(dest)
 	}
 	if err == nil {
-		log.Info("remove file success [%s] -> [%s]", path, dest)
+		s.logger.Info("remove file success [%s] -> [%s]", path, dest)
 	}
 	return err
 }
@@ -329,7 +329,7 @@ func (s *diskSync) Rename(path string) error {
 }
 
 func (s *diskSync) Chmod(path string) error {
-	log.Debug("Chmod is unimplemented [%s]", path)
+	s.logger.Debug("Chmod is unimplemented [%s]", path)
 	return nil
 }
 
@@ -338,7 +338,7 @@ func (s *diskSync) Chmod(path string) error {
 func (s *diskSync) buildDestAbsFile(sourceFileAbs string) (string, error) {
 	sourceFileRel, err := filepath.Rel(s.sourceAbsPath, sourceFileAbs)
 	if err != nil {
-		log.Error(err, "parse rel path error, basePath=%s destPath=%s", s.sourceAbsPath, sourceFileRel)
+		s.logger.Error(err, "parse rel path error, basePath=%s destPath=%s", s.sourceAbsPath, sourceFileRel)
 		return "", err
 	}
 	return filepath.Join(s.destAbsPath, sourceFileRel), nil
@@ -462,7 +462,7 @@ func (s *diskSync) deepCopy(source, dest string) error {
 				return err
 			}
 			if !isSub {
-				log.Info("ignore the symlink because it point outside the source tree, symlink => %s, real file => %s", originalSource, source)
+				s.logger.Info("ignore the symlink because it point outside the source tree, symlink => %s, real file => %s", originalSource, source)
 				return s.symlink(realPath, dest)
 			}
 		}

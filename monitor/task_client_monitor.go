@@ -12,11 +12,11 @@ import (
 	"github.com/no-src/gofs/api/task"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/internal/clist"
+	"github.com/no-src/gofs/internal/logger"
 	"github.com/no-src/gofs/result"
 	"github.com/no-src/gofs/retry"
 	"github.com/no-src/gofs/util/randutil"
 	"github.com/no-src/gofs/wait"
-	"github.com/no-src/log"
 )
 
 type taskClientMonitor struct {
@@ -30,6 +30,7 @@ type taskClientMonitor struct {
 	tasks    sync.Map
 	workers  chan struct{}
 	queue    *clist.CList
+	logger   *logger.Logger
 }
 
 // NewTaskClientMonitor create an instance of taskClientMonitor to receive the task from remote server
@@ -43,6 +44,7 @@ func NewTaskClientMonitor(opt Option, run runFn) (Monitor, error) {
 	labels := opt.TaskClientLabels
 	retry := opt.Retry
 	maxWorker := opt.TaskClientMaxWorker
+	logger := opt.Logger
 
 	var user *auth.User
 	if len(users) > 0 {
@@ -57,6 +59,7 @@ func NewTaskClientMonitor(opt Option, run runFn) (Monitor, error) {
 		labels:   labels,
 		queue:    clist.New(),
 		workers:  make(chan struct{}, maxWorker),
+		logger:   logger,
 	}
 	return m, nil
 }
@@ -87,7 +90,7 @@ func (m *taskClientMonitor) receive() wait.Wait {
 func (m *taskClientMonitor) waitShutdown(st *atomic.Bool, wd wait.Done) {
 	<-m.shutdown
 	st.Store(true)
-	log.ErrorIf(m.Close(), "close remote client monitor error")
+	m.logger.ErrorIf(m.Close(), "close remote client monitor error")
 	wd.Done()
 }
 
@@ -112,7 +115,7 @@ func (m *taskClientMonitor) readMessage(st *atomic.Bool, wd wait.Done) {
 			if st.Load() {
 				break
 			}
-			log.Error(err, "subscribe task message error")
+			m.logger.Error(err, "subscribe task message error")
 			if m.client.IsClosed(err) {
 				m.retry.Do(func() error {
 					nrc, err := m.client.SubscribeTask(clientInfo)
@@ -160,18 +163,18 @@ func (m *taskClientMonitor) Shutdown() (err error) {
 }
 
 func (m *taskClientMonitor) run(t *task.TaskInfo) {
-	log.Info("running gofs task [%s]", t.Name)
+	m.logger.Info("running gofs task [%s]", t.Name)
 	r := m.runFn(t.Content, t.Ext)
 	go func() {
-		log.ErrorIf(r.Wait(), "running gofs task error [%s]", t.Name)
+		m.logger.ErrorIf(r.Wait(), "running gofs task error [%s]", t.Name)
 	}()
 
 	<-m.shutdown
-	log.ErrorIf(r.Shutdown(), "shutdown gofs task error [%s]", t.Name)
+	m.logger.ErrorIf(r.Shutdown(), "shutdown gofs task error [%s]", t.Name)
 
 	m.tasks.Delete(t.Name)
 	<-m.workers
-	log.Info("running gofs task finished [%s]", t.Name)
+	m.logger.Info("running gofs task finished [%s]", t.Name)
 }
 
 func (m *taskClientMonitor) enqueue(t *task.TaskInfo) {
@@ -194,7 +197,7 @@ func (m *taskClientMonitor) dequeue() {
 		m.queue.Remove(e)
 
 		if _, loaded := m.tasks.LoadOrStore(t.Name, t); loaded {
-			log.Info("[ignore task] task already exists => %s", t.Name)
+			m.logger.Info("[ignore task] task already exists => %s", t.Name)
 			continue
 		}
 		m.workers <- struct{}{}

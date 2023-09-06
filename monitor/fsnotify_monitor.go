@@ -15,7 +15,6 @@ import (
 	"github.com/no-src/gofs/internal/clist"
 	"github.com/no-src/gofs/report"
 	"github.com/no-src/gofs/wait"
-	"github.com/no-src/log"
 )
 
 type fsNotifyMonitor struct {
@@ -54,7 +53,7 @@ func NewFsNotifyMonitor(opt Option) (m Monitor, err error) {
 func (m *fsNotifyMonitor) monitor(dir string) (err error) {
 	dir, err = filepath.Abs(dir)
 	if err != nil {
-		log.Error(err, "parse dir to abs dir error")
+		m.logger.Error(err, "parse dir to abs dir error")
 		return err
 	}
 	err = filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
@@ -67,15 +66,15 @@ func (m *fsNotifyMonitor) monitor(dir string) (err error) {
 			m.watcher.Remove(path)
 			err = m.watcher.Add(path)
 			if err != nil {
-				log.Error(err, "watch dir error [%s]", path)
+				m.logger.Error(err, "watch dir error [%s]", path)
 			} else {
-				log.Debug("watch dir success [%s]", path)
+				m.logger.Debug("watch dir success [%s]", path)
 			}
 		}
 		return err
 	})
 	if err != nil {
-		log.Error(err, "monitor dir error [%s]", dir)
+		m.logger.Error(err, "monitor dir error [%s]", dir)
 	}
 	return err
 }
@@ -122,7 +121,7 @@ func (m *fsNotifyMonitor) startReceiveEvents(wd wait.Done) error {
 					wd.DoneWithError(err)
 					return err
 				}
-				log.Debug("notify received [%s] -> [%s]", event.Op.String(), event.Name)
+				m.logger.Debug("notify received [%s] -> [%s]", event.Op.String(), event.Name)
 				m.events.PushBack(event)
 			}
 		case err, ok := <-m.watcher.Errors:
@@ -132,7 +131,7 @@ func (m *fsNotifyMonitor) startReceiveEvents(wd wait.Done) error {
 					wd.DoneWithError(err)
 					return err
 				}
-				log.Error(err, "watcher error")
+				m.logger.Error(err, "watcher error")
 			}
 		case <-m.shutdown:
 			{
@@ -167,7 +166,7 @@ func (m *fsNotifyMonitor) startProcessEvents() error {
 			m.monitorDirIfCreate(event)
 		} else if event.Op&fsnotify.Write == fsnotify.Write {
 			symlink, err := nsfs.IsSymlink(event.Name)
-			log.ErrorIf(err, "[write] check is symlink error =>%s", event.Name)
+			m.logger.ErrorIf(err, "[write] check is symlink error =>%s", event.Name)
 			if err == nil && !symlink {
 				m.write(event)
 			}
@@ -190,7 +189,7 @@ func (m *fsNotifyMonitor) startProcessEvents() error {
 func (m *fsNotifyMonitor) write(event fsnotify.Event) {
 	// ignore is not exist error
 	if err := m.syncer.Create(event.Name); err != nil && !os.IsNotExist(err) {
-		log.Error(err, "[write] event execute create error => [%s]", event.Name)
+		m.logger.Error(err, "[write] event execute create error => [%s]", event.Name)
 	}
 
 	var size int64
@@ -208,7 +207,7 @@ func (m *fsNotifyMonitor) create(event fsnotify.Event) {
 		isDir, err := m.syncer.IsDir(event.Name)
 		if err == nil && isDir {
 			if err = m.monitor(event.Name); err != nil {
-				log.Error(err, "[create] event execute monitor error => [%s]", event.Name)
+				m.logger.Error(err, "[create] event execute monitor error => [%s]", event.Name)
 			}
 		}
 		if err == nil {
@@ -216,7 +215,7 @@ func (m *fsNotifyMonitor) create(event fsnotify.Event) {
 			// rename a dir will not trigger the Write event on Linux and some Windows environments
 			// in some cases it will trigger the Write event for the parent dir on Windows
 			// send a Write event manually if the file is not a symbolic link
-			log.Debug("prepare to send a [write] event after [create] event [%s]", event.Name)
+			m.logger.Debug("prepare to send a [write] event after [create] event [%s]", event.Name)
 			m.events.PushBack(fsnotify.Event{
 				Name: event.Name,
 				Op:   fsnotify.Write,
@@ -228,16 +227,16 @@ func (m *fsNotifyMonitor) create(event fsnotify.Event) {
 func (m *fsNotifyMonitor) symlink(event fsnotify.Event) {
 	source, err := nsfs.Readlink(event.Name)
 	if err != nil {
-		log.Error(err, "[symlink] read link error => [%s]", event.Name)
+		m.logger.Error(err, "[symlink] read link error => [%s]", event.Name)
 		return
 	}
-	log.ErrorIf(m.syncer.Symlink(source, event.Name), "[symlink] event execute error => [%s]", event.Name)
+	m.logger.ErrorIf(m.syncer.Symlink(source, event.Name), "[symlink] event execute error => [%s]", event.Name)
 }
 
 func (m *fsNotifyMonitor) symlinkOrCreate(event fsnotify.Event) {
 	symlink, err := nsfs.IsSymlink(event.Name)
 	if err != nil {
-		log.Error(err, "[create] check is symlink error =>%s", event.Name)
+		m.logger.Error(err, "[create] check is symlink error =>%s", event.Name)
 		return
 	}
 	if symlink {
@@ -249,26 +248,26 @@ func (m *fsNotifyMonitor) symlinkOrCreate(event fsnotify.Event) {
 
 func (m *fsNotifyMonitor) remove(event fsnotify.Event) {
 	m.removeWrite(event.Name)
-	log.ErrorIf(m.syncer.Remove(event.Name), "[remove] event execute error => [%s]", event.Name)
+	m.logger.ErrorIf(m.syncer.Remove(event.Name), "[remove] event execute error => [%s]", event.Name)
 }
 
 func (m *fsNotifyMonitor) rename(event fsnotify.Event) {
-	log.ErrorIf(m.syncer.Rename(event.Name), "[rename] event execute error => [%s]", event.Name)
+	m.logger.ErrorIf(m.syncer.Rename(event.Name), "[rename] event execute error => [%s]", event.Name)
 }
 
 func (m *fsNotifyMonitor) chmod(event fsnotify.Event) {
-	log.ErrorIf(m.syncer.Chmod(event.Name), "[chmod] event execute error => [%s]", event.Name)
+	m.logger.ErrorIf(m.syncer.Chmod(event.Name), "[chmod] event execute error => [%s]", event.Name)
 }
 
 // monitorDirIfCreate monitor the directory if you create a new directory
 func (m *fsNotifyMonitor) monitorDirIfCreate(event fsnotify.Event) {
 	if event.Op&fsnotify.Create == fsnotify.Create {
 		isDir, err := m.syncer.IsDir(event.Name)
-		if log.ErrorIf(err, "check path is dir or not error") != nil {
+		if m.logger.ErrorIf(err, "check path is dir or not error") != nil {
 			return
 		}
 		if isDir {
-			log.ErrorIf(m.monitor(event.Name), "monitor the directory error that matched ignore rule => [%s]", event.Name)
+			m.logger.ErrorIf(m.monitor(event.Name), "monitor the directory error that matched ignore rule => [%s]", event.Name)
 		}
 	}
 }

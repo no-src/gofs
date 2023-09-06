@@ -19,7 +19,6 @@ import (
 	"github.com/no-src/gofs/internal/clist"
 	"github.com/no-src/gofs/util/stringutil"
 	"github.com/no-src/gofs/wait"
-	"github.com/no-src/log"
 )
 
 type remoteClientMonitor struct {
@@ -122,7 +121,7 @@ func (m *remoteClientMonitor) receive() wait.Wait {
 func (m *remoteClientMonitor) waitShutdown(st *atomic.Bool, wd wait.Done) {
 	<-m.shutdown
 	st.Store(true)
-	log.ErrorIf(m.Close(), "close remote client monitor error")
+	m.logger.ErrorIf(m.Close(), "close remote client monitor error")
 	m.syncer.Close()
 	wd.Done()
 }
@@ -144,7 +143,7 @@ func (m *remoteClientMonitor) readMessage(st *atomic.Bool, wd wait.Done) {
 			if st.Load() {
 				break
 			}
-			log.Error(err, "receive monitor message error")
+			m.logger.Error(err, "receive monitor message error")
 			if m.client.IsClosed(err) {
 				m.retry.Do(func() error {
 					nmc, err := m.client.Monitor()
@@ -175,7 +174,7 @@ func (m *remoteClientMonitor) startProcessMessage() {
 			continue
 		}
 		msg := element.Value.(*monitor.MonitorMessage)
-		log.Info("client read request => %s", msg.String())
+		m.logger.Info("client read request => %s", msg.String())
 		if m.pi.MatchPath(msg.FileInfo.Path, "remote client monitor", action.Action(msg.Action).String()) {
 			// ignore match
 		} else {
@@ -224,7 +223,7 @@ func (m *remoteClientMonitor) execSync(msg *monitor.MonitorMessage) (err error) 
 	m.el.Write(eventlog.NewEvent(path, action.Action(msg.Action).String()))
 
 	if err != nil {
-		log.Error(err, "%s action execute error => [%s]", action.Action(msg.Action).String(), path)
+		m.logger.Error(err, "%s action execute error => [%s]", action.Action(msg.Action).String(), path)
 	}
 	return err
 }
