@@ -6,16 +6,16 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/no-src/gofs/contract"
+	"github.com/no-src/gofs/internal/logger"
 	"github.com/no-src/gofs/server"
-	"github.com/no-src/log"
 )
 
 type privateAccessHandler struct {
-	logger log.Logger
+	logger *logger.Logger
 }
 
 // NewPrivateAccessHandlerFunc returns a middleware that only allows to access http resource from loop back ip or private ip
-func NewPrivateAccessHandlerFunc(logger log.Logger) gin.HandlerFunc {
+func NewPrivateAccessHandlerFunc(logger *logger.Logger) gin.HandlerFunc {
 	return (&privateAccessHandler{
 		logger: logger,
 	}).Handle

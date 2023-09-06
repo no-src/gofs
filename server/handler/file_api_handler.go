@@ -11,13 +11,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/no-src/gofs/contract"
 	nsfs "github.com/no-src/gofs/fs"
+	"github.com/no-src/gofs/internal/logger"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/util/hashutil"
-	"github.com/no-src/log"
 )
 
 type fileApiHandler struct {
-	logger          log.Logger
+	logger          *logger.Logger
 	root            http.Dir
 	chunkSize       int64
 	checkpointCount int
@@ -25,7 +25,7 @@ type fileApiHandler struct {
 }
 
 // NewFileApiHandlerFunc returns a gin.HandlerFunc that queries the file info
-func NewFileApiHandlerFunc(logger log.Logger, root http.Dir, chunkSize int64, checkpointCount int, hash hashutil.Hash) gin.HandlerFunc {
+func NewFileApiHandlerFunc(logger *logger.Logger, root http.Dir, chunkSize int64, checkpointCount int, hash hashutil.Hash) gin.HandlerFunc {
 	return (&fileApiHandler{
 		logger:          logger,
 		root:            root,

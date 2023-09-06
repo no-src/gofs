@@ -17,21 +17,21 @@ import (
 	"github.com/no-src/gofs/contract/push"
 	"github.com/no-src/gofs/core"
 	nsfs "github.com/no-src/gofs/fs"
+	"github.com/no-src/gofs/internal/logger"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/util/hashutil"
 	"github.com/no-src/gofs/util/jsonutil"
-	"github.com/no-src/log"
 )
 
 type pushHandler struct {
-	logger                log.Logger
+	logger                *logger.Logger
 	storagePath           string
 	enableLogicallyDelete bool
 	hash                  hashutil.Hash
 }
 
 // NewPushHandlerFunc returns a gin.HandlerFunc that to manage the files
-func NewPushHandlerFunc(logger log.Logger, source core.VFS, enableLogicallyDelete bool, hash hashutil.Hash) gin.HandlerFunc {
+func NewPushHandlerFunc(logger *logger.Logger, source core.VFS, enableLogicallyDelete bool, hash hashutil.Hash) gin.HandlerFunc {
 	return (&pushHandler{
 		logger:                logger,
 		storagePath:           source.Path(),
@@ -201,7 +201,7 @@ func (h *pushHandler) write(pushData push.PushData, c *gin.Context) (server.ApiR
 
 	// change file times
 	if err = h.chtimes(path, fi); err != nil {
-		log.Error(err, "change file times error after write file => [%s]", path)
+		h.logger.Error(err, "change file times error after write file => [%s]", path)
 		return server.NewErrorApiResult(-507, fmt.Sprintf("change file times error => [%s]", fi.Path)), err
 	}
 
@@ -261,7 +261,7 @@ func (h *pushHandler) compare(dst string, pushData push.PushData) (contract.Code
 	if pushAction == push.CompareFilePushAction || pushAction == push.CompareFileAndChunkPushAction {
 		destStat, err := os.Stat(dst)
 		if err == nil && h.quickCompare(fileSize, destStat.Size(), pushData.FileInfo.MTime, destStat.ModTime().Unix(), pushData.ForceChecksum) {
-			log.Debug("[push handler] the file size and file modification time are both unmodified => %s", pushData.FileInfo.Path)
+			h.logger.Debug("[push handler] the file size and file modification time are both unmodified => %s", pushData.FileInfo.Path)
 			return contract.NotModified, nil
 		}
 	}

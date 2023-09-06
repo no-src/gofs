@@ -442,7 +442,7 @@ func (rs *remoteClientSync) httpGetWithAuth(rawURL string, header http.Header) (
 			return nil, err
 		}
 		user := rs.currentUser
-		cookies, err := client.SignIn(rs.httpClient, parseUrl.Scheme, parseUrl.Host, user.UserName(), user.Password())
+		cookies, err := client.SignIn(rs.httpClient, parseUrl.Scheme, parseUrl.Host, user.UserName(), user.Password(), rs.logger)
 		if err != nil {
 			return nil, err
 		}

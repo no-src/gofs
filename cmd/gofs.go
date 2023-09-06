@@ -287,7 +287,7 @@ func initDefaultLogger(c conf.Config) (*logger.Logger, error) {
 }
 
 // initWebServerLogger init the web server logger
-func initWebServerLogger(c conf.Config) (log.Logger, error) {
+func initWebServerLogger(c conf.Config) (*logger.Logger, error) {
 	var webLogger = log.NewConsoleLogger(level.Level(c.LogLevel))
 	if c.EnableFileLogger && c.EnableFileServer {
 		webFileLogger, err := log.NewFileLoggerWithOption(option.NewFileLoggerOption(level.Level(c.LogLevel), c.LogDir, "web_", c.LogFlush, c.LogFlushInterval.Duration(), c.LogSplitDate))
@@ -297,11 +297,11 @@ func initWebServerLogger(c conf.Config) (log.Logger, error) {
 		}
 		webLogger = log.NewMultiLogger(webFileLogger, webLogger)
 	}
-	return webLogger, nil
+	return logger.NewLogger(webLogger, log.NewDefaultSampleLogger(webLogger, c.LogSampleRate)), nil
 }
 
 // startWebServer start a file web server
-func startWebServer(c conf.Config, webLogger log.Logger, userList []*auth.User, r retry.Retry, reporter report.Reporter) error {
+func startWebServer(c conf.Config, webLogger *logger.Logger, userList []*auth.User, r retry.Retry, reporter report.Reporter) error {
 	if c.EnableFileServer {
 		waitInit := wait.NewWaitDone()
 		go func() {

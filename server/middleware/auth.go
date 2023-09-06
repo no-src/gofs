@@ -9,17 +9,17 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
+	"github.com/no-src/gofs/internal/logger"
 	"github.com/no-src/gofs/server"
-	"github.com/no-src/log"
 )
 
 type authHandler struct {
-	logger log.Logger
+	logger *logger.Logger
 	perm   auth.Perm
 }
 
 // NewAuthHandlerFunc returns a middleware that checks whether the user is sign in
-func NewAuthHandlerFunc(logger log.Logger, perm string) gin.HandlerFunc {
+func NewAuthHandlerFunc(logger *logger.Logger, perm string) gin.HandlerFunc {
 	p := auth.ToPermWithDefault(perm, auth.DefaultPerm)
 	if !p.IsValid() {
 		logger.Warn("the auth middleware get an invalid permission")
