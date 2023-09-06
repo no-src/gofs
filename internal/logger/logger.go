@@ -1,6 +1,9 @@
 package logger
 
-import "github.com/no-src/log"
+import (
+	"github.com/no-src/log"
+	"github.com/no-src/log/level"
+)
 
 // Logger an internal logger
 type Logger struct {
@@ -17,4 +20,16 @@ func NewLogger(logger, sample log.Logger) *Logger {
 		Logger: logger,
 		Sample: sample,
 	}
+}
+
+// NewConsoleLogger return a console logger
+func NewConsoleLogger(lvl level.Level, sampleRate float64) *Logger {
+	logger := log.NewConsoleLogger(lvl)
+	sample := log.NewDefaultSampleLogger(logger, sampleRate)
+	return NewLogger(logger, sample)
+}
+
+// NewTestLogger return a logger used for the test
+func NewTestLogger() *Logger {
+	return NewConsoleLogger(level.DebugLevel, 1)
 }

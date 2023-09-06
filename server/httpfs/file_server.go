@@ -163,7 +163,7 @@ func initRoute(engine *gin.Engine, opt server.Option, logger *logger.Logger) err
 		rootGroup.StaticFS(server.DestRoutePrefix, rate.NewHTTPDir(dest.Path(), opt.MaxTranRate))
 		enableFileApi = true
 	} else if dest.Is(core.SFTP) {
-		sftpDir, err := sftp.NewDir(dest.RemotePath(), dest.Addr(), dest.SSHConfig(), opt.Retry, opt.MaxTranRate)
+		sftpDir, err := sftp.NewDir(dest.RemotePath(), dest.Addr(), dest.SSHConfig(), opt.Retry, opt.MaxTranRate, logger)
 		if err != nil {
 			return err
 		}
@@ -174,7 +174,7 @@ func initRoute(engine *gin.Engine, opt server.Option, logger *logger.Logger) err
 			return errors.New("a user is required for MinIO server")
 		}
 		user := opt.Users[0]
-		minioDir, err := minio.NewDir(dest.RemotePath(), dest.Addr(), dest.Secure(), user.UserName(), user.Password(), opt.Retry, opt.MaxTranRate)
+		minioDir, err := minio.NewDir(dest.RemotePath(), dest.Addr(), dest.Secure(), user.UserName(), user.Password(), opt.Retry, opt.MaxTranRate, logger)
 		if err != nil {
 			return err
 		}

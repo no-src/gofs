@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/no-src/log"
+	"github.com/no-src/gofs/internal/logger"
 )
 
 var (
@@ -23,7 +23,7 @@ type NotifySignal func(s os.Signal, timeout ...time.Duration) error
 type StopSignal func()
 
 // Notify receive signal and try to shut down
-func Notify(shutdown func() error) (NotifySignal, StopSignal) {
+func Notify(shutdown func() error, logger *logger.Logger) (NotifySignal, StopSignal) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGABRT, syscall.SIGTERM)
 	go func() {
@@ -31,17 +31,17 @@ func Notify(shutdown func() error) (NotifySignal, StopSignal) {
 			s := <-c
 			switch s {
 			case syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGABRT, syscall.SIGTERM:
-				log.Debug("received a signal [%s], waiting to exit", s.String())
+				logger.Debug("received a signal [%s], waiting to exit", s.String())
 				err := shutdown()
 				if err != nil {
-					log.Error(err, "shutdown error")
+					logger.Error(err, "shutdown error")
 				} else {
 					signal.Stop(c)
-					log.Debug("shutdown success")
+					logger.Debug("shutdown success")
 					return
 				}
 			default:
-				log.Debug("received a signal [%s], ignore it", s.String())
+				logger.Debug("received a signal [%s], ignore it", s.String())
 			}
 		}
 	}()
@@ -56,10 +56,10 @@ func Notify(shutdown func() error) (NotifySignal, StopSignal) {
 		}
 		select {
 		case c <- s:
-			log.Debug("[success] send a signal [%s] by user", s.String())
+			logger.Debug("[success] send a signal [%s] by user", s.String())
 			return nil
 		case <-time.After(t):
-			log.Warn("[timeout] send a signal [%s] by user", s.String())
+			logger.Warn("[timeout] send a signal [%s] by user", s.String())
 			return fmt.Errorf("%w => %s", errSendSignalTimeout, s.String())
 		}
 	}, ss

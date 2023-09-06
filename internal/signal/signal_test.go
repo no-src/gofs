@@ -6,12 +6,17 @@ import (
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/no-src/gofs/internal/logger"
 )
 
 func TestNotify(t *testing.T) {
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
 	ns, ss := Notify(func() error {
 		return nil
-	})
+	}, logger)
 
 	testCases := []struct {
 		name   string
@@ -32,9 +37,12 @@ func TestNotify(t *testing.T) {
 }
 
 func TestNotify_ShutdownError(t *testing.T) {
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
 	ns, ss := Notify(func() error {
 		return errors.New("shutdown error mock")
-	})
+	}, logger)
 
 	testCases := []struct {
 		name   string
@@ -59,9 +67,12 @@ func TestNotify_ShutdownError(t *testing.T) {
 }
 
 func TestNotify_IgnoreSignal(t *testing.T) {
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
 	ns, ss := Notify(func() error {
 		return nil
-	})
+	}, logger)
 
 	testCases := []struct {
 		name   string
