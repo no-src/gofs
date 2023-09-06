@@ -23,8 +23,6 @@ func initDefaultLogger(c conf.Config) (*logger.Logger, error) {
 	if c.LogFormat != formatter.TextFormatter {
 		innerLogger.Info("switch logger format to %s", c.LogFormat)
 	}
-	formatter.InitDefaultFormatter(c.LogFormat)
-	log.DefaultLogger().WithFormatter(formatter.New(c.LogFormat))
 
 	var loggers []log.Logger
 	loggers = append(loggers, log.NewConsoleLogger(level.Level(c.LogLevel)))
@@ -41,8 +39,8 @@ func initDefaultLogger(c conf.Config) (*logger.Logger, error) {
 		loggers = append(loggers, flogger)
 	}
 
-	log.InitDefaultLoggerWithSample(log.NewMultiLogger(loggers...), c.LogSampleRate)
-	return logger.NewLogger(log.DefaultLogger(), log.DefaultSampleLogger()), nil
+	defaultLogger := log.NewMultiLogger(loggers...).WithFormatter(formatter.New(c.LogFormat))
+	return logger.NewLogger(defaultLogger, log.NewDefaultSampleLogger(defaultLogger, c.LogSampleRate)), nil
 }
 
 // initWebServerLogger init the web server logger
@@ -54,7 +52,7 @@ func initWebServerLogger(c conf.Config) (*logger.Logger, error) {
 			innerLogger.Error(err, "init the web server file logger error")
 			return nil, err
 		}
-		webLogger = log.NewMultiLogger(webFileLogger, webLogger)
+		webLogger = log.NewMultiLogger(webFileLogger, webLogger).WithFormatter(formatter.New(c.LogFormat))
 	}
 	return logger.NewLogger(webLogger, log.NewDefaultSampleLogger(webLogger, c.LogSampleRate)), nil
 }
@@ -68,7 +66,7 @@ func initEventLogger(c conf.Config) (log.Logger, error) {
 			innerLogger.Error(err, "init the event file logger error")
 			return nil, err
 		}
-		eventLogger = eventFileLogger
+		eventLogger = eventFileLogger.WithFormatter(formatter.New(c.LogFormat))
 	}
 	return eventLogger, nil
 }
