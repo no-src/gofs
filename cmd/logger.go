@@ -11,7 +11,8 @@ import (
 
 var (
 	// innerLogger is used before other loggers have completed initialization
-	innerLogger = log.NewConsoleLogger(level.DebugLevel)
+	innerLogger   = log.NewConsoleLogger(level.DebugLevel)
+	debugLogLevel = level.DebugLevel
 )
 
 // initDefaultLogger init the default logger

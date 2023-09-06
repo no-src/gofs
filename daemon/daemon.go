@@ -6,9 +6,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/util/osutil"
 	"github.com/no-src/gofs/wait"
-	"github.com/no-src/log"
 )
 
 // SubprocessTag mark the current process is subprocess
@@ -17,17 +17,17 @@ const SubprocessTag = "sub"
 // Daemon support to running daemon process and create subprocess for working
 type Daemon struct {
 	shutdown chan struct{}
-	logger   log.Logger
+	logger   *logger.Logger
 }
 
 // New create an instance of Daemon
-func New(logger log.Logger) *Daemon {
-	if logger == nil {
-		logger = log.NewEmptyLogger()
+func New(l *logger.Logger) *Daemon {
+	if l == nil {
+		l = logger.NewEmptyLogger()
 	}
 	return &Daemon{
 		shutdown: make(chan struct{}, 1),
-		logger:   logger,
+		logger:   l,
 	}
 }
 

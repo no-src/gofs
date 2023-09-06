@@ -2,8 +2,8 @@ package ignore
 
 import (
 	"github.com/no-src/gofs/fs"
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/util/stringutil"
-	"github.com/no-src/log"
 )
 
 // PathIgnore check the ignore rules of the specified file path
@@ -15,15 +15,18 @@ type PathIgnore interface {
 type pathIgnore struct {
 	ig                Ignore
 	ignoreDeletedPath bool
+	logger            *logger.Logger
 }
 
 // NewPathIgnore create an instance of the PathIgnore component
 // ignoreConf the config file path of the ignore component
 // ignoreDeletedPath whether ignore the deleted path
-func NewPathIgnore(ignoreConf string, ignoreDeletedPath bool) (PathIgnore, error) {
-	pi := &pathIgnore{}
+func NewPathIgnore(ignoreConf string, ignoreDeletedPath bool, logger *logger.Logger) (PathIgnore, error) {
+	pi := &pathIgnore{
+		logger: logger,
+	}
 	if !stringutil.IsEmpty(ignoreConf) {
-		ig, err := New(ignoreConf)
+		ig, err := New(ignoreConf, logger)
 		if err != nil {
 			return nil, err
 		}
@@ -46,13 +49,13 @@ func (pi *pathIgnore) MatchPath(path, caller, desc string) bool {
 	if pi.ignoreDeletedPath {
 		matched = fs.IsDeleted(path)
 		if matched {
-			log.Debug("[ignored] [%s] a deleted path is matched [%s] => [%s]", caller, desc, path)
+			pi.logger.Debug("[ignored] [%s] a deleted path is matched [%s] => [%s]", caller, desc, path)
 			return true
 		}
 	}
 	matched = pi.match(path)
 	if matched {
-		log.Debug("[ignored] [%s] an ignore path is matched [%s] => [%s]", caller, desc, path)
+		pi.logger.Debug("[ignored] [%s] an ignore path is matched [%s] => [%s]", caller, desc, path)
 	}
 	return matched
 }

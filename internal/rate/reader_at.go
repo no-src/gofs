@@ -1,6 +1,10 @@
 package rate
 
-import "io"
+import (
+	"io"
+
+	"github.com/no-src/gofs/logger"
+)
 
 type readerAt struct {
 	rate *rateReader
@@ -8,12 +12,12 @@ type readerAt struct {
 
 // NewReaderAt create a limit io.ReaderAt that wrap the real io.ReaderAt.
 // The bytesPerSecond must be greater than defaultBufSize of io.ReaderAt.
-func NewReaderAt(ra io.ReaderAt, bytesPerSecond int64) io.ReaderAt {
+func NewReaderAt(ra io.ReaderAt, bytesPerSecond int64, logger *logger.Logger) io.ReaderAt {
 	if bytesPerSecond <= 0 {
 		return ra
 	}
 	return &readerAt{
-		rate: newRateReader(nil, ra, bytesPerSecond),
+		rate: newRateReader(nil, ra, bytesPerSecond, logger),
 	}
 }
 

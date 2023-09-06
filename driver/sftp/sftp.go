@@ -256,7 +256,7 @@ func (sd *sftpDriver) Open(path string) (f http.File, err error) {
 		var sftpFile *sftp.File
 		sftpFile, err = sd.client.Open(path)
 		if err == nil {
-			f = rate.NewFile(newFile(sftpFile, sd, path), sd.maxTranRate)
+			f = rate.NewFile(newFile(sftpFile, sd, path), sd.maxTranRate, sd.logger)
 		}
 		return err
 	})
@@ -336,7 +336,7 @@ func (sd *sftpDriver) Write(src string, dest string) (err error) {
 		}
 		defer destFile.Close()
 
-		_, err = io.Copy(destFile, rate.NewReader(srcFile, sd.maxTranRate))
+		_, err = io.Copy(destFile, rate.NewReader(srcFile, sd.maxTranRate, sd.logger))
 		return err
 	})
 	return err

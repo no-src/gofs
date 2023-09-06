@@ -6,11 +6,16 @@ import (
 	"os"
 	"testing"
 	"time"
+
+	"github.com/no-src/gofs/logger"
 )
 
 func TestNewHTTPDir(t *testing.T) {
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
 	bytesPerSecond := KB
-	dir := NewHTTPDir("./", bytesPerSecond)
+	dir := NewHTTPDir("./", bytesPerSecond, logger)
 	f, err := dir.Open("fs_test.go")
 	if err != nil {
 		t.Errorf("open file error, %v", err)
@@ -40,6 +45,9 @@ func TestNewHTTPDir(t *testing.T) {
 }
 
 func TestNewHTTPDir_DisableOrEnableRate(t *testing.T) {
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
 	testCases := []struct {
 		name           string
 		bytesPerSecond int64
@@ -51,7 +59,7 @@ func TestNewHTTPDir_DisableOrEnableRate(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			d := NewHTTPDir("./", tc.bytesPerSecond)
+			d := NewHTTPDir("./", tc.bytesPerSecond, logger)
 			switch d.(type) {
 			case http.Dir:
 				if !tc.expectHTTPDir {

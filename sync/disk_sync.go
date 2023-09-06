@@ -262,7 +262,7 @@ func (s *diskSync) write(path, dest string) error {
 		return err
 	}
 
-	reader := bufio.NewReader(rate.NewReader(sourceFile, s.maxTranRate))
+	reader := bufio.NewReader(rate.NewReader(sourceFile, s.maxTranRate, s.logger))
 	writer, err := s.enc.NewWriter(destFile, path, destStat.Name())
 	if err != nil {
 		return err

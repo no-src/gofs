@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/no-src/gofs/conf"
+	"github.com/no-src/gofs/logger"
 )
 
 var (
@@ -27,18 +28,21 @@ var (
 )
 
 func TestEncrypt(t *testing.T) {
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
 	encryptOpt := NewOption(conf.Config{
 		Encrypt:       true,
 		EncryptPath:   encryptPath,
 		EncryptSecret: secret,
-	})
+	}, logger)
 
 	decryptOpt := NewOption(conf.Config{
 		Decrypt:       true,
 		DecryptPath:   decryptPath,
 		DecryptSecret: secret,
 		DecryptOut:    decryptOut,
-	})
+	}, logger)
 
 	err := testEncrypt(encryptOpt, decryptOpt, sourcePath, originPath, encryptFilePath)
 	if err != nil {
@@ -47,18 +51,21 @@ func TestEncrypt(t *testing.T) {
 }
 
 func TestEncrypt_Disabled(t *testing.T) {
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
 	encryptOpt := NewOption(conf.Config{
 		Encrypt:       true,
 		EncryptPath:   encryptPath,
 		EncryptSecret: secret,
-	})
+	}, logger)
 
 	decryptOpt := NewOption(conf.Config{
 		Decrypt:       true,
 		DecryptPath:   decryptPath,
 		DecryptSecret: secret,
 		DecryptOut:    decryptOut,
-	})
+	}, logger)
 
 	// disable encryption and decryption
 	encryptOpt.Encrypt = false
@@ -71,18 +78,21 @@ func TestEncrypt_Disabled(t *testing.T) {
 }
 
 func TestEncrypt_NotSubPath(t *testing.T) {
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
 	encryptOpt := NewOption(conf.Config{
 		Encrypt:       true,
 		EncryptPath:   "../",
 		EncryptSecret: secret,
-	})
+	}, logger)
 
 	decryptOpt := NewOption(conf.Config{
 		Decrypt:       true,
 		DecryptPath:   decryptPath,
 		DecryptSecret: secret,
 		DecryptOut:    decryptOut,
-	})
+	}, logger)
 
 	err := testEncrypt(encryptOpt, decryptOpt, sourcePath, originPath, encryptFilePath)
 	if !errors.Is(err, errNotSubDir) {
@@ -91,11 +101,14 @@ func TestEncrypt_NotSubPath(t *testing.T) {
 }
 
 func TestEncrypt_EmptyOption(t *testing.T) {
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
 	encryptOpt := NewOption(conf.Config{
 		Encrypt:       false,
 		EncryptPath:   encryptPath,
 		EncryptSecret: secret,
-	})
+	}, logger)
 
 	if len(encryptOpt.EncryptPath) != 0 || len(encryptOpt.EncryptSecret) != 0 {
 		t.Errorf("expect to get an empty option but not")
@@ -107,7 +120,7 @@ func TestEncrypt_EmptyOption(t *testing.T) {
 		DecryptPath:   decryptPath,
 		DecryptSecret: secret,
 		DecryptOut:    decryptOut,
-	})
+	}, logger)
 
 	if len(decryptOpt.EncryptPath) != 0 || len(decryptOpt.EncryptSecret) != 0 || len(decryptOpt.DecryptOut) != 0 {
 		t.Errorf("expect to get an empty option but not")
@@ -116,13 +129,16 @@ func TestEncrypt_EmptyOption(t *testing.T) {
 }
 
 func TestNewEncrypt_CheckKey(t *testing.T) {
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
 	for _, tc := range aesKeyTestCases {
 		t.Run(tc.key, func(t *testing.T) {
 			encryptOpt := NewOption(conf.Config{
 				Encrypt:       true,
 				EncryptPath:   encryptPath,
 				EncryptSecret: tc.key,
-			})
+			}, logger)
 
 			_, err := NewEncrypt(encryptOpt, sourcePath)
 			if tc.valid && err != nil {

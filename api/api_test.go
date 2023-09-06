@@ -12,8 +12,8 @@ import (
 	"github.com/no-src/gofs/api/task"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/conf"
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/report"
-	"github.com/no-src/log"
 )
 
 const (
@@ -55,7 +55,7 @@ func runApiServer(t *testing.T, user *auth.User) (apiserver.Server, error) {
 	if user != nil {
 		users = append(users, user)
 	}
-	srv, err := apiserver.New(apiServerHost, apiServerPort, true, certFile, keyFile, tokenSecret, users, report.NewReporter(), serverAddr, log.DefaultLogger(), taskConfFile)
+	srv, err := apiserver.New(apiServerHost, apiServerPort, true, certFile, keyFile, tokenSecret, users, report.NewReporter(), serverAddr, logger.NewTestLogger(), taskConfFile)
 	if err != nil {
 		return nil, err
 	}

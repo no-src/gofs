@@ -223,7 +223,7 @@ func (rs *remoteClientSync) write(path, dest string) error {
 		return err
 	}
 
-	reader := bufio.NewReader(rate.NewReader(resp.Body, rs.maxTranRate))
+	reader := bufio.NewReader(rate.NewReader(resp.Body, rs.maxTranRate, rs.logger))
 	writer := bufio.NewWriter(destFile)
 
 	// truncate first before write to file
@@ -353,7 +353,7 @@ func (rs *remoteClientSync) sync(serverAddr, path string) error {
 		return err
 	}
 	defer resp.Body.Close()
-	data, err := io.ReadAll(rate.NewReader(resp.Body, rs.maxTranRate))
+	data, err := io.ReadAll(rate.NewReader(resp.Body, rs.maxTranRate, rs.logger))
 	if err != nil {
 		return err
 	}

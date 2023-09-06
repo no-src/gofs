@@ -201,7 +201,7 @@ func (c *minIODriver) Open(path string) (f http.File, err error) {
 		var obj *minio.Object
 		obj, err = c.client.GetObject(c.ctx, c.bucketName, path, minio.GetObjectOptions{})
 		if err == nil {
-			f = rate.NewFile(newFile(obj, c.client, c.bucketName, path), c.maxTranRate)
+			f = rate.NewFile(newFile(obj, c.client, c.bucketName, path), c.maxTranRate, c.logger)
 		}
 		return err
 	})
@@ -346,5 +346,5 @@ func (c *minIODriver) fPutObject(ctx context.Context, bucketName, objectName, fi
 			opts.ContentType = "application/octet-stream"
 		}
 	}
-	return c.client.PutObject(ctx, bucketName, objectName, rate.NewReader(fileReader, c.maxTranRate), fileSize, opts)
+	return c.client.PutObject(ctx, bucketName, objectName, rate.NewReader(fileReader, c.maxTranRate, c.logger), fileSize, opts)
 }

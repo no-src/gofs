@@ -65,7 +65,7 @@ func NewSyncOption(config conf.Config, users []*auth.User, r retry.Retry, pi ign
 		TokenSecret:           config.TokenSecret,
 		Users:                 users,
 		Retry:                 r,
-		EncOpt:                encrypt.NewOption(config),
+		EncOpt:                encrypt.NewOption(config, logger),
 		PathIgnore:            pi,
 		Reporter:              reporter,
 		TaskConf:              config.TaskConf,

@@ -310,7 +310,7 @@ func (pcs *pushClientSync) sendFileChunk(path string, pd push.PushData) error {
 	// if loopCount == 1 means read an empty file maybe, send it
 	loopCount := -1
 	checkChunkHash := false
-	ra := rate.NewReaderAt(f, pcs.maxTranRate)
+	ra := rate.NewReaderAt(f, pcs.maxTranRate, pcs.logger)
 	for {
 		loopCount++
 		n, err := ra.ReadAt(chunk, offset)
