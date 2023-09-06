@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/no-src/gofs/auth"
@@ -24,10 +25,7 @@ import (
 	"github.com/no-src/gofs/server/httpfs"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/wait"
-	"github.com/no-src/log"
-	"github.com/no-src/log/formatter"
 	"github.com/no-src/log/level"
-	"github.com/no-src/log/option"
 )
 
 // Run running the gofs program
@@ -99,27 +97,27 @@ func runWithConfig(c conf.Config, result result.Result) {
 		result.InitDoneWithError(err)
 		return
 	}
-	defer log.Close()
+	defer logger.Close()
 
 	if switchDebug {
-		log.Info("to be able to see more details, force enable the log with debug level in dry run mode!")
+		logger.Info("to be able to see more details, force enable the log with debug level in dry run mode!")
 	}
 
 	var exit bool
 	// execute and exit
-	if exit, err = executeOnce(c); exit {
+	if exit, err = executeOnce(c, logger); exit {
 		result.InitDoneWithError(err)
 		return
 	}
 
-	if err = initDefaultValue(cp); err != nil {
-		log.Error(err, "init default value of config error")
+	if err = initDefaultValue(cp, logger); err != nil {
+		logger.Error(err, "init default value of config error")
 		result.InitDoneWithError(err)
 		return
 	}
 
 	// kill parent process
-	daemon := daemon.New(log.DefaultLogger())
+	daemon := daemon.New(logger)
 	if c.KillPPid {
 		daemon.KillPPid()
 	}
@@ -149,7 +147,7 @@ func runWithConfig(c conf.Config, result result.Result) {
 
 	userList, err := auth.ParseUsers(c.Users)
 	if err != nil {
-		log.Error(err, "parse users error => [%s]", c.Users)
+		logger.Error(err, "parse users error => [%s]", c.Users)
 		result.InitDoneWithError(err)
 		return
 	}
@@ -167,7 +165,7 @@ func runWithConfig(c conf.Config, result result.Result) {
 
 	reporter := report.NewReporter()
 	// start a file web server
-	if err = startWebServer(c, webLogger, userList, r, reporter); err != nil {
+	if err = startWebServer(c, webLogger, userList, r, reporter, logger); err != nil {
 		result.InitDoneWithError(err)
 		return
 	}
@@ -182,7 +180,7 @@ func runWithConfig(c conf.Config, result result.Result) {
 
 	pi, err := ignore.NewPathIgnore(c.IgnoreConf, c.IgnoreDeletedPath)
 	if err != nil {
-		log.Error(err, "init ignore config error")
+		logger.Error(err, "init ignore config error")
 		result.InitDoneWithError(err)
 		return
 	}
@@ -195,8 +193,8 @@ func runWithConfig(c conf.Config, result result.Result) {
 	}
 
 	// start monitor
-	log.Info("monitor is starting...")
-	defer log.Info("gofs exited")
+	logger.Info("monitor is starting...")
+	defer logger.Info("gofs exited")
 	ns, ss := signal.Notify(m.Shutdown)
 	go func() {
 		result.RegisterNotifyHandler(ns)
@@ -205,17 +203,17 @@ func runWithConfig(c conf.Config, result result.Result) {
 	w, err := m.Start()
 	result.InitDoneWithError(err)
 	if err != nil {
-		log.Error(err, "start to monitor failed")
+		logger.Error(err, "start to monitor failed")
 		return
 	}
-	err = log.ErrorIf(w.Wait(), "monitor running failed")
+	err = logger.ErrorIf(w.Wait(), "monitor running failed")
 	ss()
 }
 
 func parseConfigFile(cp *conf.Config) error {
 	if len(cp.Conf) > 0 {
 		if err := conf.Parse(cp.Conf, cp); err != nil {
-			log.Error(err, "parse config file error => [%s]", cp.Conf)
+			innerLogger.Error(err, "parse config file error => [%s]", cp.Conf)
 			return err
 		}
 	}
@@ -223,7 +221,7 @@ func parseConfigFile(cp *conf.Config) error {
 }
 
 // executeOnce execute the work and get ready to exit
-func executeOnce(c conf.Config) (exit bool, err error) {
+func executeOnce(c conf.Config, logger *logger.Logger) (exit bool, err error) {
 	// print version info
 	if c.PrintVersion {
 		version.PrintVersion("gofs")
@@ -238,17 +236,17 @@ func executeOnce(c conf.Config) (exit bool, err error) {
 
 	// clear the deleted files
 	if c.ClearDeletedPath {
-		return true, log.ErrorIf(fs.ClearDeletedFile(c.Dest.Path()), "clear the deleted files error")
+		return true, logger.ErrorIf(fs.ClearDeletedFile(c.Dest.Path()), "clear the deleted files error")
 	}
 
 	// decrypt the specified file or directory
 	if c.Decrypt {
 		dec, err := encrypt.NewDecrypt(encrypt.NewOption(c))
 		if err != nil {
-			log.Error(err, "init decrypt component error")
+			logger.Error(err, "init decrypt component error")
 			return true, err
 		}
-		return true, log.ErrorIf(dec.Decrypt(), "decrypt error")
+		return true, logger.ErrorIf(dec.Decrypt(), "decrypt error")
 	}
 
 	// calculate checksum
@@ -258,77 +256,20 @@ func executeOnce(c conf.Config) (exit bool, err error) {
 	return false, nil
 }
 
-// initDefaultLogger init the default logger
-func initDefaultLogger(c conf.Config) (*logger.Logger, error) {
-	// init log formatter
-	if c.LogFormat != formatter.TextFormatter {
-		log.Info("switch logger format to %s", c.LogFormat)
-	}
-	formatter.InitDefaultFormatter(c.LogFormat)
-	log.DefaultLogger().WithFormatter(formatter.New(c.LogFormat))
-
-	var loggers []log.Logger
-	loggers = append(loggers, log.NewConsoleLogger(level.Level(c.LogLevel)))
-	if c.EnableFileLogger {
-		filePrefix := "gofs_"
-		if c.IsDaemon {
-			filePrefix += "daemon_"
-		}
-		flogger, err := log.NewFileLoggerWithOption(option.NewFileLoggerOption(level.Level(c.LogLevel), c.LogDir, filePrefix, c.LogFlush, c.LogFlushInterval.Duration(), c.LogSplitDate))
-		if err != nil {
-			log.Error(err, "init file logger error")
-			return nil, err
-		}
-		loggers = append(loggers, flogger)
-	}
-
-	log.InitDefaultLoggerWithSample(log.NewMultiLogger(loggers...), c.LogSampleRate)
-	return logger.NewLogger(log.DefaultLogger(), log.DefaultSampleLogger()), nil
-}
-
-// initWebServerLogger init the web server logger
-func initWebServerLogger(c conf.Config) (*logger.Logger, error) {
-	var webLogger = log.NewConsoleLogger(level.Level(c.LogLevel))
-	if c.EnableFileLogger && c.EnableFileServer {
-		webFileLogger, err := log.NewFileLoggerWithOption(option.NewFileLoggerOption(level.Level(c.LogLevel), c.LogDir, "web_", c.LogFlush, c.LogFlushInterval.Duration(), c.LogSplitDate))
-		if err != nil {
-			log.Error(err, "init the web server file logger error")
-			return nil, err
-		}
-		webLogger = log.NewMultiLogger(webFileLogger, webLogger)
-	}
-	return logger.NewLogger(webLogger, log.NewDefaultSampleLogger(webLogger, c.LogSampleRate)), nil
-}
-
 // startWebServer start a file web server
-func startWebServer(c conf.Config, webLogger *logger.Logger, userList []*auth.User, r retry.Retry, reporter report.Reporter) error {
+func startWebServer(c conf.Config, webLogger *logger.Logger, userList []*auth.User, r retry.Retry, reporter report.Reporter, logger *logger.Logger) error {
 	if c.EnableFileServer {
 		waitInit := wait.NewWaitDone()
 		go func() {
 			httpfs.StartFileServer(server.NewServerOption(c, waitInit, userList, webLogger, r, reporter))
 		}()
-
-		return log.ErrorIf(waitInit.Wait(), "start the file server [%s] error", c.FileServerAddr)
+		return logger.ErrorIf(waitInit.Wait(), "start the file server [%s] error", c.FileServerAddr)
 	}
 	return nil
 }
 
-// initEventLogger init the event logger
-func initEventLogger(c conf.Config) (log.Logger, error) {
-	var eventLogger = log.NewEmptyLogger()
-	if c.EnableEventLog {
-		eventFileLogger, err := log.NewFileLoggerWithOption(option.NewFileLoggerOption(level.Level(c.LogLevel), c.LogDir, "event_", c.LogFlush, c.LogFlushInterval.Duration(), c.LogSplitDate))
-		if err != nil {
-			log.Error(err, "init the event file logger error")
-			return nil, err
-		}
-		eventLogger = eventFileLogger
-	}
-	return eventLogger, nil
-}
-
 // initMonitor init the monitor
-func initMonitor(c conf.Config, userList []*auth.User, eventLogger log.Logger, r retry.Retry, pi ignore.PathIgnore, reporter report.Reporter, logger *logger.Logger) (monitor.Monitor, error) {
+func initMonitor(c conf.Config, userList []*auth.User, eventWriter io.Writer, r retry.Retry, pi ignore.PathIgnore, reporter report.Reporter, logger *logger.Logger) (monitor.Monitor, error) {
 	// create syncer
 	syncer, err := sync.NewSync(sync.NewSyncOption(c, userList, r, pi, reporter, logger))
 	if err != nil {
@@ -337,7 +278,7 @@ func initMonitor(c conf.Config, userList []*auth.User, eventLogger log.Logger, r
 	}
 
 	// create monitor
-	m, err := monitor.NewMonitor(monitor.NewMonitorOption(c, syncer, r, userList, eventLogger, pi, reporter, logger), RunWithConfigContent)
+	m, err := monitor.NewMonitor(monitor.NewMonitorOption(c, syncer, r, userList, eventWriter, pi, reporter, logger), RunWithConfigContent)
 	if err != nil {
 		logger.Error(err, "create the instance of Monitor error")
 		return nil, err
@@ -352,10 +293,10 @@ func initMonitor(c conf.Config, userList []*auth.User, eventLogger log.Logger, r
 }
 
 // initDefaultValue init default value of config
-func initDefaultValue(cp *conf.Config) error {
+func initDefaultValue(cp *conf.Config, logger *logger.Logger) error {
 	initFileServer(cp)
 
-	if err := generateRandomUser(cp); err != nil {
+	if err := generateRandomUser(cp, logger); err != nil {
 		return err
 	}
 
@@ -379,7 +320,7 @@ func initFileServer(cp *conf.Config) {
 }
 
 // generateRandomUser check and generate some random user
-func generateRandomUser(cp *conf.Config) error {
+func generateRandomUser(cp *conf.Config, logger *logger.Logger) error {
 	if cp.RandomUserCount > 0 && cp.EnableFileServer {
 		userList, err := auth.RandomUser(cp.RandomUserCount, cp.RandomUserNameLen, cp.RandomPasswordLen, cp.RandomDefaultPerm)
 		if err != nil {
@@ -394,7 +335,7 @@ func generateRandomUser(cp *conf.Config) error {
 		} else {
 			cp.Users = randUserStr
 		}
-		log.Info("generate random users success => [%s]", cp.Users)
+		logger.Info("generate random users success => [%s]", cp.Users)
 	}
 	return nil
 }
