@@ -10,7 +10,7 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/minio/minio-go/v7 v7.0.63
 	github.com/no-src/fsctl v0.1.2
-	github.com/no-src/log v0.3.0
+	github.com/no-src/log v0.3.1
 	github.com/no-src/nscache v0.1.1
 	github.com/pkg/sftp v1.13.6
 	github.com/quic-go/quic-go v0.38.1
