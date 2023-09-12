@@ -25,6 +25,10 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
 
+      - name: Init Env
+        run: chmod +x ./scripts/init-env.sh && ./scripts/init-env.sh
+        if: matrix.os != 'windows-latest'
+
       - name: Build
         run: go build -v ./...
 
