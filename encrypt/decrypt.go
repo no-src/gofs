@@ -57,7 +57,7 @@ func (dec *Decrypt) Decrypt() error {
 		if d.IsDir() {
 			return nil
 		}
-		r, err := NewDecryptReader(path, dec.opt.DecryptSecret, dec.opt.Logger)
+		r, err := newDecryptReader(path, dec.opt.DecryptSecret, dec.opt.Logger)
 		if err != nil {
 			return err
 		}
