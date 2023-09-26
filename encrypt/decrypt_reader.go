@@ -77,8 +77,8 @@ func (r *decryptReader) WriteTo(path string) (err error) {
 	return err
 }
 
-// NewDecryptReader create a decryption reader
-func NewDecryptReader(path string, secret []byte, logger *logger.Logger) (*decryptReader, error) {
+// newDecryptReader create a decryption reader
+func newDecryptReader(path string, secret []byte, logger *logger.Logger) (*decryptReader, error) {
 	zrc, err := zip.OpenReader(path)
 	if err != nil {
 		return nil, err
