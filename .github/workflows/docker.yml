@@ -16,5 +16,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Test Docker
+      - name: Build Docker
         run: chmod +x ./scripts/build-docker.sh && ./scripts/build-docker.sh
+
+      - name: Test Print Version
+        run: chmod +x ./scripts/docker-example/run-gofs-docker-print-version.sh && ./scripts/docker-example/run-gofs-docker-print-version.sh
+
+      - name: Test Checksum
+        run: chmod +x ./scripts/docker-example/run-gofs-docker-checksum.sh && ./scripts/docker-example/run-gofs-docker-checksum.sh
