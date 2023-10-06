@@ -15,6 +15,12 @@ type driverPullClientSync struct {
 	driver driver.Driver
 }
 
+func newDriverPullClientSync(ds diskSync) driverPullClientSync {
+	return driverPullClientSync{
+		diskSync: ds,
+	}
+}
+
 func (s *driverPullClientSync) start() error {
 	return s.driver.Connect()
 }

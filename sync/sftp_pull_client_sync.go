@@ -29,10 +29,8 @@ func NewSftpPullClientSync(opt Option) (Sync, error) {
 	}
 
 	s := &sftpPullClientSync{
-		driverPullClientSync: driverPullClientSync{
-			diskSync: *ds,
-		},
-		remoteAddr: source.Addr(),
+		driverPullClientSync: newDriverPullClientSync(*ds),
+		remoteAddr:           source.Addr(),
 	}
 	s.driver = sftp.NewSFTPDriver(s.remoteAddr, source.SSHConfig(), true, r, maxTranRate, logger)
 

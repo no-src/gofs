@@ -38,14 +38,11 @@ func NewMinIOPushClientSync(opt Option) (Sync, error) {
 	}
 
 	s := &minIOPushClientSync{
-		driverPushClientSync: driverPushClientSync{
-			diskSync: *ds,
-			basePath: "",
-		},
-		endpoint:    dest.Addr(),
-		bucketName:  dest.RemotePath(),
-		secure:      dest.Secure(),
-		currentUser: users[0],
+		driverPushClientSync: newDriverPushClientSync(*ds, ""),
+		endpoint:             dest.Addr(),
+		bucketName:           dest.RemotePath(),
+		secure:               dest.Secure(),
+		currentUser:          users[0],
 	}
 
 	s.driver = minio.NewMinIODriver(s.endpoint, s.bucketName, s.secure, s.currentUser.UserName(), s.currentUser.Password(), true, r, maxTranRate, logger)

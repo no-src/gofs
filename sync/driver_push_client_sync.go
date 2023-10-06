@@ -20,6 +20,13 @@ type driverPushClientSync struct {
 	files    sync.Map
 }
 
+func newDriverPushClientSync(ds diskSync, basePath string) driverPushClientSync {
+	return driverPushClientSync{
+		diskSync: ds,
+		basePath: basePath,
+	}
+}
+
 func (s *driverPushClientSync) start() error {
 	if err := s.initFileInfo(); err != nil {
 		return err
