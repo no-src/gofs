@@ -8,7 +8,7 @@ import (
 )
 
 // VERSION the current program version info
-const VERSION = "v0.8.0"
+const VERSION = "v0.8.1"
 
 // Commit the commit file records the last commit hash value, used by release
 //

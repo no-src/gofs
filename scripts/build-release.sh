@@ -48,52 +48,35 @@ function build_release {
 
 init_version
 
-############################## linux-amd64-release ##############################
-
-# set go env
+# linux amd64 release
 export GOOS=linux
 export GOARCH=amd64
-
 build_release
 
-############################## linux-amd64-release ##############################
-
-############################## linux-arm64-release ##############################
-
+# linux arm64 release
 export GOOS=linux
 export GOARCH=arm64
-
 build_release
 
-############################## linux-arm64-release ##############################
-
-############################# windows-release #############################
-
-# set go env
+# windows amd64 release
 export GOOS=windows
 export GOARCH=amd64
-
 build_release
 
-############################# windows-release #############################
+# windows arm64 release
+export GOOS=windows
+export GOARCH=arm64
+build_release
 
-############################## macOS-amd64-release ##############################
-
+# macOS amd64 release
 export GOOS=darwin
 export GOARCH=amd64
-
 build_release
 
-############################## macOS-amd64-release ##############################
-
-############################## macOS-arm64-release ##############################
-
+# macOS arm64 release
 export GOOS=darwin
 export GOARCH=arm64
-
 build_release
-
-############################## macOS-arm64-release ##############################
 
 # reset commit file
 echo -e "\c" >internal/version/commit
