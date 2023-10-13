@@ -662,3 +662,15 @@ $ gofs -about
 
 [gofs-webui](https://github.com/no-src/gofs-webui)是`gofs`的Web用户界面工具，它允许你通过Web用户界面来生成`gofs`
 的配置文件，让使用`gofs`变得更加简单
+
+## 贡献
+
+利用云开发环境快速参与贡献
+
+### Github Codespaces
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/no-src/gofs)
+
+### Gitpod
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/no-src/gofs)
