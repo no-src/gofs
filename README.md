@@ -692,3 +692,15 @@ $ gofs -about
 
 The [gofs-webui](https://github.com/no-src/gofs-webui) is a web UI tool for `gofs`, and it allows you to generate the
 config file of `gofs` through the web UI, making the use of gofs easier.
+
+## Contributing
+
+Quick to contribute using cloud development environments.
+
+### Github Codespaces
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/no-src/gofs)
+
+### Gitpod
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/no-src/gofs)
