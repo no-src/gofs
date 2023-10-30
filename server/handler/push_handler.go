@@ -34,7 +34,7 @@ type pushHandler struct {
 func NewPushHandlerFunc(logger *logger.Logger, source core.VFS, enableLogicallyDelete bool, hash hashutil.Hash) gin.HandlerFunc {
 	return (&pushHandler{
 		logger:                logger,
-		storagePath:           source.Path(),
+		storagePath:           source.Path().Base(),
 		enableLogicallyDelete: enableLogicallyDelete,
 		hash:                  hash,
 	}).Handle

@@ -29,7 +29,7 @@ func NewSftpPushClientSync(opt Option) (Sync, error) {
 	}
 
 	s := &sftpPushClientSync{
-		driverPushClientSync: newDriverPushClientSync(*ds, dest.RemotePath()),
+		driverPushClientSync: newDriverPushClientSync(*ds, dest.RemotePath().Base()),
 		remoteAddr:           dest.Addr(),
 	}
 

@@ -86,12 +86,12 @@ func (m *fsNotifyMonitor) Start() (wait.Wait, error) {
 	// execute -sync_once flag
 	if m.syncOnce {
 		wd.Done()
-		return wd, m.syncer.SyncOnce(source.Path())
+		return wd, m.syncer.SyncOnce(source.Path().Base())
 	}
 
 	// execute -sync_cron flag
 	if err := m.startCron(func() error {
-		return m.syncer.SyncOnce(source.Path())
+		return m.syncer.SyncOnce(source.Path().Base())
 	}); err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (m *fsNotifyMonitor) Start() (wait.Wait, error) {
 	if !source.IsDisk() && !source.Is(core.RemoteDisk) {
 		return nil, errors.New("the source must be a disk or remote disk")
 	}
-	if err := m.monitor(source.Path()); err != nil {
+	if err := m.monitor(source.Path().Base()); err != nil {
 		return nil, err
 	}
 

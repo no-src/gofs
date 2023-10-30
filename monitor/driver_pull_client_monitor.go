@@ -50,12 +50,8 @@ func (m *driverPullClientMonitor) waitShutdown(st *atomic.Bool, wd wait.Done) {
 
 // sync try to sync all the files once
 func (m *driverPullClientMonitor) sync() (err error) {
-	// source.Path() and source.RemotePath() are equivalent here, and source.RemotePath() has higher priority
 	source := m.syncer.Source()
-	path := source.RemotePath()
-	if len(path) == 0 {
-		path = source.Path()
-	}
+	path := source.RemotePath().Base()
 	return m.syncer.SyncOnce(path)
 }
 

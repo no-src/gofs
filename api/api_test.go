@@ -131,10 +131,10 @@ func runApiClient(user *auth.User) (err error) {
 		if err != nil {
 			return err
 		}
-		if i == 0 && (!c.SyncOnce || c.Source.Path() != "source" || c.Dest.Path() != "dest") {
+		if i == 0 && (!c.SyncOnce || c.Source.Path().Base() != "source" || c.Dest.Path().Base() != "dest") {
 			return errors.New("unexpect arguments")
 		}
-		if i == 1 && (c.SyncOnce || c.Source.Path() != "source" || c.Dest.Path() != "dest") {
+		if i == 1 && (c.SyncOnce || c.Source.Path().Base() != "source" || c.Dest.Path().Base() != "dest") {
 			return errors.New("unexpect arguments")
 		}
 	}
