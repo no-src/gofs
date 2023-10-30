@@ -31,32 +31,32 @@ actions:
   - sleep: 10s
   - is-equal:
     source: ./minio-data-mount/partial-pull-1/integration_minio_test.go.pull.bak1
-    dest: ./minio-pull-client-partial/dest/integration_minio_test.go.pull.bak1
+    dest: ./minio-pull-client-partial/dest/partial-pull-1/integration_minio_test.go.pull.bak1
     expect: true
     must-non-empty: true
   - is-exist:
     source: ./minio-data-mount/partial-pull-2/integration_minio_test.go.pull.bak1
     expect: false
   - is-exist:
-    source: ./minio-pull-client-partial/partial-pull-1/dest/integration_minio_test.go.pull.bak2
+    source: ./minio-pull-client-partial/dest/partial-pull-1/integration_minio_test.go.pull.bak2
     expect: false
   - is-exist:
-    source: ./minio-pull-client-partial/partial-pull-1/dest/hello.pull
+    source: ./minio-pull-client-partial/dest/partial-pull-1/hello.pull
     expect: true
   - is-exist:
-    source: ./minio-pull-client-partial/partial-pull-2/dest/hello.pull
+    source: ./minio-pull-client-partial/dest/partial-pull-2/hello.pull
     expect: false
   - is-empty:
-    source: ./minio-pull-client-partial/partial-pull-1/dest/hello.pull
+    source: ./minio-pull-client-partial/dest/partial-pull-1/hello.pull
     expect: true
   - is-empty:
-    source: ./minio-pull-client-partial/partial-pull-2/dest/hello.pull
+    source: ./minio-pull-client-partial/dest/partial-pull-2/hello.pull
     expect: false
   - is-dir:
-    source: ./minio-pull-client-partial/partial-pull-1/dest/work_pull
+    source: ./minio-pull-client-partial/dest/partial-pull-1/work_pull
     expect: true
   - is-dir:
-    source: ./minio-pull-client-partial/partial-pull-2/dest/work_pull
+    source: ./minio-pull-client-partial/dest/partial-pull-2/work_pull
     expect: false
 clear:
   - rm:
