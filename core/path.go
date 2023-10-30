@@ -1,6 +1,9 @@
 package core
 
-import "strings"
+import (
+	"path/filepath"
+	"strings"
+)
 
 type Path struct {
 	origin string
@@ -34,6 +37,10 @@ func (p Path) String() string {
 }
 
 func (p *Path) parse() {
+	// maybe the remote os is different from the current os, force convert remote path to slash
+	if p.fsType != MinIO {
+		p.origin = filepath.ToSlash(filepath.Clean(p.origin))
+	}
 	p.base = p.origin
 
 	if p.fsType == MinIO {

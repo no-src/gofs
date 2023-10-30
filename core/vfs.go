@@ -187,9 +187,8 @@ func parse(path string, fsType VFSType) (scheme string, host string, port int, l
 		}
 	}
 
-	localPath = newPath(filepath.Clean(parseUrl.Query().Get(paramPath)), fsType)
-	// maybe the remote os is different from the current os, force convert remote path to slash
-	remotePath = newPath(filepath.ToSlash(filepath.Clean(parseUrl.Query().Get(paramRemotePath))), fsType)
+	localPath = newPath(parseUrl.Query().Get(paramPath), Disk)
+	remotePath = newPath(parseUrl.Query().Get(paramRemotePath), fsType)
 
 	mode := parseUrl.Query().Get(paramMode)
 	if strings.ToLower(mode) == valueModeServer {
