@@ -39,12 +39,9 @@ func NewSftpPullClientSync(opt Option) (Sync, error) {
 		return nil, err
 	}
 
-	// reset the sourceAbsPath because the source.Path() or source.RemotePath() is absolute representation of path and the source.Path() or source.RemotePath() may be cross-platform
-	// source.Path() and source.RemotePath() are equivalent here, and source.RemotePath() has higher priority
+	// reset the sourceAbsPath because the source.RemotePath() is absolute representation of path and the source.RemotePath() may be cross-platform
 	s.diskSync.sourceAbsPath = source.RemotePath().Base()
-	if len(s.diskSync.sourceAbsPath) == 0 {
-		s.diskSync.sourceAbsPath = source.Path().Base()
-	}
+
 	// reset some functions for sftp
 	s.diskSync.isDirFn = s.IsDir
 	s.diskSync.statFn = s.driver.Stat
