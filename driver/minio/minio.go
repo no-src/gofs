@@ -160,6 +160,7 @@ func (c *minIODriver) Symlink(oldname, newname string) (err error) {
 }
 
 func (c *minIODriver) Remove(path string) (err error) {
+	path = c.trimPath(path)
 	return c.reconnectIfLost(func() error {
 		infoChan := c.client.ListObjects(c.ctx, c.bucketName, minio.ListObjectsOptions{
 			Recursive: true,
@@ -286,7 +287,7 @@ func (c *minIODriver) GetFileTime(path string) (cTime time.Time, aTime time.Time
 
 func (c *minIODriver) WalkDir(root string, fn fs.WalkDirFunc) error {
 	return c.reconnectIfLost(func() error {
-		infoChan := c.client.ListObjects(c.ctx, c.bucketName, minio.ListObjectsOptions{Recursive: true, Prefix: strings.TrimPrefix(root, "/")})
+		infoChan := c.client.ListObjects(c.ctx, c.bucketName, minio.ListObjectsOptions{Recursive: true, Prefix: c.trimPath(root)})
 		for info := range infoChan {
 			if err := fn(info.Key, fs.FileInfoToDirEntry(newMinIOFileInfo(info)), info.Err); err != nil {
 				return err
@@ -347,4 +348,8 @@ func (c *minIODriver) fPutObject(ctx context.Context, bucketName, objectName, fi
 		}
 	}
 	return c.client.PutObject(ctx, bucketName, objectName, rate.NewReader(fileReader, c.maxTranRate, c.logger), fileSize, opts)
+}
+
+func (c *minIODriver) trimPath(path string) string {
+	return strings.TrimPrefix(path, "/")
 }
