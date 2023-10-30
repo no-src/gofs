@@ -40,7 +40,7 @@ func NewMinIOPushClientSync(opt Option) (Sync, error) {
 	s := &minIOPushClientSync{
 		driverPushClientSync: newDriverPushClientSync(*ds, ""),
 		endpoint:             dest.Addr(),
-		bucketName:           dest.RemotePath(),
+		bucketName:           dest.RemotePath().Bucket(),
 		secure:               dest.Secure(),
 		currentUser:          users[0],
 	}

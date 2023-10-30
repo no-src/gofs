@@ -1,0 +1,5 @@
+source: minio://127.0.0.1:9000?secure=false&remote_path=minio-bucket:/partial-pull-1
+dest: ./minio-pull-client-partial/dest
+log_dir: ./minio-pull-client-partial-logs/
+users: minio_user|minio_pwd
+sync_cron: "*/5 * * * * *"

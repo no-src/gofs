@@ -151,7 +151,7 @@ func initRoute(engine *gin.Engine, opt server.Option, logger *logger.Logger) err
 	}
 
 	if source.IsDisk() || source.Is(core.RemoteDisk) {
-		rootGroup.StaticFS(server.SourceRoutePrefix, rate.NewHTTPDir(source.Path(), opt.MaxTranRate, logger))
+		rootGroup.StaticFS(server.SourceRoutePrefix, rate.NewHTTPDir(source.Path().Base(), opt.MaxTranRate, logger))
 		enableFileApi = true
 
 		if opt.EnablePushServer {
@@ -160,10 +160,10 @@ func initRoute(engine *gin.Engine, opt server.Option, logger *logger.Logger) err
 	}
 
 	if dest.IsDisk() {
-		rootGroup.StaticFS(server.DestRoutePrefix, rate.NewHTTPDir(dest.Path(), opt.MaxTranRate, logger))
+		rootGroup.StaticFS(server.DestRoutePrefix, rate.NewHTTPDir(dest.Path().Base(), opt.MaxTranRate, logger))
 		enableFileApi = true
 	} else if dest.Is(core.SFTP) {
-		sftpDir, err := sftp.NewDir(dest.RemotePath(), dest.Addr(), dest.SSHConfig(), opt.Retry, opt.MaxTranRate, logger)
+		sftpDir, err := sftp.NewDir(dest.RemotePath().Base(), dest.Addr(), dest.SSHConfig(), opt.Retry, opt.MaxTranRate, logger)
 		if err != nil {
 			return err
 		}
@@ -174,7 +174,7 @@ func initRoute(engine *gin.Engine, opt server.Option, logger *logger.Logger) err
 			return errors.New("a user is required for MinIO server")
 		}
 		user := opt.Users[0]
-		minioDir, err := minio.NewDir(dest.RemotePath(), dest.Addr(), dest.Secure(), user.UserName(), user.Password(), opt.Retry, opt.MaxTranRate, logger)
+		minioDir, err := minio.NewDir(dest.RemotePath().Bucket(), dest.Addr(), dest.Secure(), user.UserName(), user.Password(), opt.Retry, opt.MaxTranRate, logger)
 		if err != nil {
 			return err
 		}
@@ -183,7 +183,7 @@ func initRoute(engine *gin.Engine, opt server.Option, logger *logger.Logger) err
 	}
 
 	if enableFileApi {
-		rootGroup.GET(server.QueryRoute, handler.NewFileApiHandlerFunc(logger, http.Dir(source.Path()), opt.ChunkSize, opt.CheckpointCount, hash))
+		rootGroup.GET(server.QueryRoute, handler.NewFileApiHandlerFunc(logger, http.Dir(source.Path().Base()), opt.ChunkSize, opt.CheckpointCount, hash))
 	}
 	return nil
 }

@@ -286,7 +286,7 @@ func (c *minIODriver) GetFileTime(path string) (cTime time.Time, aTime time.Time
 
 func (c *minIODriver) WalkDir(root string, fn fs.WalkDirFunc) error {
 	return c.reconnectIfLost(func() error {
-		infoChan := c.client.ListObjects(c.ctx, c.bucketName, minio.ListObjectsOptions{Recursive: true})
+		infoChan := c.client.ListObjects(c.ctx, c.bucketName, minio.ListObjectsOptions{Recursive: true, Prefix: root})
 		for info := range infoChan {
 			if err := fn(info.Key, fs.FileInfoToDirEntry(newMinIOFileInfo(info)), info.Err); err != nil {
 				return err

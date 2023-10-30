@@ -237,7 +237,7 @@ func executeOnce(c conf.Config, logger *logger.Logger) (exit bool, err error) {
 
 	// clear the deleted files
 	if c.ClearDeletedPath {
-		return true, logger.ErrorIf(fs.ClearDeletedFile(c.Dest.Path(), logger), "clear the deleted files error")
+		return true, logger.ErrorIf(fs.ClearDeletedFile(c.Dest.Path().Base(), logger), "clear the deleted files error")
 	}
 
 	// decrypt the specified file or directory
@@ -252,7 +252,7 @@ func executeOnce(c conf.Config, logger *logger.Logger) (exit bool, err error) {
 
 	// calculate checksum
 	if c.Checksum {
-		return true, checksum.PrintChecksum(c.Source.Path(), c.ChunkSize, c.CheckpointCount, c.ChecksumAlgorithm, logger)
+		return true, checksum.PrintChecksum(c.Source.Path().Base(), c.ChunkSize, c.CheckpointCount, c.ChecksumAlgorithm, logger)
 	}
 	return false, nil
 }

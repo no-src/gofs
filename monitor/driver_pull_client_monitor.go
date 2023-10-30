@@ -52,9 +52,9 @@ func (m *driverPullClientMonitor) waitShutdown(st *atomic.Bool, wd wait.Done) {
 func (m *driverPullClientMonitor) sync() (err error) {
 	// source.Path() and source.RemotePath() are equivalent here, and source.RemotePath() has higher priority
 	source := m.syncer.Source()
-	path := source.RemotePath()
+	path := source.RemotePath().Base()
 	if len(path) == 0 {
-		path = source.Path()
+		path = source.Path().Base()
 	}
 	return m.syncer.SyncOnce(path)
 }
