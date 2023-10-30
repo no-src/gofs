@@ -26,6 +26,10 @@ func TestNewPath(t *testing.T) {
 			}
 			if p.Base() != tc.expectBasePath {
 				t.Errorf("test new path error, expect base path:%s, actual:%s", tc.expectBasePath, p.Base())
+				return
+			}
+			if p.String() != tc.path {
+				t.Errorf("test new path error, expect path:%s, actual:%s", tc.path, p.String())
 			}
 		})
 	}
