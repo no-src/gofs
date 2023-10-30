@@ -52,7 +52,7 @@ actions:
   - is-dir:
     source: ./minio-pull-client-partial/dest/partial-pull-1/work_pull
     expect: true
-  - is-exit:
+  - is-exist:
     source: ./minio-pull-client-partial/dest/partial-pull-2/work_pull
     expect: false
 clear:
