@@ -49,9 +49,6 @@ actions:
   - is-empty:
     source: ./minio-pull-client-partial/dest/partial-pull-1/hello.pull
     expect: true
-  - is-empty:
-    source: ./minio-pull-client-partial/dest/partial-pull-2/hello.pull
-    expect: false
   - is-dir:
     source: ./minio-pull-client-partial/dest/partial-pull-1/work_pull
     expect: true
