@@ -35,7 +35,7 @@ actions:
     expect: true
     must-non-empty: true
   - is-exist:
-    source: ./minio-data-mount/partial-pull-2/integration_minio_test.go.pull.bak1
+    source: ./minio-pull-client-partial/dest/partial-pull-2/integration_minio_test.go.pull.bak1
     expect: false
   - is-exist:
     source: ./minio-pull-client-partial/dest/partial-pull-1/integration_minio_test.go.pull.bak2
