@@ -18,6 +18,8 @@ func NewSftpPushClientSync(opt Option) (Sync, error) {
 	maxTranRate := opt.MaxTranRate
 	r := opt.Retry
 	logger := opt.Logger
+	syncOnce := opt.SyncOnce
+	syncCron := opt.SyncCron
 
 	if chunkSize <= 0 {
 		return nil, errInvalidChunkSize
@@ -35,7 +37,8 @@ func NewSftpPushClientSync(opt Option) (Sync, error) {
 
 	s.driver = sftp.NewSFTPDriver(s.remoteAddr, dest.SSHConfig(), true, r, maxTranRate, logger)
 
-	err = s.start()
+	isSync := syncOnce || len(syncCron) > 0
+	err = s.start(isSync)
 	if err != nil {
 		return nil, err
 	}

@@ -39,6 +39,8 @@ type Option struct {
 	Reporter              report.Reporter
 	TaskConf              string
 	Logger                *logger.Logger
+	SyncOnce              bool
+	SyncCron              string
 }
 
 // NewSyncOption create an instance of the Option, store all the sync component options
@@ -70,6 +72,8 @@ func NewSyncOption(config conf.Config, users []*auth.User, r retry.Retry, pi ign
 		Reporter:              reporter,
 		TaskConf:              config.TaskConf,
 		Logger:                logger,
+		SyncOnce:              config.SyncOnce,
+		SyncCron:              config.SyncCron,
 	}
 	return opt
 }
