@@ -27,9 +27,11 @@ func newDriverPushClientSync(ds diskSync, basePath string) driverPushClientSync 
 	}
 }
 
-func (s *driverPushClientSync) start() error {
-	if err := s.initFileInfo(); err != nil {
-		return err
+func (s *driverPushClientSync) start(isSync bool) error {
+	if !isSync {
+		if err := s.initFileInfo(); err != nil {
+			return err
+		}
 	}
 	return s.driver.Connect()
 }
