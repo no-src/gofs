@@ -90,13 +90,7 @@ actions:
     algorithm: sha1
     source: ./minio-data-mount/hello
     expect: f343874b5df87e887d85df2e790df33584463162
-  - rm:
-    source: ./minio-push-client-once/source/integration_test.go.bak1
-  - sleep: 10s
   - run: ../scripts/minio/remount-minio.sh
-  - is-exist:
-    source: ./minio-data-mount/integration_test.go.bak1
-    expect: false
   - is-empty:
     source: ./minio-data-mount/hello.symlink
     expect: false

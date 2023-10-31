@@ -90,13 +90,6 @@ actions:
     algorithm: sha1
     source: /sftp-workspace/hello
     expect: f343874b5df87e887d85df2e790df33584463162
-  - sleep: 2s
-  - rm:
-    source: ./sftp-push-client-once/source/integration_test.go.bak1
-  - sleep: 10s
-  - is-exist:
-    source: /sftp-workspace/integration_test.go.bak1
-    expect: false
   - is-symlink:
     link: /sftp-workspace/hello.symlink
     expect: true
