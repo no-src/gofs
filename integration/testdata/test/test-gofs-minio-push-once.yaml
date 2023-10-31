@@ -90,7 +90,6 @@ actions:
     algorithm: sha1
     source: ./minio-data-mount/hello
     expect: f343874b5df87e887d85df2e790df33584463162
-  - run: ../scripts/minio/remount-minio.sh
   - is-empty:
     source: ./minio-data-mount/hello.symlink
     expect: false
