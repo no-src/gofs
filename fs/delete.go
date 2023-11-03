@@ -11,7 +11,11 @@ import (
 	"github.com/no-src/gofs/logger"
 )
 
-var deletedPathRegexp *regexp.Regexp
+var (
+	isNotExist = os.IsNotExist
+
+	deletedPathRegexp *regexp.Regexp
+)
 
 // LogicallyDelete delete the path logically
 func LogicallyDelete(path string) error {

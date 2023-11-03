@@ -5,7 +5,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/no-src/gofs/util/jsonutil"
+	"github.com/no-src/nsgo/jsonutil"
 )
 
 func TestTopList_WithCapZero(t *testing.T) {

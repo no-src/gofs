@@ -13,7 +13,8 @@ import (
 	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/internal/rate"
 	"github.com/no-src/gofs/progress"
-	"github.com/no-src/gofs/util/hashutil"
+	"github.com/no-src/nsgo/fsutil"
+	"github.com/no-src/nsgo/hashutil"
 )
 
 type diskSync struct {
@@ -33,9 +34,9 @@ type diskSync struct {
 	copyLink              bool
 	copyUnsafeLink        bool
 
-	isDirFn       nsfs.IsDirFunc
-	statFn        nsfs.StatFunc
-	getFileTimeFn nsfs.GetFileTimeFunc
+	isDirFn       fsutil.IsDirFunc
+	statFn        fsutil.StatFunc
+	getFileTimeFn fsutil.GetFileTimeFunc
 }
 
 // NewDiskSync create a diskSync instance
@@ -104,9 +105,9 @@ func newDiskSync(opt Option) (s *diskSync, err error) {
 		pi:                    pi,
 		copyLink:              copyLink,
 		copyUnsafeLink:        copyUnsafeLink,
-		isDirFn:               nsfs.IsDir,
+		isDirFn:               fsutil.IsDir,
 		statFn:                os.Stat,
-		getFileTimeFn:         nsfs.GetFileTime,
+		getFileTimeFn:         fsutil.GetFileTime,
 	}
 	return s, nil
 }
@@ -118,7 +119,7 @@ func (s *diskSync) Create(path string) error {
 		return err
 	}
 
-	exist, err := nsfs.FileExist(dest)
+	exist, err := fsutil.FileExist(dest)
 	if err != nil {
 		return err
 	}
@@ -159,7 +160,7 @@ func (s *diskSync) createFile(dest string) error {
 	if err != nil {
 		return err
 	}
-	f, err := nsfs.CreateFile(dest)
+	f, err := fsutil.CreateFile(dest)
 	if err != nil {
 		return err
 	}
@@ -180,7 +181,7 @@ func (s *diskSync) symlink(oldname, newname string) error {
 	if err := os.RemoveAll(newname); err != nil {
 		return err
 	}
-	return nsfs.Symlink(oldname, newname)
+	return fsutil.Symlink(oldname, newname)
 }
 
 // Write sync the source file to the dest
@@ -246,7 +247,7 @@ func (s *diskSync) write(path, dest string) error {
 		}
 	}
 
-	destFile, err := nsfs.OpenRWFile(dest)
+	destFile, err := fsutil.OpenRWFile(dest)
 	if err != nil {
 		return err
 	}
@@ -361,14 +362,14 @@ func (s *diskSync) SyncOnce(path string) error {
 		if s.pi.MatchPath(currentPath, "disk sync", "sync once") {
 			return nil
 		}
-		return s.syncWalk(currentPath, d, s, nsfs.Readlink)
+		return s.syncWalk(currentPath, d, s, fsutil.Readlink)
 	})
 }
 
 func (s *diskSync) syncWalk(currentPath string, d fs.DirEntry, sync Sync, readLink func(path string) (string, error)) (err error) {
 	if d.IsDir() {
 		err = sync.Create(currentPath)
-	} else if nsfs.IsSymlinkMode(d.Type()) {
+	} else if fsutil.IsSymlinkMode(d.Type()) {
 		err = s.syncSymlink(currentPath, sync, readLink)
 	} else {
 		err = sync.Create(currentPath)
@@ -421,12 +422,12 @@ func (s *diskSync) deepCopy(source, dest string) error {
 	}
 
 	// sync symlink
-	if nsfs.IsSymlinkMode(sourceStat.Mode()) {
+	if fsutil.IsSymlinkMode(sourceStat.Mode()) {
 		if s.pi.MatchPath(source, "local disk deep copy", "the symlink") {
 			return nil
 		}
 		originalSource := source
-		realPath, err := nsfs.Readlink(source)
+		realPath, err := fsutil.Readlink(source)
 		if err != nil {
 			return err
 		}
@@ -442,7 +443,7 @@ func (s *diskSync) deepCopy(source, dest string) error {
 		if err != nil {
 			return err
 		}
-		isSym, err := nsfs.IsSymlink(source)
+		isSym, err := fsutil.IsSymlink(source)
 		if err != nil {
 			return err
 		}
@@ -457,7 +458,7 @@ func (s *diskSync) deepCopy(source, dest string) error {
 		// check unsafe link
 		if !s.copyUnsafeLink {
 			// ignore unsafe file
-			isSub, err := nsfs.IsSub(s.sourceAbsPath, source)
+			isSub, err := fsutil.IsSub(s.sourceAbsPath, source)
 			if err != nil {
 				return err
 			}

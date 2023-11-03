@@ -16,13 +16,13 @@ import (
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/contract/push"
-	nsfs "github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/internal/rate"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/client"
-	"github.com/no-src/gofs/util/hashutil"
-	"github.com/no-src/gofs/util/httputil"
-	"github.com/no-src/gofs/util/jsonutil"
+	"github.com/no-src/nsgo/fsutil"
+	"github.com/no-src/nsgo/hashutil"
+	"github.com/no-src/nsgo/httputil"
+	"github.com/no-src/nsgo/jsonutil"
 )
 
 var (
@@ -177,7 +177,7 @@ func (pcs *pushClientSync) SyncOnce(path string) error {
 		if pcs.pi.MatchPath(currentPath, "push client sync", "sync once") {
 			return nil
 		}
-		return pcs.syncWalk(currentPath, d, pcs, nsfs.Readlink)
+		return pcs.syncWalk(currentPath, d, pcs, fsutil.Readlink)
 	})
 }
 
@@ -207,7 +207,7 @@ func (pcs *pushClientSync) send(act action.Action, path string) (err error) {
 
 	if pcs.needGetFileTime(act) {
 		var timeErr error
-		cTime, aTime, mTime, timeErr = nsfs.GetFileTime(path)
+		cTime, aTime, mTime, timeErr = fsutil.GetFileTime(path)
 		if timeErr != nil {
 			return timeErr
 		}
@@ -241,7 +241,7 @@ func (pcs *pushClientSync) send(act action.Action, path string) (err error) {
 }
 
 func (pcs *pushClientSync) sendSymlink(oldname, newname string) (err error) {
-	cTime, aTime, mTime, timeErr := nsfs.GetFileTime(newname)
+	cTime, aTime, mTime, timeErr := fsutil.GetFileTime(newname)
 	if timeErr != nil {
 		return timeErr
 	}
@@ -314,10 +314,10 @@ func (pcs *pushClientSync) sendFileChunk(path string, pd push.PushData) error {
 	for {
 		loopCount++
 		n, err := ra.ReadAt(chunk, offset)
-		if nsfs.IsNonEOF(err) {
+		if fsutil.IsNonEOF(err) {
 			return err
 		}
-		if nsfs.IsEOF(err) {
+		if fsutil.IsEOF(err) {
 			isEnd = true
 		}
 		chunkSize := n

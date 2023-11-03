@@ -3,7 +3,7 @@ package ignore
 import (
 	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/logger"
-	"github.com/no-src/gofs/util/stringutil"
+	"github.com/no-src/nsgo/stringutil"
 )
 
 // PathIgnore check the ignore rules of the specified file path

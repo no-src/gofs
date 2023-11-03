@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/no-src/gofs/logger"
-	"github.com/no-src/gofs/util/osutil"
 	"github.com/no-src/gofs/wait"
+	"github.com/no-src/nsgo/osutil"
 )
 
 // SubprocessTag mark the current process is subprocess

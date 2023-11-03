@@ -3,4 +3,4 @@ dest: rs://127.0.0.1:8105?local_sync_disabled=false&path=./rc-push/dest
 log_dir: ./rc-push-logs/
 users: gofs|password
 http3: true
-tls_cert_file: ../util/httputil/testdata/cert.pem
+tls_cert_file: ../integration/testdata/cert/cert.pem

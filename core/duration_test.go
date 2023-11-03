@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/no-src/gofs/util/jsonutil"
+	"github.com/no-src/nsgo/jsonutil"
 )
 
 func TestDuration_MarshalText(t *testing.T) {

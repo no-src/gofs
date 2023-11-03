@@ -9,11 +9,12 @@ require (
 	github.com/gin-contrib/sessions v0.0.5
 	github.com/gin-gonic/gin v1.9.1
 	github.com/minio/minio-go/v7 v7.0.63
-	github.com/no-src/fsctl v0.1.2
+	github.com/no-src/fsctl v0.1.3-0.20231103153818-803e58721165
 	github.com/no-src/log v0.3.1
 	github.com/no-src/nscache v0.1.1
+	github.com/no-src/nsgo v0.0.0-20231103152835-167bae0e1fb2
 	github.com/pkg/sftp v1.13.6
-	github.com/quic-go/quic-go v0.39.3
+	github.com/quic-go/quic-go v0.40.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/schollz/progressbar/v3 v3.13.1
 	golang.org/x/crypto v0.14.0
@@ -21,7 +22,6 @@ require (
 	golang.org/x/time v0.3.0
 	google.golang.org/grpc v1.59.0
 	google.golang.org/protobuf v1.31.0
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -66,7 +66,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/quasoft/memstore v0.0.0-20191010062613-2bce066d2b0b // indirect
 	github.com/quic-go/qpack v0.4.0 // indirect
-	github.com/quic-go/qtls-go1-20 v0.3.4 // indirect
+	github.com/quic-go/qtls-go1-20 v0.4.1 // indirect
 	github.com/redis/go-redis/v9 v9.0.5 // indirect
 	github.com/rivo/uniseg v0.4.3 // indirect
 	github.com/rs/xid v1.5.0 // indirect
@@ -102,4 +102,5 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20230822172742-b8732ec3820d // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230822172742-b8732ec3820d // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

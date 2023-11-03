@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	certFile      = "../util/httputil/testdata/cert.pem"
-	keyFile       = "../util/httputil/testdata/key.pem"
+	certFile      = "../integration/testdata/cert/cert.pem"
+	keyFile       = "../integration/testdata/cert/key.pem"
 	serverAddr    = "https://127.0.0.1"
 	apiServerHost = "127.0.0.1"
 	apiServerPort = 8128

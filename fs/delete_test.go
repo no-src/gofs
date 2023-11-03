@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/no-src/gofs/logger"
-	"github.com/no-src/gofs/util/osutil"
+	"github.com/no-src/nsgo/osutil"
 )
 
 func TestIsDeleted(t *testing.T) {
@@ -238,4 +238,8 @@ func removeAllErrorMock(path string) error {
 
 func isDeleteMock(path string) bool {
 	return true
+}
+
+func isNotExistAlwaysFalseMock(err error) bool {
+	return false
 }

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/no-src/gofs/logger"
-	"github.com/no-src/gofs/util/hashutil"
+	"github.com/no-src/nsgo/hashutil"
 )
 
 func TestPrintChecksum(t *testing.T) {

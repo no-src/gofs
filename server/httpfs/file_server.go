@@ -23,7 +23,7 @@ import (
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/handler"
 	"github.com/no-src/gofs/server/middleware"
-	"github.com/no-src/gofs/util/hashutil"
+	"github.com/no-src/nsgo/hashutil"
 	"github.com/quic-go/quic-go/http3"
 )
 

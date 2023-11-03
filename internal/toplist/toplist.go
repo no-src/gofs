@@ -4,7 +4,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/no-src/gofs/util/jsonutil"
+	"github.com/no-src/nsgo/jsonutil"
 )
 
 // TopList store some elements in list with specified capacity, the oldest elements that exceed specified capacity will be discarded

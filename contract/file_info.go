@@ -1,6 +1,6 @@
 package contract
 
-import "github.com/no-src/gofs/util/hashutil"
+import "github.com/no-src/nsgo/hashutil"
 
 // FileInfo the basic file info description
 type FileInfo struct {
