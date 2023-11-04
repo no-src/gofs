@@ -665,12 +665,28 @@ $ gofs -about
 
 ## 贡献
 
+### 如何参与贡献
+
+```mermaid
+%%{init: { "flowchart": {"htmlLabels": false}} }%%
+flowchart TD
+  PR[pull request]
+  MainRepo[github.com/no-src/gofs.git] -- 1.fork --> ForkRepo[github.com/yourname/gofs.git]
+  ForkRepo -- 2.git clone --> LocalRepo[local repository]
+  LocalRepo -- 3.commit changes --> NewBranch[new branch]
+  NewBranch -- 4.git push --> ForkRepo
+  ForkRepo -- 5.create pull request --> PR
+  PR -- 6.merge to --> MainRepo
+```
+
+### 云开发环境
+
 利用云开发环境快速参与贡献
 
-### Github Codespaces
+#### Github Codespaces
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/no-src/gofs)
 
-### Gitpod
+#### Gitpod
 
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/no-src/gofs)
