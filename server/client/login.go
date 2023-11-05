@@ -8,7 +8,7 @@ import (
 
 	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/server"
-	"github.com/no-src/gofs/util/httputil"
+	"github.com/no-src/nsgo/httputil"
 )
 
 // ErrSignIn the current user sign in failed

@@ -3,4 +3,4 @@ dest: ./rc/dest
 log_dir: ./rc-logs/
 users: gofs|password
 http3: true
-tls_cert_file: ../util/httputil/testdata/cert.pem
+tls_cert_file: ../integration/testdata/cert/cert.pem

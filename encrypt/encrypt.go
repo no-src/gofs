@@ -6,8 +6,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/logger"
+	"github.com/no-src/nsgo/fsutil"
 )
 
 // Encrypt the encryption component
@@ -25,7 +25,7 @@ func NewEncrypt(opt Option, parentPath string) (*Encrypt, error) {
 		logger:     opt.Logger,
 	}
 	if enc.opt.Encrypt {
-		isSub, err := fs.IsSub(parentPath, opt.EncryptPath)
+		isSub, err := fsutil.IsSub(parentPath, opt.EncryptPath)
 		if err != nil {
 			return nil, err
 		}
@@ -50,7 +50,7 @@ func (e *Encrypt) NewWriter(w io.Writer, source string, name string) (io.WriteCl
 // NeedEncrypt encryption is enabled and path is matched
 func (e *Encrypt) NeedEncrypt(path string) bool {
 	if e.opt.Encrypt {
-		isSub, err := fs.IsSub(e.opt.EncryptPath, path)
+		isSub, err := fsutil.IsSub(e.opt.EncryptPath, path)
 		if err == nil && isSub {
 			return true
 		}

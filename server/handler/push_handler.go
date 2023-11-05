@@ -19,8 +19,9 @@ import (
 	nsfs "github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/server"
-	"github.com/no-src/gofs/util/hashutil"
-	"github.com/no-src/gofs/util/jsonutil"
+	"github.com/no-src/nsgo/fsutil"
+	"github.com/no-src/nsgo/hashutil"
+	"github.com/no-src/nsgo/jsonutil"
 )
 
 type pushHandler struct {
@@ -97,7 +98,7 @@ func (h *pushHandler) buildAbsPath(path string) string {
 
 func (h *pushHandler) create(fi contract.FileInfo) error {
 	path := h.buildAbsPath(fi.Path)
-	exist, err := nsfs.FileExist(path)
+	exist, err := fsutil.FileExist(path)
 	if err != nil {
 		return err
 	}
@@ -115,7 +116,7 @@ func (h *pushHandler) create(fi contract.FileInfo) error {
 		if err != nil {
 			return err
 		}
-		f, err := nsfs.CreateFile(path)
+		f, err := fsutil.CreateFile(path)
 		defer func() {
 			if err = f.Close(); err != nil {
 				h.logger.Error(err, "close file error")
@@ -140,7 +141,7 @@ func (h *pushHandler) symlink(fi contract.FileInfo) error {
 	if err != nil {
 		return err
 	}
-	if err = nsfs.Symlink(fi.LinkTo, path); err != nil {
+	if err = fsutil.Symlink(fi.LinkTo, path); err != nil {
 		return err
 	}
 	h.logger.Info("create symlink success [%s] -> [%s]", path, fi.LinkTo)
@@ -226,7 +227,7 @@ func (h *pushHandler) Save(file *multipart.FileHeader, dst string, pushData push
 
 	var out *os.File
 	if offset > 0 {
-		out, err = nsfs.CreateFile(dst)
+		out, err = fsutil.CreateFile(dst)
 	} else {
 		out, err = os.Create(dst)
 	}

@@ -3,8 +3,8 @@ dest: ./rs-push/dest
 log_dir: ./rs-push-logs/
 users: gofs|password|rwx
 server_addr: ":2889"
-tls_cert_file: ../util/httputil/testdata/cert.pem
-tls_key_file: ../util/httputil/testdata/key.pem
+tls_cert_file: ../integration/testdata/cert/cert.pem
+tls_key_file: ../integration/testdata/cert/key.pem
 push_server: true
 http3: true
 token_secret: "1234567890123456"

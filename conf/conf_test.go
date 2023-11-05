@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/no-src/gofs/core"
-	"github.com/no-src/gofs/util/yamlutil"
+	"github.com/no-src/nsgo/yamlutil"
 )
 
 func TestConfig_ToArgs(t *testing.T) {

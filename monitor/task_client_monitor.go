@@ -15,8 +15,8 @@ import (
 	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/result"
 	"github.com/no-src/gofs/retry"
-	"github.com/no-src/gofs/util/randutil"
 	"github.com/no-src/gofs/wait"
+	"github.com/no-src/nsgo/randutil"
 )
 
 type taskClientMonitor struct {

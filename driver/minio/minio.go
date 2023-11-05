@@ -18,10 +18,10 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/minio/minio-go/v7/pkg/s3utils"
 	"github.com/no-src/gofs/driver"
-	nsfs "github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/internal/rate"
 	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/retry"
+	"github.com/no-src/nsgo/fsutil"
 )
 
 // minIODriver a MinIO driver component, support auto reconnect
@@ -152,7 +152,7 @@ func (c *minIODriver) Symlink(oldname, newname string) (err error) {
 		return err
 	}
 	err = c.reconnectIfLost(func() error {
-		content := nsfs.SymlinkText(oldname)
+		content := fsutil.SymlinkText(oldname)
 		_, err = c.client.PutObject(c.ctx, c.bucketName, newname, bytes.NewReader([]byte(content)), int64(len(content)), minio.PutObjectOptions{})
 		return err
 	})

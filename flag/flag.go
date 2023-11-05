@@ -10,7 +10,7 @@ import (
 	"github.com/no-src/gofs/daemon"
 	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/server"
-	"github.com/no-src/gofs/util/hashutil"
+	"github.com/no-src/nsgo/hashutil"
 )
 
 // ParseFlags parse config from arguments

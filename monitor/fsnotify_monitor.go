@@ -10,11 +10,11 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/eventlog"
-	nsfs "github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/ignore"
 	"github.com/no-src/gofs/internal/clist"
 	"github.com/no-src/gofs/report"
 	"github.com/no-src/gofs/wait"
+	"github.com/no-src/nsgo/fsutil"
 )
 
 type fsNotifyMonitor struct {
@@ -165,7 +165,7 @@ func (m *fsNotifyMonitor) startProcessEvents() error {
 			// the file "info.log" does not match the ignore rule and should be synchronized to destination directory.
 			m.monitorDirIfCreate(event)
 		} else if event.Op&fsnotify.Write == fsnotify.Write {
-			symlink, err := nsfs.IsSymlink(event.Name)
+			symlink, err := fsutil.IsSymlink(event.Name)
 			m.logger.ErrorIf(err, "[write] check is symlink error =>%s", event.Name)
 			if err == nil && !symlink {
 				m.write(event)
@@ -225,7 +225,7 @@ func (m *fsNotifyMonitor) create(event fsnotify.Event) {
 }
 
 func (m *fsNotifyMonitor) symlink(event fsnotify.Event) {
-	source, err := nsfs.Readlink(event.Name)
+	source, err := fsutil.Readlink(event.Name)
 	if err != nil {
 		m.logger.Error(err, "[symlink] read link error => [%s]", event.Name)
 		return
@@ -234,7 +234,7 @@ func (m *fsNotifyMonitor) symlink(event fsnotify.Event) {
 }
 
 func (m *fsNotifyMonitor) symlinkOrCreate(event fsnotify.Event) {
-	symlink, err := nsfs.IsSymlink(event.Name)
+	symlink, err := fsutil.IsSymlink(event.Name)
 	if err != nil {
 		m.logger.Error(err, "[create] check is symlink error =>%s", event.Name)
 		return

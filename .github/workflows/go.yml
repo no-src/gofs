@@ -38,9 +38,6 @@ jobs:
       - name: Test Encrypt
         run: go test -v -race -tags=encrypt_test ./encrypt
 
-      - name: Test HttpUtil
-        run: go test -v -race -tags=httputil_test ./util/httputil
-
       - name: Test Integration
         run: go test -v -race -tags=integration_test ./integration
 

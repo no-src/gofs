@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/no-src/gofs/driver"
-	nsfs "github.com/no-src/gofs/fs"
+	"github.com/no-src/nsgo/fsutil"
 )
 
 type driverPullClientSync struct {
@@ -81,7 +81,7 @@ func (s *driverPullClientSync) write(path, dest string) error {
 		return nil
 	}
 
-	destFile, err := nsfs.OpenRWFile(dest)
+	destFile, err := fsutil.OpenRWFile(dest)
 	if err != nil {
 		return err
 	}

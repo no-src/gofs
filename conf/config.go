@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/no-src/gofs/core"
-	"github.com/no-src/gofs/util/yamlutil"
+	"github.com/no-src/nsgo/yamlutil"
 )
 
 // Config store all the flag info

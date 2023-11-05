@@ -10,6 +10,7 @@ import (
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/driver"
 	nsfs "github.com/no-src/gofs/fs"
+	"github.com/no-src/nsgo/fsutil"
 )
 
 type driverPushClientSync struct {
@@ -107,7 +108,7 @@ func (s *driverPushClientSync) Write(path string) error {
 	err = s.driver.Write(encryptPath, destPath)
 	if err == nil {
 		s.logger.Info("[%s-driver-push] [write] [success] => %s", s.driver.DriverName(), path)
-		if _, aTime, mTime, err := nsfs.GetFileTime(path); err == nil {
+		if _, aTime, mTime, err := fsutil.GetFileTime(path); err == nil {
 			s.logger.ErrorIf(s.driver.Chtimes(destPath, aTime, mTime), "[%s push client sync] [write] change file times error", s.driver.DriverName())
 		}
 		s.storeFileInfo(path)
@@ -182,7 +183,7 @@ func (s *driverPushClientSync) SyncOnce(path string) error {
 		if s.pi.MatchPath(currentPath, s.driver.DriverName()+" push client sync", "sync once") {
 			return nil
 		}
-		return s.syncWalk(currentPath, d, s, nsfs.Readlink)
+		return s.syncWalk(currentPath, d, s, fsutil.Readlink)
 	})
 }
 

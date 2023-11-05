@@ -3,7 +3,7 @@ package report
 import (
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/internal/toplist"
-	"github.com/no-src/gofs/util/timeutil"
+	"github.com/no-src/nsgo/timeutil"
 )
 
 // Report the program report data

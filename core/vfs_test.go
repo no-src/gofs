@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/no-src/gofs/util/jsonutil"
+	"github.com/no-src/nsgo/jsonutil"
 )
 
 const (

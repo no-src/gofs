@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/no-src/gofs/util/hashutil"
+	"github.com/no-src/nsgo/hashutil"
 )
 
 const (

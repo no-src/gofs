@@ -3,7 +3,7 @@ dest: ./rs/dest
 log_dir: ./rs-logs/
 users: gofs|password|rwx
 server_addr: ":1888"
-tls_cert_file: ../util/httputil/testdata/cert.pem
-tls_key_file: ../util/httputil/testdata/key.pem
+tls_cert_file: ../integration/testdata/cert/cert.pem
+tls_key_file: ../integration/testdata/cert/key.pem
 token_secret: "1234567890123456"
 task_conf: "file://./testdata/conf/task/remote-disk-task.yaml"

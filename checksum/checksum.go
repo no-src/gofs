@@ -2,8 +2,8 @@ package checksum
 
 import (
 	"github.com/no-src/gofs/logger"
-	"github.com/no-src/gofs/util/hashutil"
-	"github.com/no-src/gofs/util/jsonutil"
+	"github.com/no-src/nsgo/hashutil"
+	"github.com/no-src/nsgo/jsonutil"
 )
 
 // PrintChecksum calculate and print the checksum for file

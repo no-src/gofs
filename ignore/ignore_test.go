@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/no-src/gofs/logger"
-	"github.com/no-src/gofs/util/osutil"
+	"github.com/no-src/nsgo/osutil"
 )
 
 const (

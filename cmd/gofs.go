@@ -25,6 +25,7 @@ import (
 	"github.com/no-src/gofs/server/httpfs"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/wait"
+	"github.com/no-src/nsgo/fsutil"
 )
 
 // Run running the gofs program
@@ -344,14 +345,14 @@ func generateRandomUser(cp *conf.Config, logger *logger.Logger) error {
 // checkTLS check cert and key file of the TLS
 func checkTLS(c conf.Config) error {
 	if c.EnableTLS && (c.Source.Server() || c.EnableFileServer) {
-		exist, err := fs.FileExist(c.TLSCertFile)
+		exist, err := fsutil.FileExist(c.TLSCertFile)
 		if err != nil {
 			return err
 		}
 		if !exist {
 			return fmt.Errorf("cert file is not found for tls => [%s], for more information, see -tls and -tls_cert_file flags", c.TLSCertFile)
 		}
-		exist, err = fs.FileExist(c.TLSKeyFile)
+		exist, err = fsutil.FileExist(c.TLSKeyFile)
 		if err != nil {
 			return err
 		}

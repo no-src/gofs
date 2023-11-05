@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/no-src/gofs/util/jsonutil"
-	"github.com/no-src/gofs/util/yamlutil"
+	"github.com/no-src/nsgo/jsonutil"
+	"github.com/no-src/nsgo/yamlutil"
 )
 
 var (

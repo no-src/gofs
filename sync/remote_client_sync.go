@@ -20,10 +20,11 @@ import (
 	"github.com/no-src/gofs/internal/rate"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/client"
-	"github.com/no-src/gofs/util/hashutil"
-	"github.com/no-src/gofs/util/httputil"
-	"github.com/no-src/gofs/util/jsonutil"
-	"github.com/no-src/gofs/util/stringutil"
+	"github.com/no-src/nsgo/fsutil"
+	"github.com/no-src/nsgo/hashutil"
+	"github.com/no-src/nsgo/httputil"
+	"github.com/no-src/nsgo/jsonutil"
+	"github.com/no-src/nsgo/stringutil"
 )
 
 var (
@@ -104,7 +105,7 @@ func (rs *remoteClientSync) Create(path string) error {
 		return err
 	}
 
-	exist, err := nsfs.FileExist(dest)
+	exist, err := fsutil.FileExist(dest)
 	if err != nil {
 		return err
 	}
@@ -127,7 +128,7 @@ func (rs *remoteClientSync) Create(path string) error {
 		if err != nil {
 			return err
 		}
-		f, err := nsfs.CreateFile(dest)
+		f, err := fsutil.CreateFile(dest)
 		defer func() {
 			rs.logger.ErrorIf(f.Close(), "[create] close the dest file error")
 		}()
@@ -155,7 +156,7 @@ func (rs *remoteClientSync) Symlink(oldname, newname string) error {
 	if err = os.RemoveAll(dest); err != nil {
 		return err
 	}
-	return nsfs.Symlink(oldname, dest)
+	return fsutil.Symlink(oldname, dest)
 }
 
 func (rs *remoteClientSync) Write(path string) error {
@@ -211,7 +212,7 @@ func (rs *remoteClientSync) write(path, dest string) error {
 		rs.logger.ErrorIf(resp.Body.Close(), "[remote client sync] [write] close the resp body error")
 	}()
 
-	destFile, err := nsfs.OpenRWFile(dest)
+	destFile, err := fsutil.OpenRWFile(dest)
 	if err != nil {
 		return err
 	}
@@ -397,7 +398,7 @@ func (rs *remoteClientSync) syncFiles(files []contract.FileInfo, serverAddr, pat
 		values.Add(contract.FsCtime, stringutil.String(file.CTime))
 		values.Add(contract.FsAtime, stringutil.String(file.ATime))
 		values.Add(contract.FsMtime, stringutil.String(file.MTime))
-		syncPath := fmt.Sprintf("%s/%s?%s", serverAddr, nsfs.SafePath(currentPath), values.Encode())
+		syncPath := fmt.Sprintf("%s/%s?%s", serverAddr, fsutil.SafePath(currentPath), values.Encode())
 
 		// create directory or file
 		rs.logger.ErrorIf(rs.Create(syncPath), "sync create directory or file error => [syncPath=%s]", syncPath)

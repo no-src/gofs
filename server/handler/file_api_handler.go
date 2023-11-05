@@ -10,10 +10,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/no-src/gofs/contract"
-	nsfs "github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/server"
-	"github.com/no-src/gofs/util/hashutil"
+	"github.com/no-src/nsgo/fsutil"
+	"github.com/no-src/nsgo/hashutil"
 )
 
 type fileApiHandler struct {
@@ -103,7 +103,7 @@ func (h *fileApiHandler) readDir(f http.File, needHash bool, needCheckpoint bool
 		return fileList, err
 	}
 	for _, file := range files {
-		cTime, aTime, mTime, fsTimeErr := nsfs.GetFileTimeBySys(file.Sys())
+		cTime, aTime, mTime, fsTimeErr := fsutil.GetFileTimeBySys(file.Sys())
 		if fsTimeErr != nil {
 			h.logger.Error(fsTimeErr, "get file times error => %s", file.Name())
 			cTime = time.Now()
@@ -145,9 +145,9 @@ func (h *fileApiHandler) readDir(f http.File, needHash bool, needCheckpoint bool
 }
 
 func (h *fileApiHandler) readlink(file fs.FileInfo) string {
-	if nsfs.IsSymlinkMode(file.Mode()) {
+	if fsutil.IsSymlinkMode(file.Mode()) {
 		path := filepath.Join(string(h.root), file.Name())
-		realPath, err := nsfs.Readlink(path)
+		realPath, err := fsutil.Readlink(path)
 		if err == nil {
 			return realPath
 		}
