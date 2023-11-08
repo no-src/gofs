@@ -22,6 +22,9 @@ func NewMinIOPushClientSync(opt Option) (Sync, error) {
 	chunkSize := opt.ChunkSize
 	maxTranRate := opt.MaxTranRate
 	r := opt.Retry
+	logger := opt.Logger
+	syncOnce := opt.SyncOnce
+	syncCron := opt.SyncCron
 
 	if chunkSize <= 0 {
 		return nil, errInvalidChunkSize
@@ -37,19 +40,17 @@ func NewMinIOPushClientSync(opt Option) (Sync, error) {
 	}
 
 	s := &minIOPushClientSync{
-		driverPushClientSync: driverPushClientSync{
-			diskSync: *ds,
-			basePath: "",
-		},
-		endpoint:    dest.Addr(),
-		bucketName:  dest.RemotePath(),
-		secure:      dest.Secure(),
-		currentUser: users[0],
+		driverPushClientSync: newDriverPushClientSync(*ds, dest.RemotePath().Base()),
+		endpoint:             dest.Addr(),
+		bucketName:           dest.RemotePath().Bucket(),
+		secure:               dest.Secure(),
+		currentUser:          users[0],
 	}
 
-	s.driver = minio.NewMinIODriver(s.endpoint, s.bucketName, s.secure, s.currentUser.UserName(), s.currentUser.Password(), true, r, maxTranRate)
+	s.driver = minio.NewMinIODriver(s.endpoint, s.bucketName, s.secure, s.currentUser.UserName(), s.currentUser.Password(), true, r, maxTranRate, logger)
 
-	err = s.start()
+	isSync := syncOnce || len(syncCron) > 0
+	err = s.start(isSync)
 	if err != nil {
 		return nil, err
 	}

@@ -6,6 +6,7 @@ import (
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/encrypt"
 	"github.com/no-src/gofs/ignore"
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/report"
 	"github.com/no-src/gofs/retry"
 )
@@ -37,10 +38,13 @@ type Option struct {
 	PathIgnore            ignore.PathIgnore
 	Reporter              report.Reporter
 	TaskConf              string
+	Logger                *logger.Logger
+	SyncOnce              bool
+	SyncCron              string
 }
 
 // NewSyncOption create an instance of the Option, store all the sync component options
-func NewSyncOption(config conf.Config, users []*auth.User, r retry.Retry, pi ignore.PathIgnore, reporter report.Reporter) Option {
+func NewSyncOption(config conf.Config, users []*auth.User, r retry.Retry, pi ignore.PathIgnore, reporter report.Reporter, logger *logger.Logger) Option {
 	opt := Option{
 		Source:                config.Source,
 		Dest:                  config.Dest,
@@ -63,10 +67,13 @@ func NewSyncOption(config conf.Config, users []*auth.User, r retry.Retry, pi ign
 		TokenSecret:           config.TokenSecret,
 		Users:                 users,
 		Retry:                 r,
-		EncOpt:                encrypt.NewOption(config),
+		EncOpt:                encrypt.NewOption(config, logger),
 		PathIgnore:            pi,
 		Reporter:              reporter,
 		TaskConf:              config.TaskConf,
+		Logger:                logger,
+		SyncOnce:              config.SyncOnce,
+		SyncCron:              config.SyncCron,
 	}
 	return opt
 }

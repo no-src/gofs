@@ -11,8 +11,8 @@ import (
 	"github.com/no-src/gofs/api/task"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/internal/clist"
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/report"
-	"github.com/no-src/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
@@ -32,12 +32,12 @@ type grpcServer struct {
 	server          *grpc.Server
 	monitors        *sync.Map
 	monitorMessages *clist.CList
-	logger          log.Logger
+	logger          *logger.Logger
 	taskConf        string
 }
 
 // New create the instance of the Server
-func New(ip string, port int, enableTLS bool, certFile string, keyFile string, tokenSecret string, users []*auth.User, reporter report.Reporter, httpServerAddr string, logger log.Logger, taskConf string) (Server, error) {
+func New(ip string, port int, enableTLS bool, certFile string, keyFile string, tokenSecret string, users []*auth.User, reporter report.Reporter, httpServerAddr string, logger *logger.Logger, taskConf string) (Server, error) {
 	if len(users) == 0 {
 		logger.Warn("the grpc server allows anonymous access, you should set some server users by the -users or -rand_user_count flag for security reasons")
 		users = append(users, auth.GetAnonymousUser())

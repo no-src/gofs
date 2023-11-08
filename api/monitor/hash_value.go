@@ -1,6 +1,6 @@
 package monitor
 
-import "github.com/no-src/gofs/util/hashutil"
+import "github.com/no-src/nsgo/hashutil"
 
 // ToHashValueMessageList convert the hashutil.HashValues to a HashValue array
 func ToHashValueMessageList(hvs hashutil.HashValues) []*HashValue {

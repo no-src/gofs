@@ -3,7 +3,7 @@ dest: ./local-disk-server/dest
 log_dir: ./local-disk-task-server-logs/
 users: gofs|password|rwx
 server_addr: ":3888"
-tls_cert_file: ../util/httputil/testdata/cert.pem
-tls_key_file: ../util/httputil/testdata/key.pem
+tls_cert_file: ../integration/testdata/cert/cert.pem
+tls_key_file: ../integration/testdata/cert/key.pem
 token_secret: "1234567890123456"
 task_conf: "file://./testdata/conf/task/local-disk-task.yaml"

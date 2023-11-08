@@ -12,15 +12,19 @@ import (
 	"testing"
 
 	"github.com/no-src/gofs/conf"
+	"github.com/no-src/gofs/logger"
 )
 
 func TestDecrypt_DecryptOutNotDir(t *testing.T) {
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
 	decryptOpt := NewOption(conf.Config{
 		Decrypt:       true,
 		DecryptPath:   decryptPath,
 		DecryptSecret: secret,
 		DecryptOut:    "./encrypt_test.go",
-	})
+	}, logger)
 	dec, err := NewDecrypt(decryptOpt)
 	if err != nil {
 		t.Errorf("init decrypt component error => %v", err)
@@ -69,12 +73,15 @@ func TestDecrypt_EvilFile(t *testing.T) {
 		return
 	}
 
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
 	decryptOpt := NewOption(conf.Config{
 		Decrypt:       true,
 		DecryptPath:   evilFile,
 		DecryptSecret: secret,
 		DecryptOut:    decryptOut,
-	})
+	}, logger)
 	dec, err := NewDecrypt(decryptOpt)
 	if err != nil {
 		t.Errorf("init decrypt component error => %v", err)
@@ -87,6 +94,9 @@ func TestDecrypt_EvilFile(t *testing.T) {
 }
 
 func TestNewDecrypt_CheckKey(t *testing.T) {
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
 	for _, tc := range aesKeyTestCases {
 		t.Run(tc.key, func(t *testing.T) {
 			decryptOpt := NewOption(conf.Config{
@@ -94,7 +104,7 @@ func TestNewDecrypt_CheckKey(t *testing.T) {
 				DecryptPath:   decryptPath,
 				DecryptSecret: tc.key,
 				DecryptOut:    decryptOut,
-			})
+			}, logger)
 
 			_, err := NewDecrypt(decryptOpt)
 			if tc.valid && err != nil {

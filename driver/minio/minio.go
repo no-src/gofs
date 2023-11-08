@@ -18,10 +18,10 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/minio/minio-go/v7/pkg/s3utils"
 	"github.com/no-src/gofs/driver"
-	nsfs "github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/internal/rate"
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/retry"
-	"github.com/no-src/log"
+	"github.com/no-src/nsgo/fsutil"
 )
 
 // minIODriver a MinIO driver component, support auto reconnect
@@ -39,14 +39,15 @@ type minIODriver struct {
 	autoReconnect bool
 	ctx           context.Context
 	maxTranRate   int64
+	logger        *logger.Logger
 }
 
 // NewMinIODriver get a MinIO driver
-func NewMinIODriver(endpoint string, bucketName string, secure bool, userName string, password string, autoReconnect bool, r retry.Retry, maxTranRate int64) driver.Driver {
-	return newMinIODriver(endpoint, bucketName, secure, userName, password, autoReconnect, r, maxTranRate)
+func NewMinIODriver(endpoint string, bucketName string, secure bool, userName string, password string, autoReconnect bool, r retry.Retry, maxTranRate int64, logger *logger.Logger) driver.Driver {
+	return newMinIODriver(endpoint, bucketName, secure, userName, password, autoReconnect, r, maxTranRate, logger)
 }
 
-func newMinIODriver(endpoint string, bucketName string, secure bool, userName string, password string, autoReconnect bool, r retry.Retry, maxTranRate int64) *minIODriver {
+func newMinIODriver(endpoint string, bucketName string, secure bool, userName string, password string, autoReconnect bool, r retry.Retry, maxTranRate int64, logger *logger.Logger) *minIODriver {
 	return &minIODriver{
 		driverName:    "minio",
 		endpoint:      endpoint,
@@ -58,6 +59,7 @@ func newMinIODriver(endpoint string, bucketName string, secure bool, userName st
 		autoReconnect: autoReconnect,
 		ctx:           context.Background(),
 		maxTranRate:   maxTranRate,
+		logger:        logger,
 	}
 }
 
@@ -91,13 +93,13 @@ func (c *minIODriver) Connect() (err error) {
 	}
 
 	c.online = true
-	log.Debug("connect to MinIO server success => %s", c.endpoint)
+	c.logger.Debug("connect to MinIO server success => %s", c.endpoint)
 
 	return nil
 }
 
 func (c *minIODriver) reconnect() error {
-	log.Debug("reconnect to MinIO server => %s", c.endpoint)
+	c.logger.Debug("reconnect to MinIO server => %s", c.endpoint)
 	return c.r.Do(c.Connect, "MinIO reconnect").Wait()
 }
 
@@ -114,7 +116,7 @@ func (c *minIODriver) reconnectIfLost(f func() error) error {
 
 	err := f()
 	if c.isClosed(err) {
-		log.Error(err, "connect to MinIO server failed")
+		c.logger.Error(err, "connect to MinIO server failed")
 		c.mu.Lock()
 		c.online = false
 		c.mu.Unlock()
@@ -150,7 +152,7 @@ func (c *minIODriver) Symlink(oldname, newname string) (err error) {
 		return err
 	}
 	err = c.reconnectIfLost(func() error {
-		content := nsfs.SymlinkText(oldname)
+		content := fsutil.SymlinkText(oldname)
 		_, err = c.client.PutObject(c.ctx, c.bucketName, newname, bytes.NewReader([]byte(content)), int64(len(content)), minio.PutObjectOptions{})
 		return err
 	})
@@ -158,6 +160,7 @@ func (c *minIODriver) Symlink(oldname, newname string) (err error) {
 }
 
 func (c *minIODriver) Remove(path string) (err error) {
+	path = c.trimPath(path)
 	return c.reconnectIfLost(func() error {
 		infoChan := c.client.ListObjects(c.ctx, c.bucketName, minio.ListObjectsOptions{
 			Recursive: true,
@@ -199,7 +202,7 @@ func (c *minIODriver) Open(path string) (f http.File, err error) {
 		var obj *minio.Object
 		obj, err = c.client.GetObject(c.ctx, c.bucketName, path, minio.GetObjectOptions{})
 		if err == nil {
-			f = rate.NewFile(newFile(obj, c.client, c.bucketName, path), c.maxTranRate)
+			f = rate.NewFile(newFile(obj, c.client, c.bucketName, path), c.maxTranRate, c.logger)
 		}
 		return err
 	})
@@ -284,7 +287,7 @@ func (c *minIODriver) GetFileTime(path string) (cTime time.Time, aTime time.Time
 
 func (c *minIODriver) WalkDir(root string, fn fs.WalkDirFunc) error {
 	return c.reconnectIfLost(func() error {
-		infoChan := c.client.ListObjects(c.ctx, c.bucketName, minio.ListObjectsOptions{Recursive: true})
+		infoChan := c.client.ListObjects(c.ctx, c.bucketName, minio.ListObjectsOptions{Recursive: true, Prefix: c.trimPath(root)})
 		for info := range infoChan {
 			if err := fn(info.Key, fs.FileInfoToDirEntry(newMinIOFileInfo(info)), info.Err); err != nil {
 				return err
@@ -344,5 +347,9 @@ func (c *minIODriver) fPutObject(ctx context.Context, bucketName, objectName, fi
 			opts.ContentType = "application/octet-stream"
 		}
 	}
-	return c.client.PutObject(ctx, bucketName, objectName, rate.NewReader(fileReader, c.maxTranRate), fileSize, opts)
+	return c.client.PutObject(ctx, bucketName, objectName, rate.NewReader(fileReader, c.maxTranRate, c.logger), fileSize, opts)
+}
+
+func (c *minIODriver) trimPath(path string) string {
+	return strings.TrimPrefix(path, "/")
 }

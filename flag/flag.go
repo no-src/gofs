@@ -8,10 +8,9 @@ import (
 	"github.com/no-src/gofs/conf"
 	"github.com/no-src/gofs/core"
 	"github.com/no-src/gofs/daemon"
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/server"
-	"github.com/no-src/gofs/util/hashutil"
-	"github.com/no-src/log/formatter"
-	"github.com/no-src/log/level"
+	"github.com/no-src/nsgo/hashutil"
 )
 
 // ParseFlags parse config from arguments
@@ -63,14 +62,14 @@ func ParseFlags(args []string) (config conf.Config) {
 	cl.BoolVar(&config.RetryAsync, "retry_async", false, "execute retry asynchronously")
 
 	// log
-	cl.IntVar(&config.LogLevel, "log_level", int(level.InfoLevel), "set log level, default is INFO. DEBUG=0 INFO=1 WARN=2 ERROR=3")
+	cl.IntVar(&config.LogLevel, "log_level", int(logger.DefaultLevel), "set log level, default is INFO. DEBUG=0 INFO=1 WARN=2 ERROR=3")
 	cl.BoolVar(&config.EnableFileLogger, "log_file", true, "enable the file logger")
 	cl.StringVar(&config.LogDir, "log_dir", "./logs/", "set the directory of the log file")
 	cl.BoolVar(&config.LogFlush, "log_flush", true, "enable auto flush log with interval")
 	cl.DurationVar(&config.LogFlushInterval, "log_flush_interval", time.Second*3, "set the log flush interval duration, you need to enable -log_flush first")
 	cl.BoolVar(&config.EnableEventLog, "log_event", false, "enable the event log")
 	cl.Float64Var(&config.LogSampleRate, "log_sample_rate", 1, "set the sample rate for the sample logger, and the value ranges from 0 to 1")
-	cl.StringVar(&config.LogFormat, "log_format", formatter.TextFormatter, "set the log output format, current support text and json")
+	cl.StringVar(&config.LogFormat, "log_format", logger.DefaultFormatter, "set the log output format, current support text and json")
 	cl.BoolVar(&config.LogSplitDate, "log_split_date", false, "split log file by date")
 
 	// daemon

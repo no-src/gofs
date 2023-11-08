@@ -7,17 +7,17 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/no-src/gofs/conf"
 	"github.com/no-src/gofs/contract"
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/server"
-	"github.com/no-src/log"
 )
 
 type manageHandler struct {
-	logger log.Logger
+	logger *logger.Logger
 	conf   conf.Config
 }
 
 // NewManageHandlerFunc returns a gin.HandlerFunc that shows the application config
-func NewManageHandlerFunc(logger log.Logger, conf conf.Config) gin.HandlerFunc {
+func NewManageHandlerFunc(logger *logger.Logger, conf conf.Config) gin.HandlerFunc {
 	return (&manageHandler{
 		logger: logger,
 		conf:   conf,

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/no-src/gofs/logger"
 )
 
 const (
@@ -27,7 +29,7 @@ func testDefaultRetrySuccess(t *testing.T, async bool) {
 	if !async {
 		desc = "[sync] [do work success] "
 	}
-	r := New(testRetryCount, testWaitTime, async)
+	r := New(testRetryCount, testWaitTime, async, logger.NewTestLogger())
 	w := r.Do(tw.doSuccess, desc)
 	err := w.Wait()
 	if err != nil {
@@ -55,7 +57,7 @@ func testDefaultRetryFailed(t *testing.T, async bool) {
 	if !async {
 		desc = "[sync] [do work failed] "
 	}
-	r := New(testRetryCount, testWaitTime, async)
+	r := New(testRetryCount, testWaitTime, async, logger.NewTestLogger())
 	w := r.Do(tw.doFail, desc)
 	err := w.Wait()
 	if err != nil {
@@ -77,7 +79,7 @@ func testDefaultRetryAbort(t *testing.T, async bool) {
 	if !async {
 		desc = "[sync] [do work abort] "
 	}
-	r := New(testRetryCount, testWaitTime, async)
+	r := New(testRetryCount, testWaitTime, async, logger.NewTestLogger())
 	ctx, cancel := context.WithCancel(context.Background())
 	w := r.DoWithContext(ctx, tw.doFail, desc)
 	cancel()
@@ -101,7 +103,7 @@ func testDefaultRetryFailedThenSuccess(t *testing.T, async bool) {
 	if !async {
 		asyncDesc = "[sync] "
 	}
-	r := New(testRetryCount, testWaitTime, async)
+	r := New(testRetryCount, testWaitTime, async, logger.NewTestLogger())
 	w := r.Do(tw.doFailThenSuccess, asyncDesc+"do work failed then success")
 	err := w.Wait()
 	if err != nil {
@@ -111,7 +113,7 @@ func testDefaultRetryFailedThenSuccess(t *testing.T, async bool) {
 
 func TestDefaultRetry_Panic(t *testing.T) {
 	tw := testWork{}
-	r := New(testRetryCount, testWaitTime, true)
+	r := New(testRetryCount, testWaitTime, true, logger.NewTestLogger())
 	w := r.Do(tw.doPanic, "do work panic")
 	err := w.Wait()
 	if err != nil {

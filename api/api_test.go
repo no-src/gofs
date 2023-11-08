@@ -12,13 +12,13 @@ import (
 	"github.com/no-src/gofs/api/task"
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/conf"
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/report"
-	"github.com/no-src/log"
 )
 
 const (
-	certFile      = "../util/httputil/testdata/cert.pem"
-	keyFile       = "../util/httputil/testdata/key.pem"
+	certFile      = "../integration/testdata/cert/cert.pem"
+	keyFile       = "../integration/testdata/cert/key.pem"
 	serverAddr    = "https://127.0.0.1"
 	apiServerHost = "127.0.0.1"
 	apiServerPort = 8128
@@ -55,7 +55,7 @@ func runApiServer(t *testing.T, user *auth.User) (apiserver.Server, error) {
 	if user != nil {
 		users = append(users, user)
 	}
-	srv, err := apiserver.New(apiServerHost, apiServerPort, true, certFile, keyFile, tokenSecret, users, report.NewReporter(), serverAddr, log.DefaultLogger(), taskConfFile)
+	srv, err := apiserver.New(apiServerHost, apiServerPort, true, certFile, keyFile, tokenSecret, users, report.NewReporter(), serverAddr, logger.NewTestLogger(), taskConfFile)
 	if err != nil {
 		return nil, err
 	}
@@ -131,10 +131,10 @@ func runApiClient(user *auth.User) (err error) {
 		if err != nil {
 			return err
 		}
-		if i == 0 && (!c.SyncOnce || c.Source.Path() != "source" || c.Dest.Path() != "dest") {
+		if i == 0 && (!c.SyncOnce || c.Source.Path().Base() != "source" || c.Dest.Path().Base() != "dest") {
 			return errors.New("unexpect arguments")
 		}
-		if i == 1 && (c.SyncOnce || c.Source.Path() != "source" || c.Dest.Path() != "dest") {
+		if i == 1 && (c.SyncOnce || c.Source.Path().Base() != "source" || c.Dest.Path().Base() != "dest") {
 			return errors.New("unexpect arguments")
 		}
 	}

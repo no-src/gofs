@@ -2,7 +2,7 @@ source: rs://127.0.0.1:8105
 dest: ./task-client/dest
 log_dir: ./task-client-logs/
 users: gofs|password
-tls_cert_file: ../util/httputil/testdata/cert.pem
+tls_cert_file: ../integration/testdata/cert/cert.pem
 task_client: true
 task_client_labels:
   local-disk-client,

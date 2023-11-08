@@ -8,10 +8,14 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/no-src/log"
+	"github.com/no-src/gofs/logger"
 )
 
-var deletedPathRegexp *regexp.Regexp
+var (
+	isNotExist = os.IsNotExist
+
+	deletedPathRegexp *regexp.Regexp
+)
 
 // LogicallyDelete delete the path logically
 func LogicallyDelete(path string) error {
@@ -36,7 +40,7 @@ func isDeletedCore(path string) bool {
 }
 
 // ClearDeletedFile remove all the deleted files in the path
-func ClearDeletedFile(clearPath string) error {
+func ClearDeletedFile(clearPath string, logger *logger.Logger) error {
 	return filepath.WalkDir(clearPath, func(path string, d fs.DirEntry, err error) error {
 		if err != nil && isNotExist(err) {
 			return nil
@@ -47,9 +51,9 @@ func ClearDeletedFile(clearPath string) error {
 		if IsDeleted(path) {
 			err = removeAll(path)
 			if err != nil {
-				log.Error(err, "remove the deleted files error => [%s]", path)
+				logger.Error(err, "remove the deleted files error => [%s]", path)
 			} else {
-				log.Debug("remove the deleted files success => [%s]", path)
+				logger.Debug("remove the deleted files success => [%s]", path)
 			}
 		}
 		return err

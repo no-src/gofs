@@ -4,16 +4,16 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/server"
-	"github.com/no-src/log"
 )
 
 type defaultHandler struct {
-	logger log.Logger
+	logger *logger.Logger
 }
 
 // NewDefaultHandlerFunc returns a gin.HandlerFunc that shows the default home page
-func NewDefaultHandlerFunc(logger log.Logger) gin.HandlerFunc {
+func NewDefaultHandlerFunc(logger *logger.Logger) gin.HandlerFunc {
 	return (&defaultHandler{
 		logger: logger,
 	}).Handle

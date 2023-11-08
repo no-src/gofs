@@ -1,113 +1,84 @@
 #!/usr/bin/env bash
 
-# switch to branch main
-git checkout main
+echo "current branch is $(git branch --show-current)"
 
 # update repository
 #git pull --no-rebase
 
 # update the last git commit
-echo -e "$(git rev-parse main)\c" >internal/version/commit
+echo -e "$(git rev-parse HEAD)\c" >internal/version/commit
 
 # set GOPROXY environment variable
 # export GOPROXY=https://goproxy.cn
 
+export SOFT_RELEASE_GO_VERSION
+export SOFT_RELEASE_VERSION
+export SOFT_NAME="gofs"
+export SOFT_PREFIX="${SOFT_NAME}_"
+
+function init_version {
+  go build -v -o . ./...
+
+  SOFT_RELEASE_GO_VERSION=$(go version | awk '{print $3}')
+  SOFT_RELEASE_VERSION=$(./${SOFT_NAME} -v | awk 'NR==1 {print $3}')
+}
+
 function build_release {
+  # release path, for example, gofs_go1.21.1_arm64_linux_v0.8.0
+  SOFT_RELEASE="${SOFT_PREFIX}${SOFT_RELEASE_GO_VERSION}_${GOARCH}_${GOOS}_${SOFT_RELEASE_VERSION}"
+
+  rm -rf "$SOFT_RELEASE"
+  mkdir "$SOFT_RELEASE"
+
   # build
   go build -v -o . ./...
 
-  # release path, for example, gofs_go1.20.1_arm64_linux_v0.6.0
-  GOFS_RELEASE="gofs_${GOFS_RELEASE_GO_VERSION}_${GOARCH}_${GOOS}_${GOFS_RELEASE_VERSION}"
-
-  rm -rf "$GOFS_RELEASE"
-  mkdir "$GOFS_RELEASE"
-  mv gofs "$GOFS_RELEASE/"
-
-  # release archive
-  tar -zcvf "$GOFS_RELEASE.tar.gz" "$GOFS_RELEASE"
-
-  rm -rf "$GOFS_RELEASE"
+  if [ "$GOOS" == "windows" ]; then
+    go build -v -ldflags="-H windowsgui" -o ./${SOFT_NAME}_background.exe ./cmd/${SOFT_NAME}
+    mv ${SOFT_NAME}.exe ${SOFT_NAME}_background.exe "$SOFT_RELEASE/"
+    # windows release archive
+    zip -r "$SOFT_RELEASE.zip" "$SOFT_RELEASE"
+  else
+    mv ${SOFT_NAME} "$SOFT_RELEASE/"
+    # release archive
+    tar -zcvf "$SOFT_RELEASE.tar.gz" "$SOFT_RELEASE"
+  fi
+  rm -rf "$SOFT_RELEASE"
 }
 
-############################## linux-amd64-release ##############################
+init_version
 
-# set go env
+# linux amd64 release
 export GOOS=linux
 export GOARCH=amd64
-
-# build
-go build -v -o . ./...
-
-GOFS_RELEASE_GO_VERSION=$(go version | awk '{print $3}')
-GOFS_RELEASE_VERSION=$(./gofs -v | awk 'NR==1 {print $3}')
-
-# release path, for example, gofs_go1.20.1_amd64_linux_v0.6.0
-GOFS_RELEASE="gofs_${GOFS_RELEASE_GO_VERSION}_${GOARCH}_${GOOS}_${GOFS_RELEASE_VERSION}"
-
-rm -rf "$GOFS_RELEASE"
-mkdir "$GOFS_RELEASE"
-mv gofs "$GOFS_RELEASE/"
-
-# release archive
-tar -zcvf "$GOFS_RELEASE.tar.gz" "$GOFS_RELEASE"
-
-rm -rf "$GOFS_RELEASE"
-
-############################## linux-amd64-release ##############################
-
-############################## linux-arm64-release ##############################
-
-export GOOS=linux
-export GOARCH=arm64
-
 build_release
 
-############################## linux-arm64-release ##############################
+# linux arm64 release
+export GOOS=linux
+export GOARCH=arm64
+build_release
 
-############################# windows-release #############################
-
-# set go env
+# windows amd64 release
 export GOOS=windows
 export GOARCH=amd64
+build_release
 
-# build
-go build -v -o . ./...
+# windows arm64 release
+export GOOS=windows
+export GOARCH=arm64
+build_release
 
-# build with -ldflags="-H windowsgui" flag
-go build -v -ldflags="-H windowsgui" -o ./gofs_background.exe ./cmd/gofs
-
-# release path, for example, gofs_go1.20.1_amd64_windows_v0.6.0
-GOFS_RELEASE="gofs_${GOFS_RELEASE_GO_VERSION}_${GOARCH}_${GOOS}_${GOFS_RELEASE_VERSION}"
-
-mkdir "$GOFS_RELEASE"
-mv gofs.exe gofs_background.exe "$GOFS_RELEASE/"
-
-# windows release archive
-zip -r "$GOFS_RELEASE.zip" "$GOFS_RELEASE"
-
-rm -rf "$GOFS_RELEASE"
-
-############################# windows-release #############################
-
-############################## macOS-amd64-release ##############################
-
+# macOS amd64 release
 export GOOS=darwin
 export GOARCH=amd64
-
 build_release
 
-############################## macOS-amd64-release ##############################
-
-############################## macOS-arm64-release ##############################
-
+# macOS arm64 release
 export GOOS=darwin
 export GOARCH=arm64
-
 build_release
-
-############################## macOS-arm64-release ##############################
 
 # reset commit file
 echo -e "\c" >internal/version/commit
 
-ls -alh | grep gofs_
+ls -alh | grep ${SOFT_PREFIX}

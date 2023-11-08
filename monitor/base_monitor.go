@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"github.com/no-src/gofs/eventlog"
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/retry"
 	nssync "github.com/no-src/gofs/sync"
-	"github.com/no-src/log"
 	"github.com/robfig/cron/v3"
 )
 
@@ -40,6 +40,7 @@ type baseMonitor struct {
 	workerChan      chan struct{}
 	workerMap       sync.Map
 	smallFileSize   int64
+	logger          *logger.Logger
 }
 
 func newBaseMonitor(opt Option) baseMonitor {
@@ -51,6 +52,7 @@ func newBaseMonitor(opt Option) baseMonitor {
 	syncDelayEvents := opt.SyncDelayEvents
 	syncDelayTime := opt.SyncDelayTime
 	syncWorkers := opt.SyncWorkers
+	logger := opt.Logger
 
 	multiWorkers := false
 	if syncWorkers > 1 {
@@ -74,6 +76,7 @@ func newBaseMonitor(opt Option) baseMonitor {
 		multiWorkers:    multiWorkers,
 		workerChan:      newFullChannel(syncWorkers - 1),
 		smallFileSize:   1024 * 1024 * 10,
+		logger:          logger,
 	}
 }
 
@@ -100,7 +103,7 @@ func (m *baseMonitor) addWrite(name string, size int64) {
 	parent := filepath.Dir(name)
 	pwm := m.writeMap[m.key(parent)]
 	if pwm != nil {
-		log.Debug("add write ignore the file path => %s", name)
+		m.logger.Debug("add write ignore the file path => %s", name)
 		m.mu.Unlock()
 		return
 	}
@@ -128,7 +131,7 @@ func (m *baseMonitor) removeWrite(name string) {
 	if wm != nil {
 		wm.cancel = true
 		delete(m.writeMap, m.key(name))
-		log.Debug("removeWrite => [%s]", name)
+		m.logger.Debug("removeWrite => [%s]", name)
 	}
 	m.mu.Unlock()
 	m.writeNotify <- struct{}{}
@@ -213,12 +216,12 @@ func (m *baseMonitor) write(name string) {
 				return nil
 			}
 			if err != nil {
-				log.Error(err, "write file error => [%s]", name)
+				m.logger.Error(err, "write file error => [%s]", name)
 			}
 			return err
 		}, fmt.Sprintf("write file => %s", name))
 	} else {
-		log.ErrorIf(m.syncer.Write(name), "write file error => [%s]", name)
+		m.logger.ErrorIf(m.syncer.Write(name), "write file error => [%s]", name)
 	}
 }
 
@@ -240,22 +243,22 @@ func (m *baseMonitor) startCron(f func() error) error {
 		defer func() {
 			<-m.cronChan
 			if e := recover(); e != nil {
-				log.Error(errors.New("cron task execute panic"), "%v", e)
+				m.logger.Error(errors.New("cron task execute panic"), "%v", e)
 			}
 		}()
 		m.cronChan <- struct{}{}
-		log.Info("start execute cron task, spec=[%s]", m.syncSpec)
+		m.logger.Info("start execute cron task, spec=[%s]", m.syncSpec)
 		err := f()
 		if err != nil {
-			log.Error(err, "execute cron error spec=[%s]", m.syncSpec)
+			m.logger.Error(err, "execute cron error spec=[%s]", m.syncSpec)
 		} else {
-			log.Info("execute cron task finished, spec=[%s]", m.syncSpec)
+			m.logger.Info("execute cron task finished, spec=[%s]", m.syncSpec)
 		}
 	})
 	if err != nil {
 		return err
 	}
-	log.Info("cron task starting, spec=[%s] id=[%d]", m.syncSpec, id)
+	m.logger.Info("cron task starting, spec=[%s] id=[%d]", m.syncSpec, id)
 	c.Start()
 	return nil
 }
@@ -291,11 +294,11 @@ func (m *baseMonitor) waitSyncDelay(eventLenFunc func() int) {
 			currentEvents := eventLenFunc()
 			if currentEvents > 0 {
 				if currentEvents < m.syncDelayEvents && time.Now().Before(m.lastSyncTime.Add(m.syncDelayTime)) {
-					log.DebugSample("[sync delay] [waiting] sync delay time => %s, sync delay events => %d, last sync time => %s, current event count => %d ", m.syncDelayTime, m.syncDelayEvents, m.lastSyncTime, currentEvents)
+					m.logger.Sample.Debug("[sync delay] [waiting] sync delay time => %s, sync delay events => %d, last sync time => %s, current event count => %d ", m.syncDelayTime, m.syncDelayEvents, m.lastSyncTime, currentEvents)
 					<-time.After(time.Second)
 					continue
 				}
-				log.Debug("[sync delay] [starting] sync delay time => %s, sync delay events => %d, last sync time => %s, current event count => %d ", m.syncDelayTime, m.syncDelayEvents, m.lastSyncTime, currentEvents)
+				m.logger.Debug("[sync delay] [starting] sync delay time => %s, sync delay events => %d, last sync time => %s, current event count => %d ", m.syncDelayTime, m.syncDelayEvents, m.lastSyncTime, currentEvents)
 				m.syncing = true
 			}
 		}
@@ -309,7 +312,7 @@ func (m *baseMonitor) resetSyncDelay() {
 		syncing := m.syncing
 		m.syncing = false
 		if syncing {
-			log.Debug("[sync delay] [reset] sync delay time => %s, sync delay events => %d, last sync time => %s ", m.syncDelayTime, m.syncDelayEvents, m.lastSyncTime)
+			m.logger.Debug("[sync delay] [reset] sync delay time => %s, sync delay events => %d, last sync time => %s ", m.syncDelayTime, m.syncDelayEvents, m.lastSyncTime)
 		}
 	} else {
 		m.syncing = true

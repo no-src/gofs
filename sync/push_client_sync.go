@@ -16,14 +16,13 @@ import (
 	"github.com/no-src/gofs/auth"
 	"github.com/no-src/gofs/contract"
 	"github.com/no-src/gofs/contract/push"
-	nsfs "github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/internal/rate"
 	"github.com/no-src/gofs/server"
 	"github.com/no-src/gofs/server/client"
-	"github.com/no-src/gofs/util/hashutil"
-	"github.com/no-src/gofs/util/httputil"
-	"github.com/no-src/gofs/util/jsonutil"
-	"github.com/no-src/log"
+	"github.com/no-src/nsgo/fsutil"
+	"github.com/no-src/nsgo/hashutil"
+	"github.com/no-src/nsgo/httputil"
+	"github.com/no-src/nsgo/jsonutil"
 )
 
 var (
@@ -158,7 +157,7 @@ func (pcs *pushClientSync) Rename(path string) error {
 }
 
 func (pcs *pushClientSync) Chmod(path string) error {
-	log.Debug("Chmod is unimplemented [%s]", path)
+	pcs.logger.Debug("Chmod is unimplemented [%s]", path)
 	return nil
 }
 
@@ -178,7 +177,7 @@ func (pcs *pushClientSync) SyncOnce(path string) error {
 		if pcs.pi.MatchPath(currentPath, "push client sync", "sync once") {
 			return nil
 		}
-		return pcs.syncWalk(currentPath, d, pcs, nsfs.Readlink)
+		return pcs.syncWalk(currentPath, d, pcs, fsutil.Readlink)
 	})
 }
 
@@ -208,7 +207,7 @@ func (pcs *pushClientSync) send(act action.Action, path string) (err error) {
 
 	if pcs.needGetFileTime(act) {
 		var timeErr error
-		cTime, aTime, mTime, timeErr = nsfs.GetFileTime(path)
+		cTime, aTime, mTime, timeErr = fsutil.GetFileTime(path)
 		if timeErr != nil {
 			return timeErr
 		}
@@ -242,7 +241,7 @@ func (pcs *pushClientSync) send(act action.Action, path string) (err error) {
 }
 
 func (pcs *pushClientSync) sendSymlink(oldname, newname string) (err error) {
-	cTime, aTime, mTime, timeErr := nsfs.GetFileTime(newname)
+	cTime, aTime, mTime, timeErr := fsutil.GetFileTime(newname)
 	if timeErr != nil {
 		return timeErr
 	}
@@ -311,14 +310,14 @@ func (pcs *pushClientSync) sendFileChunk(path string, pd push.PushData) error {
 	// if loopCount == 1 means read an empty file maybe, send it
 	loopCount := -1
 	checkChunkHash := false
-	ra := rate.NewReaderAt(f, pcs.maxTranRate)
+	ra := rate.NewReaderAt(f, pcs.maxTranRate, pcs.logger)
 	for {
 		loopCount++
 		n, err := ra.ReadAt(chunk, offset)
-		if nsfs.IsNonEOF(err) {
+		if fsutil.IsNonEOF(err) {
 			return err
 		}
-		if nsfs.IsEOF(err) {
+		if fsutil.IsEOF(err) {
 			isEnd = true
 		}
 		chunkSize := n
@@ -372,11 +371,11 @@ func (pcs *pushClientSync) sendChunkRequest(path string, pd *push.PushData, offs
 	if err != nil {
 		return true, err
 	} else if code == contract.NotModified {
-		log.Debug("upload a file that not modified, ignore and abort next request => %s", path)
+		pcs.logger.Debug("upload a file that not modified, ignore and abort next request => %s", path)
 		return true, nil
 	} else if code == contract.ChunkNotModified {
 		// current chunk is not modified, continue to compare next chunk in the next loop
-		log.Debug("upload a file chunk that not modified, continue to compare next chunk [%d]=> %s", *offset, path)
+		pcs.logger.Debug("upload a file chunk that not modified, continue to compare next chunk [%d]=> %s", *offset, path)
 		*checkChunkHash = true
 		*offset += int64(chunkSize)
 		// if the checkpoint compare result offset is greater than the next offset, then replace it
@@ -485,13 +484,13 @@ func (pcs *pushClientSync) httpPostWithAuth(rawURL string, act action.Action, fi
 			return nil, err
 		}
 		user := pcs.currentUser
-		cookies, err := client.SignIn(pcs.httpClient, parseUrl.Scheme, parseUrl.Host, user.UserName(), user.Password())
+		cookies, err := client.SignIn(pcs.httpClient, parseUrl.Scheme, parseUrl.Host, user.UserName(), user.Password(), pcs.logger)
 		if err != nil {
 			return nil, err
 		}
 		if len(cookies) > 0 {
 			pcs.cookies = cookies
-			log.Debug("try to auto login file server success maybe, retry to get resource => %s", rawURL)
+			pcs.logger.Debug("try to auto login file server success maybe, retry to get resource => %s", rawURL)
 			if sendFile {
 				return pcs.httpClient.HttpPostFileChunkWithCookie(rawURL, fieldName, fileName, data, chunk, pcs.cookies...)
 			}

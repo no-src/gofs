@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	nsfs "github.com/no-src/gofs/fs"
+	"github.com/no-src/nsgo/fsutil"
 )
 
 var (
@@ -37,7 +37,7 @@ func (dec *Decrypt) Decrypt() error {
 	if !dec.opt.Decrypt {
 		return nil
 	}
-	isDir, err := nsfs.IsDir(dec.opt.DecryptOut)
+	isDir, err := fsutil.IsDir(dec.opt.DecryptOut)
 	if err != nil {
 		if os.IsNotExist(err) {
 			err = os.MkdirAll(dec.opt.DecryptOut, fs.ModePerm)
@@ -57,7 +57,7 @@ func (dec *Decrypt) Decrypt() error {
 		if d.IsDir() {
 			return nil
 		}
-		r, err := NewDecryptReader(path, dec.opt.DecryptSecret)
+		r, err := newDecryptReader(path, dec.opt.DecryptSecret, dec.opt.Logger)
 		if err != nil {
 			return err
 		}

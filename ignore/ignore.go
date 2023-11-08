@@ -4,7 +4,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/no-src/log"
+	"github.com/no-src/gofs/logger"
 )
 
 // Ignore support to check the string matches the ignore rule or not
@@ -17,8 +17,8 @@ type ignore struct {
 }
 
 // New get a default Ignore instance
-func New(ignoreFile string) (Ignore, error) {
-	rules, err := parseIgnoreFile(ignoreFile)
+func New(ignoreFile string, logger *logger.Logger) (Ignore, error) {
+	rules, err := parseIgnoreFile(ignoreFile, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -36,15 +36,15 @@ func (ig *ignore) Match(s string) bool {
 	return false
 }
 
-func parseIgnoreFile(ignoreFile string) ([]Rule, error) {
+func parseIgnoreFile(ignoreFile string, logger *logger.Logger) ([]Rule, error) {
 	conf, err := os.ReadFile(ignoreFile)
 	if err != nil {
 		return nil, err
 	}
-	return parse(conf)
+	return parse(conf, logger)
 }
 
-func parse(data []byte) (rs []Rule, err error) {
+func parse(data []byte, logger *logger.Logger) (rs []Rule, err error) {
 	conf := string(data)
 	lines := strings.Split(conf, "\n")
 	switchName := filePathSwitch
@@ -60,7 +60,7 @@ func parse(data []byte) (rs []Rule, err error) {
 				if err != nil {
 					return nil, err
 				}
-				log.Debug("register %s rule, expression=%s", r.SwitchName(), r.Expression())
+				logger.Debug("register %s rule, expression=%s", r.SwitchName(), r.Expression())
 				rs = append(rs, r)
 			}
 		}

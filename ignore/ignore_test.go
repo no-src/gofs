@@ -3,7 +3,8 @@ package ignore
 import (
 	"testing"
 
-	"github.com/no-src/gofs/util/osutil"
+	"github.com/no-src/gofs/logger"
+	"github.com/no-src/nsgo/osutil"
 )
 
 const (
@@ -11,7 +12,10 @@ const (
 )
 
 func TestMatch(t *testing.T) {
-	pi, err := NewPathIgnore(testIgnoreFile, true)
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
+	pi, err := NewPathIgnore(testIgnoreFile, true, logger)
 	if err != nil {
 		t.Errorf("init default ignore component error => %v", err)
 		return
@@ -63,7 +67,10 @@ func TestMatch(t *testing.T) {
 }
 
 func TestMatch_Windows(t *testing.T) {
-	pi, err := NewPathIgnore(testIgnoreFile, true)
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
+	pi, err := NewPathIgnore(testIgnoreFile, true, logger)
 	if err != nil {
 		t.Errorf("init default ignore component error => %v", err)
 		return
@@ -104,7 +111,10 @@ func TestMatch_Windows(t *testing.T) {
 }
 
 func TestMatchPath_WithIgnoreDeletedPath_True(t *testing.T) {
-	pi, err := NewPathIgnore(testIgnoreFile, true)
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
+	pi, err := NewPathIgnore(testIgnoreFile, true, logger)
 	if err != nil {
 		t.Errorf("init default ignore component error => %v", err)
 		return
@@ -126,7 +136,10 @@ func TestMatchPath_WithIgnoreDeletedPath_True(t *testing.T) {
 }
 
 func TestMatchPath_WithIgnoreDeletedPath_False(t *testing.T) {
-	pi, err := NewPathIgnore(testIgnoreFile, false)
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
+	pi, err := NewPathIgnore(testIgnoreFile, false, logger)
 	if err != nil {
 		t.Errorf("init default ignore component error => %v", err)
 		return
@@ -149,6 +162,9 @@ func TestMatchPath_WithIgnoreDeletedPath_False(t *testing.T) {
 }
 
 func TestParse_ReturnError(t *testing.T) {
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
 	testCases := []struct {
 		expr string
 	}{
@@ -157,7 +173,7 @@ func TestParse_ReturnError(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.expr, func(t *testing.T) {
-			_, err := parse([]byte(tc.expr))
+			_, err := parse([]byte(tc.expr), logger)
 			if err == nil {
 				t.Errorf("parse the rule text should be return error => [%s] error => %v", tc.expr, err)
 				return
@@ -167,8 +183,11 @@ func TestParse_ReturnError(t *testing.T) {
 }
 
 func TestInit_ReturnError(t *testing.T) {
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
 	c := "./testdata/notfound.ignore"
-	_, err := NewPathIgnore(c, true)
+	_, err := NewPathIgnore(c, true, logger)
 	if err == nil {
 		t.Errorf("init default ignore component should be return error => %s", c)
 		return
@@ -176,7 +195,10 @@ func TestInit_ReturnError(t *testing.T) {
 }
 
 func TestInit_WithNoConfig(t *testing.T) {
-	pi, err := NewPathIgnore("", true)
+	logger := logger.NewTestLogger()
+	defer logger.Close()
+
+	pi, err := NewPathIgnore("", true, logger)
 	if err != nil {
 		t.Errorf("init default ignore component error => %v", err)
 		return

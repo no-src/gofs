@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/no-src/gofs/auth"
@@ -15,6 +16,7 @@ import (
 	"github.com/no-src/gofs/internal/about"
 	"github.com/no-src/gofs/internal/signal"
 	"github.com/no-src/gofs/internal/version"
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/monitor"
 	"github.com/no-src/gofs/report"
 	"github.com/no-src/gofs/result"
@@ -23,10 +25,7 @@ import (
 	"github.com/no-src/gofs/server/httpfs"
 	"github.com/no-src/gofs/sync"
 	"github.com/no-src/gofs/wait"
-	"github.com/no-src/log"
-	"github.com/no-src/log/formatter"
-	"github.com/no-src/log/level"
-	"github.com/no-src/log/option"
+	"github.com/no-src/nsgo/fsutil"
 )
 
 // Run running the gofs program
@@ -66,6 +65,8 @@ func RunWithConfigContent(content string, ext string) result.Result {
 
 //gocyclo:ignore
 func runWithConfig(c conf.Config, result result.Result) {
+	defer innerLogger.Close()
+
 	var err error
 
 	//  ensure all the code in this function is executed
@@ -87,37 +88,38 @@ func runWithConfig(c conf.Config, result result.Result) {
 	}
 
 	switchDebug := false
-	if c.DryRun && c.LogLevel != int(level.DebugLevel) {
-		c.LogLevel = int(level.DebugLevel)
+	if c.DryRun && c.LogLevel != int(debugLogLevel) {
+		c.LogLevel = int(debugLogLevel)
 		switchDebug = true
 	}
 
 	// init the default logger
-	if err = initDefaultLogger(c); err != nil {
+	var logger *logger.Logger
+	if logger, err = initDefaultLogger(c); err != nil {
 		result.InitDoneWithError(err)
 		return
 	}
-	defer log.Close()
+	defer logger.Close()
 
 	if switchDebug {
-		log.Info("to be able to see more details, force enable the log with debug level in dry run mode!")
+		logger.Info("to be able to see more details, force enable the log with debug level in dry run mode!")
 	}
 
 	var exit bool
 	// execute and exit
-	if exit, err = executeOnce(c); exit {
+	if exit, err = executeOnce(c, logger); exit {
 		result.InitDoneWithError(err)
 		return
 	}
 
-	if err = initDefaultValue(cp); err != nil {
-		log.Error(err, "init default value of config error")
+	if err = initDefaultValue(cp, logger); err != nil {
+		logger.Error(err, "init default value of config error")
 		result.InitDoneWithError(err)
 		return
 	}
 
 	// kill parent process
-	daemon := daemon.New(log.DefaultLogger())
+	daemon := daemon.New(logger)
 	if c.KillPPid {
 		daemon.KillPPid()
 	}
@@ -131,7 +133,7 @@ func runWithConfig(c conf.Config, result result.Result) {
 			return
 		}
 
-		ns, ss := signal.Notify(daemon.Shutdown)
+		ns, ss := signal.Notify(daemon.Shutdown, logger)
 		go func() {
 			result.RegisterNotifyHandler(ns)
 		}()
@@ -147,7 +149,7 @@ func runWithConfig(c conf.Config, result result.Result) {
 
 	userList, err := auth.ParseUsers(c.Users)
 	if err != nil {
-		log.Error(err, "parse users error => [%s]", c.Users)
+		logger.Error(err, "parse users error => [%s]", c.Users)
 		result.InitDoneWithError(err)
 		return
 	}
@@ -161,11 +163,11 @@ func runWithConfig(c conf.Config, result result.Result) {
 	defer webLogger.Close()
 
 	// create retry
-	r := retry.New(c.RetryCount, c.RetryWait.Duration(), c.RetryAsync)
+	r := retry.New(c.RetryCount, c.RetryWait.Duration(), c.RetryAsync, logger)
 
 	reporter := report.NewReporter()
 	// start a file web server
-	if err = startWebServer(c, webLogger, userList, r, reporter); err != nil {
+	if err = startWebServer(c, webLogger, userList, r, reporter, logger); err != nil {
 		result.InitDoneWithError(err)
 		return
 	}
@@ -178,24 +180,24 @@ func runWithConfig(c conf.Config, result result.Result) {
 	}
 	defer eventLogger.Close()
 
-	pi, err := ignore.NewPathIgnore(c.IgnoreConf, c.IgnoreDeletedPath)
+	pi, err := ignore.NewPathIgnore(c.IgnoreConf, c.IgnoreDeletedPath, logger)
 	if err != nil {
-		log.Error(err, "init ignore config error")
+		logger.Error(err, "init ignore config error")
 		result.InitDoneWithError(err)
 		return
 	}
 
 	// init the monitor
-	m, err := initMonitor(c, userList, eventLogger, r, pi, reporter)
+	m, err := initMonitor(c, userList, eventLogger, r, pi, reporter, logger)
 	if err != nil {
 		result.InitDoneWithError(err)
 		return
 	}
 
 	// start monitor
-	log.Info("monitor is starting...")
-	defer log.Info("gofs exited")
-	ns, ss := signal.Notify(m.Shutdown)
+	logger.Info("monitor is starting...")
+	defer logger.Info("gofs exited")
+	ns, ss := signal.Notify(m.Shutdown, logger)
 	go func() {
 		result.RegisterNotifyHandler(ns)
 	}()
@@ -203,17 +205,17 @@ func runWithConfig(c conf.Config, result result.Result) {
 	w, err := m.Start()
 	result.InitDoneWithError(err)
 	if err != nil {
-		log.Error(err, "start to monitor failed")
+		logger.Error(err, "start to monitor failed")
 		return
 	}
-	err = log.ErrorIf(w.Wait(), "monitor running failed")
+	err = logger.ErrorIf(w.Wait(), "monitor running failed")
 	ss()
 }
 
 func parseConfigFile(cp *conf.Config) error {
 	if len(cp.Conf) > 0 {
 		if err := conf.Parse(cp.Conf, cp); err != nil {
-			log.Error(err, "parse config file error => [%s]", cp.Conf)
+			innerLogger.Error(err, "parse config file error => [%s]", cp.Conf)
 			return err
 		}
 	}
@@ -221,139 +223,82 @@ func parseConfigFile(cp *conf.Config) error {
 }
 
 // executeOnce execute the work and get ready to exit
-func executeOnce(c conf.Config) (exit bool, err error) {
+func executeOnce(c conf.Config, logger *logger.Logger) (exit bool, err error) {
 	// print version info
 	if c.PrintVersion {
-		version.PrintVersion("gofs")
+		version.PrintVersion("gofs", logger.Log)
 		return true, nil
 	}
 
 	// print about info
 	if c.PrintAbout {
-		about.PrintAbout()
+		about.PrintAbout(logger.Log)
 		return true, nil
 	}
 
 	// clear the deleted files
 	if c.ClearDeletedPath {
-		return true, log.ErrorIf(fs.ClearDeletedFile(c.Dest.Path()), "clear the deleted files error")
+		return true, logger.ErrorIf(fs.ClearDeletedFile(c.Dest.Path().Base(), logger), "clear the deleted files error")
 	}
 
 	// decrypt the specified file or directory
 	if c.Decrypt {
-		dec, err := encrypt.NewDecrypt(encrypt.NewOption(c))
+		dec, err := encrypt.NewDecrypt(encrypt.NewOption(c, logger))
 		if err != nil {
-			log.Error(err, "init decrypt component error")
+			logger.Error(err, "init decrypt component error")
 			return true, err
 		}
-		return true, log.ErrorIf(dec.Decrypt(), "decrypt error")
+		return true, logger.ErrorIf(dec.Decrypt(), "decrypt error")
 	}
 
 	// calculate checksum
 	if c.Checksum {
-		return true, checksum.PrintChecksum(c.Source.Path(), c.ChunkSize, c.CheckpointCount, c.ChecksumAlgorithm)
+		return true, checksum.PrintChecksum(c.Source.Path().Base(), c.ChunkSize, c.CheckpointCount, c.ChecksumAlgorithm, logger)
 	}
 	return false, nil
 }
 
-// initDefaultLogger init the default logger
-func initDefaultLogger(c conf.Config) error {
-	// init log formatter
-	if c.LogFormat != formatter.TextFormatter {
-		log.Info("switch logger format to %s", c.LogFormat)
-	}
-	formatter.InitDefaultFormatter(c.LogFormat)
-	log.DefaultLogger().WithFormatter(formatter.New(c.LogFormat))
-
-	var loggers []log.Logger
-	loggers = append(loggers, log.NewConsoleLogger(level.Level(c.LogLevel)))
-	if c.EnableFileLogger {
-		filePrefix := "gofs_"
-		if c.IsDaemon {
-			filePrefix += "daemon_"
-		}
-		flogger, err := log.NewFileLoggerWithOption(option.NewFileLoggerOption(level.Level(c.LogLevel), c.LogDir, filePrefix, c.LogFlush, c.LogFlushInterval.Duration(), c.LogSplitDate))
-		if err != nil {
-			log.Error(err, "init file logger error")
-			return err
-		}
-		loggers = append(loggers, flogger)
-	}
-
-	log.InitDefaultLoggerWithSample(log.NewMultiLogger(loggers...), c.LogSampleRate)
-	return nil
-}
-
-// initWebServerLogger init the web server logger
-func initWebServerLogger(c conf.Config) (log.Logger, error) {
-	var webLogger = log.NewConsoleLogger(level.Level(c.LogLevel))
-	if c.EnableFileLogger && c.EnableFileServer {
-		webFileLogger, err := log.NewFileLoggerWithOption(option.NewFileLoggerOption(level.Level(c.LogLevel), c.LogDir, "web_", c.LogFlush, c.LogFlushInterval.Duration(), c.LogSplitDate))
-		if err != nil {
-			log.Error(err, "init the web server file logger error")
-			return nil, err
-		}
-		webLogger = log.NewMultiLogger(webFileLogger, webLogger)
-	}
-	return webLogger, nil
-}
-
 // startWebServer start a file web server
-func startWebServer(c conf.Config, webLogger log.Logger, userList []*auth.User, r retry.Retry, reporter report.Reporter) error {
+func startWebServer(c conf.Config, webLogger *logger.Logger, userList []*auth.User, r retry.Retry, reporter report.Reporter, logger *logger.Logger) error {
 	if c.EnableFileServer {
 		waitInit := wait.NewWaitDone()
 		go func() {
 			httpfs.StartFileServer(server.NewServerOption(c, waitInit, userList, webLogger, r, reporter))
 		}()
-
-		return log.ErrorIf(waitInit.Wait(), "start the file server [%s] error", c.FileServerAddr)
+		return logger.ErrorIf(waitInit.Wait(), "start the file server [%s] error", c.FileServerAddr)
 	}
 	return nil
 }
 
-// initEventLogger init the event logger
-func initEventLogger(c conf.Config) (log.Logger, error) {
-	var eventLogger = log.NewEmptyLogger()
-	if c.EnableEventLog {
-		eventFileLogger, err := log.NewFileLoggerWithOption(option.NewFileLoggerOption(level.Level(c.LogLevel), c.LogDir, "event_", c.LogFlush, c.LogFlushInterval.Duration(), c.LogSplitDate))
-		if err != nil {
-			log.Error(err, "init the event file logger error")
-			return nil, err
-		}
-		eventLogger = eventFileLogger
-	}
-	return eventLogger, nil
-}
-
 // initMonitor init the monitor
-func initMonitor(c conf.Config, userList []*auth.User, eventLogger log.Logger, r retry.Retry, pi ignore.PathIgnore, reporter report.Reporter) (monitor.Monitor, error) {
+func initMonitor(c conf.Config, userList []*auth.User, eventWriter io.Writer, r retry.Retry, pi ignore.PathIgnore, reporter report.Reporter, logger *logger.Logger) (monitor.Monitor, error) {
 	// create syncer
-	syncer, err := sync.NewSync(sync.NewSyncOption(c, userList, r, pi, reporter))
+	syncer, err := sync.NewSync(sync.NewSyncOption(c, userList, r, pi, reporter, logger))
 	if err != nil {
-		log.Error(err, "create the instance of Sync error")
+		logger.Error(err, "create the instance of Sync error")
 		return nil, err
 	}
 
 	// create monitor
-	m, err := monitor.NewMonitor(monitor.NewMonitorOption(c, syncer, r, userList, eventLogger, pi, reporter), RunWithConfigContent)
+	m, err := monitor.NewMonitor(monitor.NewMonitorOption(c, syncer, r, userList, eventWriter, pi, reporter, logger), RunWithConfigContent)
 	if err != nil {
-		log.Error(err, "create the instance of Monitor error")
+		logger.Error(err, "create the instance of Monitor error")
 		return nil, err
 	}
 
 	err = m.SyncCron(c.SyncCron)
 	if err != nil {
-		log.Error(err, "register sync cron task error")
+		logger.Error(err, "register sync cron task error")
 		return nil, err
 	}
 	return m, nil
 }
 
 // initDefaultValue init default value of config
-func initDefaultValue(cp *conf.Config) error {
+func initDefaultValue(cp *conf.Config, logger *logger.Logger) error {
 	initFileServer(cp)
 
-	if err := generateRandomUser(cp); err != nil {
+	if err := generateRandomUser(cp, logger); err != nil {
 		return err
 	}
 
@@ -377,7 +322,7 @@ func initFileServer(cp *conf.Config) {
 }
 
 // generateRandomUser check and generate some random user
-func generateRandomUser(cp *conf.Config) error {
+func generateRandomUser(cp *conf.Config, logger *logger.Logger) error {
 	if cp.RandomUserCount > 0 && cp.EnableFileServer {
 		userList, err := auth.RandomUser(cp.RandomUserCount, cp.RandomUserNameLen, cp.RandomPasswordLen, cp.RandomDefaultPerm)
 		if err != nil {
@@ -392,7 +337,7 @@ func generateRandomUser(cp *conf.Config) error {
 		} else {
 			cp.Users = randUserStr
 		}
-		log.Info("generate random users success => [%s]", cp.Users)
+		logger.Info("generate random users success => [%s]", cp.Users)
 	}
 	return nil
 }
@@ -400,14 +345,14 @@ func generateRandomUser(cp *conf.Config) error {
 // checkTLS check cert and key file of the TLS
 func checkTLS(c conf.Config) error {
 	if c.EnableTLS && (c.Source.Server() || c.EnableFileServer) {
-		exist, err := fs.FileExist(c.TLSCertFile)
+		exist, err := fsutil.FileExist(c.TLSCertFile)
 		if err != nil {
 			return err
 		}
 		if !exist {
 			return fmt.Errorf("cert file is not found for tls => [%s], for more information, see -tls and -tls_cert_file flags", c.TLSCertFile)
 		}
-		exist, err = fs.FileExist(c.TLSKeyFile)
+		exist, err = fsutil.FileExist(c.TLSKeyFile)
 		if err != nil {
 			return err
 		}

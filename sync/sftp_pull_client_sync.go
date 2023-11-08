@@ -17,6 +17,7 @@ func NewSftpPullClientSync(opt Option) (Sync, error) {
 	chunkSize := opt.ChunkSize
 	maxTranRate := opt.MaxTranRate
 	r := opt.Retry
+	logger := opt.Logger
 
 	if chunkSize <= 0 {
 		return nil, errInvalidChunkSize
@@ -28,24 +29,19 @@ func NewSftpPullClientSync(opt Option) (Sync, error) {
 	}
 
 	s := &sftpPullClientSync{
-		driverPullClientSync: driverPullClientSync{
-			diskSync: *ds,
-		},
-		remoteAddr: source.Addr(),
+		driverPullClientSync: newDriverPullClientSync(*ds),
+		remoteAddr:           source.Addr(),
 	}
-	s.driver = sftp.NewSFTPDriver(s.remoteAddr, source.SSHConfig(), true, r, maxTranRate)
+	s.driver = sftp.NewSFTPDriver(s.remoteAddr, source.SSHConfig(), true, r, maxTranRate, logger)
 
 	err = s.start()
 	if err != nil {
 		return nil, err
 	}
 
-	// reset the sourceAbsPath because the source.Path() or source.RemotePath() is absolute representation of path and the source.Path() or source.RemotePath() may be cross-platform
-	// source.Path() and source.RemotePath() are equivalent here, and source.RemotePath() has higher priority
-	s.diskSync.sourceAbsPath = source.RemotePath()
-	if len(s.diskSync.sourceAbsPath) == 0 {
-		s.diskSync.sourceAbsPath = source.Path()
-	}
+	// reset the sourceAbsPath because the source.RemotePath() is absolute representation of path and the source.RemotePath() may be cross-platform
+	s.diskSync.sourceAbsPath = source.RemotePath().Base()
+
 	// reset some functions for sftp
 	s.diskSync.isDirFn = s.IsDir
 	s.diskSync.statFn = s.driver.Stat

@@ -14,16 +14,20 @@ jobs:
   build:
     strategy:
       matrix:
-        go: [ '1.20','1.21' ]
+        go: [ '1.20', '1.21' ]
         os: [ 'ubuntu-latest', 'windows-latest', 'macos-latest' ]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go }}
+
+      - name: Init Env
+        run: chmod +x ./scripts/init-env.sh && ./scripts/init-env.sh
+        if: matrix.os != 'windows-latest'
 
       - name: Build
         run: go build -v ./...
@@ -33,9 +37,6 @@ jobs:
 
       - name: Test Encrypt
         run: go test -v -race -tags=encrypt_test ./encrypt
-
-      - name: Test HttpUtil
-        run: go test -v -race -tags=httputil_test ./util/httputil
 
       - name: Test Integration
         run: go test -v -race -tags=integration_test ./integration
@@ -61,8 +62,4 @@ jobs:
 
       - name: Codecov
         uses: codecov/codecov-action@v3
-        if: matrix.os == 'ubuntu-latest'
-
-      - name: Test Release
-        run: chmod +x ./scripts/build-release.sh && ./scripts/build-release.sh
         if: matrix.os == 'ubuntu-latest'

@@ -17,6 +17,9 @@ func NewSftpPushClientSync(opt Option) (Sync, error) {
 	chunkSize := opt.ChunkSize
 	maxTranRate := opt.MaxTranRate
 	r := opt.Retry
+	logger := opt.Logger
+	syncOnce := opt.SyncOnce
+	syncCron := opt.SyncCron
 
 	if chunkSize <= 0 {
 		return nil, errInvalidChunkSize
@@ -28,16 +31,14 @@ func NewSftpPushClientSync(opt Option) (Sync, error) {
 	}
 
 	s := &sftpPushClientSync{
-		driverPushClientSync: driverPushClientSync{
-			diskSync: *ds,
-			basePath: dest.RemotePath(),
-		},
-		remoteAddr: dest.Addr(),
+		driverPushClientSync: newDriverPushClientSync(*ds, dest.RemotePath().Base()),
+		remoteAddr:           dest.Addr(),
 	}
 
-	s.driver = sftp.NewSFTPDriver(s.remoteAddr, dest.SSHConfig(), true, r, maxTranRate)
+	s.driver = sftp.NewSFTPDriver(s.remoteAddr, dest.SSHConfig(), true, r, maxTranRate, logger)
 
-	err = s.start()
+	isSync := syncOnce || len(syncCron) > 0
+	err = s.start(isSync)
 	if err != nil {
 		return nil, err
 	}

@@ -5,7 +5,7 @@ export MINIO_ROOT_PASSWORD=minio_pwd
 export MINIO_CONSOLE_ADDRESS=:9001
 
 # Install MinIO (https://github.com/minio/minio)
-wget https://dl.min.io/server/minio/release/linux-amd64/minio
+wget -q https://dl.min.io/server/minio/release/linux-amd64/minio
 chmod +x minio
 
 # Run MinIO
@@ -13,7 +13,7 @@ mkdir minio-data
 setsid ./minio server ./minio-data &
 
 # Install mc (https://github.com/minio/mc)
-wget https://dl.min.io/client/mc/release/linux-amd64/mc
+wget -q https://dl.min.io/client/mc/release/linux-amd64/mc
 chmod +x mc
 
 # Set MinIO alias

@@ -9,12 +9,13 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/no-src/log"
+	"github.com/no-src/gofs/logger"
 )
 
 type decryptReader struct {
 	zrc    *zip.ReadCloser
 	secret []byte
+	logger *logger.Logger
 }
 
 func (r *decryptReader) WriteTo(path string) (err error) {
@@ -71,13 +72,13 @@ func (r *decryptReader) WriteTo(path string) (err error) {
 		if err != nil {
 			return err
 		}
-		log.Info("save decryption file success => %s", outPath)
+		r.logger.Info("save decryption file success => %s", outPath)
 	}
 	return err
 }
 
-// NewDecryptReader create a decryption reader
-func NewDecryptReader(path string, secret []byte) (*decryptReader, error) {
+// newDecryptReader create a decryption reader
+func newDecryptReader(path string, secret []byte, logger *logger.Logger) (*decryptReader, error) {
 	zrc, err := zip.OpenReader(path)
 	if err != nil {
 		return nil, err
@@ -85,5 +86,6 @@ func NewDecryptReader(path string, secret []byte) (*decryptReader, error) {
 	return &decryptReader{
 		zrc:    zrc,
 		secret: secret,
+		logger: logger,
 	}, nil
 }

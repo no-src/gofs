@@ -2,7 +2,7 @@ package report
 
 import (
 	"github.com/no-src/gofs/core"
-	"github.com/no-src/gofs/util/timeutil"
+	"github.com/no-src/nsgo/timeutil"
 )
 
 // ConnStat the client connection info

@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/no-src/gofs/auth"
-	"github.com/no-src/gofs/util/jsonutil"
+	"github.com/no-src/nsgo/jsonutil"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"

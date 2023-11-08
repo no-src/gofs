@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/no-src/gofs/util/randutil"
+	"github.com/no-src/nsgo/randutil"
 )
 
 // User a login user info

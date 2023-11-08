@@ -6,14 +6,19 @@ import (
 	"os"
 
 	"github.com/no-src/gofs/driver"
-	nsfs "github.com/no-src/gofs/fs"
-	"github.com/no-src/log"
+	"github.com/no-src/nsgo/fsutil"
 )
 
 type driverPullClientSync struct {
 	diskSync
 
 	driver driver.Driver
+}
+
+func newDriverPullClientSync(ds diskSync) driverPullClientSync {
+	return driverPullClientSync{
+		diskSync: ds,
+	}
 }
 
 func (s *driverPullClientSync) start() error {
@@ -55,7 +60,7 @@ func (s *driverPullClientSync) write(path, dest string) error {
 		return err
 	}
 	defer func() {
-		log.ErrorIf(sourceFile.Close(), "[%s pull client sync] [write] close the source file error", s.driver.DriverName())
+		s.logger.ErrorIf(sourceFile.Close(), "[%s pull client sync] [write] close the source file error", s.driver.DriverName())
 	}()
 
 	sourceStat, err := sourceFile.Stat()
@@ -72,16 +77,16 @@ func (s *driverPullClientSync) write(path, dest string) error {
 	destSize := destStat.Size()
 
 	if s.hash.QuickCompare(s.forceChecksum, sourceSize, destSize, sourceStat.ModTime(), destStat.ModTime()) {
-		log.Debug("[%s pull client sync] [write] [ignored], the file size and file modification time are both unmodified => %s", s.driver.DriverName(), path)
+		s.logger.Debug("[%s pull client sync] [write] [ignored], the file size and file modification time are both unmodified => %s", s.driver.DriverName(), path)
 		return nil
 	}
 
-	destFile, err := nsfs.OpenRWFile(dest)
+	destFile, err := fsutil.OpenRWFile(dest)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		log.ErrorIf(destFile.Close(), "[%s pull client sync] [write] close the dest file error", s.driver.DriverName())
+		s.logger.ErrorIf(destFile.Close(), "[%s pull client sync] [write] close the dest file error", s.driver.DriverName())
 	}()
 
 	reader := bufio.NewReader(sourceFile)
@@ -101,7 +106,7 @@ func (s *driverPullClientSync) write(path, dest string) error {
 	err = writer.Flush()
 
 	if err == nil {
-		log.Info("[driver-pull] [write] [success] size[%d => %d] [%s] => [%s]", sourceSize, n, path, dest)
+		s.logger.Info("[driver-pull] [write] [success] size[%d => %d] [%s] => [%s]", sourceSize, n, path, dest)
 		s.chtimes(path, dest)
 	}
 	return err
@@ -116,7 +121,7 @@ func (s *driverPullClientSync) Rename(path string) error {
 }
 
 func (s *driverPullClientSync) Chmod(path string) error {
-	log.Debug("Chmod is unimplemented [%s]", path)
+	s.logger.Debug("Chmod is unimplemented [%s]", path)
 	return nil
 }
 

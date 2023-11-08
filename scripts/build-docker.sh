@@ -4,10 +4,9 @@
 # build the latest image
 # ./scripts/build-docker.sh
 # build the image with a specified tag
-# ./scripts/build-docker.sh v0.6.0
+# ./scripts/build-docker.sh v0.8.0
 
-# switch to branch main
-git checkout main
+echo "current branch is $(git branch --show-current)"
 
 # update git repository
 # git pull --no-rebase
@@ -18,28 +17,30 @@ docker pull golang:latest
 # set GOPROXY environment variable
 # GOPROXY=https://goproxy.cn
 
-# set the gofs docker image name by GOFS_IMAGE_NAME variable
-GOFS_IMAGE_NAME=nosrc/gofs
+SOFT_NAME=gofs
+# docker image name
+SOFT_IMAGE_NAME=nosrc/${SOFT_NAME}
+# docker image tag
+SOFT_IMAGE_TAG=latest
 
-# set the gofs docker image tag by GOFS_IMAGE_TAG variable
-GOFS_IMAGE_TAG=latest
-
-# reset GOFS_IMAGE_TAG to the value of the first parameter provided by the user
+# reset SOFT_IMAGE_TAG to the value of the first parameter provided by the user
 if [ -n "$1" ]; then
-  GOFS_IMAGE_TAG=$1
+  SOFT_IMAGE_TAG=$1
 fi
 
 # remove the existing old image
-docker rmi -f $GOFS_IMAGE_NAME:$GOFS_IMAGE_TAG
+docker rmi -f $SOFT_IMAGE_NAME:$SOFT_IMAGE_TAG
 
 # build Dockerfile
-docker build --build-arg GOPROXY=$GOPROXY -t $GOFS_IMAGE_NAME:$GOFS_IMAGE_TAG .
+docker build --build-arg GOPROXY=$GOPROXY -t $SOFT_IMAGE_NAME:$SOFT_IMAGE_TAG .
 
 # remove dangling images
 docker image prune -f
 
-# run a container to print the gofs version
-docker run -it --rm --name running-gofs-version $GOFS_IMAGE_NAME:$GOFS_IMAGE_TAG gofs -v
+docker images | grep ${SOFT_NAME}
+
+# run a container to print the soft version
+docker run --rm --name running-${SOFT_NAME}-version $SOFT_IMAGE_NAME:$SOFT_IMAGE_TAG ${SOFT_NAME} -v
 
 # push the image to the DockerHub
-# docker push $GOFS_IMAGE_NAME:$GOFS_IMAGE_TAG
+# docker push $SOFT_IMAGE_NAME:$SOFT_IMAGE_TAG

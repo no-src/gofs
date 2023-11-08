@@ -3,7 +3,7 @@ package eventlog
 import (
 	"fmt"
 
-	"github.com/no-src/gofs/util/timeutil"
+	"github.com/no-src/nsgo/timeutil"
 )
 
 // Event the description of file change event

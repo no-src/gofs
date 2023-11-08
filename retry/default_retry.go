@@ -4,25 +4,27 @@ import (
 	"context"
 	"time"
 
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/wait"
-	"github.com/no-src/log"
 )
 
 type defaultRetry struct {
-	count int
-	wait  time.Duration
-	async bool
+	count  int
+	wait   time.Duration
+	async  bool
+	logger *logger.Logger
 }
 
 // New get a default retry instance
 // count the retry execute count
 // wait execute once per wait interval
 // async is async or sync to execute retry
-func New(count int, wait time.Duration, async bool) Retry {
+func New(count int, wait time.Duration, async bool, logger *logger.Logger) Retry {
 	r := &defaultRetry{
-		count: count,
-		wait:  wait,
-		async: async,
+		count:  count,
+		wait:   wait,
+		async:  async,
+		logger: logger,
 	}
 	return r
 }
@@ -36,7 +38,7 @@ func (r *defaultRetry) DoWithContext(ctx context.Context, f func() error, desc s
 	defer func() {
 		e := recover()
 		if e != nil {
-			log.Warn("retry do recover from => [%s] error => %v", desc, e)
+			r.logger.Warn("retry do recover from => [%s] error => %v", desc, e)
 			wd.Done()
 			w = wd
 		}
@@ -46,7 +48,7 @@ func (r *defaultRetry) DoWithContext(ctx context.Context, f func() error, desc s
 		wd.Done()
 		return wd
 	}
-	log.Warn("execute failed, wait to retry [%s] %d times, execute once per %s", desc, r.count, r.wait)
+	r.logger.Warn("execute failed, wait to retry [%s] %d times, execute once per %s", desc, r.count, r.wait)
 	if r.async {
 		go r.retry(ctx, wd, f, desc)
 	} else {
@@ -62,7 +64,7 @@ func (r *defaultRetry) retry(ctx context.Context, wd wait.Done, f func() error, 
 	for i := 0; i < r.count; i++ {
 		select {
 		case <-ctx.Done():
-			log.Debug("retry [%d] [%s] done => %s", i+1, desc, ctx.Err())
+			r.logger.Debug("retry [%d] [%s] done => %s", i+1, desc, ctx.Err())
 			return
 		default:
 
@@ -70,13 +72,13 @@ func (r *defaultRetry) retry(ctx context.Context, wd wait.Done, f func() error, 
 		err := f()
 		if err == nil {
 			if i > 0 {
-				log.Debug("retry [%d] success [%s] ", i+1, desc)
+				r.logger.Debug("retry [%d] success [%s] ", i+1, desc)
 			}
 			break
 		} else {
-			log.Debug("retry [%d] after %s [%s]", i+1, r.wait.String(), desc)
+			r.logger.Debug("retry [%d] after %s [%s]", i+1, r.wait.String(), desc)
 			if i == r.count-1 {
-				log.Error(err, "retry [%d] times, and aborted [%s]", r.count, desc)
+				r.logger.Error(err, "retry [%d] times, and aborted [%s]", r.count, desc)
 			} else {
 				time.Sleep(r.wait)
 			}

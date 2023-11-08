@@ -17,24 +17,25 @@ import (
 	"github.com/no-src/gofs/contract/push"
 	"github.com/no-src/gofs/core"
 	nsfs "github.com/no-src/gofs/fs"
+	"github.com/no-src/gofs/logger"
 	"github.com/no-src/gofs/server"
-	"github.com/no-src/gofs/util/hashutil"
-	"github.com/no-src/gofs/util/jsonutil"
-	"github.com/no-src/log"
+	"github.com/no-src/nsgo/fsutil"
+	"github.com/no-src/nsgo/hashutil"
+	"github.com/no-src/nsgo/jsonutil"
 )
 
 type pushHandler struct {
-	logger                log.Logger
+	logger                *logger.Logger
 	storagePath           string
 	enableLogicallyDelete bool
 	hash                  hashutil.Hash
 }
 
 // NewPushHandlerFunc returns a gin.HandlerFunc that to manage the files
-func NewPushHandlerFunc(logger log.Logger, source core.VFS, enableLogicallyDelete bool, hash hashutil.Hash) gin.HandlerFunc {
+func NewPushHandlerFunc(logger *logger.Logger, source core.VFS, enableLogicallyDelete bool, hash hashutil.Hash) gin.HandlerFunc {
 	return (&pushHandler{
 		logger:                logger,
-		storagePath:           source.Path(),
+		storagePath:           source.Path().Base(),
 		enableLogicallyDelete: enableLogicallyDelete,
 		hash:                  hash,
 	}).Handle
@@ -97,7 +98,7 @@ func (h *pushHandler) buildAbsPath(path string) string {
 
 func (h *pushHandler) create(fi contract.FileInfo) error {
 	path := h.buildAbsPath(fi.Path)
-	exist, err := nsfs.FileExist(path)
+	exist, err := fsutil.FileExist(path)
 	if err != nil {
 		return err
 	}
@@ -115,7 +116,7 @@ func (h *pushHandler) create(fi contract.FileInfo) error {
 		if err != nil {
 			return err
 		}
-		f, err := nsfs.CreateFile(path)
+		f, err := fsutil.CreateFile(path)
 		defer func() {
 			if err = f.Close(); err != nil {
 				h.logger.Error(err, "close file error")
@@ -140,7 +141,7 @@ func (h *pushHandler) symlink(fi contract.FileInfo) error {
 	if err != nil {
 		return err
 	}
-	if err = nsfs.Symlink(fi.LinkTo, path); err != nil {
+	if err = fsutil.Symlink(fi.LinkTo, path); err != nil {
 		return err
 	}
 	h.logger.Info("create symlink success [%s] -> [%s]", path, fi.LinkTo)
@@ -201,7 +202,7 @@ func (h *pushHandler) write(pushData push.PushData, c *gin.Context) (server.ApiR
 
 	// change file times
 	if err = h.chtimes(path, fi); err != nil {
-		log.Error(err, "change file times error after write file => [%s]", path)
+		h.logger.Error(err, "change file times error after write file => [%s]", path)
 		return server.NewErrorApiResult(-507, fmt.Sprintf("change file times error => [%s]", fi.Path)), err
 	}
 
@@ -226,7 +227,7 @@ func (h *pushHandler) Save(file *multipart.FileHeader, dst string, pushData push
 
 	var out *os.File
 	if offset > 0 {
-		out, err = nsfs.CreateFile(dst)
+		out, err = fsutil.CreateFile(dst)
 	} else {
 		out, err = os.Create(dst)
 	}
@@ -261,7 +262,7 @@ func (h *pushHandler) compare(dst string, pushData push.PushData) (contract.Code
 	if pushAction == push.CompareFilePushAction || pushAction == push.CompareFileAndChunkPushAction {
 		destStat, err := os.Stat(dst)
 		if err == nil && h.quickCompare(fileSize, destStat.Size(), pushData.FileInfo.MTime, destStat.ModTime().Unix(), pushData.ForceChecksum) {
-			log.Debug("[push handler] the file size and file modification time are both unmodified => %s", pushData.FileInfo.Path)
+			h.logger.Debug("[push handler] the file size and file modification time are both unmodified => %s", pushData.FileInfo.Path)
 			return contract.NotModified, nil
 		}
 	}

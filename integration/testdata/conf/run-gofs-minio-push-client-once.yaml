@@ -1,0 +1,5 @@
+source: ./minio-push-client-once/source
+dest: minio://127.0.0.1:9000?secure=false&local_sync_disabled=false&path=./minio-push-client-once/dest&remote_path=minio-bucket
+log_dir: ./minio-push-client-once-logs/
+users: minio_user|minio_pwd
+sync_once: true

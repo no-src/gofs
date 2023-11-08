@@ -12,10 +12,9 @@ import (
 	"github.com/no-src/gofs/api/apiserver"
 	"github.com/no-src/gofs/api/monitor"
 	"github.com/no-src/gofs/contract"
-	"github.com/no-src/gofs/fs"
 	"github.com/no-src/gofs/server"
-	"github.com/no-src/gofs/util/hashutil"
-	"github.com/no-src/log"
+	"github.com/no-src/nsgo/fsutil"
+	"github.com/no-src/nsgo/hashutil"
 )
 
 var (
@@ -41,6 +40,7 @@ func NewRemoteServerSync(opt Option) (Sync, error) {
 	tokenSecret := opt.TokenSecret
 	users := opt.Users
 	taskConf := opt.TaskConf
+	logger := opt.Logger
 
 	ds, err := newDiskSync(opt)
 	if err != nil {
@@ -73,10 +73,10 @@ func NewRemoteServerSync(opt Option) (Sync, error) {
 	}
 	rs.serverAddr = strings.TrimRight(rs.serverAddr, "/")
 	if invalidPort {
-		log.Warn("create remote server sync warning, you should enable the file server with -server and -server_addr flags")
+		rs.logger.Warn("create remote server sync warning, you should enable the file server with -server and -server_addr flags")
 	}
 
-	rs.server, err = apiserver.New(source.Host(), source.Port(), enableTLS, certFile, keyFile, tokenSecret, users, opt.Reporter, rs.serverAddr, log.DefaultLogger(), taskConf)
+	rs.server, err = apiserver.New(source.Host(), source.Port(), enableTLS, certFile, keyFile, tokenSecret, users, opt.Reporter, rs.serverAddr, logger, taskConf)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ func (rs *remoteServerSync) send(act action.Action, path string) (err error) {
 
 	if act == action.WriteAction || act == action.CreateAction {
 		var timeErr error
-		cTime, aTime, mTime, timeErr = fs.GetFileTime(path)
+		cTime, aTime, mTime, timeErr = fsutil.GetFileTime(path)
 		if timeErr != nil {
 			return timeErr
 		}
@@ -196,7 +196,7 @@ func (rs *remoteServerSync) send(act action.Action, path string) (err error) {
 }
 
 func (rs *remoteServerSync) sendSymlink(oldname, newname string) (err error) {
-	cTime, aTime, mTime, timeErr := fs.GetFileTime(newname)
+	cTime, aTime, mTime, timeErr := fsutil.GetFileTime(newname)
 	if timeErr != nil {
 		return timeErr
 	}
@@ -236,7 +236,7 @@ func (rs *remoteServerSync) start() error {
 		return errNilRemoteSyncServer
 	}
 	go func() {
-		log.ErrorIf(rs.server.Start(), "start api server error")
+		rs.logger.ErrorIf(rs.server.Start(), "start api server error")
 	}()
 	return nil
 }

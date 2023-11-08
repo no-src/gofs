@@ -692,3 +692,31 @@ $ gofs -about
 
 The [gofs-webui](https://github.com/no-src/gofs-webui) is a web UI tool for `gofs`, and it allows you to generate the
 config file of `gofs` through the web UI, making the use of gofs easier.
+
+## Contributing
+
+### How To Contribute
+
+```mermaid
+%%{init: { "flowchart": {"htmlLabels": false}} }%%
+flowchart TD
+  PR[pull request]
+  MainRepo[github.com/no-src/gofs.git] -- 1.fork --> ForkRepo[github.com/yourname/gofs.git]
+  ForkRepo -- 2.git clone --> LocalRepo[local repository]
+  LocalRepo -- 3.commit changes --> NewBranch[new branch]
+  NewBranch -- 4.git push --> ForkRepo
+  ForkRepo -- 5.create pull request --> PR
+  PR -- 6.merge to --> MainRepo
+```
+
+### Cloud Development Environments
+
+Quick to contribute using cloud development environments.
+
+#### Github Codespaces
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/no-src/gofs)
+
+#### Gitpod
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/no-src/gofs)
