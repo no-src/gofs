@@ -12,7 +12,7 @@ require (
 	github.com/no-src/fsctl v0.1.3-0.20231103153818-803e58721165
 	github.com/no-src/log v0.3.1
 	github.com/no-src/nscache v0.1.1
-	github.com/no-src/nsgo v0.0.0-20231103152835-167bae0e1fb2
+	github.com/no-src/nsgo v0.0.1
 	github.com/pkg/sftp v1.13.6
 	github.com/quic-go/quic-go v0.40.0
 	github.com/robfig/cron/v3 v3.0.1
