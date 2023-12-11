@@ -16,8 +16,6 @@ func TestVFSType(t *testing.T) {
 		{FTP, "FTP"},
 		{SFTP, "SFTP"},
 		{MinIO, "MinIO"},
-		{NetworkDisk, "NetworkDisk"},
-		{SharedFolder, "SharedFolder"},
 	}
 
 	for _, tc := range testCases {
