@@ -16,10 +16,6 @@ const (
 	SFTP
 	// MinIO the MinIO data source
 	MinIO
-	// NetworkDisk the network disk data source
-	NetworkDisk
-	// SharedFolder the shared folder data source
-	SharedFolder
 )
 
 // String return the VFSType name
@@ -35,10 +31,6 @@ func (t VFSType) String() string {
 		return "SFTP"
 	case MinIO:
 		return "MinIO"
-	case NetworkDisk:
-		return "NetworkDisk"
-	case SharedFolder:
-		return "SharedFolder"
 	default:
 		return "Unknown"
 	}
