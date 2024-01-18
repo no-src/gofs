@@ -14,7 +14,7 @@ import (
 func TestConfig_ToArgs(t *testing.T) {
 	c := Config{
 		SyncOnce:          true,
-		ChunkSize:         1024,
+		ChunkSize:         core.NewSize(1024),
 		SyncDelayTime:     core.Duration(time.Second * 3),
 		Source:            core.NewVFS("rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1"),
 		SessionConnection: "memory:",

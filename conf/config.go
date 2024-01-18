@@ -17,23 +17,23 @@ type Config struct {
 	Conf         string `json:"-" yaml:"-"`
 
 	// file sync
-	Source                core.VFS `json:"source" yaml:"source"`
-	Dest                  core.VFS `json:"dest" yaml:"dest"`
-	SyncOnce              bool     `json:"sync_once" yaml:"sync_once"`
-	SyncCron              string   `json:"sync_cron" yaml:"sync_cron"`
-	EnableLogicallyDelete bool     `json:"logically_delete" yaml:"logically_delete"`
-	ClearDeletedPath      bool     `json:"clear_deleted" yaml:"clear_deleted"`
-	IgnoreConf            string   `json:"ignore_conf" yaml:"ignore_conf"`
-	IgnoreDeletedPath     bool     `json:"ignore_deleted" yaml:"ignore_deleted"`
-	ChunkSize             int64    `json:"chunk_size" yaml:"chunk_size"`
-	CheckpointCount       int      `json:"checkpoint_count" yaml:"checkpoint_count"`
-	ForceChecksum         bool     `json:"force_checksum" yaml:"force_checksum"`
-	ChecksumAlgorithm     string   `json:"checksum_algorithm" yaml:"checksum_algorithm"`
-	Progress              bool     `json:"progress" yaml:"progress"`
-	MaxTranRate           int64    `json:"max_tran_rate" yaml:"max_tran_rate"`
-	DryRun                bool     `json:"dry_run" yaml:"dry_run"`
-	CopyLink              bool     `json:"copy_link" yaml:"copy_link"`
-	CopyUnsafeLink        bool     `json:"copy_unsafe_link" yaml:"copy_unsafe_link"`
+	Source                core.VFS  `json:"source" yaml:"source"`
+	Dest                  core.VFS  `json:"dest" yaml:"dest"`
+	SyncOnce              bool      `json:"sync_once" yaml:"sync_once"`
+	SyncCron              string    `json:"sync_cron" yaml:"sync_cron"`
+	EnableLogicallyDelete bool      `json:"logically_delete" yaml:"logically_delete"`
+	ClearDeletedPath      bool      `json:"clear_deleted" yaml:"clear_deleted"`
+	IgnoreConf            string    `json:"ignore_conf" yaml:"ignore_conf"`
+	IgnoreDeletedPath     bool      `json:"ignore_deleted" yaml:"ignore_deleted"`
+	ChunkSize             core.Size `json:"chunk_size" yaml:"chunk_size"`
+	CheckpointCount       int       `json:"checkpoint_count" yaml:"checkpoint_count"`
+	ForceChecksum         bool      `json:"force_checksum" yaml:"force_checksum"`
+	ChecksumAlgorithm     string    `json:"checksum_algorithm" yaml:"checksum_algorithm"`
+	Progress              bool      `json:"progress" yaml:"progress"`
+	MaxTranRate           core.Size `json:"max_tran_rate" yaml:"max_tran_rate"`
+	DryRun                bool      `json:"dry_run" yaml:"dry_run"`
+	CopyLink              bool      `json:"copy_link" yaml:"copy_link"`
+	CopyUnsafeLink        bool      `json:"copy_unsafe_link" yaml:"copy_unsafe_link"`
 
 	// file monitor
 	EnableSyncDelay bool          `json:"sync_delay" yaml:"sync_delay"`
