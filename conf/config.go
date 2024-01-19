@@ -132,9 +132,7 @@ func (c Config) ToArgs() (args []string, err error) {
 			k := strings.TrimSpace(kv[0])
 			v := strings.TrimSpace(kv[1])
 			v = strings.Trim(v, "'")
-			if v == "\"\"" {
-				v = ""
-			}
+			v = strings.Trim(v, "\"")
 			line = "-" + k + "=" + v
 			args = append(args, line)
 		}
