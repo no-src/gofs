@@ -253,7 +253,7 @@ func executeOnce(c conf.Config, logger *logger.Logger) (exit bool, err error) {
 
 	// calculate checksum
 	if c.Checksum {
-		return true, checksum.PrintChecksum(c.Source.Path().Base(), c.ChunkSize, c.CheckpointCount, c.ChecksumAlgorithm, logger)
+		return true, checksum.PrintChecksum(c.Source.Path().Base(), c.ChunkSize.Bytes(), c.CheckpointCount, c.ChecksumAlgorithm, logger)
 	}
 	return false, nil
 }
