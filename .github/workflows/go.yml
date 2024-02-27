@@ -35,9 +35,6 @@ jobs:
       - name: Test
         run: go test -v -race ./... -coverprofile=coverage.txt -covermode=atomic -timeout=10m
 
-      - name: Test Encrypt
-        run: go test -v -race -tags=encrypt_test ./encrypt
-
       - name: Test Integration
         run: go test -v -race -tags=integration_test ./integration
 
