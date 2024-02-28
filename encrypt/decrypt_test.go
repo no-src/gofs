@@ -1,5 +1,3 @@
-//go:build encrypt_test
-
 package encrypt
 
 import (
