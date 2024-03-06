@@ -59,4 +59,3 @@ jobs:
 
       - name: Codecov
         uses: codecov/codecov-action@v4
-        if: matrix.os == 'ubuntu-latest' && matrix.go == '1.21'
