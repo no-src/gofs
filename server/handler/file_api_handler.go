@@ -97,6 +97,11 @@ func (h *fileApiHandler) Handle(c *gin.Context) {
 }
 
 func (h *fileApiHandler) readDir(f http.File, needHash bool, needCheckpoint bool, path string) (fileList []contract.FileInfo, err error) {
+	const (
+		maxCalcSizeSingle int64 = 1024 * 1024 * 1024 * 15  // 15G
+		maxCalcSizeSum    int64 = 1024 * 1024 * 1024 * 500 // 500G
+	)
+	var calcSizeSum int64
 	files, err := f.Readdir(-1)
 	if err != nil {
 		h.logger.Error(err, "file server read dir error")
@@ -113,7 +118,7 @@ func (h *fileApiHandler) readDir(f http.File, needHash bool, needCheckpoint bool
 
 		hash := ""
 		var hvs hashutil.HashValues
-		if !file.IsDir() && (needHash || needCheckpoint) {
+		if !file.IsDir() && (needHash || needCheckpoint) && calcSizeSum < maxCalcSizeSum && file.Size() < maxCalcSizeSingle {
 			if cf, err := h.root.Open(filepath.ToSlash(filepath.Join(path, file.Name()))); err == nil {
 				if needCheckpoint {
 					hvs, _ = h.hash.CheckpointsHashFromFile(cf.(*os.File), h.chunkSize, h.checkpointCount)
@@ -127,6 +132,7 @@ func (h *fileApiHandler) readDir(f http.File, needHash bool, needCheckpoint bool
 				}
 				cf.Close()
 			}
+			calcSizeSum += file.Size()
 		}
 
 		fileList = append(fileList, contract.FileInfo{
