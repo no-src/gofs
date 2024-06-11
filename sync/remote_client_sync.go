@@ -347,7 +347,7 @@ func (rs *remoteClientSync) sync(serverAddr, path string) error {
 	rs.logger.Debug("remote client sync path => %s", path)
 	reqValues := url.Values{}
 	reqValues.Add(contract.FsPath, path)
-	reqValues.Add(contract.FsNeedHash, contract.FsNeedHashValueTrue)
+	reqValues.Add(contract.FsNeedHash, contract.ParamValueFalse)
 	queryUrl := fmt.Sprintf("%s%s?%s", serverAddr, server.QueryRoute, reqValues.Encode())
 	resp, err := rs.httpGetWithAuth(queryUrl, nil)
 	if err != nil {
