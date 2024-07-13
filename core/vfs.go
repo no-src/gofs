@@ -252,7 +252,7 @@ func parse(path string, fsType VFSType) (scheme string, host string, port int, l
 	}
 
 	// parse SSH config
-	usernameFromUrl := strings.TrimSpace(parseUrl.User.Username())
+	usernameFromUrl := strings.TrimSpace(parseUrl.Query().Get(paramSSHUsername))
 	if len(usernameFromUrl) > 0 {
 		sshConf.Username = usernameFromUrl
 	}
