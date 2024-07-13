@@ -3,10 +3,12 @@ package core
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 
+	"github.com/kevinburke/ssh_config"
 	"github.com/no-src/gofs/logger"
 )
 
@@ -163,6 +165,29 @@ func NewVFS(path string) VFS {
 	return vfs
 }
 
+// Find SSH IdentityFile based on the ssh config and usual locations
+func findSshKey(sshConfigHost string) string {
+	possibleKeys := ssh_config.GetAll(sshConfigHost, "IdentityFile")
+	lastExistingKey := ""
+	for i := len(possibleKeys) - 1; i >= 0; i-- {
+		if _, err := os.Stat(possibleKeys[i]); err == nil {
+			lastExistingKey = possibleKeys[i]
+			break
+		}
+	}
+	if lastExistingKey != "" {
+		return lastExistingKey
+	} else {
+		if len(possibleKeys) == 1 && possibleKeys[0] == ssh_config.Default("IdentityFile") {
+			fallbackDefault := filepath.Join(os.Getenv("HOME"), ".ssh", "id_rsa")
+			if _, err := os.Stat(fallbackDefault); err == nil {
+				return fallbackDefault
+			}
+		}
+	}
+	return ""
+}
+
 func parse(path string, fsType VFSType) (scheme string, host string, port int, localPath Path, remotePath Path, isServer bool, fsServer string, localSyncDisabled bool, secure bool, sshConf SSHConfig, err error) {
 	parseUrl, err := url.Parse(path)
 	if err != nil {
@@ -171,6 +196,17 @@ func parse(path string, fsType VFSType) (scheme string, host string, port int, l
 	scheme = parseUrl.Scheme
 	host = parseUrl.Hostname()
 	port, err = strconv.Atoi(parseUrl.Port())
+
+	if fsType == SFTP && err != nil {
+		sshConfigHost := host
+		host = ssh_config.Get(sshConfigHost, "HostName")
+		if host != "" {
+			port, err = strconv.Atoi(ssh_config.Get(sshConfigHost, "Port"))
+			sshConf.Username = ssh_config.Get(sshConfigHost, "User")
+			sshConf.Key = findSshKey(sshConfigHost)
+		}
+	}
+
 	if err != nil {
 		if scheme == remoteServerScheme {
 			port = remoteServerDefaultPort
@@ -213,9 +249,15 @@ func parse(path string, fsType VFSType) (scheme string, host string, port int, l
 	}
 
 	// parse SSH config
-	sshConf.Username = strings.TrimSpace(parseUrl.Query().Get(paramSSHUsername))
+	usernameFromUrl := strings.TrimSpace(parseUrl.User.Username())
+	if len(usernameFromUrl) > 0 {
+		sshConf.Username = usernameFromUrl
+	}
 	sshConf.Password = strings.TrimSpace(parseUrl.Query().Get(paramSSHPassword))
-	sshConf.Key = strings.TrimSpace(parseUrl.Query().Get(paramSSHKey))
+	keyFromUrl := strings.TrimSpace(parseUrl.Query().Get(paramSSHKey))
+	if len(keyFromUrl) > 0 {
+		sshConf.Key = keyFromUrl
+	}
 	sshConf.KeyPass = strings.TrimSpace(parseUrl.Query().Get(paramSSHKeyPassphrase))
 	sshConf.HostKey = strings.TrimSpace(parseUrl.Query().Get(paramSSHHostKey))
 	return
