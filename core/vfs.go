@@ -203,6 +203,9 @@ func parse(path string, fsType VFSType) (scheme string, host string, port int, l
 		if host != "" {
 			port, err = strconv.Atoi(ssh_config.Get(sshConfigHost, "Port"))
 			sshConf.Username = ssh_config.Get(sshConfigHost, "User")
+			if sshConf.Username == "" {
+				sshConf.Username = os.Getenv("USER")
+			}
 			sshConf.Key = findSshKey(sshConfigHost)
 		}
 	}
