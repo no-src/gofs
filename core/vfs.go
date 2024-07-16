@@ -39,6 +39,7 @@ const (
 	paramSSHKey             = "ssh_key"
 	paramSSHKeyPassphrase   = "ssh_key_pass"
 	paramSSHHostKey         = "ssh_host_key"
+	paramSSHConfig          = "ssh_config"
 	valueModeServer         = "server"
 	valueTrue               = "true"
 	schemeDelimiter         = "://"
@@ -165,29 +166,6 @@ func NewVFS(path string) VFS {
 	return vfs
 }
 
-// Find SSH IdentityFile based on the ssh config and usual locations
-func findSshKey(sshConfigHost string) string {
-	possibleKeys := ssh_config.GetAll(sshConfigHost, "IdentityFile")
-	lastExistingKey := ""
-	for i := len(possibleKeys) - 1; i >= 0; i-- {
-		if _, err := os.Stat(possibleKeys[i]); err == nil {
-			lastExistingKey = possibleKeys[i]
-			break
-		}
-	}
-	if lastExistingKey != "" {
-		return lastExistingKey
-	} else {
-		if len(possibleKeys) == 1 && possibleKeys[0] == ssh_config.Default("IdentityFile") {
-			fallbackDefault := filepath.Join(os.Getenv("HOME"), ".ssh", "id_rsa")
-			if _, err := os.Stat(fallbackDefault); err == nil {
-				return fallbackDefault
-			}
-		}
-	}
-	return ""
-}
-
 func parse(path string, fsType VFSType) (scheme string, host string, port int, localPath Path, remotePath Path, isServer bool, fsServer string, localSyncDisabled bool, secure bool, sshConf SSHConfig, err error) {
 	parseUrl, err := url.Parse(path)
 	if err != nil {
@@ -196,20 +174,6 @@ func parse(path string, fsType VFSType) (scheme string, host string, port int, l
 	scheme = parseUrl.Scheme
 	host = parseUrl.Hostname()
 	port, err = strconv.Atoi(parseUrl.Port())
-
-	if fsType == SFTP && err != nil {
-		sshConfigHost := host
-		host = ssh_config.Get(sshConfigHost, "HostName")
-		if host != "" {
-			port, err = strconv.Atoi(ssh_config.Get(sshConfigHost, "Port"))
-			sshConf.Username = ssh_config.Get(sshConfigHost, "User")
-			if sshConf.Username == "" {
-				sshConf.Username = os.Getenv("USER")
-			}
-			sshConf.Key = findSshKey(sshConfigHost)
-		}
-	}
-
 	if err != nil {
 		if scheme == remoteServerScheme {
 			port = remoteServerDefaultPort
@@ -251,6 +215,23 @@ func parse(path string, fsType VFSType) (scheme string, host string, port int, l
 		secure = true
 	}
 
+	// process ssh_config file
+	if fsType == SFTP && strings.TrimSpace(parseUrl.Query().Get(paramSSHConfig)) == valueTrue {
+		sshConfigHost := host
+		sshConfigHostName := ssh_config.Get(sshConfigHost, "HostName")
+		if len(sshConfigHostName) > 0 {
+			host = sshConfigHostName
+			if sshConfigPort, portErr := strconv.Atoi(ssh_config.Get(sshConfigHost, "Port")); portErr == nil {
+				if port != sshConfigPort {
+					logger.InnerLogger().Info("the port of the SFTP server has been changed from %d to %d.", port, sshConfigPort)
+					port = sshConfigPort
+				}
+			}
+			sshConf.Username = ssh_config.Get(sshConfigHost, "User")
+			sshConf.Key = findSSHKey(sshConfigHost)
+		}
+	}
+
 	// parse SSH config
 	usernameFromUrl := strings.TrimSpace(parseUrl.Query().Get(paramSSHUsername))
 	if len(usernameFromUrl) > 0 {
@@ -263,5 +244,47 @@ func parse(path string, fsType VFSType) (scheme string, host string, port int, l
 	}
 	sshConf.KeyPass = strings.TrimSpace(parseUrl.Query().Get(paramSSHKeyPassphrase))
 	sshConf.HostKey = strings.TrimSpace(parseUrl.Query().Get(paramSSHHostKey))
+
+	if fsType == SFTP {
+		logger.InnerLogger().Info("ssh config info: Host: %s Port: %d Username: %s Key: %s", host, port, sshConf.Username, sshConf.Key)
+	}
 	return
+}
+
+// findSSHKey find SSH IdentityFile based on the ssh config and usual locations
+func findSSHKey(sshConfigHost string) string {
+	possibleKeys := ssh_config.GetAll(sshConfigHost, "IdentityFile")
+	firstExistingKey := ""
+	for _, keyFile := range possibleKeys {
+		keyFile = parsePath(keyFile)
+		if _, err := os.Stat(keyFile); err == nil {
+			firstExistingKey = keyFile
+			break
+		} else {
+			logger.InnerLogger().Warn("SSH IdentityFile %s does not exist", keyFile)
+		}
+	}
+	if len(firstExistingKey) > 0 {
+		return firstExistingKey
+	}
+
+	if len(possibleKeys) == 1 && possibleKeys[0] == ssh_config.Default("IdentityFile") {
+		home, _ := os.UserHomeDir()
+		fallbackDefault := filepath.Join(home, ".ssh", "id_rsa")
+		if _, err := os.Stat(fallbackDefault); err == nil {
+			return fallbackDefault
+		}
+	}
+	return ""
+}
+
+func parsePath(path string) string {
+	if !strings.HasPrefix(path, "~/") {
+		return path
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+	return filepath.Join(home, strings.TrimPrefix(path, "~/"))
 }
