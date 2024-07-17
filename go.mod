@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/fsnotify/fsnotify v1.7.0
-	github.com/gin-contrib/gzip v1.0.0
+	github.com/gin-contrib/gzip v1.0.1
 	github.com/gin-contrib/pprof v1.5.0
 	github.com/gin-contrib/sessions v1.0.1
 	github.com/gin-gonic/gin v1.10.0
