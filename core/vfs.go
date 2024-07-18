@@ -3,10 +3,12 @@ package core
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 
+	"github.com/kevinburke/ssh_config"
 	"github.com/no-src/gofs/logger"
 )
 
@@ -37,6 +39,7 @@ const (
 	paramSSHKey             = "ssh_key"
 	paramSSHKeyPassphrase   = "ssh_key_pass"
 	paramSSHHostKey         = "ssh_host_key"
+	paramSSHConfig          = "ssh_config"
 	valueModeServer         = "server"
 	valueTrue               = "true"
 	schemeDelimiter         = "://"
@@ -212,11 +215,76 @@ func parse(path string, fsType VFSType) (scheme string, host string, port int, l
 		secure = true
 	}
 
+	// process ssh_config file
+	if fsType == SFTP && strings.TrimSpace(parseUrl.Query().Get(paramSSHConfig)) == valueTrue {
+		sshConfigHost := host
+		sshConfigHostName := ssh_config.Get(sshConfigHost, "HostName")
+		if len(sshConfigHostName) > 0 {
+			host = sshConfigHostName
+			if sshConfigPort, portErr := strconv.Atoi(ssh_config.Get(sshConfigHost, "Port")); portErr == nil {
+				if port != sshConfigPort {
+					logger.InnerLogger().Info("the port of the SFTP server has been changed from %d to %d.", port, sshConfigPort)
+					port = sshConfigPort
+				}
+			}
+			sshConf.Username = ssh_config.Get(sshConfigHost, "User")
+			sshConf.Key = findSSHKey(sshConfigHost)
+		}
+	}
+
 	// parse SSH config
-	sshConf.Username = strings.TrimSpace(parseUrl.Query().Get(paramSSHUsername))
+	usernameFromUrl := strings.TrimSpace(parseUrl.Query().Get(paramSSHUsername))
+	if len(usernameFromUrl) > 0 {
+		sshConf.Username = usernameFromUrl
+	}
 	sshConf.Password = strings.TrimSpace(parseUrl.Query().Get(paramSSHPassword))
-	sshConf.Key = strings.TrimSpace(parseUrl.Query().Get(paramSSHKey))
+	keyFromUrl := strings.TrimSpace(parseUrl.Query().Get(paramSSHKey))
+	if len(keyFromUrl) > 0 {
+		sshConf.Key = keyFromUrl
+	}
 	sshConf.KeyPass = strings.TrimSpace(parseUrl.Query().Get(paramSSHKeyPassphrase))
 	sshConf.HostKey = strings.TrimSpace(parseUrl.Query().Get(paramSSHHostKey))
+
+	if fsType == SFTP {
+		logger.InnerLogger().Info("ssh config info: Host: %s Port: %d Username: %s Key: %s", host, port, sshConf.Username, sshConf.Key)
+	}
 	return
+}
+
+// findSSHKey find SSH IdentityFile based on the ssh config and usual locations
+func findSSHKey(sshConfigHost string) string {
+	possibleKeys := ssh_config.GetAll(sshConfigHost, "IdentityFile")
+	firstExistingKey := ""
+	for _, keyFile := range possibleKeys {
+		keyFile = parsePath(keyFile)
+		if _, err := os.Stat(keyFile); err == nil {
+			firstExistingKey = keyFile
+			break
+		} else {
+			logger.InnerLogger().Warn("SSH IdentityFile %s does not exist", keyFile)
+		}
+	}
+	if len(firstExistingKey) > 0 {
+		return firstExistingKey
+	}
+
+	if len(possibleKeys) == 1 && possibleKeys[0] == ssh_config.Default("IdentityFile") {
+		home, _ := os.UserHomeDir()
+		fallbackDefault := filepath.Join(home, ".ssh", "id_rsa")
+		if _, err := os.Stat(fallbackDefault); err == nil {
+			return fallbackDefault
+		}
+	}
+	return ""
+}
+
+func parsePath(path string) string {
+	if !strings.HasPrefix(path, "~/") {
+		return path
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+	return filepath.Join(home, strings.TrimPrefix(path, "~/"))
 }

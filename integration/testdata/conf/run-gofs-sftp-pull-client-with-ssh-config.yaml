@@ -1,0 +1,4 @@
+source: sftp://sftp-test?remote_path=/sftp-workspace&ssh_config=true
+dest: ./sftp-pull-client-with-ssh-config/dest
+log_dir: ./sftp-pull-client-with-ssh-config-logs/
+sync_cron: "*/5 * * * * *"

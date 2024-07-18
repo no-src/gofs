@@ -15,6 +15,7 @@ func TestIntegration_SFTP(t *testing.T) {
 	}{
 		{"gofs SFTP push", "", "run-gofs-sftp-push-client.yaml", "test-gofs-sftp-push.yaml"},
 		{"gofs SFTP pull", "", "run-gofs-sftp-pull-client.yaml", "test-gofs-sftp-pull.yaml"},
+		{"gofs SFTP pull with ssh config", "", "run-gofs-sftp-pull-client-with-ssh-config.yaml", "test-gofs-sftp-pull-with-ssh-config.yaml"},
 		{"gofs SFTP push once", "", "run-gofs-sftp-push-client-once.yaml", "test-gofs-sftp-push-once.yaml"},
 	}
 

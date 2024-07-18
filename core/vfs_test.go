@@ -10,13 +10,17 @@ import (
 )
 
 const (
-	testVFSServerPath                     = "rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1"
-	testVFSServerPathWithNoPort           = "rs://127.0.0.1?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1"
-	testVFSServerPathWithNoSchemeFsServer = "rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=127.0.0.1"
-	testVFSSFTPDestPath                   = "sftp://127.0.0.1:22?mode=server&local_sync_disabled=true&path=./source&remote_path=/home/remote/dest&ssh_user=sftp_user&ssh_pass=sftp_pwd&ssh_key=./id_rsa&ssh_key_pass=123456&ssh_host_key=/root/.ssh/known_hosts"
-	testVFSSFTPDestPathWithNoPort         = "sftp://127.0.0.1?mode=server&local_sync_disabled=true&path=./source&remote_path=/home/remote/dest&ssh_user=sftp_user&ssh_pass=sftp_pwd&ssh_key=./id_rsa&ssh_key_pass=123456&ssh_host_key=/root/.ssh/known_hosts"
-	testVFSMinIODestPath                  = "minio://127.0.0.1:9000?mode=server&local_sync_disabled=true&path=./source&remote_path=/home/remote/dest&secure=true"
-	testVFSMinIODestPathWithNoPort        = "minio://127.0.0.1?mode=server&local_sync_disabled=true&path=./source&remote_path=/home/remote/dest&secure=false"
+	testVFSServerPath                               = "rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1"
+	testVFSServerPathWithNoPort                     = "rs://127.0.0.1?mode=server&local_sync_disabled=true&path=./source&fs_server=https://127.0.0.1"
+	testVFSServerPathWithNoSchemeFsServer           = "rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./source&fs_server=127.0.0.1"
+	testVFSSFTPDestPath                             = "sftp://127.0.0.1:22?mode=server&local_sync_disabled=true&path=./source&remote_path=/home/remote/dest&ssh_user=sftp_user&ssh_pass=sftp_pwd&ssh_key=./id_rsa&ssh_key_pass=123456&ssh_host_key=/root/.ssh/known_hosts"
+	testVFSSFTPDestPathWithNoPort                   = "sftp://127.0.0.1?mode=server&local_sync_disabled=true&path=./source&remote_path=/home/remote/dest&ssh_user=sftp_user&ssh_pass=sftp_pwd&ssh_key=./id_rsa&ssh_key_pass=123456&ssh_host_key=/root/.ssh/known_hosts"
+	testVFSSFTPSSHConfigDestPath                    = "sftp://example.com:22?mode=server&local_sync_disabled=true&path=./source&remote_path=/home/remote/dest&ssh_pass=sftp_pwd&ssh_key=./id_rsa&ssh_key_pass=123456&ssh_host_key=/root/.ssh/known_hosts&ssh_config=true"
+	testVFSSFTPSSHConfigDestPathWithNoPort          = "sftp://example.com?mode=server&local_sync_disabled=true&path=./source&remote_path=/home/remote/dest&ssh_user=sftp_user&ssh_pass=sftp_pwd&ssh_key=./id_rsa&ssh_key_pass=123456&ssh_host_key=/root/.ssh/known_hosts&ssh_config=true"
+	testVFSSFTPSSHConfigDestPathWithCover           = "sftp://example.com:22?mode=server&local_sync_disabled=true&path=./source&remote_path=/home/remote/dest&ssh_user=sftp_user&ssh_pass=sftp_pwd&ssh_key=./id_rsa&ssh_key_pass=123456&ssh_host_key=/root/.ssh/known_hosts&ssh_config=true"
+	testVFSSFTPSSHConfigDestPathWithDefaultIdentity = "sftp://default-identity?mode=server&local_sync_disabled=true&path=./source&remote_path=/home/remote/dest&ssh_pass=sftp_pwd&ssh_config=true"
+	testVFSMinIODestPath                            = "minio://127.0.0.1:9000?mode=server&local_sync_disabled=true&path=./source&remote_path=/home/remote/dest&secure=true"
+	testVFSMinIODestPathWithNoPort                  = "minio://127.0.0.1?mode=server&local_sync_disabled=true&path=./source&remote_path=/home/remote/dest&secure=false"
 )
 
 func TestVFS_MarshalText(t *testing.T) {
@@ -29,6 +33,10 @@ func TestVFS_MarshalText(t *testing.T) {
 		{testVFSServerPathWithNoSchemeFsServer},
 		{testVFSSFTPDestPath},
 		{testVFSSFTPDestPathWithNoPort},
+		{testVFSSFTPSSHConfigDestPath},
+		{testVFSSFTPSSHConfigDestPathWithNoPort},
+		{testVFSSFTPSSHConfigDestPathWithCover},
+		{testVFSSFTPSSHConfigDestPathWithDefaultIdentity},
 		{testVFSMinIODestPath},
 		{testVFSMinIODestPathWithNoPort},
 	}
@@ -62,6 +70,10 @@ func TestVFS_UnmarshalText(t *testing.T) {
 		{testVFSServerPathWithNoSchemeFsServer},
 		{testVFSSFTPDestPath},
 		{testVFSSFTPDestPathWithNoPort},
+		{testVFSSFTPSSHConfigDestPath},
+		{testVFSSFTPSSHConfigDestPathWithNoPort},
+		{testVFSSFTPSSHConfigDestPathWithCover},
+		{testVFSSFTPSSHConfigDestPathWithDefaultIdentity},
 		{testVFSMinIODestPath},
 		{testVFSMinIODestPathWithNoPort},
 	}
@@ -164,6 +176,11 @@ func TestVFSVar(t *testing.T) {
 
 		{"testVFSSFTPDestPath", testVFSSFTPDestPath, NewEmptyVFS()},
 		{"testVFSSFTPDestPathWithNoPort", testVFSSFTPDestPathWithNoPort, NewEmptyVFS()},
+
+		{"testVFSSFTPSSHConfigDestPath", testVFSSFTPSSHConfigDestPath, NewEmptyVFS()},
+		{"testVFSSFTPSSHConfigDestPathWithNoPort", testVFSSFTPSSHConfigDestPathWithNoPort, NewEmptyVFS()},
+		{"testVFSSFTPSSHConfigDestPathWithCover", testVFSSFTPSSHConfigDestPathWithCover, NewEmptyVFS()},
+		{"testVFSSFTPSSHConfigDestPathWithDefaultIdentity", testVFSSFTPSSHConfigDestPathWithDefaultIdentity, NewEmptyVFS()},
 
 		{"testVFSMinIODestPath", testVFSMinIODestPath, NewEmptyVFS()},
 		{"testVFSMinIODestPathWithNoPort", testVFSMinIODestPathWithNoPort, NewEmptyVFS()},
