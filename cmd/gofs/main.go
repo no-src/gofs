@@ -1,7 +1,13 @@
 package main
 
-import "github.com/no-src/gofs/cmd"
+import (
+	"os"
+
+	"github.com/no-src/gofs/cmd"
+)
 
 func main() {
-	cmd.Run().Wait()
+	if err := cmd.Run().Wait(); err != nil {
+		os.Exit(1)
+	}
 }

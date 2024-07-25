@@ -1,0 +1,17 @@
+Host example.com
+   HostName 127.0.0.1
+   User hello
+   Port 8818
+   IdentityFile ~/.ssh/identity
+   IdentityFile ~/.ssh/id_rsa
+
+Host default-identity
+   HostName 127.0.0.1
+   User hello
+   Port 8818
+
+Host sftp-test
+   HostName 127.0.0.1
+   User sftp_user
+   Port 22
+   IdentityFile ~/.ssh/id_rsa

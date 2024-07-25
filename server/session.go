@@ -2,6 +2,7 @@ package server
 
 import (
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -10,6 +11,13 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/memstore"
 	"github.com/no-src/gin-session-redis/redis"
+)
+
+var (
+	errInvalidSession      = errors.New("invalid session connection")
+	errUnsupportedSession  = errors.New("unsupported session connection")
+	errInvalidRedisDB      = errors.New("invalid redis db")
+	errInvalidRedisMaxIdle = errors.New("invalid redis max idle")
 )
 
 // NewSessionStore create a session store, stored in memory or redis
@@ -21,19 +29,19 @@ func NewSessionStore(sessionConnection string) (sessions.Store, error) {
 	}
 	connUrl, err := url.Parse(sessionConnection)
 	if err != nil {
-		return nil, fmt.Errorf("invalid session connection, %w", err)
+		return nil, fmt.Errorf("%w => %s", errors.Join(errInvalidSession, err), sessionConnection)
 	}
 	switch strings.ToLower(connUrl.Scheme) {
 	case "memory":
 		return memstore.NewStore(secret), nil
 	case "redis":
-		return redisSessionStore(sessionConnection, secret)
+		return redisSessionStore(connUrl, secret)
 	default:
-		return nil, fmt.Errorf("unsupported session connection => %s", sessionConnection)
+		return nil, fmt.Errorf("%w => %s", errUnsupportedSession, sessionConnection)
 	}
 }
 
-func redisSessionStore(redisUrl string, secret []byte) (sessions.Store, error) {
+func redisSessionStore(redisUrl *url.URL, secret []byte) (sessions.Store, error) {
 	maxIdle, network, address, password, db, redisSecret, err := parseRedisConnection(redisUrl)
 	if err != nil {
 		return nil, err
@@ -48,11 +56,7 @@ func redisSessionStore(redisUrl string, secret []byte) (sessions.Store, error) {
 
 // parseRedisConnection parse the redis connection string
 // for example => redis://127.0.0.1:6379?password=redis_password&db=10&max_idle=10&secret=redis_secret
-func parseRedisConnection(redisUrl string) (maxIdle int, network, address, password string, db int, secret []byte, err error) {
-	u, err := url.Parse(redisUrl)
-	if err != nil {
-		return
-	}
+func parseRedisConnection(u *url.URL) (maxIdle int, network, address, password string, db int, secret []byte, err error) {
 	// network
 	network = "tcp"
 
@@ -64,10 +68,10 @@ func parseRedisConnection(redisUrl string) (maxIdle int, network, address, passw
 	} else {
 		maxIdle, err = strconv.Atoi(maxIdleStr)
 		if err != nil {
-			err = fmt.Errorf("invalid redis max idle => %d", maxIdle)
+			err = fmt.Errorf("%w => %d", errInvalidRedisMaxIdle, maxIdle)
 			return
 		} else if maxIdle <= 0 {
-			err = fmt.Errorf("invalid redis max idle => %d, max idle must be greater than zero", maxIdle)
+			err = fmt.Errorf("%w => %d, max idle must be greater than zero", errInvalidRedisMaxIdle, maxIdle)
 			return
 		}
 	}
@@ -87,9 +91,9 @@ func parseRedisConnection(redisUrl string) (maxIdle int, network, address, passw
 		return
 	}
 	if dbInt, dbErr := strconv.Atoi(dbValue); dbErr != nil {
-		err = fmt.Errorf("invalid redis db => %s", dbValue)
+		err = fmt.Errorf("%w => %s", errInvalidRedisDB, dbValue)
 	} else if dbInt < 0 || dbInt > 15 {
-		err = fmt.Errorf("invalid redis db => %s, db must be between 0 and 15", dbValue)
+		err = fmt.Errorf("%w => %s, db must be between 0 and 15", errInvalidRedisDB, dbValue)
 	} else {
 		db = dbInt
 	}

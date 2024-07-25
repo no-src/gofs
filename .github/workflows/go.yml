@@ -14,7 +14,7 @@ jobs:
   build:
     strategy:
       matrix:
-        go: [ '1.20', '1.21' ]
+        go: [ '1.21', '1.22' ]
         os: [ 'ubuntu-latest', 'windows-latest', 'macos-latest' ]
     runs-on: ${{ matrix.os }}
     steps:
@@ -29,14 +29,15 @@ jobs:
         run: chmod +x ./scripts/init-env.sh && ./scripts/init-env.sh
         if: matrix.os != 'windows-latest'
 
+      - name: Init SFTP
+        run: chmod +x ./scripts/sftp/*.sh && ./scripts/sftp/init-sftp.sh
+        if: matrix.os == 'ubuntu-latest'
+        
       - name: Build
         run: go build -v ./...
 
       - name: Test
         run: go test -v -race ./... -coverprofile=coverage.txt -covermode=atomic -timeout=10m
-
-      - name: Test Encrypt
-        run: go test -v -race -tags=encrypt_test ./encrypt
 
       - name: Test Integration
         run: go test -v -race -tags=integration_test ./integration
@@ -52,14 +53,11 @@ jobs:
         run: go test -v -race -tags=integration_test_minio ./integration
         if: matrix.os == 'ubuntu-latest'
 
-      - name: Init SFTP
-        run: chmod +x ./scripts/sftp/*.sh && ./scripts/sftp/init-sftp.sh
-        if: matrix.os == 'ubuntu-latest'
-
       - name: Test Integration SFTP
         run: go test -v -race -tags=integration_test_sftp ./integration
         if: matrix.os == 'ubuntu-latest'
 
       - name: Codecov
-        uses: codecov/codecov-action@v3
-        if: matrix.os == 'ubuntu-latest'
+        uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

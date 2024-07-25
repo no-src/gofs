@@ -24,3 +24,6 @@ jobs:
 
       - name: Test Checksum
         run: chmod +x ./scripts/docker-example/run-gofs-docker-checksum.sh && ./scripts/docker-example/run-gofs-docker-checksum.sh
+
+      - name: Test Timezone
+        run: chmod +x ./scripts/docker-example/run-gofs-docker-timezone.sh && ./scripts/docker-example/run-gofs-docker-timezone.sh
