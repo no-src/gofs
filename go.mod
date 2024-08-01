@@ -11,7 +11,7 @@ require (
 	github.com/kevinburke/ssh_config v1.2.0
 	github.com/minio/minio-go/v7 v7.0.70
 	github.com/no-src/fsctl v0.1.3
-	github.com/no-src/log v0.3.1
+	github.com/no-src/log v0.3.2
 	github.com/no-src/nscache v0.1.2
 	github.com/no-src/nsgo v0.0.3
 	github.com/pkg/sftp v1.13.6
