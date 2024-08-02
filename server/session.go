@@ -10,7 +10,7 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/memstore"
-	"github.com/gin-contrib/sessions/redis"
+	"github.com/no-src/gin-session-redis/redis"
 )
 
 var (
@@ -51,7 +51,7 @@ func redisSessionStore(redisUrl *url.URL, secret []byte) (sessions.Store, error)
 	}
 	// get the existing secret in the redis, if not exist, set the new secret
 	// TODO
-	return redis.NewStoreWithDB(maxIdle, network, address, password, strconv.Itoa(db), secret)
+	return redis.NewStoreWithDB(maxIdle, network, address, password, db, secret)
 }
 
 // parseRedisConnection parse the redis connection string

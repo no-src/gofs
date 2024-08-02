@@ -4,6 +4,7 @@ go 1.21
 
 require (
 	github.com/fsnotify/fsnotify v1.7.0
+	github.com/no-src/gin-session-redis v0.0.0-20230607000019-22f0f8e8d226
 	github.com/gin-contrib/gzip v1.0.1
 	github.com/gin-contrib/pprof v1.5.0
 	github.com/gin-contrib/sessions v1.0.1
@@ -68,6 +69,7 @@ require (
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/no-src/redistore v0.0.0-20230606141741-b5d82a351724 // indirect
 	github.com/onsi/ginkgo/v2 v2.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/quasoft/memstore v0.0.0-20191010062613-2bce066d2b0b // indirect
