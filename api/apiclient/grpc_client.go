@@ -64,7 +64,7 @@ func (c *client) connect() (err error) {
 			return err
 		}
 	}
-	clientConn, err := grpc.Dial(addr, grpc.WithTransportCredentials(tranCreds))
+	clientConn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(tranCreds))
 	if err != nil {
 		return err
 	}
@@ -151,7 +151,13 @@ func (c *client) needLogin(err error) bool {
 func (c *client) login() (err error) {
 	token, err := c.getToken()
 	if err == nil {
-		c.creds = &oauth.TokenSource{TokenSource: oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})}
+		oauth2Token := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
+		if c.enableTLS {
+			c.creds = &oauth.TokenSource{TokenSource: oauth2Token}
+		} else {
+			// TODO insecureTokenSource is a temporary solution, it will be removed in the future
+			c.creds = &insecureTokenSource{TokenSource: oauth2Token}
+		}
 	}
 	return err
 }

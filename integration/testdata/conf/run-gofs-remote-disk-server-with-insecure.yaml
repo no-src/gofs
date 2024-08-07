@@ -1,0 +1,7 @@
+source: rs://127.0.0.1:8105?mode=server&local_sync_disabled=true&path=./rs/source&fs_server=https://127.0.0.1:1777
+dest: ./rs/dest
+log_dir: ./rs-logs/
+users: gofs|password|rwx
+server_addr: ":1777"
+token_secret: "1234567890123456"
+tls: false
