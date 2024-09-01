@@ -15,7 +15,7 @@ require (
 	github.com/no-src/nscache v0.1.2
 	github.com/no-src/nsgo v0.0.3
 	github.com/pkg/sftp v1.13.6
-	github.com/quic-go/quic-go v0.45.1
+	github.com/quic-go/quic-go v0.46.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/schollz/progressbar/v3 v3.14.5
 	golang.org/x/crypto v0.25.0
