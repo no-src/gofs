@@ -53,7 +53,7 @@ func (c *client) Start() (err error) {
 	if err = c.connect(); err != nil {
 		return err
 	}
-	return c.login()
+	return c.Login()
 }
 
 func (c *client) connect() (err error) {
@@ -89,10 +89,10 @@ func (c *client) getInfo() (*info.FileServerInfo, error) {
 
 func (c *client) GetInfo() (*info.FileServerInfo, error) {
 	fsi, err := c.getInfo()
-	if !c.needLogin(err) {
+	if !c.IsUnauthenticated(err) {
 		return fsi, err
 	}
-	if err = c.login(); err != nil {
+	if err = c.Login(); err != nil {
 		return nil, err
 	}
 	return c.getInfo()
@@ -104,10 +104,10 @@ func (c *client) monitor() (monitor.MonitorService_MonitorClient, error) {
 
 func (c *client) Monitor() (monitor.MonitorService_MonitorClient, error) {
 	fsi, err := c.monitor()
-	if !c.needLogin(err) {
+	if !c.IsUnauthenticated(err) {
 		return fsi, err
 	}
-	if err = c.login(); err != nil {
+	if err = c.Login(); err != nil {
 		return nil, err
 	}
 	return c.monitor()
@@ -117,16 +117,20 @@ func (c *client) IsClosed(err error) bool {
 	return status.Code(err) == codes.Unavailable
 }
 
+func (c *client) IsUnauthenticated(err error) bool {
+	return status.Code(err) == codes.Unauthenticated
+}
+
 func (c *client) subscribeTask(clientInfo *task.ClientInfo) (task.TaskService_SubscribeTaskClient, error) {
 	return c.TaskServiceClient.SubscribeTask(context.Background(), clientInfo, grpc.PerRPCCredentials(c.creds))
 }
 
 func (c *client) SubscribeTask(clientInfo *task.ClientInfo) (task.TaskService_SubscribeTaskClient, error) {
 	rc, err := c.subscribeTask(clientInfo)
-	if !c.needLogin(err) {
+	if !c.IsUnauthenticated(err) {
 		return rc, err
 	}
-	if err = c.login(); err != nil {
+	if err = c.Login(); err != nil {
 		return nil, err
 	}
 	return c.subscribeTask(clientInfo)
@@ -144,11 +148,7 @@ func (c *client) getToken() (token string, err error) {
 	return reply.Token, nil
 }
 
-func (c *client) needLogin(err error) bool {
-	return status.Code(err) == codes.Unauthenticated
-}
-
-func (c *client) login() (err error) {
+func (c *client) Login() (err error) {
 	token, err := c.getToken()
 	if err == nil {
 		oauth2Token := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
