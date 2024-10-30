@@ -149,9 +149,18 @@ func (m *remoteClientMonitor) readMessage(st *atomic.Bool, wd wait.Done) {
 					nmc, err := m.client.Monitor()
 					if err == nil {
 						mc = nmc
+						m.logger.Info("monitor the remote server success")
 					}
 					return err
 				}, "monitor the remote server")
+			} else if m.client.IsUnauthenticated(err) {
+				if m.logger.ErrorIf(m.client.Login(), "re-login to remote server error") == nil {
+					m.logger.Info("re-login to remote server success")
+					if nmc, err := m.client.Monitor(); err == nil {
+						mc = nmc
+						m.logger.Info("monitor the remote server success")
+					}
+				}
 			}
 		} else {
 			m.messages.PushBack(msg)

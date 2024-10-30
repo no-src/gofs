@@ -18,6 +18,10 @@ type Client interface {
 	Monitor() (monitor.MonitorService_MonitorClient, error)
 	// IsClosed is connection closed of the current client
 	IsClosed(err error) bool
+	// IsUnauthenticated check whether the error is unauthorized
+	IsUnauthenticated(err error) bool
 	// SubscribeTask register a task client to the task server and wait to receive task
 	SubscribeTask(clientInfo *task.ClientInfo) (task.TaskService_SubscribeTaskClient, error)
+	// Login login to the server
+	Login() (err error)
 }
