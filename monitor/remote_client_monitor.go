@@ -133,6 +133,8 @@ func (m *remoteClientMonitor) readMessage(st *atomic.Bool, wd wait.Done) {
 	if err != nil {
 		return
 	}
+	errCount := 0
+	errThreshold := 20
 	for {
 		if m.closed.Load() {
 			wd.DoneWithError(errors.New("remote monitor is closed"))
@@ -143,6 +145,7 @@ func (m *remoteClientMonitor) readMessage(st *atomic.Bool, wd wait.Done) {
 			if st.Load() {
 				break
 			}
+			errCount++
 			m.logger.Error(err, "receive monitor message error")
 			if m.client.IsClosed(err) {
 				m.retry.Do(func() error {
@@ -161,8 +164,13 @@ func (m *remoteClientMonitor) readMessage(st *atomic.Bool, wd wait.Done) {
 						m.logger.Info("monitor the remote server success")
 					}
 				}
+			} else if errCount > errThreshold {
+				w := min(errCount/errThreshold, errThreshold)
+				m.logger.Info("receive monitor message error threshold exceeded, will retry after %d seconds", w)
+				time.Sleep(time.Second * time.Duration(w))
 			}
 		} else {
+			errCount = 0
 			m.messages.PushBack(msg)
 		}
 	}
