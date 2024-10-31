@@ -92,7 +92,7 @@ func (gs *grpcServer) Start() error {
 }
 
 func (gs *grpcServer) Stop() {
-	gs.server.GracefulStop()
+	gs.server.Stop()
 }
 
 func (gs *grpcServer) SendMonitorMessage(message *monitor.MonitorMessage) {
