@@ -161,7 +161,7 @@ func (sd *sftpDriver) reconnectIfLost(f func() error) error {
 }
 
 func (sd *sftpDriver) isClosed(err error) bool {
-	return err == sftp.ErrSSHFxConnectionLost
+	return errors.Is(err, sftp.ErrSSHFxConnectionLost)
 }
 
 func (sd *sftpDriver) MkdirAll(path string) error {

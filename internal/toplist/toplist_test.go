@@ -2,6 +2,7 @@ package toplist
 
 import (
 	"bytes"
+	"errors"
 	"sync"
 	"testing"
 
@@ -12,14 +13,14 @@ func TestTopList_WithCapZero(t *testing.T) {
 	// desc
 	capacity := 0
 	_, err := New(capacity)
-	if err != errInvalidCapacity {
+	if !errors.Is(err, errInvalidCapacity) {
 		t.Errorf("[desc] test toplist with zero capacity error, expect get an error")
 	}
 
 	// asc
 	capacity = 0
 	_, err = NewOrderByAsc(capacity)
-	if err != errInvalidCapacity {
+	if !errors.Is(err, errInvalidCapacity) {
 		t.Errorf("[asc] test toplist with zero capacity error, expect get an error")
 	}
 }
