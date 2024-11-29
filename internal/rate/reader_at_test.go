@@ -57,16 +57,16 @@ func TestReadAt(t *testing.T) {
 				return
 			}
 
-			expectCost, max, min := getExpectCost(tc.dataSize, tc.bytesPerSecond)
+			expectCost, maxCost, minCost := getExpectCost(tc.dataSize, tc.bytesPerSecond)
 			actualCost := end.Sub(start)
-			if actualCost >= min && actualCost <= max {
+			if actualCost >= minCost && actualCost <= maxCost {
 				rate := 0.0
 				if actualCost > 0 {
 					rate = float64(tc.dataSize) / actualCost.Seconds()
 				}
 				t.Logf("[%s] dataSize=%d bytesPerSecond=%d cost=%s, rate=%.2f bytes/sec", tc.name, tc.dataSize, tc.bytesPerSecond, actualCost, rate)
 			} else {
-				t.Errorf("[%s] dataSize=%d bytesPerSecond=%d expect cost=%s min=%s max=%s, but actual cost=%s", tc.name, tc.dataSize, tc.bytesPerSecond, expectCost, min, max, actualCost)
+				t.Errorf("[%s] dataSize=%d bytesPerSecond=%d expect cost=%s min=%s max=%s, but actual cost=%s", tc.name, tc.dataSize, tc.bytesPerSecond, expectCost, minCost, maxCost, actualCost)
 			}
 		})
 	}
