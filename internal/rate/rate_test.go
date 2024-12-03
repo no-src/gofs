@@ -13,7 +13,7 @@ const (
 	defaultBufSize               = 4096
 )
 
-func getExpectCost(dataSize, bytesPerSecond int64) (expectCost time.Duration, max time.Duration, min time.Duration) {
+func getExpectCost(dataSize, bytesPerSecond int64) (expectCost time.Duration, maxCost time.Duration, minCost time.Duration) {
 	expectCost = time.Second * time.Duration(dataSize) / time.Duration(bytesPerSecond)
 
 	if bytesPerSecond <= defaultBufSize && dataSize <= defaultBufSize {
@@ -21,19 +21,19 @@ func getExpectCost(dataSize, bytesPerSecond int64) (expectCost time.Duration, ma
 	} else if bytesPerSecond > defaultBufSize && dataSize <= defaultBufSize {
 		expectCost = 0
 	}
-	max = expectCost * (100 + deviation) / 100
-	min = expectCost * (100 - deviation) / 100
+	maxCost = expectCost * (100 + deviation) / 100
+	minCost = expectCost * (100 - deviation) / 100
 	// the minimum deviation time is 1 second
-	if expectCost-min < time.Second {
-		min = expectCost - time.Second
+	if expectCost-minCost < time.Second {
+		minCost = expectCost - time.Second
 	}
-	if min < 0 {
-		min = 0
+	if minCost < 0 {
+		minCost = 0
 	}
-	if max <= 0 {
-		max = time.Second * deviation / 100
+	if maxCost <= 0 {
+		maxCost = time.Second * deviation / 100
 	}
-	return expectCost, max, min
+	return expectCost, maxCost, minCost
 }
 
 type writer struct {
