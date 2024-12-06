@@ -65,7 +65,7 @@ func StartFileServer(opt server.Option) error {
 	var err error
 	if opt.EnableTLS {
 		if opt.EnableHTTP3 {
-			err = logger.ErrorIf(http3.ListenAndServe(opt.FileServerAddr, opt.TLSCertFile, opt.TLSKeyFile, engine.Handler()), "running the http3 server error")
+			err = logger.ErrorIf(http3.ListenAndServeTLS(opt.FileServerAddr, opt.TLSCertFile, opt.TLSKeyFile, engine.Handler()), "running the http3 server error")
 		} else {
 			err = logger.ErrorIf(engine.RunTLS(opt.FileServerAddr, opt.TLSCertFile, opt.TLSKeyFile), "running the https server error")
 		}
