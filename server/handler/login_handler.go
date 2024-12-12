@@ -69,7 +69,7 @@ func (h *loginHandler) Handle(c *gin.Context) {
 		h.logger.Info("login success, userid=%d username=%s remote=%s", loginUser.UserId, loginUser.UserName, c.Request.RemoteAddr)
 		c.Redirect(http.StatusFound, returnUrl)
 	} else {
-		h.logger.Info("login failed, username=%s password=%s remote=%s", userName, password, c.Request.RemoteAddr)
+		h.logger.Info("login failed, username=%s remote=%s", userName, c.Request.RemoteAddr)
 		c.Redirect(http.StatusFound, server.LoginIndexFullRoute)
 	}
 }
