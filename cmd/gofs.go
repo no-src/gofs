@@ -337,10 +337,12 @@ func generateRandomUser(cp *conf.Config, logger *logger.Logger) error {
 		} else {
 			cp.Users = randUserStr
 		}
-		logger.Info("generate random users success => [%s]", cp.Users)
+		usernames := extractUsernames(userList)
+		logger.Info("generate random users success => [%s]", usernames)
 	}
 	return nil
 }
+
 
 // checkTLS check cert and key file of the TLS
 func checkTLS(c conf.Config) error {
