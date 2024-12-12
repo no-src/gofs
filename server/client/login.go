@@ -20,7 +20,7 @@ func SignIn(httpClient httputil.HttpClient, scheme, host, userName, password str
 	form := url.Values{}
 	form.Set(server.ParamUserName, userName)
 	form.Set(server.ParamPassword, password)
-	logger.Debug("try to auto login file server %s=%s %s=%s", server.ParamUserName, userName, server.ParamPassword, password)
+	logger.Debug("try to auto login file server %s=%s", server.ParamUserName, userName)
 	loginResp, err := httpClient.HttpPostWithoutRedirect(loginUrl, form)
 	if err != nil {
 		return nil, err
