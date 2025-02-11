@@ -11,6 +11,8 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/memstore"
 	"github.com/gin-contrib/sessions/redis"
+	"github.com/no-src/log"
+	"github.com/no-src/nscache"
 )
 
 var (
@@ -48,10 +50,31 @@ func redisSessionStore(redisUrl *url.URL, secret []byte) (sessions.Store, error)
 	}
 	if len(redisSecret) > 0 {
 		secret = redisSecret
+	} else {
+		// get the existing secret in the redis, if not exist, set the new secret
+		secret = getOrSetStoreSecret(address, password, db, secret)
 	}
-	// get the existing secret in the redis, if not exist, set the new secret
-	// TODO
 	return redis.NewStoreWithDB(maxIdle, network, address, password, strconv.Itoa(db), secret)
+}
+
+func getOrSetStoreSecret(address, password string, db int, newSecret []byte) (secret []byte) {
+	conn := fmt.Sprintf("redis://:%s@%s/%d", password, address, db)
+	key := "nosrc-gofs-session-secret"
+	c, err := nscache.NewCache(conn)
+	if err != nil {
+		log.Error(err, "init nscache error conn=%s", conn)
+		return newSecret
+	}
+	defer c.Close()
+	if v, ok := c.GetBytes(key); ok {
+		secret = v
+	} else {
+		log.ErrorIf(c.Set(key, newSecret, 0), "set redis session secret error")
+	}
+	if len(secret) == 0 {
+		secret = newSecret
+	}
+	return secret
 }
 
 // parseRedisConnection parse the redis connection string
