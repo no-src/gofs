@@ -1,6 +1,6 @@
 module github.com/no-src/gofs
 
-go 1.22
+go 1.23
 
 require (
 	github.com/fsnotify/fsnotify v1.8.0
