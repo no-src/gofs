@@ -14,7 +14,7 @@ A cross-platform real-time file synchronization tool out of the box based on Gol
 
 ## Installation
 
-The first need [Go](https://go.dev/doc/install) installed (**version 1.22+ is required**), then you can use the below
+The first need [Go](https://go.dev/doc/install) installed (**version 1.23+ is required**), then you can use the below
 command to install `gofs`.
 
 ```bash
