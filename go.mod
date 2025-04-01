@@ -1,6 +1,7 @@
 module github.com/no-src/gofs
 
 go 1.23.6
+toolchain go1.24.1
 
 require (
 	github.com/fsnotify/fsnotify v1.8.0
@@ -15,7 +16,7 @@ require (
 	github.com/no-src/nscache v0.1.2
 	github.com/no-src/nsgo v0.0.3
 	github.com/pkg/sftp v1.13.7
-	github.com/quic-go/quic-go v0.50.0
+	github.com/quic-go/quic-go v0.50.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/schollz/progressbar/v3 v3.18.0
 	golang.org/x/crypto v0.35.0
