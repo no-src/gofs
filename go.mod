@@ -1,6 +1,7 @@
 module github.com/no-src/gofs
 
 go 1.23.6
+toolchain go1.24.1
 
 require (
 	github.com/fsnotify/fsnotify v1.8.0
@@ -21,12 +22,12 @@ require (
 	golang.org/x/crypto v0.35.0
 	golang.org/x/oauth2 v0.27.0
 	golang.org/x/time v0.10.0
-	google.golang.org/grpc v1.70.0
+	google.golang.org/grpc v1.71.0
 	google.golang.org/protobuf v1.36.5
 )
 
 require (
-	cloud.google.com/go/compute/metadata v0.5.2 // indirect
+	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	github.com/VictoriaMetrics/fastcache v1.12.2 // indirect
 	github.com/allegro/bigcache/v3 v3.1.0 // indirect
 	github.com/bytedance/sonic v1.12.10 // indirect
@@ -100,7 +101,7 @@ require (
 	golang.org/x/term v0.29.0 // indirect
 	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/tools v0.30.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20241202173237-19429a94021a // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250106144421-5f5ef82da422 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250303144028-a0af3efb3deb // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
