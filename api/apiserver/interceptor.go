@@ -31,7 +31,7 @@ func (gs *grpcServer) StreamServerInterceptor(srv interface{}, ss grpc.ServerStr
 	loginUser, err := gs.token.IsLogin(ss.Context())
 	if err != nil || loginUser == nil {
 		gs.logger.ErrorIf(err, "login failed")
-		return status.Errorf(codes.Unauthenticated, err.Error())
+		return status.Errorf(codes.Unauthenticated, "login failed")
 	}
 	return handler(srv, ss)
 }
