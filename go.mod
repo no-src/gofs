@@ -14,7 +14,7 @@ require (
 	github.com/no-src/log v0.3.2
 	github.com/no-src/nscache v0.1.3
 	github.com/no-src/nsgo v0.1.0
-	github.com/pkg/sftp v1.13.7
+	github.com/pkg/sftp v1.13.9
 	github.com/quic-go/quic-go v0.53.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/schollz/progressbar/v3 v3.18.0
