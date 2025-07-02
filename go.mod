@@ -9,7 +9,7 @@ require (
 	github.com/gin-contrib/sessions v1.0.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/kevinburke/ssh_config v1.2.0
-	github.com/minio/minio-go/v7 v7.0.87
+	github.com/minio/minio-go/v7 v7.0.94
 	github.com/no-src/fsctl v0.1.3
 	github.com/no-src/log v0.3.2
 	github.com/no-src/nscache v0.1.3
@@ -67,6 +67,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
+	github.com/philhofer/fwd v1.1.3-0.20240916144458-20a13a1f6b7c // indirect
 	github.com/quasoft/memstore v0.0.0-20191010062613-2bce066d2b0b // indirect
 	github.com/quic-go/qpack v0.5.1 // indirect
 	github.com/redis/go-redis/v9 v9.11.0 // indirect
@@ -81,6 +82,7 @@ require (
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/tidwall/rtred v0.1.2 // indirect
 	github.com/tidwall/tinyqueue v0.1.1 // indirect
+	github.com/tinylib/msgp v1.3.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	go.etcd.io/etcd/api/v3 v3.6.1 // indirect
