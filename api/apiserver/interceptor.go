@@ -17,11 +17,8 @@ func (gs *grpcServer) UnaryServerInterceptor(ctx context.Context, req interface{
 		return handler(ctx, req)
 	}
 	loginUser, err := gs.token.IsLogin(ctx)
-	if err != nil {
-		gs.logger.Error(err, "login failed")
-		return nil, status.Errorf(codes.Unauthenticated, err.Error())
-	}
-	if loginUser == nil {
+	if err != nil || loginUser == nil {
+		gs.logger.ErrorIf(err, "login failed")
 		return nil, status.Errorf(codes.Unauthenticated, "login failed")
 	}
 	return handler(ctx, req)
@@ -32,12 +29,9 @@ func (gs *grpcServer) StreamServerInterceptor(srv interface{}, ss grpc.ServerStr
 		return nil
 	}
 	loginUser, err := gs.token.IsLogin(ss.Context())
-	if err != nil {
-		gs.logger.Error(err, "login failed")
+	if err != nil || loginUser == nil {
+		gs.logger.ErrorIf(err, "login failed")
 		return status.Errorf(codes.Unauthenticated, err.Error())
-	}
-	if loginUser == nil {
-		return status.Errorf(codes.Unauthenticated, "login failed")
 	}
 	return handler(srv, ss)
 }
