@@ -24,7 +24,7 @@ type server struct {
 func (s *server) Login(ctx context.Context, in *LoginUser) (*LoginReply, error) {
 	token, err := s.token.GenerateToken(in)
 	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, err.Error())
+		return nil, status.Error(codes.Unauthenticated, err.Error())
 	}
 	return &LoginReply{
 		Token: token,
