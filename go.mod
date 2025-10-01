@@ -20,7 +20,7 @@ require (
 	github.com/schollz/progressbar/v3 v3.18.0
 	golang.org/x/crypto v0.39.0
 	golang.org/x/oauth2 v0.30.0
-	golang.org/x/time v0.10.0
+	golang.org/x/time v0.13.0
 	google.golang.org/grpc v1.75.0
 	google.golang.org/protobuf v1.36.6
 )
