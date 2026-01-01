@@ -17,7 +17,7 @@ require (
 	github.com/pkg/sftp v1.13.9
 	github.com/quic-go/quic-go v0.57.0
 	github.com/robfig/cron/v3 v3.0.1
-	github.com/schollz/progressbar/v3 v3.18.0
+	github.com/schollz/progressbar/v3 v3.19.0
 	golang.org/x/crypto v0.41.0
 	golang.org/x/oauth2 v0.30.0
 	golang.org/x/time v0.12.0
